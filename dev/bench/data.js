@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1772989633201,
+  "lastUpdate": 1773018027029,
   "repoUrl": "https://github.com/yukin371/Qingyu_backend",
   "entries": {
     "Benchmark": [
@@ -39936,6 +39936,9990 @@ window.BENCHMARK_DATA = {
             "value": 28,
             "unit": "allocs/op",
             "extra": "419454 times\n4 procs"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "yukin3430@gmail.com",
+            "name": "Alias",
+            "username": "yukin3430"
+          },
+          "committer": {
+            "email": "yukin3430@gmail.com",
+            "name": "Alias",
+            "username": "yukin3430"
+          },
+          "distinct": true,
+          "id": "d8f56a97311ab0e35ad4c55ff99064f40f0b9032",
+          "message": "fix(ci): 修复CI lint超时和废弃目录检查问题\n\n- 为lint job添加timeout-minutes: 15限制\n- 在golangci-lint配置中排除.archive和_deprecated目录\n- 避免检查废弃代码导致的编译错误",
+          "timestamp": "2026-03-09T08:47:17+08:00",
+          "tree_id": "098190247f8938d889b38f3608088437f266e9a6",
+          "url": "https://github.com/yukin371/Qingyu_backend/commit/d8f56a97311ab0e35ad4c55ff99064f40f0b9032"
+        },
+        "date": 1773018026410,
+        "tool": "go",
+        "benches": [
+          {
+            "name": "BenchmarkSuccess (Qingyu_backend/api/v1/shared)",
+            "value": 7013,
+            "unit": "ns/op\t    2608 B/op\t      22 allocs/op",
+            "extra": "213793 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSuccess (Qingyu_backend/api/v1/shared) - ns/op",
+            "value": 7013,
+            "unit": "ns/op",
+            "extra": "213793 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSuccess (Qingyu_backend/api/v1/shared) - B/op",
+            "value": 2608,
+            "unit": "B/op",
+            "extra": "213793 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSuccess (Qingyu_backend/api/v1/shared) - allocs/op",
+            "value": 22,
+            "unit": "allocs/op",
+            "extra": "213793 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSuccess (Qingyu_backend/api/v1/shared)",
+            "value": 7365,
+            "unit": "ns/op\t    2608 B/op\t      22 allocs/op",
+            "extra": "168732 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSuccess (Qingyu_backend/api/v1/shared) - ns/op",
+            "value": 7365,
+            "unit": "ns/op",
+            "extra": "168732 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSuccess (Qingyu_backend/api/v1/shared) - B/op",
+            "value": 2608,
+            "unit": "B/op",
+            "extra": "168732 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSuccess (Qingyu_backend/api/v1/shared) - allocs/op",
+            "value": 22,
+            "unit": "allocs/op",
+            "extra": "168732 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSuccess (Qingyu_backend/api/v1/shared)",
+            "value": 8360,
+            "unit": "ns/op\t    2608 B/op\t      22 allocs/op",
+            "extra": "141276 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSuccess (Qingyu_backend/api/v1/shared) - ns/op",
+            "value": 8360,
+            "unit": "ns/op",
+            "extra": "141276 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSuccess (Qingyu_backend/api/v1/shared) - B/op",
+            "value": 2608,
+            "unit": "B/op",
+            "extra": "141276 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSuccess (Qingyu_backend/api/v1/shared) - allocs/op",
+            "value": 22,
+            "unit": "allocs/op",
+            "extra": "141276 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSuccess (Qingyu_backend/api/v1/shared)",
+            "value": 7883,
+            "unit": "ns/op\t    2608 B/op\t      22 allocs/op",
+            "extra": "188834 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSuccess (Qingyu_backend/api/v1/shared) - ns/op",
+            "value": 7883,
+            "unit": "ns/op",
+            "extra": "188834 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSuccess (Qingyu_backend/api/v1/shared) - B/op",
+            "value": 2608,
+            "unit": "B/op",
+            "extra": "188834 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSuccess (Qingyu_backend/api/v1/shared) - allocs/op",
+            "value": 22,
+            "unit": "allocs/op",
+            "extra": "188834 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSuccess (Qingyu_backend/api/v1/shared)",
+            "value": 7155,
+            "unit": "ns/op\t    2608 B/op\t      22 allocs/op",
+            "extra": "159219 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSuccess (Qingyu_backend/api/v1/shared) - ns/op",
+            "value": 7155,
+            "unit": "ns/op",
+            "extra": "159219 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSuccess (Qingyu_backend/api/v1/shared) - B/op",
+            "value": 2608,
+            "unit": "B/op",
+            "extra": "159219 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSuccess (Qingyu_backend/api/v1/shared) - allocs/op",
+            "value": 22,
+            "unit": "allocs/op",
+            "extra": "159219 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPermissionMiddleware (Qingyu_backend/internal/middleware/auth)",
+            "value": 1536,
+            "unit": "ns/op\t    1776 B/op\t      17 allocs/op",
+            "extra": "778178 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPermissionMiddleware (Qingyu_backend/internal/middleware/auth) - ns/op",
+            "value": 1536,
+            "unit": "ns/op",
+            "extra": "778178 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPermissionMiddleware (Qingyu_backend/internal/middleware/auth) - B/op",
+            "value": 1776,
+            "unit": "B/op",
+            "extra": "778178 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPermissionMiddleware (Qingyu_backend/internal/middleware/auth) - allocs/op",
+            "value": 17,
+            "unit": "allocs/op",
+            "extra": "778178 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPermissionMiddleware (Qingyu_backend/internal/middleware/auth)",
+            "value": 1523,
+            "unit": "ns/op\t    1776 B/op\t      17 allocs/op",
+            "extra": "730693 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPermissionMiddleware (Qingyu_backend/internal/middleware/auth) - ns/op",
+            "value": 1523,
+            "unit": "ns/op",
+            "extra": "730693 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPermissionMiddleware (Qingyu_backend/internal/middleware/auth) - B/op",
+            "value": 1776,
+            "unit": "B/op",
+            "extra": "730693 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPermissionMiddleware (Qingyu_backend/internal/middleware/auth) - allocs/op",
+            "value": 17,
+            "unit": "allocs/op",
+            "extra": "730693 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPermissionMiddleware (Qingyu_backend/internal/middleware/auth)",
+            "value": 1532,
+            "unit": "ns/op\t    1776 B/op\t      17 allocs/op",
+            "extra": "737398 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPermissionMiddleware (Qingyu_backend/internal/middleware/auth) - ns/op",
+            "value": 1532,
+            "unit": "ns/op",
+            "extra": "737398 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPermissionMiddleware (Qingyu_backend/internal/middleware/auth) - B/op",
+            "value": 1776,
+            "unit": "B/op",
+            "extra": "737398 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPermissionMiddleware (Qingyu_backend/internal/middleware/auth) - allocs/op",
+            "value": 17,
+            "unit": "allocs/op",
+            "extra": "737398 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPermissionMiddleware (Qingyu_backend/internal/middleware/auth)",
+            "value": 1537,
+            "unit": "ns/op\t    1776 B/op\t      17 allocs/op",
+            "extra": "731613 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPermissionMiddleware (Qingyu_backend/internal/middleware/auth) - ns/op",
+            "value": 1537,
+            "unit": "ns/op",
+            "extra": "731613 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPermissionMiddleware (Qingyu_backend/internal/middleware/auth) - B/op",
+            "value": 1776,
+            "unit": "B/op",
+            "extra": "731613 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPermissionMiddleware (Qingyu_backend/internal/middleware/auth) - allocs/op",
+            "value": 17,
+            "unit": "allocs/op",
+            "extra": "731613 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPermissionMiddleware (Qingyu_backend/internal/middleware/auth)",
+            "value": 1786,
+            "unit": "ns/op\t    1776 B/op\t      17 allocs/op",
+            "extra": "683878 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPermissionMiddleware (Qingyu_backend/internal/middleware/auth) - ns/op",
+            "value": 1786,
+            "unit": "ns/op",
+            "extra": "683878 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPermissionMiddleware (Qingyu_backend/internal/middleware/auth) - B/op",
+            "value": 1776,
+            "unit": "B/op",
+            "extra": "683878 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPermissionMiddleware (Qingyu_backend/internal/middleware/auth) - allocs/op",
+            "value": 17,
+            "unit": "allocs/op",
+            "extra": "683878 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCompressionMiddleware (Qingyu_backend/internal/middleware/builtin)",
+            "value": 1585,
+            "unit": "ns/op\t    1600 B/op\t      18 allocs/op",
+            "extra": "787045 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCompressionMiddleware (Qingyu_backend/internal/middleware/builtin) - ns/op",
+            "value": 1585,
+            "unit": "ns/op",
+            "extra": "787045 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCompressionMiddleware (Qingyu_backend/internal/middleware/builtin) - B/op",
+            "value": 1600,
+            "unit": "B/op",
+            "extra": "787045 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCompressionMiddleware (Qingyu_backend/internal/middleware/builtin) - allocs/op",
+            "value": 18,
+            "unit": "allocs/op",
+            "extra": "787045 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCompressionMiddleware (Qingyu_backend/internal/middleware/builtin)",
+            "value": 1466,
+            "unit": "ns/op\t    1600 B/op\t      18 allocs/op",
+            "extra": "771662 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCompressionMiddleware (Qingyu_backend/internal/middleware/builtin) - ns/op",
+            "value": 1466,
+            "unit": "ns/op",
+            "extra": "771662 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCompressionMiddleware (Qingyu_backend/internal/middleware/builtin) - B/op",
+            "value": 1600,
+            "unit": "B/op",
+            "extra": "771662 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCompressionMiddleware (Qingyu_backend/internal/middleware/builtin) - allocs/op",
+            "value": 18,
+            "unit": "allocs/op",
+            "extra": "771662 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCompressionMiddleware (Qingyu_backend/internal/middleware/builtin)",
+            "value": 1456,
+            "unit": "ns/op\t    1600 B/op\t      18 allocs/op",
+            "extra": "771127 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCompressionMiddleware (Qingyu_backend/internal/middleware/builtin) - ns/op",
+            "value": 1456,
+            "unit": "ns/op",
+            "extra": "771127 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCompressionMiddleware (Qingyu_backend/internal/middleware/builtin) - B/op",
+            "value": 1600,
+            "unit": "B/op",
+            "extra": "771127 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCompressionMiddleware (Qingyu_backend/internal/middleware/builtin) - allocs/op",
+            "value": 18,
+            "unit": "allocs/op",
+            "extra": "771127 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCompressionMiddleware (Qingyu_backend/internal/middleware/builtin)",
+            "value": 1485,
+            "unit": "ns/op\t    1600 B/op\t      18 allocs/op",
+            "extra": "741136 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCompressionMiddleware (Qingyu_backend/internal/middleware/builtin) - ns/op",
+            "value": 1485,
+            "unit": "ns/op",
+            "extra": "741136 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCompressionMiddleware (Qingyu_backend/internal/middleware/builtin) - B/op",
+            "value": 1600,
+            "unit": "B/op",
+            "extra": "741136 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCompressionMiddleware (Qingyu_backend/internal/middleware/builtin) - allocs/op",
+            "value": 18,
+            "unit": "allocs/op",
+            "extra": "741136 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCompressionMiddleware (Qingyu_backend/internal/middleware/builtin)",
+            "value": 1450,
+            "unit": "ns/op\t    1600 B/op\t      18 allocs/op",
+            "extra": "741927 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCompressionMiddleware (Qingyu_backend/internal/middleware/builtin) - ns/op",
+            "value": 1450,
+            "unit": "ns/op",
+            "extra": "741927 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCompressionMiddleware (Qingyu_backend/internal/middleware/builtin) - B/op",
+            "value": 1600,
+            "unit": "B/op",
+            "extra": "741927 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCompressionMiddleware (Qingyu_backend/internal/middleware/builtin) - allocs/op",
+            "value": 18,
+            "unit": "allocs/op",
+            "extra": "741927 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCORSMiddleware (Qingyu_backend/internal/middleware/builtin)",
+            "value": 2537,
+            "unit": "ns/op\t    1841 B/op\t      26 allocs/op",
+            "extra": "447242 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCORSMiddleware (Qingyu_backend/internal/middleware/builtin) - ns/op",
+            "value": 2537,
+            "unit": "ns/op",
+            "extra": "447242 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCORSMiddleware (Qingyu_backend/internal/middleware/builtin) - B/op",
+            "value": 1841,
+            "unit": "B/op",
+            "extra": "447242 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCORSMiddleware (Qingyu_backend/internal/middleware/builtin) - allocs/op",
+            "value": 26,
+            "unit": "allocs/op",
+            "extra": "447242 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCORSMiddleware (Qingyu_backend/internal/middleware/builtin)",
+            "value": 2519,
+            "unit": "ns/op\t    1841 B/op\t      26 allocs/op",
+            "extra": "456222 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCORSMiddleware (Qingyu_backend/internal/middleware/builtin) - ns/op",
+            "value": 2519,
+            "unit": "ns/op",
+            "extra": "456222 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCORSMiddleware (Qingyu_backend/internal/middleware/builtin) - B/op",
+            "value": 1841,
+            "unit": "B/op",
+            "extra": "456222 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCORSMiddleware (Qingyu_backend/internal/middleware/builtin) - allocs/op",
+            "value": 26,
+            "unit": "allocs/op",
+            "extra": "456222 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCORSMiddleware (Qingyu_backend/internal/middleware/builtin)",
+            "value": 2516,
+            "unit": "ns/op\t    1841 B/op\t      26 allocs/op",
+            "extra": "439794 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCORSMiddleware (Qingyu_backend/internal/middleware/builtin) - ns/op",
+            "value": 2516,
+            "unit": "ns/op",
+            "extra": "439794 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCORSMiddleware (Qingyu_backend/internal/middleware/builtin) - B/op",
+            "value": 1841,
+            "unit": "B/op",
+            "extra": "439794 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCORSMiddleware (Qingyu_backend/internal/middleware/builtin) - allocs/op",
+            "value": 26,
+            "unit": "allocs/op",
+            "extra": "439794 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCORSMiddleware (Qingyu_backend/internal/middleware/builtin)",
+            "value": 2801,
+            "unit": "ns/op\t    1841 B/op\t      26 allocs/op",
+            "extra": "442053 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCORSMiddleware (Qingyu_backend/internal/middleware/builtin) - ns/op",
+            "value": 2801,
+            "unit": "ns/op",
+            "extra": "442053 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCORSMiddleware (Qingyu_backend/internal/middleware/builtin) - B/op",
+            "value": 1841,
+            "unit": "B/op",
+            "extra": "442053 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCORSMiddleware (Qingyu_backend/internal/middleware/builtin) - allocs/op",
+            "value": 26,
+            "unit": "allocs/op",
+            "extra": "442053 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCORSMiddleware (Qingyu_backend/internal/middleware/builtin)",
+            "value": 2796,
+            "unit": "ns/op\t    1841 B/op\t      26 allocs/op",
+            "extra": "451941 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCORSMiddleware (Qingyu_backend/internal/middleware/builtin) - ns/op",
+            "value": 2796,
+            "unit": "ns/op",
+            "extra": "451941 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCORSMiddleware (Qingyu_backend/internal/middleware/builtin) - B/op",
+            "value": 1841,
+            "unit": "B/op",
+            "extra": "451941 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCORSMiddleware (Qingyu_backend/internal/middleware/builtin) - allocs/op",
+            "value": 26,
+            "unit": "allocs/op",
+            "extra": "451941 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkErrorHandlerMiddleware (Qingyu_backend/internal/middleware/builtin)",
+            "value": 1242,
+            "unit": "ns/op\t    1440 B/op\t      15 allocs/op",
+            "extra": "853602 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkErrorHandlerMiddleware (Qingyu_backend/internal/middleware/builtin) - ns/op",
+            "value": 1242,
+            "unit": "ns/op",
+            "extra": "853602 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkErrorHandlerMiddleware (Qingyu_backend/internal/middleware/builtin) - B/op",
+            "value": 1440,
+            "unit": "B/op",
+            "extra": "853602 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkErrorHandlerMiddleware (Qingyu_backend/internal/middleware/builtin) - allocs/op",
+            "value": 15,
+            "unit": "allocs/op",
+            "extra": "853602 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkErrorHandlerMiddleware (Qingyu_backend/internal/middleware/builtin)",
+            "value": 1251,
+            "unit": "ns/op\t    1440 B/op\t      15 allocs/op",
+            "extra": "859528 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkErrorHandlerMiddleware (Qingyu_backend/internal/middleware/builtin) - ns/op",
+            "value": 1251,
+            "unit": "ns/op",
+            "extra": "859528 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkErrorHandlerMiddleware (Qingyu_backend/internal/middleware/builtin) - B/op",
+            "value": 1440,
+            "unit": "B/op",
+            "extra": "859528 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkErrorHandlerMiddleware (Qingyu_backend/internal/middleware/builtin) - allocs/op",
+            "value": 15,
+            "unit": "allocs/op",
+            "extra": "859528 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkErrorHandlerMiddleware (Qingyu_backend/internal/middleware/builtin)",
+            "value": 1290,
+            "unit": "ns/op\t    1440 B/op\t      15 allocs/op",
+            "extra": "961393 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkErrorHandlerMiddleware (Qingyu_backend/internal/middleware/builtin) - ns/op",
+            "value": 1290,
+            "unit": "ns/op",
+            "extra": "961393 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkErrorHandlerMiddleware (Qingyu_backend/internal/middleware/builtin) - B/op",
+            "value": 1440,
+            "unit": "B/op",
+            "extra": "961393 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkErrorHandlerMiddleware (Qingyu_backend/internal/middleware/builtin) - allocs/op",
+            "value": 15,
+            "unit": "allocs/op",
+            "extra": "961393 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkErrorHandlerMiddleware (Qingyu_backend/internal/middleware/builtin)",
+            "value": 1251,
+            "unit": "ns/op\t    1440 B/op\t      15 allocs/op",
+            "extra": "845929 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkErrorHandlerMiddleware (Qingyu_backend/internal/middleware/builtin) - ns/op",
+            "value": 1251,
+            "unit": "ns/op",
+            "extra": "845929 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkErrorHandlerMiddleware (Qingyu_backend/internal/middleware/builtin) - B/op",
+            "value": 1440,
+            "unit": "B/op",
+            "extra": "845929 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkErrorHandlerMiddleware (Qingyu_backend/internal/middleware/builtin) - allocs/op",
+            "value": 15,
+            "unit": "allocs/op",
+            "extra": "845929 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkErrorHandlerMiddleware (Qingyu_backend/internal/middleware/builtin)",
+            "value": 1244,
+            "unit": "ns/op\t    1440 B/op\t      15 allocs/op",
+            "extra": "869055 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkErrorHandlerMiddleware (Qingyu_backend/internal/middleware/builtin) - ns/op",
+            "value": 1244,
+            "unit": "ns/op",
+            "extra": "869055 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkErrorHandlerMiddleware (Qingyu_backend/internal/middleware/builtin) - B/op",
+            "value": 1440,
+            "unit": "B/op",
+            "extra": "869055 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkErrorHandlerMiddleware (Qingyu_backend/internal/middleware/builtin) - allocs/op",
+            "value": 15,
+            "unit": "allocs/op",
+            "extra": "869055 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecoveryMiddleware (Qingyu_backend/internal/middleware/builtin)",
+            "value": 1569,
+            "unit": "ns/op\t    1440 B/op\t      15 allocs/op",
+            "extra": "782961 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecoveryMiddleware (Qingyu_backend/internal/middleware/builtin) - ns/op",
+            "value": 1569,
+            "unit": "ns/op",
+            "extra": "782961 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecoveryMiddleware (Qingyu_backend/internal/middleware/builtin) - B/op",
+            "value": 1440,
+            "unit": "B/op",
+            "extra": "782961 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecoveryMiddleware (Qingyu_backend/internal/middleware/builtin) - allocs/op",
+            "value": 15,
+            "unit": "allocs/op",
+            "extra": "782961 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecoveryMiddleware (Qingyu_backend/internal/middleware/builtin)",
+            "value": 1652,
+            "unit": "ns/op\t    1440 B/op\t      15 allocs/op",
+            "extra": "693397 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecoveryMiddleware (Qingyu_backend/internal/middleware/builtin) - ns/op",
+            "value": 1652,
+            "unit": "ns/op",
+            "extra": "693397 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecoveryMiddleware (Qingyu_backend/internal/middleware/builtin) - B/op",
+            "value": 1440,
+            "unit": "B/op",
+            "extra": "693397 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecoveryMiddleware (Qingyu_backend/internal/middleware/builtin) - allocs/op",
+            "value": 15,
+            "unit": "allocs/op",
+            "extra": "693397 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecoveryMiddleware (Qingyu_backend/internal/middleware/builtin)",
+            "value": 1605,
+            "unit": "ns/op\t    1440 B/op\t      15 allocs/op",
+            "extra": "854529 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecoveryMiddleware (Qingyu_backend/internal/middleware/builtin) - ns/op",
+            "value": 1605,
+            "unit": "ns/op",
+            "extra": "854529 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecoveryMiddleware (Qingyu_backend/internal/middleware/builtin) - B/op",
+            "value": 1440,
+            "unit": "B/op",
+            "extra": "854529 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecoveryMiddleware (Qingyu_backend/internal/middleware/builtin) - allocs/op",
+            "value": 15,
+            "unit": "allocs/op",
+            "extra": "854529 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecoveryMiddleware (Qingyu_backend/internal/middleware/builtin)",
+            "value": 1599,
+            "unit": "ns/op\t    1440 B/op\t      15 allocs/op",
+            "extra": "662709 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecoveryMiddleware (Qingyu_backend/internal/middleware/builtin) - ns/op",
+            "value": 1599,
+            "unit": "ns/op",
+            "extra": "662709 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecoveryMiddleware (Qingyu_backend/internal/middleware/builtin) - B/op",
+            "value": 1440,
+            "unit": "B/op",
+            "extra": "662709 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecoveryMiddleware (Qingyu_backend/internal/middleware/builtin) - allocs/op",
+            "value": 15,
+            "unit": "allocs/op",
+            "extra": "662709 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecoveryMiddleware (Qingyu_backend/internal/middleware/builtin)",
+            "value": 1658,
+            "unit": "ns/op\t    1440 B/op\t      15 allocs/op",
+            "extra": "847878 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecoveryMiddleware (Qingyu_backend/internal/middleware/builtin) - ns/op",
+            "value": 1658,
+            "unit": "ns/op",
+            "extra": "847878 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecoveryMiddleware (Qingyu_backend/internal/middleware/builtin) - B/op",
+            "value": 1440,
+            "unit": "B/op",
+            "extra": "847878 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecoveryMiddleware (Qingyu_backend/internal/middleware/builtin) - allocs/op",
+            "value": 15,
+            "unit": "allocs/op",
+            "extra": "847878 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordHttpRequest (Qingyu_backend/pkg/metrics)",
+            "value": 320.5,
+            "unit": "ns/op\t       3 B/op\t       1 allocs/op",
+            "extra": "3547465 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordHttpRequest (Qingyu_backend/pkg/metrics) - ns/op",
+            "value": 320.5,
+            "unit": "ns/op",
+            "extra": "3547465 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordHttpRequest (Qingyu_backend/pkg/metrics) - B/op",
+            "value": 3,
+            "unit": "B/op",
+            "extra": "3547465 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordHttpRequest (Qingyu_backend/pkg/metrics) - allocs/op",
+            "value": 1,
+            "unit": "allocs/op",
+            "extra": "3547465 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordHttpRequest (Qingyu_backend/pkg/metrics)",
+            "value": 326.5,
+            "unit": "ns/op\t       3 B/op\t       1 allocs/op",
+            "extra": "3504061 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordHttpRequest (Qingyu_backend/pkg/metrics) - ns/op",
+            "value": 326.5,
+            "unit": "ns/op",
+            "extra": "3504061 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordHttpRequest (Qingyu_backend/pkg/metrics) - B/op",
+            "value": 3,
+            "unit": "B/op",
+            "extra": "3504061 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordHttpRequest (Qingyu_backend/pkg/metrics) - allocs/op",
+            "value": 1,
+            "unit": "allocs/op",
+            "extra": "3504061 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordHttpRequest (Qingyu_backend/pkg/metrics)",
+            "value": 328.6,
+            "unit": "ns/op\t       3 B/op\t       1 allocs/op",
+            "extra": "3673020 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordHttpRequest (Qingyu_backend/pkg/metrics) - ns/op",
+            "value": 328.6,
+            "unit": "ns/op",
+            "extra": "3673020 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordHttpRequest (Qingyu_backend/pkg/metrics) - B/op",
+            "value": 3,
+            "unit": "B/op",
+            "extra": "3673020 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordHttpRequest (Qingyu_backend/pkg/metrics) - allocs/op",
+            "value": 1,
+            "unit": "allocs/op",
+            "extra": "3673020 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordHttpRequest (Qingyu_backend/pkg/metrics)",
+            "value": 315.5,
+            "unit": "ns/op\t       3 B/op\t       1 allocs/op",
+            "extra": "3843500 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordHttpRequest (Qingyu_backend/pkg/metrics) - ns/op",
+            "value": 315.5,
+            "unit": "ns/op",
+            "extra": "3843500 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordHttpRequest (Qingyu_backend/pkg/metrics) - B/op",
+            "value": 3,
+            "unit": "B/op",
+            "extra": "3843500 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordHttpRequest (Qingyu_backend/pkg/metrics) - allocs/op",
+            "value": 1,
+            "unit": "allocs/op",
+            "extra": "3843500 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordHttpRequest (Qingyu_backend/pkg/metrics)",
+            "value": 327.9,
+            "unit": "ns/op\t       3 B/op\t       1 allocs/op",
+            "extra": "3605350 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordHttpRequest (Qingyu_backend/pkg/metrics) - ns/op",
+            "value": 327.9,
+            "unit": "ns/op",
+            "extra": "3605350 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordHttpRequest (Qingyu_backend/pkg/metrics) - B/op",
+            "value": 3,
+            "unit": "B/op",
+            "extra": "3605350 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordHttpRequest (Qingyu_backend/pkg/metrics) - allocs/op",
+            "value": 1,
+            "unit": "allocs/op",
+            "extra": "3605350 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordDbQuery (Qingyu_backend/pkg/metrics)",
+            "value": 169.8,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "7823196 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordDbQuery (Qingyu_backend/pkg/metrics) - ns/op",
+            "value": 169.8,
+            "unit": "ns/op",
+            "extra": "7823196 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordDbQuery (Qingyu_backend/pkg/metrics) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "7823196 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordDbQuery (Qingyu_backend/pkg/metrics) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "7823196 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordDbQuery (Qingyu_backend/pkg/metrics)",
+            "value": 187,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "7955451 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordDbQuery (Qingyu_backend/pkg/metrics) - ns/op",
+            "value": 187,
+            "unit": "ns/op",
+            "extra": "7955451 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordDbQuery (Qingyu_backend/pkg/metrics) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "7955451 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordDbQuery (Qingyu_backend/pkg/metrics) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "7955451 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordDbQuery (Qingyu_backend/pkg/metrics)",
+            "value": 161.6,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "7345105 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordDbQuery (Qingyu_backend/pkg/metrics) - ns/op",
+            "value": 161.6,
+            "unit": "ns/op",
+            "extra": "7345105 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordDbQuery (Qingyu_backend/pkg/metrics) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "7345105 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordDbQuery (Qingyu_backend/pkg/metrics) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "7345105 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordDbQuery (Qingyu_backend/pkg/metrics)",
+            "value": 148.7,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "7078356 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordDbQuery (Qingyu_backend/pkg/metrics) - ns/op",
+            "value": 148.7,
+            "unit": "ns/op",
+            "extra": "7078356 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordDbQuery (Qingyu_backend/pkg/metrics) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "7078356 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordDbQuery (Qingyu_backend/pkg/metrics) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "7078356 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordDbQuery (Qingyu_backend/pkg/metrics)",
+            "value": 154,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "7670517 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordDbQuery (Qingyu_backend/pkg/metrics) - ns/op",
+            "value": 154,
+            "unit": "ns/op",
+            "extra": "7670517 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordDbQuery (Qingyu_backend/pkg/metrics) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "7670517 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordDbQuery (Qingyu_backend/pkg/metrics) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "7670517 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordSearch (Qingyu_backend/pkg/metrics)",
+            "value": 191.6,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "6042096 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordSearch (Qingyu_backend/pkg/metrics) - ns/op",
+            "value": 191.6,
+            "unit": "ns/op",
+            "extra": "6042096 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordSearch (Qingyu_backend/pkg/metrics) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "6042096 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordSearch (Qingyu_backend/pkg/metrics) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "6042096 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordSearch (Qingyu_backend/pkg/metrics)",
+            "value": 193,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "6494701 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordSearch (Qingyu_backend/pkg/metrics) - ns/op",
+            "value": 193,
+            "unit": "ns/op",
+            "extra": "6494701 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordSearch (Qingyu_backend/pkg/metrics) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "6494701 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordSearch (Qingyu_backend/pkg/metrics) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "6494701 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordSearch (Qingyu_backend/pkg/metrics)",
+            "value": 186.1,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "6351190 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordSearch (Qingyu_backend/pkg/metrics) - ns/op",
+            "value": 186.1,
+            "unit": "ns/op",
+            "extra": "6351190 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordSearch (Qingyu_backend/pkg/metrics) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "6351190 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordSearch (Qingyu_backend/pkg/metrics) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "6351190 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordSearch (Qingyu_backend/pkg/metrics)",
+            "value": 188.7,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "5876707 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordSearch (Qingyu_backend/pkg/metrics) - ns/op",
+            "value": 188.7,
+            "unit": "ns/op",
+            "extra": "5876707 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordSearch (Qingyu_backend/pkg/metrics) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "5876707 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordSearch (Qingyu_backend/pkg/metrics) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "5876707 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordSearch (Qingyu_backend/pkg/metrics)",
+            "value": 195.4,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "6848266 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordSearch (Qingyu_backend/pkg/metrics) - ns/op",
+            "value": 195.4,
+            "unit": "ns/op",
+            "extra": "6848266 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordSearch (Qingyu_backend/pkg/metrics) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "6848266 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordSearch (Qingyu_backend/pkg/metrics) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "6848266 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkOrphanedRecords (Qingyu_backend/pkg/monitor)",
+            "value": 2e-7,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkOrphanedRecords (Qingyu_backend/pkg/monitor) - ns/op",
+            "value": 2e-7,
+            "unit": "ns/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkOrphanedRecords (Qingyu_backend/pkg/monitor) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkOrphanedRecords (Qingyu_backend/pkg/monitor) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkOrphanedRecords (Qingyu_backend/pkg/monitor)",
+            "value": 2e-7,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkOrphanedRecords (Qingyu_backend/pkg/monitor) - ns/op",
+            "value": 2e-7,
+            "unit": "ns/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkOrphanedRecords (Qingyu_backend/pkg/monitor) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkOrphanedRecords (Qingyu_backend/pkg/monitor) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkOrphanedRecords (Qingyu_backend/pkg/monitor)",
+            "value": 3e-7,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkOrphanedRecords (Qingyu_backend/pkg/monitor) - ns/op",
+            "value": 3e-7,
+            "unit": "ns/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkOrphanedRecords (Qingyu_backend/pkg/monitor) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkOrphanedRecords (Qingyu_backend/pkg/monitor) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkOrphanedRecords (Qingyu_backend/pkg/monitor)",
+            "value": 5e-7,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkOrphanedRecords (Qingyu_backend/pkg/monitor) - ns/op",
+            "value": 5e-7,
+            "unit": "ns/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkOrphanedRecords (Qingyu_backend/pkg/monitor) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkOrphanedRecords (Qingyu_backend/pkg/monitor) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkOrphanedRecords (Qingyu_backend/pkg/monitor)",
+            "value": 2e-7,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkOrphanedRecords (Qingyu_backend/pkg/monitor) - ns/op",
+            "value": 2e-7,
+            "unit": "ns/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkOrphanedRecords (Qingyu_backend/pkg/monitor) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkOrphanedRecords (Qingyu_backend/pkg/monitor) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateAmount (Qingyu_backend/pkg/validator)",
+            "value": 227,
+            "unit": "ns/op\t      40 B/op\t       3 allocs/op",
+            "extra": "5453486 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateAmount (Qingyu_backend/pkg/validator) - ns/op",
+            "value": 227,
+            "unit": "ns/op",
+            "extra": "5453486 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateAmount (Qingyu_backend/pkg/validator) - B/op",
+            "value": 40,
+            "unit": "B/op",
+            "extra": "5453486 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateAmount (Qingyu_backend/pkg/validator) - allocs/op",
+            "value": 3,
+            "unit": "allocs/op",
+            "extra": "5453486 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateAmount (Qingyu_backend/pkg/validator)",
+            "value": 229.4,
+            "unit": "ns/op\t      40 B/op\t       3 allocs/op",
+            "extra": "5338809 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateAmount (Qingyu_backend/pkg/validator) - ns/op",
+            "value": 229.4,
+            "unit": "ns/op",
+            "extra": "5338809 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateAmount (Qingyu_backend/pkg/validator) - B/op",
+            "value": 40,
+            "unit": "B/op",
+            "extra": "5338809 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateAmount (Qingyu_backend/pkg/validator) - allocs/op",
+            "value": 3,
+            "unit": "allocs/op",
+            "extra": "5338809 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateAmount (Qingyu_backend/pkg/validator)",
+            "value": 202.2,
+            "unit": "ns/op\t      40 B/op\t       3 allocs/op",
+            "extra": "5888751 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateAmount (Qingyu_backend/pkg/validator) - ns/op",
+            "value": 202.2,
+            "unit": "ns/op",
+            "extra": "5888751 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateAmount (Qingyu_backend/pkg/validator) - B/op",
+            "value": 40,
+            "unit": "B/op",
+            "extra": "5888751 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateAmount (Qingyu_backend/pkg/validator) - allocs/op",
+            "value": 3,
+            "unit": "allocs/op",
+            "extra": "5888751 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateAmount (Qingyu_backend/pkg/validator)",
+            "value": 202.3,
+            "unit": "ns/op\t      40 B/op\t       3 allocs/op",
+            "extra": "5908365 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateAmount (Qingyu_backend/pkg/validator) - ns/op",
+            "value": 202.3,
+            "unit": "ns/op",
+            "extra": "5908365 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateAmount (Qingyu_backend/pkg/validator) - B/op",
+            "value": 40,
+            "unit": "B/op",
+            "extra": "5908365 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateAmount (Qingyu_backend/pkg/validator) - allocs/op",
+            "value": 3,
+            "unit": "allocs/op",
+            "extra": "5908365 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateAmount (Qingyu_backend/pkg/validator)",
+            "value": 206.5,
+            "unit": "ns/op\t      40 B/op\t       3 allocs/op",
+            "extra": "5849241 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateAmount (Qingyu_backend/pkg/validator) - ns/op",
+            "value": 206.5,
+            "unit": "ns/op",
+            "extra": "5849241 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateAmount (Qingyu_backend/pkg/validator) - B/op",
+            "value": 40,
+            "unit": "B/op",
+            "extra": "5849241 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateAmount (Qingyu_backend/pkg/validator) - allocs/op",
+            "value": 3,
+            "unit": "allocs/op",
+            "extra": "5849241 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidatePhone (Qingyu_backend/pkg/validator)",
+            "value": 4480,
+            "unit": "ns/op\t    5178 B/op\t      67 allocs/op",
+            "extra": "259164 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidatePhone (Qingyu_backend/pkg/validator) - ns/op",
+            "value": 4480,
+            "unit": "ns/op",
+            "extra": "259164 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidatePhone (Qingyu_backend/pkg/validator) - B/op",
+            "value": 5178,
+            "unit": "B/op",
+            "extra": "259164 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidatePhone (Qingyu_backend/pkg/validator) - allocs/op",
+            "value": 67,
+            "unit": "allocs/op",
+            "extra": "259164 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidatePhone (Qingyu_backend/pkg/validator)",
+            "value": 4513,
+            "unit": "ns/op\t    5178 B/op\t      67 allocs/op",
+            "extra": "265257 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidatePhone (Qingyu_backend/pkg/validator) - ns/op",
+            "value": 4513,
+            "unit": "ns/op",
+            "extra": "265257 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidatePhone (Qingyu_backend/pkg/validator) - B/op",
+            "value": 5178,
+            "unit": "B/op",
+            "extra": "265257 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidatePhone (Qingyu_backend/pkg/validator) - allocs/op",
+            "value": 67,
+            "unit": "allocs/op",
+            "extra": "265257 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidatePhone (Qingyu_backend/pkg/validator)",
+            "value": 4404,
+            "unit": "ns/op\t    5178 B/op\t      67 allocs/op",
+            "extra": "246325 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidatePhone (Qingyu_backend/pkg/validator) - ns/op",
+            "value": 4404,
+            "unit": "ns/op",
+            "extra": "246325 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidatePhone (Qingyu_backend/pkg/validator) - B/op",
+            "value": 5178,
+            "unit": "B/op",
+            "extra": "246325 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidatePhone (Qingyu_backend/pkg/validator) - allocs/op",
+            "value": 67,
+            "unit": "allocs/op",
+            "extra": "246325 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidatePhone (Qingyu_backend/pkg/validator)",
+            "value": 4431,
+            "unit": "ns/op\t    5178 B/op\t      67 allocs/op",
+            "extra": "257154 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidatePhone (Qingyu_backend/pkg/validator) - ns/op",
+            "value": 4431,
+            "unit": "ns/op",
+            "extra": "257154 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidatePhone (Qingyu_backend/pkg/validator) - B/op",
+            "value": 5178,
+            "unit": "B/op",
+            "extra": "257154 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidatePhone (Qingyu_backend/pkg/validator) - allocs/op",
+            "value": 67,
+            "unit": "allocs/op",
+            "extra": "257154 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidatePhone (Qingyu_backend/pkg/validator)",
+            "value": 4421,
+            "unit": "ns/op\t    5178 B/op\t      67 allocs/op",
+            "extra": "256258 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidatePhone (Qingyu_backend/pkg/validator) - ns/op",
+            "value": 4421,
+            "unit": "ns/op",
+            "extra": "256258 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidatePhone (Qingyu_backend/pkg/validator) - B/op",
+            "value": 5178,
+            "unit": "B/op",
+            "extra": "256258 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidatePhone (Qingyu_backend/pkg/validator) - allocs/op",
+            "value": 67,
+            "unit": "allocs/op",
+            "extra": "256258 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateStrongPassword (Qingyu_backend/pkg/validator)",
+            "value": 2254,
+            "unit": "ns/op\t    2317 B/op\t      28 allocs/op",
+            "extra": "495144 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateStrongPassword (Qingyu_backend/pkg/validator) - ns/op",
+            "value": 2254,
+            "unit": "ns/op",
+            "extra": "495144 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateStrongPassword (Qingyu_backend/pkg/validator) - B/op",
+            "value": 2317,
+            "unit": "B/op",
+            "extra": "495144 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateStrongPassword (Qingyu_backend/pkg/validator) - allocs/op",
+            "value": 28,
+            "unit": "allocs/op",
+            "extra": "495144 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateStrongPassword (Qingyu_backend/pkg/validator)",
+            "value": 2262,
+            "unit": "ns/op\t    2318 B/op\t      28 allocs/op",
+            "extra": "503162 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateStrongPassword (Qingyu_backend/pkg/validator) - ns/op",
+            "value": 2262,
+            "unit": "ns/op",
+            "extra": "503162 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateStrongPassword (Qingyu_backend/pkg/validator) - B/op",
+            "value": 2318,
+            "unit": "B/op",
+            "extra": "503162 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateStrongPassword (Qingyu_backend/pkg/validator) - allocs/op",
+            "value": 28,
+            "unit": "allocs/op",
+            "extra": "503162 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateStrongPassword (Qingyu_backend/pkg/validator)",
+            "value": 2272,
+            "unit": "ns/op\t    2320 B/op\t      28 allocs/op",
+            "extra": "495442 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateStrongPassword (Qingyu_backend/pkg/validator) - ns/op",
+            "value": 2272,
+            "unit": "ns/op",
+            "extra": "495442 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateStrongPassword (Qingyu_backend/pkg/validator) - B/op",
+            "value": 2320,
+            "unit": "B/op",
+            "extra": "495442 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateStrongPassword (Qingyu_backend/pkg/validator) - allocs/op",
+            "value": 28,
+            "unit": "allocs/op",
+            "extra": "495442 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateStrongPassword (Qingyu_backend/pkg/validator)",
+            "value": 2278,
+            "unit": "ns/op\t    2317 B/op\t      28 allocs/op",
+            "extra": "493304 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateStrongPassword (Qingyu_backend/pkg/validator) - ns/op",
+            "value": 2278,
+            "unit": "ns/op",
+            "extra": "493304 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateStrongPassword (Qingyu_backend/pkg/validator) - B/op",
+            "value": 2317,
+            "unit": "B/op",
+            "extra": "493304 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateStrongPassword (Qingyu_backend/pkg/validator) - allocs/op",
+            "value": 28,
+            "unit": "allocs/op",
+            "extra": "493304 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateStrongPassword (Qingyu_backend/pkg/validator)",
+            "value": 2269,
+            "unit": "ns/op\t    2320 B/op\t      28 allocs/op",
+            "extra": "499202 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateStrongPassword (Qingyu_backend/pkg/validator) - ns/op",
+            "value": 2269,
+            "unit": "ns/op",
+            "extra": "499202 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateStrongPassword (Qingyu_backend/pkg/validator) - B/op",
+            "value": 2320,
+            "unit": "B/op",
+            "extra": "499202 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateStrongPassword (Qingyu_backend/pkg/validator) - allocs/op",
+            "value": 28,
+            "unit": "allocs/op",
+            "extra": "499202 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateComplex (Qingyu_backend/pkg/validator)",
+            "value": 10794,
+            "unit": "ns/op\t   10003 B/op\t     127 allocs/op",
+            "extra": "121801 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateComplex (Qingyu_backend/pkg/validator) - ns/op",
+            "value": 10794,
+            "unit": "ns/op",
+            "extra": "121801 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateComplex (Qingyu_backend/pkg/validator) - B/op",
+            "value": 10003,
+            "unit": "B/op",
+            "extra": "121801 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateComplex (Qingyu_backend/pkg/validator) - allocs/op",
+            "value": 127,
+            "unit": "allocs/op",
+            "extra": "121801 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateComplex (Qingyu_backend/pkg/validator)",
+            "value": 9772,
+            "unit": "ns/op\t   10004 B/op\t     127 allocs/op",
+            "extra": "118404 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateComplex (Qingyu_backend/pkg/validator) - ns/op",
+            "value": 9772,
+            "unit": "ns/op",
+            "extra": "118404 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateComplex (Qingyu_backend/pkg/validator) - B/op",
+            "value": 10004,
+            "unit": "B/op",
+            "extra": "118404 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateComplex (Qingyu_backend/pkg/validator) - allocs/op",
+            "value": 127,
+            "unit": "allocs/op",
+            "extra": "118404 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateComplex (Qingyu_backend/pkg/validator)",
+            "value": 9744,
+            "unit": "ns/op\t   10009 B/op\t     127 allocs/op",
+            "extra": "120772 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateComplex (Qingyu_backend/pkg/validator) - ns/op",
+            "value": 9744,
+            "unit": "ns/op",
+            "extra": "120772 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateComplex (Qingyu_backend/pkg/validator) - B/op",
+            "value": 10009,
+            "unit": "B/op",
+            "extra": "120772 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateComplex (Qingyu_backend/pkg/validator) - allocs/op",
+            "value": 127,
+            "unit": "allocs/op",
+            "extra": "120772 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateComplex (Qingyu_backend/pkg/validator)",
+            "value": 9765,
+            "unit": "ns/op\t   10008 B/op\t     127 allocs/op",
+            "extra": "120525 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateComplex (Qingyu_backend/pkg/validator) - ns/op",
+            "value": 9765,
+            "unit": "ns/op",
+            "extra": "120525 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateComplex (Qingyu_backend/pkg/validator) - B/op",
+            "value": 10008,
+            "unit": "B/op",
+            "extra": "120525 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateComplex (Qingyu_backend/pkg/validator) - allocs/op",
+            "value": 127,
+            "unit": "allocs/op",
+            "extra": "120525 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateComplex (Qingyu_backend/pkg/validator)",
+            "value": 9733,
+            "unit": "ns/op\t   10010 B/op\t     127 allocs/op",
+            "extra": "119620 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateComplex (Qingyu_backend/pkg/validator) - ns/op",
+            "value": 9733,
+            "unit": "ns/op",
+            "extra": "119620 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateComplex (Qingyu_backend/pkg/validator) - B/op",
+            "value": 10010,
+            "unit": "B/op",
+            "extra": "119620 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateComplex (Qingyu_backend/pkg/validator) - allocs/op",
+            "value": 127,
+            "unit": "allocs/op",
+            "extra": "119620 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseID (Qingyu_backend/repository/mongodb/base)",
+            "value": 19.46,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "59780217 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseID (Qingyu_backend/repository/mongodb/base) - ns/op",
+            "value": 19.46,
+            "unit": "ns/op",
+            "extra": "59780217 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseID (Qingyu_backend/repository/mongodb/base) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "59780217 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseID (Qingyu_backend/repository/mongodb/base) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "59780217 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseID (Qingyu_backend/repository/mongodb/base)",
+            "value": 19.36,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "62012696 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseID (Qingyu_backend/repository/mongodb/base) - ns/op",
+            "value": 19.36,
+            "unit": "ns/op",
+            "extra": "62012696 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseID (Qingyu_backend/repository/mongodb/base) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "62012696 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseID (Qingyu_backend/repository/mongodb/base) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "62012696 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseID (Qingyu_backend/repository/mongodb/base)",
+            "value": 19.38,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "62186137 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseID (Qingyu_backend/repository/mongodb/base) - ns/op",
+            "value": 19.38,
+            "unit": "ns/op",
+            "extra": "62186137 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseID (Qingyu_backend/repository/mongodb/base) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "62186137 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseID (Qingyu_backend/repository/mongodb/base) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "62186137 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseID (Qingyu_backend/repository/mongodb/base)",
+            "value": 20.42,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "58367334 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseID (Qingyu_backend/repository/mongodb/base) - ns/op",
+            "value": 20.42,
+            "unit": "ns/op",
+            "extra": "58367334 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseID (Qingyu_backend/repository/mongodb/base) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "58367334 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseID (Qingyu_backend/repository/mongodb/base) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "58367334 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseID (Qingyu_backend/repository/mongodb/base)",
+            "value": 19.26,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "62089882 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseID (Qingyu_backend/repository/mongodb/base) - ns/op",
+            "value": 19.26,
+            "unit": "ns/op",
+            "extra": "62089882 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseID (Qingyu_backend/repository/mongodb/base) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "62089882 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseID (Qingyu_backend/repository/mongodb/base) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "62089882 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseIDs (Qingyu_backend/repository/mongodb/base)",
+            "value": 182.2,
+            "unit": "ns/op\t     112 B/op\t       2 allocs/op",
+            "extra": "6644109 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseIDs (Qingyu_backend/repository/mongodb/base) - ns/op",
+            "value": 182.2,
+            "unit": "ns/op",
+            "extra": "6644109 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseIDs (Qingyu_backend/repository/mongodb/base) - B/op",
+            "value": 112,
+            "unit": "B/op",
+            "extra": "6644109 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseIDs (Qingyu_backend/repository/mongodb/base) - allocs/op",
+            "value": 2,
+            "unit": "allocs/op",
+            "extra": "6644109 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseIDs (Qingyu_backend/repository/mongodb/base)",
+            "value": 182.5,
+            "unit": "ns/op\t     112 B/op\t       2 allocs/op",
+            "extra": "6582244 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseIDs (Qingyu_backend/repository/mongodb/base) - ns/op",
+            "value": 182.5,
+            "unit": "ns/op",
+            "extra": "6582244 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseIDs (Qingyu_backend/repository/mongodb/base) - B/op",
+            "value": 112,
+            "unit": "B/op",
+            "extra": "6582244 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseIDs (Qingyu_backend/repository/mongodb/base) - allocs/op",
+            "value": 2,
+            "unit": "allocs/op",
+            "extra": "6582244 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseIDs (Qingyu_backend/repository/mongodb/base)",
+            "value": 183.1,
+            "unit": "ns/op\t     112 B/op\t       2 allocs/op",
+            "extra": "6469414 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseIDs (Qingyu_backend/repository/mongodb/base) - ns/op",
+            "value": 183.1,
+            "unit": "ns/op",
+            "extra": "6469414 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseIDs (Qingyu_backend/repository/mongodb/base) - B/op",
+            "value": 112,
+            "unit": "B/op",
+            "extra": "6469414 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseIDs (Qingyu_backend/repository/mongodb/base) - allocs/op",
+            "value": 2,
+            "unit": "allocs/op",
+            "extra": "6469414 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseIDs (Qingyu_backend/repository/mongodb/base)",
+            "value": 193.4,
+            "unit": "ns/op\t     112 B/op\t       2 allocs/op",
+            "extra": "6628768 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseIDs (Qingyu_backend/repository/mongodb/base) - ns/op",
+            "value": 193.4,
+            "unit": "ns/op",
+            "extra": "6628768 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseIDs (Qingyu_backend/repository/mongodb/base) - B/op",
+            "value": 112,
+            "unit": "B/op",
+            "extra": "6628768 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseIDs (Qingyu_backend/repository/mongodb/base) - allocs/op",
+            "value": 2,
+            "unit": "allocs/op",
+            "extra": "6628768 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseIDs (Qingyu_backend/repository/mongodb/base)",
+            "value": 182.7,
+            "unit": "ns/op\t     112 B/op\t       2 allocs/op",
+            "extra": "6450868 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseIDs (Qingyu_backend/repository/mongodb/base) - ns/op",
+            "value": 182.7,
+            "unit": "ns/op",
+            "extra": "6450868 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseIDs (Qingyu_backend/repository/mongodb/base) - B/op",
+            "value": 112,
+            "unit": "B/op",
+            "extra": "6450868 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkParseIDs (Qingyu_backend/repository/mongodb/base) - allocs/op",
+            "value": 2,
+            "unit": "allocs/op",
+            "extra": "6450868 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkIDToHex (Qingyu_backend/repository/mongodb/base)",
+            "value": 19.11,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "62801834 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkIDToHex (Qingyu_backend/repository/mongodb/base) - ns/op",
+            "value": 19.11,
+            "unit": "ns/op",
+            "extra": "62801834 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkIDToHex (Qingyu_backend/repository/mongodb/base) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "62801834 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkIDToHex (Qingyu_backend/repository/mongodb/base) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "62801834 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkIDToHex (Qingyu_backend/repository/mongodb/base)",
+            "value": 19.73,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "62501389 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkIDToHex (Qingyu_backend/repository/mongodb/base) - ns/op",
+            "value": 19.73,
+            "unit": "ns/op",
+            "extra": "62501389 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkIDToHex (Qingyu_backend/repository/mongodb/base) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "62501389 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkIDToHex (Qingyu_backend/repository/mongodb/base) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "62501389 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkIDToHex (Qingyu_backend/repository/mongodb/base)",
+            "value": 19.02,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "62845032 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkIDToHex (Qingyu_backend/repository/mongodb/base) - ns/op",
+            "value": 19.02,
+            "unit": "ns/op",
+            "extra": "62845032 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkIDToHex (Qingyu_backend/repository/mongodb/base) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "62845032 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkIDToHex (Qingyu_backend/repository/mongodb/base) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "62845032 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkIDToHex (Qingyu_backend/repository/mongodb/base)",
+            "value": 19.01,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "62785602 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkIDToHex (Qingyu_backend/repository/mongodb/base) - ns/op",
+            "value": 19.01,
+            "unit": "ns/op",
+            "extra": "62785602 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkIDToHex (Qingyu_backend/repository/mongodb/base) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "62785602 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkIDToHex (Qingyu_backend/repository/mongodb/base) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "62785602 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkIDToHex (Qingyu_backend/repository/mongodb/base)",
+            "value": 18.93,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "62813126 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkIDToHex (Qingyu_backend/repository/mongodb/base) - ns/op",
+            "value": 18.93,
+            "unit": "ns/op",
+            "extra": "62813126 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkIDToHex (Qingyu_backend/repository/mongodb/base) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "62813126 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkIDToHex (Qingyu_backend/repository/mongodb/base) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "62813126 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordSlowQuery (Qingyu_backend/repository/mongodb/monitor)",
+            "value": 54.24,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "21672172 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordSlowQuery (Qingyu_backend/repository/mongodb/monitor) - ns/op",
+            "value": 54.24,
+            "unit": "ns/op",
+            "extra": "21672172 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordSlowQuery (Qingyu_backend/repository/mongodb/monitor) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "21672172 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordSlowQuery (Qingyu_backend/repository/mongodb/monitor) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "21672172 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordSlowQuery (Qingyu_backend/repository/mongodb/monitor)",
+            "value": 55.78,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "22059242 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordSlowQuery (Qingyu_backend/repository/mongodb/monitor) - ns/op",
+            "value": 55.78,
+            "unit": "ns/op",
+            "extra": "22059242 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordSlowQuery (Qingyu_backend/repository/mongodb/monitor) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "22059242 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordSlowQuery (Qingyu_backend/repository/mongodb/monitor) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "22059242 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordSlowQuery (Qingyu_backend/repository/mongodb/monitor)",
+            "value": 54.26,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "21927008 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordSlowQuery (Qingyu_backend/repository/mongodb/monitor) - ns/op",
+            "value": 54.26,
+            "unit": "ns/op",
+            "extra": "21927008 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordSlowQuery (Qingyu_backend/repository/mongodb/monitor) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "21927008 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordSlowQuery (Qingyu_backend/repository/mongodb/monitor) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "21927008 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordSlowQuery (Qingyu_backend/repository/mongodb/monitor)",
+            "value": 55.05,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "22150262 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordSlowQuery (Qingyu_backend/repository/mongodb/monitor) - ns/op",
+            "value": 55.05,
+            "unit": "ns/op",
+            "extra": "22150262 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordSlowQuery (Qingyu_backend/repository/mongodb/monitor) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "22150262 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordSlowQuery (Qingyu_backend/repository/mongodb/monitor) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "22150262 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordSlowQuery (Qingyu_backend/repository/mongodb/monitor)",
+            "value": 57.16,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "22192826 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordSlowQuery (Qingyu_backend/repository/mongodb/monitor) - ns/op",
+            "value": 57.16,
+            "unit": "ns/op",
+            "extra": "22192826 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordSlowQuery (Qingyu_backend/repository/mongodb/monitor) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "22192826 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordSlowQuery (Qingyu_backend/repository/mongodb/monitor) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "22192826 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordQueryDuration (Qingyu_backend/repository/mongodb/monitor)",
+            "value": 79.39,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "15142478 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordQueryDuration (Qingyu_backend/repository/mongodb/monitor) - ns/op",
+            "value": 79.39,
+            "unit": "ns/op",
+            "extra": "15142478 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordQueryDuration (Qingyu_backend/repository/mongodb/monitor) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "15142478 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordQueryDuration (Qingyu_backend/repository/mongodb/monitor) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "15142478 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordQueryDuration (Qingyu_backend/repository/mongodb/monitor)",
+            "value": 79.97,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "15132144 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordQueryDuration (Qingyu_backend/repository/mongodb/monitor) - ns/op",
+            "value": 79.97,
+            "unit": "ns/op",
+            "extra": "15132144 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordQueryDuration (Qingyu_backend/repository/mongodb/monitor) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "15132144 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordQueryDuration (Qingyu_backend/repository/mongodb/monitor) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "15132144 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordQueryDuration (Qingyu_backend/repository/mongodb/monitor)",
+            "value": 79.77,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "14100200 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordQueryDuration (Qingyu_backend/repository/mongodb/monitor) - ns/op",
+            "value": 79.77,
+            "unit": "ns/op",
+            "extra": "14100200 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordQueryDuration (Qingyu_backend/repository/mongodb/monitor) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "14100200 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordQueryDuration (Qingyu_backend/repository/mongodb/monitor) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "14100200 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordQueryDuration (Qingyu_backend/repository/mongodb/monitor)",
+            "value": 79.08,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "15191847 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordQueryDuration (Qingyu_backend/repository/mongodb/monitor) - ns/op",
+            "value": 79.08,
+            "unit": "ns/op",
+            "extra": "15191847 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordQueryDuration (Qingyu_backend/repository/mongodb/monitor) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "15191847 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordQueryDuration (Qingyu_backend/repository/mongodb/monitor) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "15191847 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordQueryDuration (Qingyu_backend/repository/mongodb/monitor)",
+            "value": 79.88,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "14563434 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordQueryDuration (Qingyu_backend/repository/mongodb/monitor) - ns/op",
+            "value": 79.88,
+            "unit": "ns/op",
+            "extra": "14563434 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordQueryDuration (Qingyu_backend/repository/mongodb/monitor) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "14563434 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRecordQueryDuration (Qingyu_backend/repository/mongodb/monitor) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "14563434 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCheckFile (Qingyu_backend/scripts/check-dependencies)",
+            "value": 255.5,
+            "unit": "ns/op\t     168 B/op\t       3 allocs/op",
+            "extra": "4632303 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCheckFile (Qingyu_backend/scripts/check-dependencies) - ns/op",
+            "value": 255.5,
+            "unit": "ns/op",
+            "extra": "4632303 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCheckFile (Qingyu_backend/scripts/check-dependencies) - B/op",
+            "value": 168,
+            "unit": "B/op",
+            "extra": "4632303 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCheckFile (Qingyu_backend/scripts/check-dependencies) - allocs/op",
+            "value": 3,
+            "unit": "allocs/op",
+            "extra": "4632303 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCheckFile (Qingyu_backend/scripts/check-dependencies)",
+            "value": 256.5,
+            "unit": "ns/op\t     168 B/op\t       3 allocs/op",
+            "extra": "4512042 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCheckFile (Qingyu_backend/scripts/check-dependencies) - ns/op",
+            "value": 256.5,
+            "unit": "ns/op",
+            "extra": "4512042 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCheckFile (Qingyu_backend/scripts/check-dependencies) - B/op",
+            "value": 168,
+            "unit": "B/op",
+            "extra": "4512042 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCheckFile (Qingyu_backend/scripts/check-dependencies) - allocs/op",
+            "value": 3,
+            "unit": "allocs/op",
+            "extra": "4512042 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCheckFile (Qingyu_backend/scripts/check-dependencies)",
+            "value": 278.5,
+            "unit": "ns/op\t     168 B/op\t       3 allocs/op",
+            "extra": "4567602 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCheckFile (Qingyu_backend/scripts/check-dependencies) - ns/op",
+            "value": 278.5,
+            "unit": "ns/op",
+            "extra": "4567602 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCheckFile (Qingyu_backend/scripts/check-dependencies) - B/op",
+            "value": 168,
+            "unit": "B/op",
+            "extra": "4567602 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCheckFile (Qingyu_backend/scripts/check-dependencies) - allocs/op",
+            "value": 3,
+            "unit": "allocs/op",
+            "extra": "4567602 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCheckFile (Qingyu_backend/scripts/check-dependencies)",
+            "value": 254.1,
+            "unit": "ns/op\t     168 B/op\t       3 allocs/op",
+            "extra": "4691838 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCheckFile (Qingyu_backend/scripts/check-dependencies) - ns/op",
+            "value": 254.1,
+            "unit": "ns/op",
+            "extra": "4691838 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCheckFile (Qingyu_backend/scripts/check-dependencies) - B/op",
+            "value": 168,
+            "unit": "B/op",
+            "extra": "4691838 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCheckFile (Qingyu_backend/scripts/check-dependencies) - allocs/op",
+            "value": 3,
+            "unit": "allocs/op",
+            "extra": "4691838 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCheckFile (Qingyu_backend/scripts/check-dependencies)",
+            "value": 256.7,
+            "unit": "ns/op\t     168 B/op\t       3 allocs/op",
+            "extra": "4711030 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCheckFile (Qingyu_backend/scripts/check-dependencies) - ns/op",
+            "value": 256.7,
+            "unit": "ns/op",
+            "extra": "4711030 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCheckFile (Qingyu_backend/scripts/check-dependencies) - B/op",
+            "value": 168,
+            "unit": "B/op",
+            "extra": "4711030 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCheckFile (Qingyu_backend/scripts/check-dependencies) - allocs/op",
+            "value": 3,
+            "unit": "allocs/op",
+            "extra": "4711030 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCircuitBreaker_AllowRequest (Qingyu_backend/service/ai)",
+            "value": 7.022,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "172040901 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCircuitBreaker_AllowRequest (Qingyu_backend/service/ai) - ns/op",
+            "value": 7.022,
+            "unit": "ns/op",
+            "extra": "172040901 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCircuitBreaker_AllowRequest (Qingyu_backend/service/ai) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "172040901 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCircuitBreaker_AllowRequest (Qingyu_backend/service/ai) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "172040901 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCircuitBreaker_AllowRequest (Qingyu_backend/service/ai)",
+            "value": 7,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "171431371 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCircuitBreaker_AllowRequest (Qingyu_backend/service/ai) - ns/op",
+            "value": 7,
+            "unit": "ns/op",
+            "extra": "171431371 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCircuitBreaker_AllowRequest (Qingyu_backend/service/ai) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "171431371 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCircuitBreaker_AllowRequest (Qingyu_backend/service/ai) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "171431371 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCircuitBreaker_AllowRequest (Qingyu_backend/service/ai)",
+            "value": 6.989,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "170222630 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCircuitBreaker_AllowRequest (Qingyu_backend/service/ai) - ns/op",
+            "value": 6.989,
+            "unit": "ns/op",
+            "extra": "170222630 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCircuitBreaker_AllowRequest (Qingyu_backend/service/ai) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "170222630 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCircuitBreaker_AllowRequest (Qingyu_backend/service/ai) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "170222630 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCircuitBreaker_AllowRequest (Qingyu_backend/service/ai)",
+            "value": 7.284,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "169694956 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCircuitBreaker_AllowRequest (Qingyu_backend/service/ai) - ns/op",
+            "value": 7.284,
+            "unit": "ns/op",
+            "extra": "169694956 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCircuitBreaker_AllowRequest (Qingyu_backend/service/ai) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "169694956 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCircuitBreaker_AllowRequest (Qingyu_backend/service/ai) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "169694956 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCircuitBreaker_AllowRequest (Qingyu_backend/service/ai)",
+            "value": 7.004,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "171325094 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCircuitBreaker_AllowRequest (Qingyu_backend/service/ai) - ns/op",
+            "value": 7.004,
+            "unit": "ns/op",
+            "extra": "171325094 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCircuitBreaker_AllowRequest (Qingyu_backend/service/ai) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "171325094 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCircuitBreaker_AllowRequest (Qingyu_backend/service/ai) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "171325094 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConvertEvent (Qingyu_backend/service/search/sync)",
+            "value": 4565,
+            "unit": "ns/op\t    2016 B/op\t      54 allocs/op",
+            "extra": "259371 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConvertEvent (Qingyu_backend/service/search/sync) - ns/op",
+            "value": 4565,
+            "unit": "ns/op",
+            "extra": "259371 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConvertEvent (Qingyu_backend/service/search/sync) - B/op",
+            "value": 2016,
+            "unit": "B/op",
+            "extra": "259371 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConvertEvent (Qingyu_backend/service/search/sync) - allocs/op",
+            "value": 54,
+            "unit": "allocs/op",
+            "extra": "259371 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConvertEvent (Qingyu_backend/service/search/sync)",
+            "value": 4689,
+            "unit": "ns/op\t    2016 B/op\t      54 allocs/op",
+            "extra": "253368 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConvertEvent (Qingyu_backend/service/search/sync) - ns/op",
+            "value": 4689,
+            "unit": "ns/op",
+            "extra": "253368 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConvertEvent (Qingyu_backend/service/search/sync) - B/op",
+            "value": 2016,
+            "unit": "B/op",
+            "extra": "253368 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConvertEvent (Qingyu_backend/service/search/sync) - allocs/op",
+            "value": 54,
+            "unit": "allocs/op",
+            "extra": "253368 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConvertEvent (Qingyu_backend/service/search/sync)",
+            "value": 4631,
+            "unit": "ns/op\t    2000 B/op\t      54 allocs/op",
+            "extra": "251113 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConvertEvent (Qingyu_backend/service/search/sync) - ns/op",
+            "value": 4631,
+            "unit": "ns/op",
+            "extra": "251113 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConvertEvent (Qingyu_backend/service/search/sync) - B/op",
+            "value": 2000,
+            "unit": "B/op",
+            "extra": "251113 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConvertEvent (Qingyu_backend/service/search/sync) - allocs/op",
+            "value": 54,
+            "unit": "allocs/op",
+            "extra": "251113 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConvertEvent (Qingyu_backend/service/search/sync)",
+            "value": 4570,
+            "unit": "ns/op\t    2016 B/op\t      54 allocs/op",
+            "extra": "259197 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConvertEvent (Qingyu_backend/service/search/sync) - ns/op",
+            "value": 4570,
+            "unit": "ns/op",
+            "extra": "259197 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConvertEvent (Qingyu_backend/service/search/sync) - B/op",
+            "value": 2016,
+            "unit": "B/op",
+            "extra": "259197 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConvertEvent (Qingyu_backend/service/search/sync) - allocs/op",
+            "value": 54,
+            "unit": "allocs/op",
+            "extra": "259197 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConvertEvent (Qingyu_backend/service/search/sync)",
+            "value": 5230,
+            "unit": "ns/op\t    2000 B/op\t      54 allocs/op",
+            "extra": "253894 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConvertEvent (Qingyu_backend/service/search/sync) - ns/op",
+            "value": 5230,
+            "unit": "ns/op",
+            "extra": "253894 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConvertEvent (Qingyu_backend/service/search/sync) - B/op",
+            "value": 2000,
+            "unit": "B/op",
+            "extra": "253894 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConvertEvent (Qingyu_backend/service/search/sync) - allocs/op",
+            "value": 54,
+            "unit": "allocs/op",
+            "extra": "253894 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCheckConsistency (Qingyu_backend/service/search/sync)",
+            "value": 845,
+            "unit": "ns/op\t     712 B/op\t      11 allocs/op",
+            "extra": "1419334 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCheckConsistency (Qingyu_backend/service/search/sync) - ns/op",
+            "value": 845,
+            "unit": "ns/op",
+            "extra": "1419334 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCheckConsistency (Qingyu_backend/service/search/sync) - B/op",
+            "value": 712,
+            "unit": "B/op",
+            "extra": "1419334 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCheckConsistency (Qingyu_backend/service/search/sync) - allocs/op",
+            "value": 11,
+            "unit": "allocs/op",
+            "extra": "1419334 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCheckConsistency (Qingyu_backend/service/search/sync)",
+            "value": 845.2,
+            "unit": "ns/op\t     712 B/op\t      11 allocs/op",
+            "extra": "1422783 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCheckConsistency (Qingyu_backend/service/search/sync) - ns/op",
+            "value": 845.2,
+            "unit": "ns/op",
+            "extra": "1422783 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCheckConsistency (Qingyu_backend/service/search/sync) - B/op",
+            "value": 712,
+            "unit": "B/op",
+            "extra": "1422783 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCheckConsistency (Qingyu_backend/service/search/sync) - allocs/op",
+            "value": 11,
+            "unit": "allocs/op",
+            "extra": "1422783 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCheckConsistency (Qingyu_backend/service/search/sync)",
+            "value": 849.6,
+            "unit": "ns/op\t     712 B/op\t      11 allocs/op",
+            "extra": "1407950 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCheckConsistency (Qingyu_backend/service/search/sync) - ns/op",
+            "value": 849.6,
+            "unit": "ns/op",
+            "extra": "1407950 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCheckConsistency (Qingyu_backend/service/search/sync) - B/op",
+            "value": 712,
+            "unit": "B/op",
+            "extra": "1407950 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCheckConsistency (Qingyu_backend/service/search/sync) - allocs/op",
+            "value": 11,
+            "unit": "allocs/op",
+            "extra": "1407950 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCheckConsistency (Qingyu_backend/service/search/sync)",
+            "value": 846.3,
+            "unit": "ns/op\t     712 B/op\t      11 allocs/op",
+            "extra": "1392387 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCheckConsistency (Qingyu_backend/service/search/sync) - ns/op",
+            "value": 846.3,
+            "unit": "ns/op",
+            "extra": "1392387 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCheckConsistency (Qingyu_backend/service/search/sync) - B/op",
+            "value": 712,
+            "unit": "B/op",
+            "extra": "1392387 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCheckConsistency (Qingyu_backend/service/search/sync) - allocs/op",
+            "value": 11,
+            "unit": "allocs/op",
+            "extra": "1392387 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCheckConsistency (Qingyu_backend/service/search/sync)",
+            "value": 944.8,
+            "unit": "ns/op\t     712 B/op\t      11 allocs/op",
+            "extra": "1412889 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCheckConsistency (Qingyu_backend/service/search/sync) - ns/op",
+            "value": 944.8,
+            "unit": "ns/op",
+            "extra": "1412889 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCheckConsistency (Qingyu_backend/service/search/sync) - B/op",
+            "value": 712,
+            "unit": "B/op",
+            "extra": "1412889 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCheckConsistency (Qingyu_backend/service/search/sync) - allocs/op",
+            "value": 11,
+            "unit": "allocs/op",
+            "extra": "1412889 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_MGet (Qingyu_backend/service/shared/cache)",
+            "value": 111257,
+            "unit": "ns/op\t   21302 B/op\t     822 allocs/op",
+            "extra": "9770 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_MGet (Qingyu_backend/service/shared/cache) - ns/op",
+            "value": 111257,
+            "unit": "ns/op",
+            "extra": "9770 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_MGet (Qingyu_backend/service/shared/cache) - B/op",
+            "value": 21302,
+            "unit": "B/op",
+            "extra": "9770 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_MGet (Qingyu_backend/service/shared/cache) - allocs/op",
+            "value": 822,
+            "unit": "allocs/op",
+            "extra": "9770 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_MGet (Qingyu_backend/service/shared/cache)",
+            "value": 111057,
+            "unit": "ns/op\t   21302 B/op\t     822 allocs/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_MGet (Qingyu_backend/service/shared/cache) - ns/op",
+            "value": 111057,
+            "unit": "ns/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_MGet (Qingyu_backend/service/shared/cache) - B/op",
+            "value": 21302,
+            "unit": "B/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_MGet (Qingyu_backend/service/shared/cache) - allocs/op",
+            "value": 822,
+            "unit": "allocs/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_MGet (Qingyu_backend/service/shared/cache)",
+            "value": 110405,
+            "unit": "ns/op\t   21302 B/op\t     822 allocs/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_MGet (Qingyu_backend/service/shared/cache) - ns/op",
+            "value": 110405,
+            "unit": "ns/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_MGet (Qingyu_backend/service/shared/cache) - B/op",
+            "value": 21302,
+            "unit": "B/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_MGet (Qingyu_backend/service/shared/cache) - allocs/op",
+            "value": 822,
+            "unit": "allocs/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_MGet (Qingyu_backend/service/shared/cache)",
+            "value": 117916,
+            "unit": "ns/op\t   21302 B/op\t     822 allocs/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_MGet (Qingyu_backend/service/shared/cache) - ns/op",
+            "value": 117916,
+            "unit": "ns/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_MGet (Qingyu_backend/service/shared/cache) - B/op",
+            "value": 21302,
+            "unit": "B/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_MGet (Qingyu_backend/service/shared/cache) - allocs/op",
+            "value": 822,
+            "unit": "allocs/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_MGet (Qingyu_backend/service/shared/cache)",
+            "value": 118063,
+            "unit": "ns/op\t   21302 B/op\t     822 allocs/op",
+            "extra": "8930 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_MGet (Qingyu_backend/service/shared/cache) - ns/op",
+            "value": 118063,
+            "unit": "ns/op",
+            "extra": "8930 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_MGet (Qingyu_backend/service/shared/cache) - B/op",
+            "value": 21302,
+            "unit": "B/op",
+            "extra": "8930 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_MGet (Qingyu_backend/service/shared/cache) - allocs/op",
+            "value": 822,
+            "unit": "allocs/op",
+            "extra": "8930 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_MSet (Qingyu_backend/service/shared/cache)",
+            "value": 236608,
+            "unit": "ns/op\t    7998 B/op\t     334 allocs/op",
+            "extra": "4924 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_MSet (Qingyu_backend/service/shared/cache) - ns/op",
+            "value": 236608,
+            "unit": "ns/op",
+            "extra": "4924 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_MSet (Qingyu_backend/service/shared/cache) - B/op",
+            "value": 7998,
+            "unit": "B/op",
+            "extra": "4924 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_MSet (Qingyu_backend/service/shared/cache) - allocs/op",
+            "value": 334,
+            "unit": "allocs/op",
+            "extra": "4924 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_MSet (Qingyu_backend/service/shared/cache)",
+            "value": 235260,
+            "unit": "ns/op\t    7998 B/op\t     334 allocs/op",
+            "extra": "4867 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_MSet (Qingyu_backend/service/shared/cache) - ns/op",
+            "value": 235260,
+            "unit": "ns/op",
+            "extra": "4867 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_MSet (Qingyu_backend/service/shared/cache) - B/op",
+            "value": 7998,
+            "unit": "B/op",
+            "extra": "4867 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_MSet (Qingyu_backend/service/shared/cache) - allocs/op",
+            "value": 334,
+            "unit": "allocs/op",
+            "extra": "4867 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_MSet (Qingyu_backend/service/shared/cache)",
+            "value": 236662,
+            "unit": "ns/op\t    7997 B/op\t     334 allocs/op",
+            "extra": "5058 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_MSet (Qingyu_backend/service/shared/cache) - ns/op",
+            "value": 236662,
+            "unit": "ns/op",
+            "extra": "5058 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_MSet (Qingyu_backend/service/shared/cache) - B/op",
+            "value": 7997,
+            "unit": "B/op",
+            "extra": "5058 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_MSet (Qingyu_backend/service/shared/cache) - allocs/op",
+            "value": 334,
+            "unit": "allocs/op",
+            "extra": "5058 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_MSet (Qingyu_backend/service/shared/cache)",
+            "value": 249209,
+            "unit": "ns/op\t    8001 B/op\t     334 allocs/op",
+            "extra": "4300 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_MSet (Qingyu_backend/service/shared/cache) - ns/op",
+            "value": 249209,
+            "unit": "ns/op",
+            "extra": "4300 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_MSet (Qingyu_backend/service/shared/cache) - B/op",
+            "value": 8001,
+            "unit": "B/op",
+            "extra": "4300 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_MSet (Qingyu_backend/service/shared/cache) - allocs/op",
+            "value": 334,
+            "unit": "allocs/op",
+            "extra": "4300 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_MSet (Qingyu_backend/service/shared/cache)",
+            "value": 234342,
+            "unit": "ns/op\t    7997 B/op\t     334 allocs/op",
+            "extra": "4897 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_MSet (Qingyu_backend/service/shared/cache) - ns/op",
+            "value": 234342,
+            "unit": "ns/op",
+            "extra": "4897 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_MSet (Qingyu_backend/service/shared/cache) - B/op",
+            "value": 7997,
+            "unit": "B/op",
+            "extra": "4897 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_MSet (Qingyu_backend/service/shared/cache) - allocs/op",
+            "value": 334,
+            "unit": "allocs/op",
+            "extra": "4897 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_Get (Qingyu_backend/service/shared/cache)",
+            "value": 60999,
+            "unit": "ns/op\t     400 B/op\t      20 allocs/op",
+            "extra": "20515 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_Get (Qingyu_backend/service/shared/cache) - ns/op",
+            "value": 60999,
+            "unit": "ns/op",
+            "extra": "20515 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_Get (Qingyu_backend/service/shared/cache) - B/op",
+            "value": 400,
+            "unit": "B/op",
+            "extra": "20515 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_Get (Qingyu_backend/service/shared/cache) - allocs/op",
+            "value": 20,
+            "unit": "allocs/op",
+            "extra": "20515 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_Get (Qingyu_backend/service/shared/cache)",
+            "value": 62253,
+            "unit": "ns/op\t     400 B/op\t      20 allocs/op",
+            "extra": "19136 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_Get (Qingyu_backend/service/shared/cache) - ns/op",
+            "value": 62253,
+            "unit": "ns/op",
+            "extra": "19136 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_Get (Qingyu_backend/service/shared/cache) - B/op",
+            "value": 400,
+            "unit": "B/op",
+            "extra": "19136 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_Get (Qingyu_backend/service/shared/cache) - allocs/op",
+            "value": 20,
+            "unit": "allocs/op",
+            "extra": "19136 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_Get (Qingyu_backend/service/shared/cache)",
+            "value": 61970,
+            "unit": "ns/op\t     400 B/op\t      20 allocs/op",
+            "extra": "19473 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_Get (Qingyu_backend/service/shared/cache) - ns/op",
+            "value": 61970,
+            "unit": "ns/op",
+            "extra": "19473 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_Get (Qingyu_backend/service/shared/cache) - B/op",
+            "value": 400,
+            "unit": "B/op",
+            "extra": "19473 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_Get (Qingyu_backend/service/shared/cache) - allocs/op",
+            "value": 20,
+            "unit": "allocs/op",
+            "extra": "19473 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_Get (Qingyu_backend/service/shared/cache)",
+            "value": 58889,
+            "unit": "ns/op\t     400 B/op\t      20 allocs/op",
+            "extra": "20407 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_Get (Qingyu_backend/service/shared/cache) - ns/op",
+            "value": 58889,
+            "unit": "ns/op",
+            "extra": "20407 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_Get (Qingyu_backend/service/shared/cache) - B/op",
+            "value": 400,
+            "unit": "B/op",
+            "extra": "20407 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_Get (Qingyu_backend/service/shared/cache) - allocs/op",
+            "value": 20,
+            "unit": "allocs/op",
+            "extra": "20407 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_Get (Qingyu_backend/service/shared/cache)",
+            "value": 64006,
+            "unit": "ns/op\t     400 B/op\t      20 allocs/op",
+            "extra": "19641 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_Get (Qingyu_backend/service/shared/cache) - ns/op",
+            "value": 64006,
+            "unit": "ns/op",
+            "extra": "19641 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_Get (Qingyu_backend/service/shared/cache) - B/op",
+            "value": 400,
+            "unit": "B/op",
+            "extra": "19641 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_Get (Qingyu_backend/service/shared/cache) - allocs/op",
+            "value": 20,
+            "unit": "allocs/op",
+            "extra": "19641 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_Set (Qingyu_backend/service/shared/cache)",
+            "value": 63696,
+            "unit": "ns/op\t     796 B/op\t      35 allocs/op",
+            "extra": "20076 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_Set (Qingyu_backend/service/shared/cache) - ns/op",
+            "value": 63696,
+            "unit": "ns/op",
+            "extra": "20076 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_Set (Qingyu_backend/service/shared/cache) - B/op",
+            "value": 796,
+            "unit": "B/op",
+            "extra": "20076 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_Set (Qingyu_backend/service/shared/cache) - allocs/op",
+            "value": 35,
+            "unit": "allocs/op",
+            "extra": "20076 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_Set (Qingyu_backend/service/shared/cache)",
+            "value": 63149,
+            "unit": "ns/op\t     796 B/op\t      35 allocs/op",
+            "extra": "19159 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_Set (Qingyu_backend/service/shared/cache) - ns/op",
+            "value": 63149,
+            "unit": "ns/op",
+            "extra": "19159 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_Set (Qingyu_backend/service/shared/cache) - B/op",
+            "value": 796,
+            "unit": "B/op",
+            "extra": "19159 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_Set (Qingyu_backend/service/shared/cache) - allocs/op",
+            "value": 35,
+            "unit": "allocs/op",
+            "extra": "19159 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_Set (Qingyu_backend/service/shared/cache)",
+            "value": 65316,
+            "unit": "ns/op\t     796 B/op\t      35 allocs/op",
+            "extra": "19213 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_Set (Qingyu_backend/service/shared/cache) - ns/op",
+            "value": 65316,
+            "unit": "ns/op",
+            "extra": "19213 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_Set (Qingyu_backend/service/shared/cache) - B/op",
+            "value": 796,
+            "unit": "B/op",
+            "extra": "19213 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_Set (Qingyu_backend/service/shared/cache) - allocs/op",
+            "value": 35,
+            "unit": "allocs/op",
+            "extra": "19213 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_Set (Qingyu_backend/service/shared/cache)",
+            "value": 62967,
+            "unit": "ns/op\t     796 B/op\t      35 allocs/op",
+            "extra": "19002 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_Set (Qingyu_backend/service/shared/cache) - ns/op",
+            "value": 62967,
+            "unit": "ns/op",
+            "extra": "19002 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_Set (Qingyu_backend/service/shared/cache) - B/op",
+            "value": 796,
+            "unit": "B/op",
+            "extra": "19002 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_Set (Qingyu_backend/service/shared/cache) - allocs/op",
+            "value": 35,
+            "unit": "allocs/op",
+            "extra": "19002 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_Set (Qingyu_backend/service/shared/cache)",
+            "value": 60329,
+            "unit": "ns/op\t     796 B/op\t      35 allocs/op",
+            "extra": "19041 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_Set (Qingyu_backend/service/shared/cache) - ns/op",
+            "value": 60329,
+            "unit": "ns/op",
+            "extra": "19041 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_Set (Qingyu_backend/service/shared/cache) - B/op",
+            "value": 796,
+            "unit": "B/op",
+            "extra": "19041 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_Set (Qingyu_backend/service/shared/cache) - allocs/op",
+            "value": 35,
+            "unit": "allocs/op",
+            "extra": "19041 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_ZAdd (Qingyu_backend/service/shared/cache)",
+            "value": 65437,
+            "unit": "ns/op\t     877 B/op\t      30 allocs/op",
+            "extra": "17150 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_ZAdd (Qingyu_backend/service/shared/cache) - ns/op",
+            "value": 65437,
+            "unit": "ns/op",
+            "extra": "17150 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_ZAdd (Qingyu_backend/service/shared/cache) - B/op",
+            "value": 877,
+            "unit": "B/op",
+            "extra": "17150 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_ZAdd (Qingyu_backend/service/shared/cache) - allocs/op",
+            "value": 30,
+            "unit": "allocs/op",
+            "extra": "17150 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_ZAdd (Qingyu_backend/service/shared/cache)",
+            "value": 64551,
+            "unit": "ns/op\t     876 B/op\t      30 allocs/op",
+            "extra": "19030 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_ZAdd (Qingyu_backend/service/shared/cache) - ns/op",
+            "value": 64551,
+            "unit": "ns/op",
+            "extra": "19030 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_ZAdd (Qingyu_backend/service/shared/cache) - B/op",
+            "value": 876,
+            "unit": "B/op",
+            "extra": "19030 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_ZAdd (Qingyu_backend/service/shared/cache) - allocs/op",
+            "value": 30,
+            "unit": "allocs/op",
+            "extra": "19030 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_ZAdd (Qingyu_backend/service/shared/cache)",
+            "value": 64320,
+            "unit": "ns/op\t     876 B/op\t      30 allocs/op",
+            "extra": "19502 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_ZAdd (Qingyu_backend/service/shared/cache) - ns/op",
+            "value": 64320,
+            "unit": "ns/op",
+            "extra": "19502 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_ZAdd (Qingyu_backend/service/shared/cache) - B/op",
+            "value": 876,
+            "unit": "B/op",
+            "extra": "19502 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_ZAdd (Qingyu_backend/service/shared/cache) - allocs/op",
+            "value": 30,
+            "unit": "allocs/op",
+            "extra": "19502 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_ZAdd (Qingyu_backend/service/shared/cache)",
+            "value": 64341,
+            "unit": "ns/op\t     876 B/op\t      30 allocs/op",
+            "extra": "18576 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_ZAdd (Qingyu_backend/service/shared/cache) - ns/op",
+            "value": 64341,
+            "unit": "ns/op",
+            "extra": "18576 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_ZAdd (Qingyu_backend/service/shared/cache) - B/op",
+            "value": 876,
+            "unit": "B/op",
+            "extra": "18576 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_ZAdd (Qingyu_backend/service/shared/cache) - allocs/op",
+            "value": 30,
+            "unit": "allocs/op",
+            "extra": "18576 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_ZAdd (Qingyu_backend/service/shared/cache)",
+            "value": 64409,
+            "unit": "ns/op\t     876 B/op\t      30 allocs/op",
+            "extra": "18843 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_ZAdd (Qingyu_backend/service/shared/cache) - ns/op",
+            "value": 64409,
+            "unit": "ns/op",
+            "extra": "18843 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_ZAdd (Qingyu_backend/service/shared/cache) - B/op",
+            "value": 876,
+            "unit": "B/op",
+            "extra": "18843 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_ZAdd (Qingyu_backend/service/shared/cache) - allocs/op",
+            "value": 30,
+            "unit": "allocs/op",
+            "extra": "18843 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_ZRange (Qingyu_backend/service/shared/cache)",
+            "value": 68059,
+            "unit": "ns/op\t    1736 B/op\t      59 allocs/op",
+            "extra": "18950 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_ZRange (Qingyu_backend/service/shared/cache) - ns/op",
+            "value": 68059,
+            "unit": "ns/op",
+            "extra": "18950 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_ZRange (Qingyu_backend/service/shared/cache) - B/op",
+            "value": 1736,
+            "unit": "B/op",
+            "extra": "18950 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_ZRange (Qingyu_backend/service/shared/cache) - allocs/op",
+            "value": 59,
+            "unit": "allocs/op",
+            "extra": "18950 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_ZRange (Qingyu_backend/service/shared/cache)",
+            "value": 66621,
+            "unit": "ns/op\t    1736 B/op\t      59 allocs/op",
+            "extra": "18384 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_ZRange (Qingyu_backend/service/shared/cache) - ns/op",
+            "value": 66621,
+            "unit": "ns/op",
+            "extra": "18384 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_ZRange (Qingyu_backend/service/shared/cache) - B/op",
+            "value": 1736,
+            "unit": "B/op",
+            "extra": "18384 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_ZRange (Qingyu_backend/service/shared/cache) - allocs/op",
+            "value": 59,
+            "unit": "allocs/op",
+            "extra": "18384 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_ZRange (Qingyu_backend/service/shared/cache)",
+            "value": 62708,
+            "unit": "ns/op\t    1736 B/op\t      59 allocs/op",
+            "extra": "19803 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_ZRange (Qingyu_backend/service/shared/cache) - ns/op",
+            "value": 62708,
+            "unit": "ns/op",
+            "extra": "19803 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_ZRange (Qingyu_backend/service/shared/cache) - B/op",
+            "value": 1736,
+            "unit": "B/op",
+            "extra": "19803 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_ZRange (Qingyu_backend/service/shared/cache) - allocs/op",
+            "value": 59,
+            "unit": "allocs/op",
+            "extra": "19803 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_ZRange (Qingyu_backend/service/shared/cache)",
+            "value": 64304,
+            "unit": "ns/op\t    1736 B/op\t      59 allocs/op",
+            "extra": "18711 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_ZRange (Qingyu_backend/service/shared/cache) - ns/op",
+            "value": 64304,
+            "unit": "ns/op",
+            "extra": "18711 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_ZRange (Qingyu_backend/service/shared/cache) - B/op",
+            "value": 1736,
+            "unit": "B/op",
+            "extra": "18711 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_ZRange (Qingyu_backend/service/shared/cache) - allocs/op",
+            "value": 59,
+            "unit": "allocs/op",
+            "extra": "18711 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_ZRange (Qingyu_backend/service/shared/cache)",
+            "value": 65135,
+            "unit": "ns/op\t    1736 B/op\t      59 allocs/op",
+            "extra": "18762 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_ZRange (Qingyu_backend/service/shared/cache) - ns/op",
+            "value": 65135,
+            "unit": "ns/op",
+            "extra": "18762 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_ZRange (Qingyu_backend/service/shared/cache) - B/op",
+            "value": 1736,
+            "unit": "B/op",
+            "extra": "18762 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisCacheService_ZRange (Qingyu_backend/service/shared/cache) - allocs/op",
+            "value": 59,
+            "unit": "allocs/op",
+            "extra": "18762 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCollectionService_AddToCollection (Qingyu_backend/service/social)",
+            "value": 33470,
+            "unit": "ns/op\t   10497 B/op\t     113 allocs/op",
+            "extra": "39690 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCollectionService_AddToCollection (Qingyu_backend/service/social) - ns/op",
+            "value": 33470,
+            "unit": "ns/op",
+            "extra": "39690 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCollectionService_AddToCollection (Qingyu_backend/service/social) - B/op",
+            "value": 10497,
+            "unit": "B/op",
+            "extra": "39690 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCollectionService_AddToCollection (Qingyu_backend/service/social) - allocs/op",
+            "value": 113,
+            "unit": "allocs/op",
+            "extra": "39690 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCollectionService_AddToCollection (Qingyu_backend/service/social)",
+            "value": 32358,
+            "unit": "ns/op\t   10085 B/op\t     113 allocs/op",
+            "extra": "38991 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCollectionService_AddToCollection (Qingyu_backend/service/social) - ns/op",
+            "value": 32358,
+            "unit": "ns/op",
+            "extra": "38991 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCollectionService_AddToCollection (Qingyu_backend/service/social) - B/op",
+            "value": 10085,
+            "unit": "B/op",
+            "extra": "38991 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCollectionService_AddToCollection (Qingyu_backend/service/social) - allocs/op",
+            "value": 113,
+            "unit": "allocs/op",
+            "extra": "38991 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCollectionService_AddToCollection (Qingyu_backend/service/social)",
+            "value": 30765,
+            "unit": "ns/op\t   10077 B/op\t     113 allocs/op",
+            "extra": "39309 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCollectionService_AddToCollection (Qingyu_backend/service/social) - ns/op",
+            "value": 30765,
+            "unit": "ns/op",
+            "extra": "39309 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCollectionService_AddToCollection (Qingyu_backend/service/social) - B/op",
+            "value": 10077,
+            "unit": "B/op",
+            "extra": "39309 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCollectionService_AddToCollection (Qingyu_backend/service/social) - allocs/op",
+            "value": 113,
+            "unit": "allocs/op",
+            "extra": "39309 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCollectionService_AddToCollection (Qingyu_backend/service/social)",
+            "value": 31343,
+            "unit": "ns/op\t   10074 B/op\t     113 allocs/op",
+            "extra": "39118 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCollectionService_AddToCollection (Qingyu_backend/service/social) - ns/op",
+            "value": 31343,
+            "unit": "ns/op",
+            "extra": "39118 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCollectionService_AddToCollection (Qingyu_backend/service/social) - B/op",
+            "value": 10074,
+            "unit": "B/op",
+            "extra": "39118 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCollectionService_AddToCollection (Qingyu_backend/service/social) - allocs/op",
+            "value": 113,
+            "unit": "allocs/op",
+            "extra": "39118 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCollectionService_AddToCollection (Qingyu_backend/service/social)",
+            "value": 31737,
+            "unit": "ns/op\t   10414 B/op\t     113 allocs/op",
+            "extra": "32685 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCollectionService_AddToCollection (Qingyu_backend/service/social) - ns/op",
+            "value": 31737,
+            "unit": "ns/op",
+            "extra": "32685 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCollectionService_AddToCollection (Qingyu_backend/service/social) - B/op",
+            "value": 10414,
+            "unit": "B/op",
+            "extra": "32685 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCollectionService_AddToCollection (Qingyu_backend/service/social) - allocs/op",
+            "value": 113,
+            "unit": "allocs/op",
+            "extra": "32685 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLikeService_LikeBook (Qingyu_backend/service/social)",
+            "value": 26051,
+            "unit": "ns/op\t    8698 B/op\t      95 allocs/op",
+            "extra": "45652 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLikeService_LikeBook (Qingyu_backend/service/social) - ns/op",
+            "value": 26051,
+            "unit": "ns/op",
+            "extra": "45652 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLikeService_LikeBook (Qingyu_backend/service/social) - B/op",
+            "value": 8698,
+            "unit": "B/op",
+            "extra": "45652 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLikeService_LikeBook (Qingyu_backend/service/social) - allocs/op",
+            "value": 95,
+            "unit": "allocs/op",
+            "extra": "45652 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLikeService_LikeBook (Qingyu_backend/service/social)",
+            "value": 26101,
+            "unit": "ns/op\t    8720 B/op\t      95 allocs/op",
+            "extra": "45063 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLikeService_LikeBook (Qingyu_backend/service/social) - ns/op",
+            "value": 26101,
+            "unit": "ns/op",
+            "extra": "45063 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLikeService_LikeBook (Qingyu_backend/service/social) - B/op",
+            "value": 8720,
+            "unit": "B/op",
+            "extra": "45063 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLikeService_LikeBook (Qingyu_backend/service/social) - allocs/op",
+            "value": 95,
+            "unit": "allocs/op",
+            "extra": "45063 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLikeService_LikeBook (Qingyu_backend/service/social)",
+            "value": 26566,
+            "unit": "ns/op\t    8683 B/op\t      95 allocs/op",
+            "extra": "46112 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLikeService_LikeBook (Qingyu_backend/service/social) - ns/op",
+            "value": 26566,
+            "unit": "ns/op",
+            "extra": "46112 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLikeService_LikeBook (Qingyu_backend/service/social) - B/op",
+            "value": 8683,
+            "unit": "B/op",
+            "extra": "46112 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLikeService_LikeBook (Qingyu_backend/service/social) - allocs/op",
+            "value": 95,
+            "unit": "allocs/op",
+            "extra": "46112 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLikeService_LikeBook (Qingyu_backend/service/social)",
+            "value": 28231,
+            "unit": "ns/op\t    8689 B/op\t      95 allocs/op",
+            "extra": "45895 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLikeService_LikeBook (Qingyu_backend/service/social) - ns/op",
+            "value": 28231,
+            "unit": "ns/op",
+            "extra": "45895 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLikeService_LikeBook (Qingyu_backend/service/social) - B/op",
+            "value": 8689,
+            "unit": "B/op",
+            "extra": "45895 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLikeService_LikeBook (Qingyu_backend/service/social) - allocs/op",
+            "value": 95,
+            "unit": "allocs/op",
+            "extra": "45895 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLikeService_LikeBook (Qingyu_backend/service/social)",
+            "value": 26667,
+            "unit": "ns/op\t    8742 B/op\t      95 allocs/op",
+            "extra": "44472 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLikeService_LikeBook (Qingyu_backend/service/social) - ns/op",
+            "value": 26667,
+            "unit": "ns/op",
+            "extra": "44472 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLikeService_LikeBook (Qingyu_backend/service/social) - B/op",
+            "value": 8742,
+            "unit": "B/op",
+            "extra": "44472 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLikeService_LikeBook (Qingyu_backend/service/social) - allocs/op",
+            "value": 95,
+            "unit": "allocs/op",
+            "extra": "44472 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLikeService_GetBookLikeCount (Qingyu_backend/service/social)",
+            "value": 11112,
+            "unit": "ns/op\t    4023 B/op\t      42 allocs/op",
+            "extra": "102242 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLikeService_GetBookLikeCount (Qingyu_backend/service/social) - ns/op",
+            "value": 11112,
+            "unit": "ns/op",
+            "extra": "102242 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLikeService_GetBookLikeCount (Qingyu_backend/service/social) - B/op",
+            "value": 4023,
+            "unit": "B/op",
+            "extra": "102242 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLikeService_GetBookLikeCount (Qingyu_backend/service/social) - allocs/op",
+            "value": 42,
+            "unit": "allocs/op",
+            "extra": "102242 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLikeService_GetBookLikeCount (Qingyu_backend/service/social)",
+            "value": 11380,
+            "unit": "ns/op\t    4042 B/op\t      42 allocs/op",
+            "extra": "100398 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLikeService_GetBookLikeCount (Qingyu_backend/service/social) - ns/op",
+            "value": 11380,
+            "unit": "ns/op",
+            "extra": "100398 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLikeService_GetBookLikeCount (Qingyu_backend/service/social) - B/op",
+            "value": 4042,
+            "unit": "B/op",
+            "extra": "100398 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLikeService_GetBookLikeCount (Qingyu_backend/service/social) - allocs/op",
+            "value": 42,
+            "unit": "allocs/op",
+            "extra": "100398 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLikeService_GetBookLikeCount (Qingyu_backend/service/social)",
+            "value": 11255,
+            "unit": "ns/op\t    4045 B/op\t      42 allocs/op",
+            "extra": "100128 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLikeService_GetBookLikeCount (Qingyu_backend/service/social) - ns/op",
+            "value": 11255,
+            "unit": "ns/op",
+            "extra": "100128 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLikeService_GetBookLikeCount (Qingyu_backend/service/social) - B/op",
+            "value": 4045,
+            "unit": "B/op",
+            "extra": "100128 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLikeService_GetBookLikeCount (Qingyu_backend/service/social) - allocs/op",
+            "value": 42,
+            "unit": "allocs/op",
+            "extra": "100128 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLikeService_GetBookLikeCount (Qingyu_backend/service/social)",
+            "value": 11243,
+            "unit": "ns/op\t    3994 B/op\t      42 allocs/op",
+            "extra": "104708 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLikeService_GetBookLikeCount (Qingyu_backend/service/social) - ns/op",
+            "value": 11243,
+            "unit": "ns/op",
+            "extra": "104708 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLikeService_GetBookLikeCount (Qingyu_backend/service/social) - B/op",
+            "value": 3994,
+            "unit": "B/op",
+            "extra": "104708 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLikeService_GetBookLikeCount (Qingyu_backend/service/social) - allocs/op",
+            "value": 42,
+            "unit": "allocs/op",
+            "extra": "104708 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLikeService_GetBookLikeCount (Qingyu_backend/service/social)",
+            "value": 10995,
+            "unit": "ns/op\t    4028 B/op\t      42 allocs/op",
+            "extra": "101824 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLikeService_GetBookLikeCount (Qingyu_backend/service/social) - ns/op",
+            "value": 10995,
+            "unit": "ns/op",
+            "extra": "101824 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLikeService_GetBookLikeCount (Qingyu_backend/service/social) - B/op",
+            "value": 4028,
+            "unit": "B/op",
+            "extra": "101824 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkLikeService_GetBookLikeCount (Qingyu_backend/service/social) - allocs/op",
+            "value": 42,
+            "unit": "allocs/op",
+            "extra": "101824 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_CacheHit (Qingyu_backend/service/social)",
+            "value": 13875,
+            "unit": "ns/op\t    4468 B/op\t      50 allocs/op",
+            "extra": "81692 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_CacheHit (Qingyu_backend/service/social) - ns/op",
+            "value": 13875,
+            "unit": "ns/op",
+            "extra": "81692 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_CacheHit (Qingyu_backend/service/social) - B/op",
+            "value": 4468,
+            "unit": "B/op",
+            "extra": "81692 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_CacheHit (Qingyu_backend/service/social) - allocs/op",
+            "value": 50,
+            "unit": "allocs/op",
+            "extra": "81692 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_CacheHit (Qingyu_backend/service/social)",
+            "value": 14852,
+            "unit": "ns/op\t    4480 B/op\t      50 allocs/op",
+            "extra": "80662 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_CacheHit (Qingyu_backend/service/social) - ns/op",
+            "value": 14852,
+            "unit": "ns/op",
+            "extra": "80662 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_CacheHit (Qingyu_backend/service/social) - B/op",
+            "value": 4480,
+            "unit": "B/op",
+            "extra": "80662 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_CacheHit (Qingyu_backend/service/social) - allocs/op",
+            "value": 50,
+            "unit": "allocs/op",
+            "extra": "80662 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_CacheHit (Qingyu_backend/service/social)",
+            "value": 14174,
+            "unit": "ns/op\t    4486 B/op\t      50 allocs/op",
+            "extra": "80030 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_CacheHit (Qingyu_backend/service/social) - ns/op",
+            "value": 14174,
+            "unit": "ns/op",
+            "extra": "80030 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_CacheHit (Qingyu_backend/service/social) - B/op",
+            "value": 4486,
+            "unit": "B/op",
+            "extra": "80030 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_CacheHit (Qingyu_backend/service/social) - allocs/op",
+            "value": 50,
+            "unit": "allocs/op",
+            "extra": "80030 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_CacheHit (Qingyu_backend/service/social)",
+            "value": 14115,
+            "unit": "ns/op\t    4462 B/op\t      50 allocs/op",
+            "extra": "82186 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_CacheHit (Qingyu_backend/service/social) - ns/op",
+            "value": 14115,
+            "unit": "ns/op",
+            "extra": "82186 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_CacheHit (Qingyu_backend/service/social) - B/op",
+            "value": 4462,
+            "unit": "B/op",
+            "extra": "82186 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_CacheHit (Qingyu_backend/service/social) - allocs/op",
+            "value": 50,
+            "unit": "allocs/op",
+            "extra": "82186 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_CacheHit (Qingyu_backend/service/social)",
+            "value": 14096,
+            "unit": "ns/op\t    4457 B/op\t      50 allocs/op",
+            "extra": "82760 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_CacheHit (Qingyu_backend/service/social) - ns/op",
+            "value": 14096,
+            "unit": "ns/op",
+            "extra": "82760 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_CacheHit (Qingyu_backend/service/social) - B/op",
+            "value": 4457,
+            "unit": "B/op",
+            "extra": "82760 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_CacheHit (Qingyu_backend/service/social) - allocs/op",
+            "value": 50,
+            "unit": "allocs/op",
+            "extra": "82760 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_CacheMiss (Qingyu_backend/service/social)",
+            "value": 40502,
+            "unit": "ns/op\t   13273 B/op\t     138 allocs/op",
+            "extra": "29451 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_CacheMiss (Qingyu_backend/service/social) - ns/op",
+            "value": 40502,
+            "unit": "ns/op",
+            "extra": "29451 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_CacheMiss (Qingyu_backend/service/social) - B/op",
+            "value": 13273,
+            "unit": "B/op",
+            "extra": "29451 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_CacheMiss (Qingyu_backend/service/social) - allocs/op",
+            "value": 138,
+            "unit": "allocs/op",
+            "extra": "29451 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_CacheMiss (Qingyu_backend/service/social)",
+            "value": 40474,
+            "unit": "ns/op\t   13283 B/op\t     138 allocs/op",
+            "extra": "29305 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_CacheMiss (Qingyu_backend/service/social) - ns/op",
+            "value": 40474,
+            "unit": "ns/op",
+            "extra": "29305 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_CacheMiss (Qingyu_backend/service/social) - B/op",
+            "value": 13283,
+            "unit": "B/op",
+            "extra": "29305 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_CacheMiss (Qingyu_backend/service/social) - allocs/op",
+            "value": 138,
+            "unit": "allocs/op",
+            "extra": "29305 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_CacheMiss (Qingyu_backend/service/social)",
+            "value": 40817,
+            "unit": "ns/op\t   13223 B/op\t     138 allocs/op",
+            "extra": "30000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_CacheMiss (Qingyu_backend/service/social) - ns/op",
+            "value": 40817,
+            "unit": "ns/op",
+            "extra": "30000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_CacheMiss (Qingyu_backend/service/social) - B/op",
+            "value": 13223,
+            "unit": "B/op",
+            "extra": "30000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_CacheMiss (Qingyu_backend/service/social) - allocs/op",
+            "value": 138,
+            "unit": "allocs/op",
+            "extra": "30000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_CacheMiss (Qingyu_backend/service/social)",
+            "value": 43247,
+            "unit": "ns/op\t   13260 B/op\t     138 allocs/op",
+            "extra": "29646 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_CacheMiss (Qingyu_backend/service/social) - ns/op",
+            "value": 43247,
+            "unit": "ns/op",
+            "extra": "29646 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_CacheMiss (Qingyu_backend/service/social) - B/op",
+            "value": 13260,
+            "unit": "B/op",
+            "extra": "29646 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_CacheMiss (Qingyu_backend/service/social) - allocs/op",
+            "value": 138,
+            "unit": "allocs/op",
+            "extra": "29646 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_CacheMiss (Qingyu_backend/service/social)",
+            "value": 40576,
+            "unit": "ns/op\t   13249 B/op\t     138 allocs/op",
+            "extra": "29596 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_CacheMiss (Qingyu_backend/service/social) - ns/op",
+            "value": 40576,
+            "unit": "ns/op",
+            "extra": "29596 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_CacheMiss (Qingyu_backend/service/social) - B/op",
+            "value": 13249,
+            "unit": "B/op",
+            "extra": "29596 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_CacheMiss (Qingyu_backend/service/social) - allocs/op",
+            "value": 138,
+            "unit": "allocs/op",
+            "extra": "29596 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_Book_CacheMiss (Qingyu_backend/service/social)",
+            "value": 43471,
+            "unit": "ns/op\t   14146 B/op\t     161 allocs/op",
+            "extra": "27648 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_Book_CacheMiss (Qingyu_backend/service/social) - ns/op",
+            "value": 43471,
+            "unit": "ns/op",
+            "extra": "27648 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_Book_CacheMiss (Qingyu_backend/service/social) - B/op",
+            "value": 14146,
+            "unit": "B/op",
+            "extra": "27648 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_Book_CacheMiss (Qingyu_backend/service/social) - allocs/op",
+            "value": 161,
+            "unit": "allocs/op",
+            "extra": "27648 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_Book_CacheMiss (Qingyu_backend/service/social)",
+            "value": 43336,
+            "unit": "ns/op\t   14188 B/op\t     161 allocs/op",
+            "extra": "27290 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_Book_CacheMiss (Qingyu_backend/service/social) - ns/op",
+            "value": 43336,
+            "unit": "ns/op",
+            "extra": "27290 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_Book_CacheMiss (Qingyu_backend/service/social) - B/op",
+            "value": 14188,
+            "unit": "B/op",
+            "extra": "27290 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_Book_CacheMiss (Qingyu_backend/service/social) - allocs/op",
+            "value": 161,
+            "unit": "allocs/op",
+            "extra": "27290 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_Book_CacheMiss (Qingyu_backend/service/social)",
+            "value": 43461,
+            "unit": "ns/op\t   14177 B/op\t     161 allocs/op",
+            "extra": "27218 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_Book_CacheMiss (Qingyu_backend/service/social) - ns/op",
+            "value": 43461,
+            "unit": "ns/op",
+            "extra": "27218 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_Book_CacheMiss (Qingyu_backend/service/social) - B/op",
+            "value": 14177,
+            "unit": "B/op",
+            "extra": "27218 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_Book_CacheMiss (Qingyu_backend/service/social) - allocs/op",
+            "value": 161,
+            "unit": "allocs/op",
+            "extra": "27218 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_Book_CacheMiss (Qingyu_backend/service/social)",
+            "value": 43708,
+            "unit": "ns/op\t   14168 B/op\t     161 allocs/op",
+            "extra": "27397 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_Book_CacheMiss (Qingyu_backend/service/social) - ns/op",
+            "value": 43708,
+            "unit": "ns/op",
+            "extra": "27397 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_Book_CacheMiss (Qingyu_backend/service/social) - B/op",
+            "value": 14168,
+            "unit": "B/op",
+            "extra": "27397 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_Book_CacheMiss (Qingyu_backend/service/social) - allocs/op",
+            "value": 161,
+            "unit": "allocs/op",
+            "extra": "27397 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_Book_CacheMiss (Qingyu_backend/service/social)",
+            "value": 44252,
+            "unit": "ns/op\t   14179 B/op\t     161 allocs/op",
+            "extra": "27338 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_Book_CacheMiss (Qingyu_backend/service/social) - ns/op",
+            "value": 44252,
+            "unit": "ns/op",
+            "extra": "27338 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_Book_CacheMiss (Qingyu_backend/service/social) - B/op",
+            "value": 14179,
+            "unit": "B/op",
+            "extra": "27338 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_Book_CacheMiss (Qingyu_backend/service/social) - allocs/op",
+            "value": 161,
+            "unit": "allocs/op",
+            "extra": "27338 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_Concurrent_CacheHit (Qingyu_backend/service/social)",
+            "value": 19023,
+            "unit": "ns/op\t    4878 B/op\t      59 allocs/op",
+            "extra": "61284 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_Concurrent_CacheHit (Qingyu_backend/service/social) - ns/op",
+            "value": 19023,
+            "unit": "ns/op",
+            "extra": "61284 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_Concurrent_CacheHit (Qingyu_backend/service/social) - B/op",
+            "value": 4878,
+            "unit": "B/op",
+            "extra": "61284 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_Concurrent_CacheHit (Qingyu_backend/service/social) - allocs/op",
+            "value": 59,
+            "unit": "allocs/op",
+            "extra": "61284 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_Concurrent_CacheHit (Qingyu_backend/service/social)",
+            "value": 19463,
+            "unit": "ns/op\t    4876 B/op\t      59 allocs/op",
+            "extra": "61436 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_Concurrent_CacheHit (Qingyu_backend/service/social) - ns/op",
+            "value": 19463,
+            "unit": "ns/op",
+            "extra": "61436 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_Concurrent_CacheHit (Qingyu_backend/service/social) - B/op",
+            "value": 4876,
+            "unit": "B/op",
+            "extra": "61436 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_Concurrent_CacheHit (Qingyu_backend/service/social) - allocs/op",
+            "value": 59,
+            "unit": "allocs/op",
+            "extra": "61436 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_Concurrent_CacheHit (Qingyu_backend/service/social)",
+            "value": 19138,
+            "unit": "ns/op\t    4873 B/op\t      59 allocs/op",
+            "extra": "61716 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_Concurrent_CacheHit (Qingyu_backend/service/social) - ns/op",
+            "value": 19138,
+            "unit": "ns/op",
+            "extra": "61716 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_Concurrent_CacheHit (Qingyu_backend/service/social) - B/op",
+            "value": 4873,
+            "unit": "B/op",
+            "extra": "61716 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_Concurrent_CacheHit (Qingyu_backend/service/social) - allocs/op",
+            "value": 59,
+            "unit": "allocs/op",
+            "extra": "61716 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_Concurrent_CacheHit (Qingyu_backend/service/social)",
+            "value": 19241,
+            "unit": "ns/op\t    4872 B/op\t      59 allocs/op",
+            "extra": "61675 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_Concurrent_CacheHit (Qingyu_backend/service/social) - ns/op",
+            "value": 19241,
+            "unit": "ns/op",
+            "extra": "61675 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_Concurrent_CacheHit (Qingyu_backend/service/social) - B/op",
+            "value": 4872,
+            "unit": "B/op",
+            "extra": "61675 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_Concurrent_CacheHit (Qingyu_backend/service/social) - allocs/op",
+            "value": 59,
+            "unit": "allocs/op",
+            "extra": "61675 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_Concurrent_CacheHit (Qingyu_backend/service/social)",
+            "value": 19389,
+            "unit": "ns/op\t    4924 B/op\t      59 allocs/op",
+            "extra": "58256 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_Concurrent_CacheHit (Qingyu_backend/service/social) - ns/op",
+            "value": 19389,
+            "unit": "ns/op",
+            "extra": "58256 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_Concurrent_CacheHit (Qingyu_backend/service/social) - B/op",
+            "value": 4924,
+            "unit": "B/op",
+            "extra": "58256 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRatingStats_Concurrent_CacheHit (Qingyu_backend/service/social) - allocs/op",
+            "value": 59,
+            "unit": "allocs/op",
+            "extra": "58256 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSerializeStats (Qingyu_backend/service/social)",
+            "value": 1812,
+            "unit": "ns/op\t     720 B/op\t      14 allocs/op",
+            "extra": "622777 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSerializeStats (Qingyu_backend/service/social) - ns/op",
+            "value": 1812,
+            "unit": "ns/op",
+            "extra": "622777 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSerializeStats (Qingyu_backend/service/social) - B/op",
+            "value": 720,
+            "unit": "B/op",
+            "extra": "622777 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSerializeStats (Qingyu_backend/service/social) - allocs/op",
+            "value": 14,
+            "unit": "allocs/op",
+            "extra": "622777 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSerializeStats (Qingyu_backend/service/social)",
+            "value": 1820,
+            "unit": "ns/op\t     720 B/op\t      14 allocs/op",
+            "extra": "626785 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSerializeStats (Qingyu_backend/service/social) - ns/op",
+            "value": 1820,
+            "unit": "ns/op",
+            "extra": "626785 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSerializeStats (Qingyu_backend/service/social) - B/op",
+            "value": 720,
+            "unit": "B/op",
+            "extra": "626785 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSerializeStats (Qingyu_backend/service/social) - allocs/op",
+            "value": 14,
+            "unit": "allocs/op",
+            "extra": "626785 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSerializeStats (Qingyu_backend/service/social)",
+            "value": 2049,
+            "unit": "ns/op\t     720 B/op\t      14 allocs/op",
+            "extra": "632326 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSerializeStats (Qingyu_backend/service/social) - ns/op",
+            "value": 2049,
+            "unit": "ns/op",
+            "extra": "632326 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSerializeStats (Qingyu_backend/service/social) - B/op",
+            "value": 720,
+            "unit": "B/op",
+            "extra": "632326 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSerializeStats (Qingyu_backend/service/social) - allocs/op",
+            "value": 14,
+            "unit": "allocs/op",
+            "extra": "632326 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSerializeStats (Qingyu_backend/service/social)",
+            "value": 1818,
+            "unit": "ns/op\t     720 B/op\t      14 allocs/op",
+            "extra": "625461 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSerializeStats (Qingyu_backend/service/social) - ns/op",
+            "value": 1818,
+            "unit": "ns/op",
+            "extra": "625461 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSerializeStats (Qingyu_backend/service/social) - B/op",
+            "value": 720,
+            "unit": "B/op",
+            "extra": "625461 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSerializeStats (Qingyu_backend/service/social) - allocs/op",
+            "value": 14,
+            "unit": "allocs/op",
+            "extra": "625461 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSerializeStats (Qingyu_backend/service/social)",
+            "value": 1834,
+            "unit": "ns/op\t     720 B/op\t      14 allocs/op",
+            "extra": "612385 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSerializeStats (Qingyu_backend/service/social) - ns/op",
+            "value": 1834,
+            "unit": "ns/op",
+            "extra": "612385 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSerializeStats (Qingyu_backend/service/social) - B/op",
+            "value": 720,
+            "unit": "B/op",
+            "extra": "612385 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkSerializeStats (Qingyu_backend/service/social) - allocs/op",
+            "value": 14,
+            "unit": "allocs/op",
+            "extra": "612385 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDeserializeStats (Qingyu_backend/service/social)",
+            "value": 3939,
+            "unit": "ns/op\t     768 B/op\t      17 allocs/op",
+            "extra": "304198 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDeserializeStats (Qingyu_backend/service/social) - ns/op",
+            "value": 3939,
+            "unit": "ns/op",
+            "extra": "304198 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDeserializeStats (Qingyu_backend/service/social) - B/op",
+            "value": 768,
+            "unit": "B/op",
+            "extra": "304198 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDeserializeStats (Qingyu_backend/service/social) - allocs/op",
+            "value": 17,
+            "unit": "allocs/op",
+            "extra": "304198 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDeserializeStats (Qingyu_backend/service/social)",
+            "value": 3948,
+            "unit": "ns/op\t     768 B/op\t      17 allocs/op",
+            "extra": "301092 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDeserializeStats (Qingyu_backend/service/social) - ns/op",
+            "value": 3948,
+            "unit": "ns/op",
+            "extra": "301092 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDeserializeStats (Qingyu_backend/service/social) - B/op",
+            "value": 768,
+            "unit": "B/op",
+            "extra": "301092 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDeserializeStats (Qingyu_backend/service/social) - allocs/op",
+            "value": 17,
+            "unit": "allocs/op",
+            "extra": "301092 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDeserializeStats (Qingyu_backend/service/social)",
+            "value": 3953,
+            "unit": "ns/op\t     768 B/op\t      17 allocs/op",
+            "extra": "304202 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDeserializeStats (Qingyu_backend/service/social) - ns/op",
+            "value": 3953,
+            "unit": "ns/op",
+            "extra": "304202 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDeserializeStats (Qingyu_backend/service/social) - B/op",
+            "value": 768,
+            "unit": "B/op",
+            "extra": "304202 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDeserializeStats (Qingyu_backend/service/social) - allocs/op",
+            "value": 17,
+            "unit": "allocs/op",
+            "extra": "304202 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDeserializeStats (Qingyu_backend/service/social)",
+            "value": 3913,
+            "unit": "ns/op\t     768 B/op\t      17 allocs/op",
+            "extra": "299559 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDeserializeStats (Qingyu_backend/service/social) - ns/op",
+            "value": 3913,
+            "unit": "ns/op",
+            "extra": "299559 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDeserializeStats (Qingyu_backend/service/social) - B/op",
+            "value": 768,
+            "unit": "B/op",
+            "extra": "299559 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDeserializeStats (Qingyu_backend/service/social) - allocs/op",
+            "value": 17,
+            "unit": "allocs/op",
+            "extra": "299559 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDeserializeStats (Qingyu_backend/service/social)",
+            "value": 3940,
+            "unit": "ns/op\t     768 B/op\t      17 allocs/op",
+            "extra": "303668 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDeserializeStats (Qingyu_backend/service/social) - ns/op",
+            "value": 3940,
+            "unit": "ns/op",
+            "extra": "303668 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDeserializeStats (Qingyu_backend/service/social) - B/op",
+            "value": 768,
+            "unit": "B/op",
+            "extra": "303668 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDeserializeStats (Qingyu_backend/service/social) - allocs/op",
+            "value": 17,
+            "unit": "allocs/op",
+            "extra": "303668 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkInvalidateCache (Qingyu_backend/service/social)",
+            "value": 11469,
+            "unit": "ns/op\t    3856 B/op\t      42 allocs/op",
+            "extra": "104431 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkInvalidateCache (Qingyu_backend/service/social) - ns/op",
+            "value": 11469,
+            "unit": "ns/op",
+            "extra": "104431 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkInvalidateCache (Qingyu_backend/service/social) - B/op",
+            "value": 3856,
+            "unit": "B/op",
+            "extra": "104431 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkInvalidateCache (Qingyu_backend/service/social) - allocs/op",
+            "value": 42,
+            "unit": "allocs/op",
+            "extra": "104431 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkInvalidateCache (Qingyu_backend/service/social)",
+            "value": 10865,
+            "unit": "ns/op\t    3856 B/op\t      42 allocs/op",
+            "extra": "104193 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkInvalidateCache (Qingyu_backend/service/social) - ns/op",
+            "value": 10865,
+            "unit": "ns/op",
+            "extra": "104193 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkInvalidateCache (Qingyu_backend/service/social) - B/op",
+            "value": 3856,
+            "unit": "B/op",
+            "extra": "104193 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkInvalidateCache (Qingyu_backend/service/social) - allocs/op",
+            "value": 42,
+            "unit": "allocs/op",
+            "extra": "104193 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkInvalidateCache (Qingyu_backend/service/social)",
+            "value": 11115,
+            "unit": "ns/op\t    3895 B/op\t      42 allocs/op",
+            "extra": "100471 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkInvalidateCache (Qingyu_backend/service/social) - ns/op",
+            "value": 11115,
+            "unit": "ns/op",
+            "extra": "100471 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkInvalidateCache (Qingyu_backend/service/social) - B/op",
+            "value": 3895,
+            "unit": "B/op",
+            "extra": "100471 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkInvalidateCache (Qingyu_backend/service/social) - allocs/op",
+            "value": 42,
+            "unit": "allocs/op",
+            "extra": "100471 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkInvalidateCache (Qingyu_backend/service/social)",
+            "value": 10937,
+            "unit": "ns/op\t    3875 B/op\t      42 allocs/op",
+            "extra": "102603 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkInvalidateCache (Qingyu_backend/service/social) - ns/op",
+            "value": 10937,
+            "unit": "ns/op",
+            "extra": "102603 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkInvalidateCache (Qingyu_backend/service/social) - B/op",
+            "value": 3875,
+            "unit": "B/op",
+            "extra": "102603 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkInvalidateCache (Qingyu_backend/service/social) - allocs/op",
+            "value": 42,
+            "unit": "allocs/op",
+            "extra": "102603 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkInvalidateCache (Qingyu_backend/service/social)",
+            "value": 10850,
+            "unit": "ns/op\t    3867 B/op\t      42 allocs/op",
+            "extra": "103062 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkInvalidateCache (Qingyu_backend/service/social) - ns/op",
+            "value": 10850,
+            "unit": "ns/op",
+            "extra": "103062 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkInvalidateCache (Qingyu_backend/service/social) - B/op",
+            "value": 3867,
+            "unit": "B/op",
+            "extra": "103062 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkInvalidateCache (Qingyu_backend/service/social) - allocs/op",
+            "value": 42,
+            "unit": "allocs/op",
+            "extra": "103062 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserErrorCreation (Qingyu_backend/service/user)",
+            "value": 145.8,
+            "unit": "ns/op\t     112 B/op\t       3 allocs/op",
+            "extra": "8241121 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserErrorCreation (Qingyu_backend/service/user) - ns/op",
+            "value": 145.8,
+            "unit": "ns/op",
+            "extra": "8241121 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserErrorCreation (Qingyu_backend/service/user) - B/op",
+            "value": 112,
+            "unit": "B/op",
+            "extra": "8241121 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserErrorCreation (Qingyu_backend/service/user) - allocs/op",
+            "value": 3,
+            "unit": "allocs/op",
+            "extra": "8241121 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserErrorCreation (Qingyu_backend/service/user)",
+            "value": 146.1,
+            "unit": "ns/op\t     112 B/op\t       3 allocs/op",
+            "extra": "8180064 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserErrorCreation (Qingyu_backend/service/user) - ns/op",
+            "value": 146.1,
+            "unit": "ns/op",
+            "extra": "8180064 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserErrorCreation (Qingyu_backend/service/user) - B/op",
+            "value": 112,
+            "unit": "B/op",
+            "extra": "8180064 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserErrorCreation (Qingyu_backend/service/user) - allocs/op",
+            "value": 3,
+            "unit": "allocs/op",
+            "extra": "8180064 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserErrorCreation (Qingyu_backend/service/user)",
+            "value": 147.6,
+            "unit": "ns/op\t     112 B/op\t       3 allocs/op",
+            "extra": "8071039 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserErrorCreation (Qingyu_backend/service/user) - ns/op",
+            "value": 147.6,
+            "unit": "ns/op",
+            "extra": "8071039 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserErrorCreation (Qingyu_backend/service/user) - B/op",
+            "value": 112,
+            "unit": "B/op",
+            "extra": "8071039 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserErrorCreation (Qingyu_backend/service/user) - allocs/op",
+            "value": 3,
+            "unit": "allocs/op",
+            "extra": "8071039 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserErrorCreation (Qingyu_backend/service/user)",
+            "value": 163.5,
+            "unit": "ns/op\t     112 B/op\t       3 allocs/op",
+            "extra": "8181354 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserErrorCreation (Qingyu_backend/service/user) - ns/op",
+            "value": 163.5,
+            "unit": "ns/op",
+            "extra": "8181354 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserErrorCreation (Qingyu_backend/service/user) - B/op",
+            "value": 112,
+            "unit": "B/op",
+            "extra": "8181354 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserErrorCreation (Qingyu_backend/service/user) - allocs/op",
+            "value": 3,
+            "unit": "allocs/op",
+            "extra": "8181354 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserErrorCreation (Qingyu_backend/service/user)",
+            "value": 173.1,
+            "unit": "ns/op\t     112 B/op\t       3 allocs/op",
+            "extra": "8127948 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserErrorCreation (Qingyu_backend/service/user) - ns/op",
+            "value": 173.1,
+            "unit": "ns/op",
+            "extra": "8127948 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserErrorCreation (Qingyu_backend/service/user) - B/op",
+            "value": 112,
+            "unit": "B/op",
+            "extra": "8127948 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserErrorCreation (Qingyu_backend/service/user) - allocs/op",
+            "value": 3,
+            "unit": "allocs/op",
+            "extra": "8127948 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserErrorWithCause (Qingyu_backend/service/user)",
+            "value": 0.3124,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserErrorWithCause (Qingyu_backend/service/user) - ns/op",
+            "value": 0.3124,
+            "unit": "ns/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserErrorWithCause (Qingyu_backend/service/user) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserErrorWithCause (Qingyu_backend/service/user) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserErrorWithCause (Qingyu_backend/service/user)",
+            "value": 0.3119,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserErrorWithCause (Qingyu_backend/service/user) - ns/op",
+            "value": 0.3119,
+            "unit": "ns/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserErrorWithCause (Qingyu_backend/service/user) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserErrorWithCause (Qingyu_backend/service/user) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserErrorWithCause (Qingyu_backend/service/user)",
+            "value": 0.3135,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserErrorWithCause (Qingyu_backend/service/user) - ns/op",
+            "value": 0.3135,
+            "unit": "ns/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserErrorWithCause (Qingyu_backend/service/user) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserErrorWithCause (Qingyu_backend/service/user) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserErrorWithCause (Qingyu_backend/service/user)",
+            "value": 0.3138,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserErrorWithCause (Qingyu_backend/service/user) - ns/op",
+            "value": 0.3138,
+            "unit": "ns/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserErrorWithCause (Qingyu_backend/service/user) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserErrorWithCause (Qingyu_backend/service/user) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserErrorWithCause (Qingyu_backend/service/user)",
+            "value": 0.3134,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserErrorWithCause (Qingyu_backend/service/user) - ns/op",
+            "value": 0.3134,
+            "unit": "ns/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserErrorWithCause (Qingyu_backend/service/user) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserErrorWithCause (Qingyu_backend/service/user) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "1000000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPasswordValidator_ValidateStrength (Qingyu_backend/service/user)",
+            "value": 2614,
+            "unit": "ns/op\t    2337 B/op\t      28 allocs/op",
+            "extra": "447429 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPasswordValidator_ValidateStrength (Qingyu_backend/service/user) - ns/op",
+            "value": 2614,
+            "unit": "ns/op",
+            "extra": "447429 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPasswordValidator_ValidateStrength (Qingyu_backend/service/user) - B/op",
+            "value": 2337,
+            "unit": "B/op",
+            "extra": "447429 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPasswordValidator_ValidateStrength (Qingyu_backend/service/user) - allocs/op",
+            "value": 28,
+            "unit": "allocs/op",
+            "extra": "447429 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPasswordValidator_ValidateStrength (Qingyu_backend/service/user)",
+            "value": 2621,
+            "unit": "ns/op\t    2335 B/op\t      28 allocs/op",
+            "extra": "433269 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPasswordValidator_ValidateStrength (Qingyu_backend/service/user) - ns/op",
+            "value": 2621,
+            "unit": "ns/op",
+            "extra": "433269 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPasswordValidator_ValidateStrength (Qingyu_backend/service/user) - B/op",
+            "value": 2335,
+            "unit": "B/op",
+            "extra": "433269 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPasswordValidator_ValidateStrength (Qingyu_backend/service/user) - allocs/op",
+            "value": 28,
+            "unit": "allocs/op",
+            "extra": "433269 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPasswordValidator_ValidateStrength (Qingyu_backend/service/user)",
+            "value": 2607,
+            "unit": "ns/op\t    2336 B/op\t      28 allocs/op",
+            "extra": "443707 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPasswordValidator_ValidateStrength (Qingyu_backend/service/user) - ns/op",
+            "value": 2607,
+            "unit": "ns/op",
+            "extra": "443707 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPasswordValidator_ValidateStrength (Qingyu_backend/service/user) - B/op",
+            "value": 2336,
+            "unit": "B/op",
+            "extra": "443707 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPasswordValidator_ValidateStrength (Qingyu_backend/service/user) - allocs/op",
+            "value": 28,
+            "unit": "allocs/op",
+            "extra": "443707 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPasswordValidator_ValidateStrength (Qingyu_backend/service/user)",
+            "value": 2606,
+            "unit": "ns/op\t    2335 B/op\t      28 allocs/op",
+            "extra": "457488 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPasswordValidator_ValidateStrength (Qingyu_backend/service/user) - ns/op",
+            "value": 2606,
+            "unit": "ns/op",
+            "extra": "457488 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPasswordValidator_ValidateStrength (Qingyu_backend/service/user) - B/op",
+            "value": 2335,
+            "unit": "B/op",
+            "extra": "457488 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPasswordValidator_ValidateStrength (Qingyu_backend/service/user) - allocs/op",
+            "value": 28,
+            "unit": "allocs/op",
+            "extra": "457488 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPasswordValidator_ValidateStrength (Qingyu_backend/service/user)",
+            "value": 2615,
+            "unit": "ns/op\t    2338 B/op\t      28 allocs/op",
+            "extra": "434632 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPasswordValidator_ValidateStrength (Qingyu_backend/service/user) - ns/op",
+            "value": 2615,
+            "unit": "ns/op",
+            "extra": "434632 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPasswordValidator_ValidateStrength (Qingyu_backend/service/user) - B/op",
+            "value": 2338,
+            "unit": "B/op",
+            "extra": "434632 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPasswordValidator_ValidateStrength (Qingyu_backend/service/user) - allocs/op",
+            "value": 28,
+            "unit": "allocs/op",
+            "extra": "434632 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPasswordValidator_GetStrengthScore (Qingyu_backend/service/user)",
+            "value": 5015,
+            "unit": "ns/op\t    3350 B/op\t      41 allocs/op",
+            "extra": "263892 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPasswordValidator_GetStrengthScore (Qingyu_backend/service/user) - ns/op",
+            "value": 5015,
+            "unit": "ns/op",
+            "extra": "263892 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPasswordValidator_GetStrengthScore (Qingyu_backend/service/user) - B/op",
+            "value": 3350,
+            "unit": "B/op",
+            "extra": "263892 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPasswordValidator_GetStrengthScore (Qingyu_backend/service/user) - allocs/op",
+            "value": 41,
+            "unit": "allocs/op",
+            "extra": "263892 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPasswordValidator_GetStrengthScore (Qingyu_backend/service/user)",
+            "value": 4542,
+            "unit": "ns/op\t    3353 B/op\t      41 allocs/op",
+            "extra": "264376 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPasswordValidator_GetStrengthScore (Qingyu_backend/service/user) - ns/op",
+            "value": 4542,
+            "unit": "ns/op",
+            "extra": "264376 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPasswordValidator_GetStrengthScore (Qingyu_backend/service/user) - B/op",
+            "value": 3353,
+            "unit": "B/op",
+            "extra": "264376 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPasswordValidator_GetStrengthScore (Qingyu_backend/service/user) - allocs/op",
+            "value": 41,
+            "unit": "allocs/op",
+            "extra": "264376 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPasswordValidator_GetStrengthScore (Qingyu_backend/service/user)",
+            "value": 4494,
+            "unit": "ns/op\t    3355 B/op\t      41 allocs/op",
+            "extra": "264861 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPasswordValidator_GetStrengthScore (Qingyu_backend/service/user) - ns/op",
+            "value": 4494,
+            "unit": "ns/op",
+            "extra": "264861 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPasswordValidator_GetStrengthScore (Qingyu_backend/service/user) - B/op",
+            "value": 3355,
+            "unit": "B/op",
+            "extra": "264861 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPasswordValidator_GetStrengthScore (Qingyu_backend/service/user) - allocs/op",
+            "value": 41,
+            "unit": "allocs/op",
+            "extra": "264861 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPasswordValidator_GetStrengthScore (Qingyu_backend/service/user)",
+            "value": 4505,
+            "unit": "ns/op\t    3351 B/op\t      41 allocs/op",
+            "extra": "264770 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPasswordValidator_GetStrengthScore (Qingyu_backend/service/user) - ns/op",
+            "value": 4505,
+            "unit": "ns/op",
+            "extra": "264770 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPasswordValidator_GetStrengthScore (Qingyu_backend/service/user) - B/op",
+            "value": 3351,
+            "unit": "B/op",
+            "extra": "264770 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPasswordValidator_GetStrengthScore (Qingyu_backend/service/user) - allocs/op",
+            "value": 41,
+            "unit": "allocs/op",
+            "extra": "264770 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPasswordValidator_GetStrengthScore (Qingyu_backend/service/user)",
+            "value": 4514,
+            "unit": "ns/op\t    3352 B/op\t      41 allocs/op",
+            "extra": "261871 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPasswordValidator_GetStrengthScore (Qingyu_backend/service/user) - ns/op",
+            "value": 4514,
+            "unit": "ns/op",
+            "extra": "261871 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPasswordValidator_GetStrengthScore (Qingyu_backend/service/user) - B/op",
+            "value": 3352,
+            "unit": "B/op",
+            "extra": "261871 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPasswordValidator_GetStrengthScore (Qingyu_backend/service/user) - allocs/op",
+            "value": 41,
+            "unit": "allocs/op",
+            "extra": "261871 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCreateDuplicateDocument (Qingyu_backend/service/writer/document)",
+            "value": 1035,
+            "unit": "ns/op\t    1795 B/op\t      12 allocs/op",
+            "extra": "1000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCreateDuplicateDocument (Qingyu_backend/service/writer/document) - ns/op",
+            "value": 1035,
+            "unit": "ns/op",
+            "extra": "1000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCreateDuplicateDocument (Qingyu_backend/service/writer/document) - B/op",
+            "value": 1795,
+            "unit": "B/op",
+            "extra": "1000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCreateDuplicateDocument (Qingyu_backend/service/writer/document) - allocs/op",
+            "value": 12,
+            "unit": "allocs/op",
+            "extra": "1000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCreateDuplicateDocument (Qingyu_backend/service/writer/document)",
+            "value": 1034,
+            "unit": "ns/op\t    1795 B/op\t      12 allocs/op",
+            "extra": "1000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCreateDuplicateDocument (Qingyu_backend/service/writer/document) - ns/op",
+            "value": 1034,
+            "unit": "ns/op",
+            "extra": "1000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCreateDuplicateDocument (Qingyu_backend/service/writer/document) - B/op",
+            "value": 1795,
+            "unit": "B/op",
+            "extra": "1000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCreateDuplicateDocument (Qingyu_backend/service/writer/document) - allocs/op",
+            "value": 12,
+            "unit": "allocs/op",
+            "extra": "1000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCreateDuplicateDocument (Qingyu_backend/service/writer/document)",
+            "value": 1032,
+            "unit": "ns/op\t    1795 B/op\t      12 allocs/op",
+            "extra": "1000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCreateDuplicateDocument (Qingyu_backend/service/writer/document) - ns/op",
+            "value": 1032,
+            "unit": "ns/op",
+            "extra": "1000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCreateDuplicateDocument (Qingyu_backend/service/writer/document) - B/op",
+            "value": 1795,
+            "unit": "B/op",
+            "extra": "1000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCreateDuplicateDocument (Qingyu_backend/service/writer/document) - allocs/op",
+            "value": 12,
+            "unit": "allocs/op",
+            "extra": "1000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCreateDuplicateDocument (Qingyu_backend/service/writer/document)",
+            "value": 1037,
+            "unit": "ns/op\t    1795 B/op\t      12 allocs/op",
+            "extra": "1000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCreateDuplicateDocument (Qingyu_backend/service/writer/document) - ns/op",
+            "value": 1037,
+            "unit": "ns/op",
+            "extra": "1000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCreateDuplicateDocument (Qingyu_backend/service/writer/document) - B/op",
+            "value": 1795,
+            "unit": "B/op",
+            "extra": "1000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCreateDuplicateDocument (Qingyu_backend/service/writer/document) - allocs/op",
+            "value": 12,
+            "unit": "allocs/op",
+            "extra": "1000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCreateDuplicateDocument (Qingyu_backend/service/writer/document)",
+            "value": 1178,
+            "unit": "ns/op\t    1795 B/op\t      12 allocs/op",
+            "extra": "1000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCreateDuplicateDocument (Qingyu_backend/service/writer/document) - ns/op",
+            "value": 1178,
+            "unit": "ns/op",
+            "extra": "1000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCreateDuplicateDocument (Qingyu_backend/service/writer/document) - B/op",
+            "value": 1795,
+            "unit": "B/op",
+            "extra": "1000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCreateDuplicateDocument (Qingyu_backend/service/writer/document) - allocs/op",
+            "value": 12,
+            "unit": "allocs/op",
+            "extra": "1000000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkTokenOperations/ValidateToken (Qingyu_backend/test/baseline)",
+            "value": 2.197,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "547754511 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkTokenOperations/ValidateToken (Qingyu_backend/test/baseline) - ns/op",
+            "value": 2.197,
+            "unit": "ns/op",
+            "extra": "547754511 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkTokenOperations/ValidateToken (Qingyu_backend/test/baseline) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "547754511 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkTokenOperations/ValidateToken (Qingyu_backend/test/baseline) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "547754511 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkTokenOperations/ValidateToken (Qingyu_backend/test/baseline)",
+            "value": 2.181,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "549159326 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkTokenOperations/ValidateToken (Qingyu_backend/test/baseline) - ns/op",
+            "value": 2.181,
+            "unit": "ns/op",
+            "extra": "549159326 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkTokenOperations/ValidateToken (Qingyu_backend/test/baseline) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "549159326 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkTokenOperations/ValidateToken (Qingyu_backend/test/baseline) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "549159326 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkTokenOperations/ValidateToken (Qingyu_backend/test/baseline)",
+            "value": 2.181,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "550341487 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkTokenOperations/ValidateToken (Qingyu_backend/test/baseline) - ns/op",
+            "value": 2.181,
+            "unit": "ns/op",
+            "extra": "550341487 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkTokenOperations/ValidateToken (Qingyu_backend/test/baseline) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "550341487 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkTokenOperations/ValidateToken (Qingyu_backend/test/baseline) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "550341487 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkTokenOperations/ValidateToken (Qingyu_backend/test/baseline)",
+            "value": 2.188,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "548757223 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkTokenOperations/ValidateToken (Qingyu_backend/test/baseline) - ns/op",
+            "value": 2.188,
+            "unit": "ns/op",
+            "extra": "548757223 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkTokenOperations/ValidateToken (Qingyu_backend/test/baseline) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "548757223 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkTokenOperations/ValidateToken (Qingyu_backend/test/baseline) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "548757223 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkTokenOperations/ValidateToken (Qingyu_backend/test/baseline)",
+            "value": 2.186,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "549131733 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkTokenOperations/ValidateToken (Qingyu_backend/test/baseline) - ns/op",
+            "value": 2.186,
+            "unit": "ns/op",
+            "extra": "549131733 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkTokenOperations/ValidateToken (Qingyu_backend/test/baseline) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "549131733 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkTokenOperations/ValidateToken (Qingyu_backend/test/baseline) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "549131733 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkTokenOperations/CheckPermission (Qingyu_backend/test/baseline)",
+            "value": 3.432,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "348883988 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkTokenOperations/CheckPermission (Qingyu_backend/test/baseline) - ns/op",
+            "value": 3.432,
+            "unit": "ns/op",
+            "extra": "348883988 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkTokenOperations/CheckPermission (Qingyu_backend/test/baseline) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "348883988 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkTokenOperations/CheckPermission (Qingyu_backend/test/baseline) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "348883988 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkTokenOperations/CheckPermission (Qingyu_backend/test/baseline)",
+            "value": 3.626,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "348832915 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkTokenOperations/CheckPermission (Qingyu_backend/test/baseline) - ns/op",
+            "value": 3.626,
+            "unit": "ns/op",
+            "extra": "348832915 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkTokenOperations/CheckPermission (Qingyu_backend/test/baseline) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "348832915 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkTokenOperations/CheckPermission (Qingyu_backend/test/baseline) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "348832915 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkTokenOperations/CheckPermission (Qingyu_backend/test/baseline)",
+            "value": 3.433,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "317319476 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkTokenOperations/CheckPermission (Qingyu_backend/test/baseline) - ns/op",
+            "value": 3.433,
+            "unit": "ns/op",
+            "extra": "317319476 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkTokenOperations/CheckPermission (Qingyu_backend/test/baseline) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "317319476 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkTokenOperations/CheckPermission (Qingyu_backend/test/baseline) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "317319476 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkTokenOperations/CheckPermission (Qingyu_backend/test/baseline)",
+            "value": 3.43,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "349678750 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkTokenOperations/CheckPermission (Qingyu_backend/test/baseline) - ns/op",
+            "value": 3.43,
+            "unit": "ns/op",
+            "extra": "349678750 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkTokenOperations/CheckPermission (Qingyu_backend/test/baseline) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "349678750 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkTokenOperations/CheckPermission (Qingyu_backend/test/baseline) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "349678750 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkTokenOperations/CheckPermission (Qingyu_backend/test/baseline)",
+            "value": 3.439,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "348165804 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkTokenOperations/CheckPermission (Qingyu_backend/test/baseline) - ns/op",
+            "value": 3.439,
+            "unit": "ns/op",
+            "extra": "348165804 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkTokenOperations/CheckPermission (Qingyu_backend/test/baseline) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "348165804 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkTokenOperations/CheckPermission (Qingyu_backend/test/baseline) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "348165804 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/UploadSmallFile (Qingyu_backend/test/baseline)",
+            "value": 4.057,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "293907333 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/UploadSmallFile (Qingyu_backend/test/baseline) - ns/op",
+            "value": 4.057,
+            "unit": "ns/op",
+            "extra": "293907333 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/UploadSmallFile (Qingyu_backend/test/baseline) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "293907333 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/UploadSmallFile (Qingyu_backend/test/baseline) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "293907333 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/UploadSmallFile (Qingyu_backend/test/baseline)",
+            "value": 4.056,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "295907742 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/UploadSmallFile (Qingyu_backend/test/baseline) - ns/op",
+            "value": 4.056,
+            "unit": "ns/op",
+            "extra": "295907742 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/UploadSmallFile (Qingyu_backend/test/baseline) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "295907742 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/UploadSmallFile (Qingyu_backend/test/baseline) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "295907742 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/UploadSmallFile (Qingyu_backend/test/baseline)",
+            "value": 4.051,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "296042343 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/UploadSmallFile (Qingyu_backend/test/baseline) - ns/op",
+            "value": 4.051,
+            "unit": "ns/op",
+            "extra": "296042343 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/UploadSmallFile (Qingyu_backend/test/baseline) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "296042343 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/UploadSmallFile (Qingyu_backend/test/baseline) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "296042343 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/UploadSmallFile (Qingyu_backend/test/baseline)",
+            "value": 4.251,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "295226151 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/UploadSmallFile (Qingyu_backend/test/baseline) - ns/op",
+            "value": 4.251,
+            "unit": "ns/op",
+            "extra": "295226151 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/UploadSmallFile (Qingyu_backend/test/baseline) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "295226151 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/UploadSmallFile (Qingyu_backend/test/baseline) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "295226151 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/UploadSmallFile (Qingyu_backend/test/baseline)",
+            "value": 4.064,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "295960789 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/UploadSmallFile (Qingyu_backend/test/baseline) - ns/op",
+            "value": 4.064,
+            "unit": "ns/op",
+            "extra": "295960789 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/UploadSmallFile (Qingyu_backend/test/baseline) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "295960789 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/UploadSmallFile (Qingyu_backend/test/baseline) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "295960789 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/UploadLargeFile (Qingyu_backend/test/baseline)",
+            "value": 3.741,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "319712344 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/UploadLargeFile (Qingyu_backend/test/baseline) - ns/op",
+            "value": 3.741,
+            "unit": "ns/op",
+            "extra": "319712344 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/UploadLargeFile (Qingyu_backend/test/baseline) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "319712344 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/UploadLargeFile (Qingyu_backend/test/baseline) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "319712344 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/UploadLargeFile (Qingyu_backend/test/baseline)",
+            "value": 3.746,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "320927065 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/UploadLargeFile (Qingyu_backend/test/baseline) - ns/op",
+            "value": 3.746,
+            "unit": "ns/op",
+            "extra": "320927065 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/UploadLargeFile (Qingyu_backend/test/baseline) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "320927065 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/UploadLargeFile (Qingyu_backend/test/baseline) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "320927065 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/UploadLargeFile (Qingyu_backend/test/baseline)",
+            "value": 3.752,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "320443825 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/UploadLargeFile (Qingyu_backend/test/baseline) - ns/op",
+            "value": 3.752,
+            "unit": "ns/op",
+            "extra": "320443825 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/UploadLargeFile (Qingyu_backend/test/baseline) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "320443825 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/UploadLargeFile (Qingyu_backend/test/baseline) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "320443825 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/UploadLargeFile (Qingyu_backend/test/baseline)",
+            "value": 3.748,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "320609608 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/UploadLargeFile (Qingyu_backend/test/baseline) - ns/op",
+            "value": 3.748,
+            "unit": "ns/op",
+            "extra": "320609608 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/UploadLargeFile (Qingyu_backend/test/baseline) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "320609608 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/UploadLargeFile (Qingyu_backend/test/baseline) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "320609608 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/UploadLargeFile (Qingyu_backend/test/baseline)",
+            "value": 3.83,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "319192999 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/UploadLargeFile (Qingyu_backend/test/baseline) - ns/op",
+            "value": 3.83,
+            "unit": "ns/op",
+            "extra": "319192999 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/UploadLargeFile (Qingyu_backend/test/baseline) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "319192999 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/UploadLargeFile (Qingyu_backend/test/baseline) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "319192999 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/DownloadFile (Qingyu_backend/test/baseline)",
+            "value": 14.81,
+            "unit": "ns/op\t       4 B/op\t       1 allocs/op",
+            "extra": "83396482 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/DownloadFile (Qingyu_backend/test/baseline) - ns/op",
+            "value": 14.81,
+            "unit": "ns/op",
+            "extra": "83396482 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/DownloadFile (Qingyu_backend/test/baseline) - B/op",
+            "value": 4,
+            "unit": "B/op",
+            "extra": "83396482 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/DownloadFile (Qingyu_backend/test/baseline) - allocs/op",
+            "value": 1,
+            "unit": "allocs/op",
+            "extra": "83396482 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/DownloadFile (Qingyu_backend/test/baseline)",
+            "value": 13.95,
+            "unit": "ns/op\t       4 B/op\t       1 allocs/op",
+            "extra": "82865911 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/DownloadFile (Qingyu_backend/test/baseline) - ns/op",
+            "value": 13.95,
+            "unit": "ns/op",
+            "extra": "82865911 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/DownloadFile (Qingyu_backend/test/baseline) - B/op",
+            "value": 4,
+            "unit": "B/op",
+            "extra": "82865911 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/DownloadFile (Qingyu_backend/test/baseline) - allocs/op",
+            "value": 1,
+            "unit": "allocs/op",
+            "extra": "82865911 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/DownloadFile (Qingyu_backend/test/baseline)",
+            "value": 13.94,
+            "unit": "ns/op\t       4 B/op\t       1 allocs/op",
+            "extra": "82001631 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/DownloadFile (Qingyu_backend/test/baseline) - ns/op",
+            "value": 13.94,
+            "unit": "ns/op",
+            "extra": "82001631 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/DownloadFile (Qingyu_backend/test/baseline) - B/op",
+            "value": 4,
+            "unit": "B/op",
+            "extra": "82001631 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/DownloadFile (Qingyu_backend/test/baseline) - allocs/op",
+            "value": 1,
+            "unit": "allocs/op",
+            "extra": "82001631 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/DownloadFile (Qingyu_backend/test/baseline)",
+            "value": 13.94,
+            "unit": "ns/op\t       4 B/op\t       1 allocs/op",
+            "extra": "82136804 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/DownloadFile (Qingyu_backend/test/baseline) - ns/op",
+            "value": 13.94,
+            "unit": "ns/op",
+            "extra": "82136804 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/DownloadFile (Qingyu_backend/test/baseline) - B/op",
+            "value": 4,
+            "unit": "B/op",
+            "extra": "82136804 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/DownloadFile (Qingyu_backend/test/baseline) - allocs/op",
+            "value": 1,
+            "unit": "allocs/op",
+            "extra": "82136804 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/DownloadFile (Qingyu_backend/test/baseline)",
+            "value": 13.89,
+            "unit": "ns/op\t       4 B/op\t       1 allocs/op",
+            "extra": "75171536 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/DownloadFile (Qingyu_backend/test/baseline) - ns/op",
+            "value": 13.89,
+            "unit": "ns/op",
+            "extra": "75171536 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/DownloadFile (Qingyu_backend/test/baseline) - B/op",
+            "value": 4,
+            "unit": "B/op",
+            "extra": "75171536 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStorageOperations/DownloadFile (Qingyu_backend/test/baseline) - allocs/op",
+            "value": 1,
+            "unit": "allocs/op",
+            "extra": "75171536 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_Login (Qingyu_backend/test/integration)",
+            "value": 8294,
+            "unit": "ns/op\t    3248 B/op\t      32 allocs/op",
+            "extra": "148111 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_Login (Qingyu_backend/test/integration) - ns/op",
+            "value": 8294,
+            "unit": "ns/op",
+            "extra": "148111 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_Login (Qingyu_backend/test/integration) - B/op",
+            "value": 3248,
+            "unit": "B/op",
+            "extra": "148111 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_Login (Qingyu_backend/test/integration) - allocs/op",
+            "value": 32,
+            "unit": "allocs/op",
+            "extra": "148111 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_Login (Qingyu_backend/test/integration)",
+            "value": 8160,
+            "unit": "ns/op\t    3242 B/op\t      32 allocs/op",
+            "extra": "149055 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_Login (Qingyu_backend/test/integration) - ns/op",
+            "value": 8160,
+            "unit": "ns/op",
+            "extra": "149055 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_Login (Qingyu_backend/test/integration) - B/op",
+            "value": 3242,
+            "unit": "B/op",
+            "extra": "149055 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_Login (Qingyu_backend/test/integration) - allocs/op",
+            "value": 32,
+            "unit": "allocs/op",
+            "extra": "149055 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_Login (Qingyu_backend/test/integration)",
+            "value": 8710,
+            "unit": "ns/op\t    3226 B/op\t      32 allocs/op",
+            "extra": "151800 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_Login (Qingyu_backend/test/integration) - ns/op",
+            "value": 8710,
+            "unit": "ns/op",
+            "extra": "151800 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_Login (Qingyu_backend/test/integration) - B/op",
+            "value": 3226,
+            "unit": "B/op",
+            "extra": "151800 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_Login (Qingyu_backend/test/integration) - allocs/op",
+            "value": 32,
+            "unit": "allocs/op",
+            "extra": "151800 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_Login (Qingyu_backend/test/integration)",
+            "value": 9974,
+            "unit": "ns/op\t    3275 B/op\t      32 allocs/op",
+            "extra": "143739 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_Login (Qingyu_backend/test/integration) - ns/op",
+            "value": 9974,
+            "unit": "ns/op",
+            "extra": "143739 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_Login (Qingyu_backend/test/integration) - B/op",
+            "value": 3275,
+            "unit": "B/op",
+            "extra": "143739 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_Login (Qingyu_backend/test/integration) - allocs/op",
+            "value": 32,
+            "unit": "allocs/op",
+            "extra": "143739 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_Login (Qingyu_backend/test/integration)",
+            "value": 8204,
+            "unit": "ns/op\t    3251 B/op\t      32 allocs/op",
+            "extra": "147637 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_Login (Qingyu_backend/test/integration) - ns/op",
+            "value": 8204,
+            "unit": "ns/op",
+            "extra": "147637 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_Login (Qingyu_backend/test/integration) - B/op",
+            "value": 3251,
+            "unit": "B/op",
+            "extra": "147637 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_Login (Qingyu_backend/test/integration) - allocs/op",
+            "value": 32,
+            "unit": "allocs/op",
+            "extra": "147637 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_ValidateToken (Qingyu_backend/test/integration)",
+            "value": 8086,
+            "unit": "ns/op\t    3112 B/op\t      30 allocs/op",
+            "extra": "154761 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_ValidateToken (Qingyu_backend/test/integration) - ns/op",
+            "value": 8086,
+            "unit": "ns/op",
+            "extra": "154761 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_ValidateToken (Qingyu_backend/test/integration) - B/op",
+            "value": 3112,
+            "unit": "B/op",
+            "extra": "154761 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_ValidateToken (Qingyu_backend/test/integration) - allocs/op",
+            "value": 30,
+            "unit": "allocs/op",
+            "extra": "154761 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_ValidateToken (Qingyu_backend/test/integration)",
+            "value": 8039,
+            "unit": "ns/op\t    3115 B/op\t      30 allocs/op",
+            "extra": "154328 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_ValidateToken (Qingyu_backend/test/integration) - ns/op",
+            "value": 8039,
+            "unit": "ns/op",
+            "extra": "154328 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_ValidateToken (Qingyu_backend/test/integration) - B/op",
+            "value": 3115,
+            "unit": "B/op",
+            "extra": "154328 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_ValidateToken (Qingyu_backend/test/integration) - allocs/op",
+            "value": 30,
+            "unit": "allocs/op",
+            "extra": "154328 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_ValidateToken (Qingyu_backend/test/integration)",
+            "value": 8142,
+            "unit": "ns/op\t    3124 B/op\t      30 allocs/op",
+            "extra": "152698 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_ValidateToken (Qingyu_backend/test/integration) - ns/op",
+            "value": 8142,
+            "unit": "ns/op",
+            "extra": "152698 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_ValidateToken (Qingyu_backend/test/integration) - B/op",
+            "value": 3124,
+            "unit": "B/op",
+            "extra": "152698 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_ValidateToken (Qingyu_backend/test/integration) - allocs/op",
+            "value": 30,
+            "unit": "allocs/op",
+            "extra": "152698 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_ValidateToken (Qingyu_backend/test/integration)",
+            "value": 8055,
+            "unit": "ns/op\t    3119 B/op\t      30 allocs/op",
+            "extra": "153577 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_ValidateToken (Qingyu_backend/test/integration) - ns/op",
+            "value": 8055,
+            "unit": "ns/op",
+            "extra": "153577 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_ValidateToken (Qingyu_backend/test/integration) - B/op",
+            "value": 3119,
+            "unit": "B/op",
+            "extra": "153577 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_ValidateToken (Qingyu_backend/test/integration) - allocs/op",
+            "value": 30,
+            "unit": "allocs/op",
+            "extra": "153577 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_ValidateToken (Qingyu_backend/test/integration)",
+            "value": 8173,
+            "unit": "ns/op\t    3165 B/op\t      30 allocs/op",
+            "extra": "145866 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_ValidateToken (Qingyu_backend/test/integration) - ns/op",
+            "value": 8173,
+            "unit": "ns/op",
+            "extra": "145866 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_ValidateToken (Qingyu_backend/test/integration) - B/op",
+            "value": 3165,
+            "unit": "B/op",
+            "extra": "145866 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_ValidateToken (Qingyu_backend/test/integration) - allocs/op",
+            "value": 30,
+            "unit": "allocs/op",
+            "extra": "145866 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_Register (Qingyu_backend/test/integration)",
+            "value": 9014,
+            "unit": "ns/op\t    3575 B/op\t      39 allocs/op",
+            "extra": "139070 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_Register (Qingyu_backend/test/integration) - ns/op",
+            "value": 9014,
+            "unit": "ns/op",
+            "extra": "139070 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_Register (Qingyu_backend/test/integration) - B/op",
+            "value": 3575,
+            "unit": "B/op",
+            "extra": "139070 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_Register (Qingyu_backend/test/integration) - allocs/op",
+            "value": 39,
+            "unit": "allocs/op",
+            "extra": "139070 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_Register (Qingyu_backend/test/integration)",
+            "value": 9789,
+            "unit": "ns/op\t    3593 B/op\t      39 allocs/op",
+            "extra": "136488 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_Register (Qingyu_backend/test/integration) - ns/op",
+            "value": 9789,
+            "unit": "ns/op",
+            "extra": "136488 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_Register (Qingyu_backend/test/integration) - B/op",
+            "value": 3593,
+            "unit": "B/op",
+            "extra": "136488 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_Register (Qingyu_backend/test/integration) - allocs/op",
+            "value": 39,
+            "unit": "allocs/op",
+            "extra": "136488 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_Register (Qingyu_backend/test/integration)",
+            "value": 9192,
+            "unit": "ns/op\t    3583 B/op\t      39 allocs/op",
+            "extra": "137905 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_Register (Qingyu_backend/test/integration) - ns/op",
+            "value": 9192,
+            "unit": "ns/op",
+            "extra": "137905 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_Register (Qingyu_backend/test/integration) - B/op",
+            "value": 3583,
+            "unit": "B/op",
+            "extra": "137905 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_Register (Qingyu_backend/test/integration) - allocs/op",
+            "value": 39,
+            "unit": "allocs/op",
+            "extra": "137905 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_Register (Qingyu_backend/test/integration)",
+            "value": 9115,
+            "unit": "ns/op\t    3573 B/op\t      39 allocs/op",
+            "extra": "139506 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_Register (Qingyu_backend/test/integration) - ns/op",
+            "value": 9115,
+            "unit": "ns/op",
+            "extra": "139506 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_Register (Qingyu_backend/test/integration) - B/op",
+            "value": 3573,
+            "unit": "B/op",
+            "extra": "139506 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_Register (Qingyu_backend/test/integration) - allocs/op",
+            "value": 39,
+            "unit": "allocs/op",
+            "extra": "139506 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_Register (Qingyu_backend/test/integration)",
+            "value": 9077,
+            "unit": "ns/op\t    3586 B/op\t      39 allocs/op",
+            "extra": "137462 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_Register (Qingyu_backend/test/integration) - ns/op",
+            "value": 9077,
+            "unit": "ns/op",
+            "extra": "137462 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_Register (Qingyu_backend/test/integration) - B/op",
+            "value": 3586,
+            "unit": "B/op",
+            "extra": "137462 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkAuthService_Register (Qingyu_backend/test/integration) - allocs/op",
+            "value": 39,
+            "unit": "allocs/op",
+            "extra": "137462 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_GetBalance (Qingyu_backend/test/integration)",
+            "value": 8112,
+            "unit": "ns/op\t    3114 B/op\t      30 allocs/op",
+            "extra": "150444 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_GetBalance (Qingyu_backend/test/integration) - ns/op",
+            "value": 8112,
+            "unit": "ns/op",
+            "extra": "150444 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_GetBalance (Qingyu_backend/test/integration) - B/op",
+            "value": 3114,
+            "unit": "B/op",
+            "extra": "150444 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_GetBalance (Qingyu_backend/test/integration) - allocs/op",
+            "value": 30,
+            "unit": "allocs/op",
+            "extra": "150444 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_GetBalance (Qingyu_backend/test/integration)",
+            "value": 8161,
+            "unit": "ns/op\t    3101 B/op\t      30 allocs/op",
+            "extra": "152695 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_GetBalance (Qingyu_backend/test/integration) - ns/op",
+            "value": 8161,
+            "unit": "ns/op",
+            "extra": "152695 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_GetBalance (Qingyu_backend/test/integration) - B/op",
+            "value": 3101,
+            "unit": "B/op",
+            "extra": "152695 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_GetBalance (Qingyu_backend/test/integration) - allocs/op",
+            "value": 30,
+            "unit": "allocs/op",
+            "extra": "152695 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_GetBalance (Qingyu_backend/test/integration)",
+            "value": 8107,
+            "unit": "ns/op\t    3134 B/op\t      30 allocs/op",
+            "extra": "146953 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_GetBalance (Qingyu_backend/test/integration) - ns/op",
+            "value": 8107,
+            "unit": "ns/op",
+            "extra": "146953 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_GetBalance (Qingyu_backend/test/integration) - B/op",
+            "value": 3134,
+            "unit": "B/op",
+            "extra": "146953 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_GetBalance (Qingyu_backend/test/integration) - allocs/op",
+            "value": 30,
+            "unit": "allocs/op",
+            "extra": "146953 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_GetBalance (Qingyu_backend/test/integration)",
+            "value": 8276,
+            "unit": "ns/op\t    3302 B/op\t      30 allocs/op",
+            "extra": "156117 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_GetBalance (Qingyu_backend/test/integration) - ns/op",
+            "value": 8276,
+            "unit": "ns/op",
+            "extra": "156117 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_GetBalance (Qingyu_backend/test/integration) - B/op",
+            "value": 3302,
+            "unit": "B/op",
+            "extra": "156117 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_GetBalance (Qingyu_backend/test/integration) - allocs/op",
+            "value": 30,
+            "unit": "allocs/op",
+            "extra": "156117 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_GetBalance (Qingyu_backend/test/integration)",
+            "value": 8080,
+            "unit": "ns/op\t    3165 B/op\t      30 allocs/op",
+            "extra": "142298 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_GetBalance (Qingyu_backend/test/integration) - ns/op",
+            "value": 8080,
+            "unit": "ns/op",
+            "extra": "142298 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_GetBalance (Qingyu_backend/test/integration) - B/op",
+            "value": 3165,
+            "unit": "B/op",
+            "extra": "142298 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_GetBalance (Qingyu_backend/test/integration) - allocs/op",
+            "value": 30,
+            "unit": "allocs/op",
+            "extra": "142298 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Recharge (Qingyu_backend/test/integration)",
+            "value": 9936,
+            "unit": "ns/op\t    3982 B/op\t      44 allocs/op",
+            "extra": "126093 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Recharge (Qingyu_backend/test/integration) - ns/op",
+            "value": 9936,
+            "unit": "ns/op",
+            "extra": "126093 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Recharge (Qingyu_backend/test/integration) - B/op",
+            "value": 3982,
+            "unit": "B/op",
+            "extra": "126093 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Recharge (Qingyu_backend/test/integration) - allocs/op",
+            "value": 44,
+            "unit": "allocs/op",
+            "extra": "126093 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Recharge (Qingyu_backend/test/integration)",
+            "value": 9882,
+            "unit": "ns/op\t    3975 B/op\t      44 allocs/op",
+            "extra": "126748 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Recharge (Qingyu_backend/test/integration) - ns/op",
+            "value": 9882,
+            "unit": "ns/op",
+            "extra": "126748 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Recharge (Qingyu_backend/test/integration) - B/op",
+            "value": 3975,
+            "unit": "B/op",
+            "extra": "126748 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Recharge (Qingyu_backend/test/integration) - allocs/op",
+            "value": 44,
+            "unit": "allocs/op",
+            "extra": "126748 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Recharge (Qingyu_backend/test/integration)",
+            "value": 9773,
+            "unit": "ns/op\t    3785 B/op\t      44 allocs/op",
+            "extra": "123055 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Recharge (Qingyu_backend/test/integration) - ns/op",
+            "value": 9773,
+            "unit": "ns/op",
+            "extra": "123055 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Recharge (Qingyu_backend/test/integration) - B/op",
+            "value": 3785,
+            "unit": "B/op",
+            "extra": "123055 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Recharge (Qingyu_backend/test/integration) - allocs/op",
+            "value": 44,
+            "unit": "allocs/op",
+            "extra": "123055 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Recharge (Qingyu_backend/test/integration)",
+            "value": 9874,
+            "unit": "ns/op\t    3991 B/op\t      44 allocs/op",
+            "extra": "125077 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Recharge (Qingyu_backend/test/integration) - ns/op",
+            "value": 9874,
+            "unit": "ns/op",
+            "extra": "125077 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Recharge (Qingyu_backend/test/integration) - B/op",
+            "value": 3991,
+            "unit": "B/op",
+            "extra": "125077 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Recharge (Qingyu_backend/test/integration) - allocs/op",
+            "value": 44,
+            "unit": "allocs/op",
+            "extra": "125077 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Recharge (Qingyu_backend/test/integration)",
+            "value": 9983,
+            "unit": "ns/op\t    3995 B/op\t      44 allocs/op",
+            "extra": "124460 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Recharge (Qingyu_backend/test/integration) - ns/op",
+            "value": 9983,
+            "unit": "ns/op",
+            "extra": "124460 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Recharge (Qingyu_backend/test/integration) - B/op",
+            "value": 3995,
+            "unit": "B/op",
+            "extra": "124460 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Recharge (Qingyu_backend/test/integration) - allocs/op",
+            "value": 44,
+            "unit": "allocs/op",
+            "extra": "124460 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Consume (Qingyu_backend/test/integration)",
+            "value": 9930,
+            "unit": "ns/op\t    3979 B/op\t      44 allocs/op",
+            "extra": "125497 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Consume (Qingyu_backend/test/integration) - ns/op",
+            "value": 9930,
+            "unit": "ns/op",
+            "extra": "125497 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Consume (Qingyu_backend/test/integration) - B/op",
+            "value": 3979,
+            "unit": "B/op",
+            "extra": "125497 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Consume (Qingyu_backend/test/integration) - allocs/op",
+            "value": 44,
+            "unit": "allocs/op",
+            "extra": "125497 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Consume (Qingyu_backend/test/integration)",
+            "value": 10477,
+            "unit": "ns/op\t    3836 B/op\t      44 allocs/op",
+            "extra": "115218 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Consume (Qingyu_backend/test/integration) - ns/op",
+            "value": 10477,
+            "unit": "ns/op",
+            "extra": "115218 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Consume (Qingyu_backend/test/integration) - B/op",
+            "value": 3836,
+            "unit": "B/op",
+            "extra": "115218 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Consume (Qingyu_backend/test/integration) - allocs/op",
+            "value": 44,
+            "unit": "allocs/op",
+            "extra": "115218 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Consume (Qingyu_backend/test/integration)",
+            "value": 9870,
+            "unit": "ns/op\t    3775 B/op\t      44 allocs/op",
+            "extra": "123423 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Consume (Qingyu_backend/test/integration) - ns/op",
+            "value": 9870,
+            "unit": "ns/op",
+            "extra": "123423 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Consume (Qingyu_backend/test/integration) - B/op",
+            "value": 3775,
+            "unit": "B/op",
+            "extra": "123423 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Consume (Qingyu_backend/test/integration) - allocs/op",
+            "value": 44,
+            "unit": "allocs/op",
+            "extra": "123423 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Consume (Qingyu_backend/test/integration)",
+            "value": 9940,
+            "unit": "ns/op\t    3984 B/op\t      44 allocs/op",
+            "extra": "124959 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Consume (Qingyu_backend/test/integration) - ns/op",
+            "value": 9940,
+            "unit": "ns/op",
+            "extra": "124959 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Consume (Qingyu_backend/test/integration) - B/op",
+            "value": 3984,
+            "unit": "B/op",
+            "extra": "124959 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Consume (Qingyu_backend/test/integration) - allocs/op",
+            "value": 44,
+            "unit": "allocs/op",
+            "extra": "124959 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Consume (Qingyu_backend/test/integration)",
+            "value": 9801,
+            "unit": "ns/op\t    3774 B/op\t      44 allocs/op",
+            "extra": "123536 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Consume (Qingyu_backend/test/integration) - ns/op",
+            "value": 9801,
+            "unit": "ns/op",
+            "extra": "123536 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Consume (Qingyu_backend/test/integration) - B/op",
+            "value": 3774,
+            "unit": "B/op",
+            "extra": "123536 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Consume (Qingyu_backend/test/integration) - allocs/op",
+            "value": 44,
+            "unit": "allocs/op",
+            "extra": "123536 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Transfer (Qingyu_backend/test/integration)",
+            "value": 10498,
+            "unit": "ns/op\t    4230 B/op\t      51 allocs/op",
+            "extra": "116912 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Transfer (Qingyu_backend/test/integration) - ns/op",
+            "value": 10498,
+            "unit": "ns/op",
+            "extra": "116912 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Transfer (Qingyu_backend/test/integration) - B/op",
+            "value": 4230,
+            "unit": "B/op",
+            "extra": "116912 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Transfer (Qingyu_backend/test/integration) - allocs/op",
+            "value": 51,
+            "unit": "allocs/op",
+            "extra": "116912 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Transfer (Qingyu_backend/test/integration)",
+            "value": 10743,
+            "unit": "ns/op\t    4224 B/op\t      51 allocs/op",
+            "extra": "117536 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Transfer (Qingyu_backend/test/integration) - ns/op",
+            "value": 10743,
+            "unit": "ns/op",
+            "extra": "117536 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Transfer (Qingyu_backend/test/integration) - B/op",
+            "value": 4224,
+            "unit": "B/op",
+            "extra": "117536 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Transfer (Qingyu_backend/test/integration) - allocs/op",
+            "value": 51,
+            "unit": "allocs/op",
+            "extra": "117536 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Transfer (Qingyu_backend/test/integration)",
+            "value": 10693,
+            "unit": "ns/op\t    4261 B/op\t      51 allocs/op",
+            "extra": "113198 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Transfer (Qingyu_backend/test/integration) - ns/op",
+            "value": 10693,
+            "unit": "ns/op",
+            "extra": "113198 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Transfer (Qingyu_backend/test/integration) - B/op",
+            "value": 4261,
+            "unit": "B/op",
+            "extra": "113198 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Transfer (Qingyu_backend/test/integration) - allocs/op",
+            "value": 51,
+            "unit": "allocs/op",
+            "extra": "113198 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Transfer (Qingyu_backend/test/integration)",
+            "value": 11230,
+            "unit": "ns/op\t    4220 B/op\t      51 allocs/op",
+            "extra": "118322 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Transfer (Qingyu_backend/test/integration) - ns/op",
+            "value": 11230,
+            "unit": "ns/op",
+            "extra": "118322 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Transfer (Qingyu_backend/test/integration) - B/op",
+            "value": 4220,
+            "unit": "B/op",
+            "extra": "118322 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Transfer (Qingyu_backend/test/integration) - allocs/op",
+            "value": 51,
+            "unit": "allocs/op",
+            "extra": "118322 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Transfer (Qingyu_backend/test/integration)",
+            "value": 10722,
+            "unit": "ns/op\t    4322 B/op\t      51 allocs/op",
+            "extra": "106329 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Transfer (Qingyu_backend/test/integration) - ns/op",
+            "value": 10722,
+            "unit": "ns/op",
+            "extra": "106329 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Transfer (Qingyu_backend/test/integration) - B/op",
+            "value": 4322,
+            "unit": "B/op",
+            "extra": "106329 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkWalletService_Transfer (Qingyu_backend/test/integration) - allocs/op",
+            "value": 51,
+            "unit": "allocs/op",
+            "extra": "106329 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Set (Qingyu_backend/test/integration)",
+            "value": 150154,
+            "unit": "ns/op\t     250 B/op\t       7 allocs/op",
+            "extra": "7873 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Set (Qingyu_backend/test/integration) - ns/op",
+            "value": 150154,
+            "unit": "ns/op",
+            "extra": "7873 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Set (Qingyu_backend/test/integration) - B/op",
+            "value": 250,
+            "unit": "B/op",
+            "extra": "7873 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Set (Qingyu_backend/test/integration) - allocs/op",
+            "value": 7,
+            "unit": "allocs/op",
+            "extra": "7873 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Set (Qingyu_backend/test/integration)",
+            "value": 150185,
+            "unit": "ns/op\t     251 B/op\t       7 allocs/op",
+            "extra": "7920 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Set (Qingyu_backend/test/integration) - ns/op",
+            "value": 150185,
+            "unit": "ns/op",
+            "extra": "7920 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Set (Qingyu_backend/test/integration) - B/op",
+            "value": 251,
+            "unit": "B/op",
+            "extra": "7920 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Set (Qingyu_backend/test/integration) - allocs/op",
+            "value": 7,
+            "unit": "allocs/op",
+            "extra": "7920 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Set (Qingyu_backend/test/integration)",
+            "value": 147478,
+            "unit": "ns/op\t     250 B/op\t       7 allocs/op",
+            "extra": "7766 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Set (Qingyu_backend/test/integration) - ns/op",
+            "value": 147478,
+            "unit": "ns/op",
+            "extra": "7766 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Set (Qingyu_backend/test/integration) - B/op",
+            "value": 250,
+            "unit": "B/op",
+            "extra": "7766 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Set (Qingyu_backend/test/integration) - allocs/op",
+            "value": 7,
+            "unit": "allocs/op",
+            "extra": "7766 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Set (Qingyu_backend/test/integration)",
+            "value": 149502,
+            "unit": "ns/op\t     250 B/op\t       7 allocs/op",
+            "extra": "8011 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Set (Qingyu_backend/test/integration) - ns/op",
+            "value": 149502,
+            "unit": "ns/op",
+            "extra": "8011 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Set (Qingyu_backend/test/integration) - B/op",
+            "value": 250,
+            "unit": "B/op",
+            "extra": "8011 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Set (Qingyu_backend/test/integration) - allocs/op",
+            "value": 7,
+            "unit": "allocs/op",
+            "extra": "8011 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Set (Qingyu_backend/test/integration)",
+            "value": 149022,
+            "unit": "ns/op\t     250 B/op\t       7 allocs/op",
+            "extra": "8270 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Set (Qingyu_backend/test/integration) - ns/op",
+            "value": 149022,
+            "unit": "ns/op",
+            "extra": "8270 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Set (Qingyu_backend/test/integration) - B/op",
+            "value": 250,
+            "unit": "B/op",
+            "extra": "8270 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Set (Qingyu_backend/test/integration) - allocs/op",
+            "value": 7,
+            "unit": "allocs/op",
+            "extra": "8270 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Get (Qingyu_backend/test/integration)",
+            "value": 147322,
+            "unit": "ns/op\t     208 B/op\t       7 allocs/op",
+            "extra": "8344 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Get (Qingyu_backend/test/integration) - ns/op",
+            "value": 147322,
+            "unit": "ns/op",
+            "extra": "8344 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Get (Qingyu_backend/test/integration) - B/op",
+            "value": 208,
+            "unit": "B/op",
+            "extra": "8344 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Get (Qingyu_backend/test/integration) - allocs/op",
+            "value": 7,
+            "unit": "allocs/op",
+            "extra": "8344 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Get (Qingyu_backend/test/integration)",
+            "value": 145492,
+            "unit": "ns/op\t     208 B/op\t       7 allocs/op",
+            "extra": "8583 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Get (Qingyu_backend/test/integration) - ns/op",
+            "value": 145492,
+            "unit": "ns/op",
+            "extra": "8583 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Get (Qingyu_backend/test/integration) - B/op",
+            "value": 208,
+            "unit": "B/op",
+            "extra": "8583 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Get (Qingyu_backend/test/integration) - allocs/op",
+            "value": 7,
+            "unit": "allocs/op",
+            "extra": "8583 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Get (Qingyu_backend/test/integration)",
+            "value": 152428,
+            "unit": "ns/op\t     208 B/op\t       7 allocs/op",
+            "extra": "7866 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Get (Qingyu_backend/test/integration) - ns/op",
+            "value": 152428,
+            "unit": "ns/op",
+            "extra": "7866 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Get (Qingyu_backend/test/integration) - B/op",
+            "value": 208,
+            "unit": "B/op",
+            "extra": "7866 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Get (Qingyu_backend/test/integration) - allocs/op",
+            "value": 7,
+            "unit": "allocs/op",
+            "extra": "7866 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Get (Qingyu_backend/test/integration)",
+            "value": 144880,
+            "unit": "ns/op\t     208 B/op\t       7 allocs/op",
+            "extra": "8344 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Get (Qingyu_backend/test/integration) - ns/op",
+            "value": 144880,
+            "unit": "ns/op",
+            "extra": "8344 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Get (Qingyu_backend/test/integration) - B/op",
+            "value": 208,
+            "unit": "B/op",
+            "extra": "8344 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Get (Qingyu_backend/test/integration) - allocs/op",
+            "value": 7,
+            "unit": "allocs/op",
+            "extra": "8344 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Get (Qingyu_backend/test/integration)",
+            "value": 145598,
+            "unit": "ns/op\t     209 B/op\t       7 allocs/op",
+            "extra": "8018 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Get (Qingyu_backend/test/integration) - ns/op",
+            "value": 145598,
+            "unit": "ns/op",
+            "extra": "8018 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Get (Qingyu_backend/test/integration) - B/op",
+            "value": 209,
+            "unit": "B/op",
+            "extra": "8018 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Get (Qingyu_backend/test/integration) - allocs/op",
+            "value": 7,
+            "unit": "allocs/op",
+            "extra": "8018 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Incr (Qingyu_backend/test/integration)",
+            "value": 147005,
+            "unit": "ns/op\t     184 B/op\t       6 allocs/op",
+            "extra": "8450 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Incr (Qingyu_backend/test/integration) - ns/op",
+            "value": 147005,
+            "unit": "ns/op",
+            "extra": "8450 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Incr (Qingyu_backend/test/integration) - B/op",
+            "value": 184,
+            "unit": "B/op",
+            "extra": "8450 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Incr (Qingyu_backend/test/integration) - allocs/op",
+            "value": 6,
+            "unit": "allocs/op",
+            "extra": "8450 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Incr (Qingyu_backend/test/integration)",
+            "value": 147846,
+            "unit": "ns/op\t     184 B/op\t       6 allocs/op",
+            "extra": "7791 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Incr (Qingyu_backend/test/integration) - ns/op",
+            "value": 147846,
+            "unit": "ns/op",
+            "extra": "7791 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Incr (Qingyu_backend/test/integration) - B/op",
+            "value": 184,
+            "unit": "B/op",
+            "extra": "7791 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Incr (Qingyu_backend/test/integration) - allocs/op",
+            "value": 6,
+            "unit": "allocs/op",
+            "extra": "7791 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Incr (Qingyu_backend/test/integration)",
+            "value": 145844,
+            "unit": "ns/op\t     184 B/op\t       6 allocs/op",
+            "extra": "8212 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Incr (Qingyu_backend/test/integration) - ns/op",
+            "value": 145844,
+            "unit": "ns/op",
+            "extra": "8212 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Incr (Qingyu_backend/test/integration) - B/op",
+            "value": 184,
+            "unit": "B/op",
+            "extra": "8212 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Incr (Qingyu_backend/test/integration) - allocs/op",
+            "value": 6,
+            "unit": "allocs/op",
+            "extra": "8212 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Incr (Qingyu_backend/test/integration)",
+            "value": 146831,
+            "unit": "ns/op\t     184 B/op\t       6 allocs/op",
+            "extra": "8151 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Incr (Qingyu_backend/test/integration) - ns/op",
+            "value": 146831,
+            "unit": "ns/op",
+            "extra": "8151 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Incr (Qingyu_backend/test/integration) - B/op",
+            "value": 184,
+            "unit": "B/op",
+            "extra": "8151 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Incr (Qingyu_backend/test/integration) - allocs/op",
+            "value": 6,
+            "unit": "allocs/op",
+            "extra": "8151 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Incr (Qingyu_backend/test/integration)",
+            "value": 146831,
+            "unit": "ns/op\t     184 B/op\t       6 allocs/op",
+            "extra": "7994 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Incr (Qingyu_backend/test/integration) - ns/op",
+            "value": 146831,
+            "unit": "ns/op",
+            "extra": "7994 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Incr (Qingyu_backend/test/integration) - B/op",
+            "value": 184,
+            "unit": "B/op",
+            "extra": "7994 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/Incr (Qingyu_backend/test/integration) - allocs/op",
+            "value": 6,
+            "unit": "allocs/op",
+            "extra": "7994 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/HSet (Qingyu_backend/test/integration)",
+            "value": 147722,
+            "unit": "ns/op\t     248 B/op\t       7 allocs/op",
+            "extra": "7286 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/HSet (Qingyu_backend/test/integration) - ns/op",
+            "value": 147722,
+            "unit": "ns/op",
+            "extra": "7286 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/HSet (Qingyu_backend/test/integration) - B/op",
+            "value": 248,
+            "unit": "B/op",
+            "extra": "7286 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/HSet (Qingyu_backend/test/integration) - allocs/op",
+            "value": 7,
+            "unit": "allocs/op",
+            "extra": "7286 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/HSet (Qingyu_backend/test/integration)",
+            "value": 155099,
+            "unit": "ns/op\t     248 B/op\t       7 allocs/op",
+            "extra": "7795 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/HSet (Qingyu_backend/test/integration) - ns/op",
+            "value": 155099,
+            "unit": "ns/op",
+            "extra": "7795 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/HSet (Qingyu_backend/test/integration) - B/op",
+            "value": 248,
+            "unit": "B/op",
+            "extra": "7795 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/HSet (Qingyu_backend/test/integration) - allocs/op",
+            "value": 7,
+            "unit": "allocs/op",
+            "extra": "7795 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/HSet (Qingyu_backend/test/integration)",
+            "value": 148016,
+            "unit": "ns/op\t     248 B/op\t       7 allocs/op",
+            "extra": "8355 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/HSet (Qingyu_backend/test/integration) - ns/op",
+            "value": 148016,
+            "unit": "ns/op",
+            "extra": "8355 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/HSet (Qingyu_backend/test/integration) - B/op",
+            "value": 248,
+            "unit": "B/op",
+            "extra": "8355 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/HSet (Qingyu_backend/test/integration) - allocs/op",
+            "value": 7,
+            "unit": "allocs/op",
+            "extra": "8355 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/HSet (Qingyu_backend/test/integration)",
+            "value": 148179,
+            "unit": "ns/op\t     249 B/op\t       7 allocs/op",
+            "extra": "7834 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/HSet (Qingyu_backend/test/integration) - ns/op",
+            "value": 148179,
+            "unit": "ns/op",
+            "extra": "7834 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/HSet (Qingyu_backend/test/integration) - B/op",
+            "value": 249,
+            "unit": "B/op",
+            "extra": "7834 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/HSet (Qingyu_backend/test/integration) - allocs/op",
+            "value": 7,
+            "unit": "allocs/op",
+            "extra": "7834 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/HSet (Qingyu_backend/test/integration)",
+            "value": 148312,
+            "unit": "ns/op\t     248 B/op\t       7 allocs/op",
+            "extra": "8097 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/HSet (Qingyu_backend/test/integration) - ns/op",
+            "value": 148312,
+            "unit": "ns/op",
+            "extra": "8097 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/HSet (Qingyu_backend/test/integration) - B/op",
+            "value": 248,
+            "unit": "B/op",
+            "extra": "8097 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkRedisOperations/HSet (Qingyu_backend/test/integration) - allocs/op",
+            "value": 7,
+            "unit": "allocs/op",
+            "extra": "8097 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetHomepageData (Qingyu_backend/test/performance)",
+            "value": 24.2,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "47864203 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetHomepageData (Qingyu_backend/test/performance) - ns/op",
+            "value": 24.2,
+            "unit": "ns/op",
+            "extra": "47864203 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetHomepageData (Qingyu_backend/test/performance) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "47864203 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetHomepageData (Qingyu_backend/test/performance) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "47864203 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetHomepageData (Qingyu_backend/test/performance)",
+            "value": 24.3,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "49663453 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetHomepageData (Qingyu_backend/test/performance) - ns/op",
+            "value": 24.3,
+            "unit": "ns/op",
+            "extra": "49663453 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetHomepageData (Qingyu_backend/test/performance) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "49663453 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetHomepageData (Qingyu_backend/test/performance) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "49663453 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetHomepageData (Qingyu_backend/test/performance)",
+            "value": 24.35,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "49701103 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetHomepageData (Qingyu_backend/test/performance) - ns/op",
+            "value": 24.35,
+            "unit": "ns/op",
+            "extra": "49701103 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetHomepageData (Qingyu_backend/test/performance) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "49701103 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetHomepageData (Qingyu_backend/test/performance) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "49701103 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetHomepageData (Qingyu_backend/test/performance)",
+            "value": 24.26,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "49590356 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetHomepageData (Qingyu_backend/test/performance) - ns/op",
+            "value": 24.26,
+            "unit": "ns/op",
+            "extra": "49590356 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetHomepageData (Qingyu_backend/test/performance) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "49590356 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetHomepageData (Qingyu_backend/test/performance) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "49590356 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetHomepageData (Qingyu_backend/test/performance)",
+            "value": 24.41,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "49570653 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetHomepageData (Qingyu_backend/test/performance) - ns/op",
+            "value": 24.41,
+            "unit": "ns/op",
+            "extra": "49570653 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetHomepageData (Qingyu_backend/test/performance) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "49570653 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetHomepageData (Qingyu_backend/test/performance) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "49570653 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetBookByID (Qingyu_backend/test/performance)",
+            "value": 69.03,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "17404777 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetBookByID (Qingyu_backend/test/performance) - ns/op",
+            "value": 69.03,
+            "unit": "ns/op",
+            "extra": "17404777 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetBookByID (Qingyu_backend/test/performance) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "17404777 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetBookByID (Qingyu_backend/test/performance) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "17404777 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetBookByID (Qingyu_backend/test/performance)",
+            "value": 68.94,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "17405395 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetBookByID (Qingyu_backend/test/performance) - ns/op",
+            "value": 68.94,
+            "unit": "ns/op",
+            "extra": "17405395 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetBookByID (Qingyu_backend/test/performance) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "17405395 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetBookByID (Qingyu_backend/test/performance) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "17405395 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetBookByID (Qingyu_backend/test/performance)",
+            "value": 68.93,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "17407120 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetBookByID (Qingyu_backend/test/performance) - ns/op",
+            "value": 68.93,
+            "unit": "ns/op",
+            "extra": "17407120 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetBookByID (Qingyu_backend/test/performance) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "17407120 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetBookByID (Qingyu_backend/test/performance) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "17407120 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetBookByID (Qingyu_backend/test/performance)",
+            "value": 69.87,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "17301014 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetBookByID (Qingyu_backend/test/performance) - ns/op",
+            "value": 69.87,
+            "unit": "ns/op",
+            "extra": "17301014 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetBookByID (Qingyu_backend/test/performance) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "17301014 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetBookByID (Qingyu_backend/test/performance) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "17301014 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetBookByID (Qingyu_backend/test/performance)",
+            "value": 68.93,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "17425820 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetBookByID (Qingyu_backend/test/performance) - ns/op",
+            "value": 68.93,
+            "unit": "ns/op",
+            "extra": "17425820 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetBookByID (Qingyu_backend/test/performance) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "17425820 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetBookByID (Qingyu_backend/test/performance) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "17425820 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRankings (Qingyu_backend/test/performance)",
+            "value": 2432,
+            "unit": "ns/op\t    3040 B/op\t      21 allocs/op",
+            "extra": "493978 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRankings (Qingyu_backend/test/performance) - ns/op",
+            "value": 2432,
+            "unit": "ns/op",
+            "extra": "493978 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRankings (Qingyu_backend/test/performance) - B/op",
+            "value": 3040,
+            "unit": "B/op",
+            "extra": "493978 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRankings (Qingyu_backend/test/performance) - allocs/op",
+            "value": 21,
+            "unit": "allocs/op",
+            "extra": "493978 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRankings (Qingyu_backend/test/performance)",
+            "value": 2458,
+            "unit": "ns/op\t    3040 B/op\t      21 allocs/op",
+            "extra": "469521 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRankings (Qingyu_backend/test/performance) - ns/op",
+            "value": 2458,
+            "unit": "ns/op",
+            "extra": "469521 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRankings (Qingyu_backend/test/performance) - B/op",
+            "value": 3040,
+            "unit": "B/op",
+            "extra": "469521 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRankings (Qingyu_backend/test/performance) - allocs/op",
+            "value": 21,
+            "unit": "allocs/op",
+            "extra": "469521 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRankings (Qingyu_backend/test/performance)",
+            "value": 2465,
+            "unit": "ns/op\t    3040 B/op\t      21 allocs/op",
+            "extra": "453790 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRankings (Qingyu_backend/test/performance) - ns/op",
+            "value": 2465,
+            "unit": "ns/op",
+            "extra": "453790 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRankings (Qingyu_backend/test/performance) - B/op",
+            "value": 3040,
+            "unit": "B/op",
+            "extra": "453790 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRankings (Qingyu_backend/test/performance) - allocs/op",
+            "value": 21,
+            "unit": "allocs/op",
+            "extra": "453790 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRankings (Qingyu_backend/test/performance)",
+            "value": 2438,
+            "unit": "ns/op\t    3040 B/op\t      21 allocs/op",
+            "extra": "481561 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRankings (Qingyu_backend/test/performance) - ns/op",
+            "value": 2438,
+            "unit": "ns/op",
+            "extra": "481561 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRankings (Qingyu_backend/test/performance) - B/op",
+            "value": 3040,
+            "unit": "B/op",
+            "extra": "481561 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRankings (Qingyu_backend/test/performance) - allocs/op",
+            "value": 21,
+            "unit": "allocs/op",
+            "extra": "481561 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRankings (Qingyu_backend/test/performance)",
+            "value": 2452,
+            "unit": "ns/op\t    3040 B/op\t      21 allocs/op",
+            "extra": "476463 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRankings (Qingyu_backend/test/performance) - ns/op",
+            "value": 2452,
+            "unit": "ns/op",
+            "extra": "476463 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRankings (Qingyu_backend/test/performance) - B/op",
+            "value": 3040,
+            "unit": "B/op",
+            "extra": "476463 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGetRankings (Qingyu_backend/test/performance) - allocs/op",
+            "value": 21,
+            "unit": "allocs/op",
+            "extra": "476463 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearch_NoCursor (Qingyu_backend/test/performance)",
+            "value": 786387,
+            "unit": "ns/op\t  284584 B/op\t    6534 allocs/op",
+            "extra": "1572 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearch_NoCursor (Qingyu_backend/test/performance) - ns/op",
+            "value": 786387,
+            "unit": "ns/op",
+            "extra": "1572 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearch_NoCursor (Qingyu_backend/test/performance) - B/op",
+            "value": 284584,
+            "unit": "B/op",
+            "extra": "1572 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearch_NoCursor (Qingyu_backend/test/performance) - allocs/op",
+            "value": 6534,
+            "unit": "allocs/op",
+            "extra": "1572 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearch_NoCursor (Qingyu_backend/test/performance)",
+            "value": 887917,
+            "unit": "ns/op\t  284562 B/op\t    6533 allocs/op",
+            "extra": "1436 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearch_NoCursor (Qingyu_backend/test/performance) - ns/op",
+            "value": 887917,
+            "unit": "ns/op",
+            "extra": "1436 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearch_NoCursor (Qingyu_backend/test/performance) - B/op",
+            "value": 284562,
+            "unit": "B/op",
+            "extra": "1436 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearch_NoCursor (Qingyu_backend/test/performance) - allocs/op",
+            "value": 6533,
+            "unit": "allocs/op",
+            "extra": "1436 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearch_NoCursor (Qingyu_backend/test/performance)",
+            "value": 793355,
+            "unit": "ns/op\t  284542 B/op\t    6534 allocs/op",
+            "extra": "1506 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearch_NoCursor (Qingyu_backend/test/performance) - ns/op",
+            "value": 793355,
+            "unit": "ns/op",
+            "extra": "1506 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearch_NoCursor (Qingyu_backend/test/performance) - B/op",
+            "value": 284542,
+            "unit": "B/op",
+            "extra": "1506 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearch_NoCursor (Qingyu_backend/test/performance) - allocs/op",
+            "value": 6534,
+            "unit": "allocs/op",
+            "extra": "1506 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearch_NoCursor (Qingyu_backend/test/performance)",
+            "value": 796061,
+            "unit": "ns/op\t  284529 B/op\t    6533 allocs/op",
+            "extra": "1496 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearch_NoCursor (Qingyu_backend/test/performance) - ns/op",
+            "value": 796061,
+            "unit": "ns/op",
+            "extra": "1496 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearch_NoCursor (Qingyu_backend/test/performance) - B/op",
+            "value": 284529,
+            "unit": "B/op",
+            "extra": "1496 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearch_NoCursor (Qingyu_backend/test/performance) - allocs/op",
+            "value": 6533,
+            "unit": "allocs/op",
+            "extra": "1496 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearch_NoCursor (Qingyu_backend/test/performance)",
+            "value": 797413,
+            "unit": "ns/op\t  284589 B/op\t    6534 allocs/op",
+            "extra": "1468 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearch_NoCursor (Qingyu_backend/test/performance) - ns/op",
+            "value": 797413,
+            "unit": "ns/op",
+            "extra": "1468 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearch_NoCursor (Qingyu_backend/test/performance) - B/op",
+            "value": 284589,
+            "unit": "B/op",
+            "extra": "1468 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearch_NoCursor (Qingyu_backend/test/performance) - allocs/op",
+            "value": 6534,
+            "unit": "allocs/op",
+            "extra": "1468 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearch_WithCursor (Qingyu_backend/test/performance)",
+            "value": 258431,
+            "unit": "ns/op\t   55898 B/op\t    1079 allocs/op",
+            "extra": "4455 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearch_WithCursor (Qingyu_backend/test/performance) - ns/op",
+            "value": 258431,
+            "unit": "ns/op",
+            "extra": "4455 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearch_WithCursor (Qingyu_backend/test/performance) - B/op",
+            "value": 55898,
+            "unit": "B/op",
+            "extra": "4455 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearch_WithCursor (Qingyu_backend/test/performance) - allocs/op",
+            "value": 1079,
+            "unit": "allocs/op",
+            "extra": "4455 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearch_WithCursor (Qingyu_backend/test/performance)",
+            "value": 261086,
+            "unit": "ns/op\t   55898 B/op\t    1079 allocs/op",
+            "extra": "4401 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearch_WithCursor (Qingyu_backend/test/performance) - ns/op",
+            "value": 261086,
+            "unit": "ns/op",
+            "extra": "4401 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearch_WithCursor (Qingyu_backend/test/performance) - B/op",
+            "value": 55898,
+            "unit": "B/op",
+            "extra": "4401 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearch_WithCursor (Qingyu_backend/test/performance) - allocs/op",
+            "value": 1079,
+            "unit": "allocs/op",
+            "extra": "4401 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearch_WithCursor (Qingyu_backend/test/performance)",
+            "value": 261169,
+            "unit": "ns/op\t   55887 B/op\t    1079 allocs/op",
+            "extra": "4407 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearch_WithCursor (Qingyu_backend/test/performance) - ns/op",
+            "value": 261169,
+            "unit": "ns/op",
+            "extra": "4407 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearch_WithCursor (Qingyu_backend/test/performance) - B/op",
+            "value": 55887,
+            "unit": "B/op",
+            "extra": "4407 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearch_WithCursor (Qingyu_backend/test/performance) - allocs/op",
+            "value": 1079,
+            "unit": "allocs/op",
+            "extra": "4407 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearch_WithCursor (Qingyu_backend/test/performance)",
+            "value": 261026,
+            "unit": "ns/op\t   55893 B/op\t    1079 allocs/op",
+            "extra": "4360 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearch_WithCursor (Qingyu_backend/test/performance) - ns/op",
+            "value": 261026,
+            "unit": "ns/op",
+            "extra": "4360 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearch_WithCursor (Qingyu_backend/test/performance) - B/op",
+            "value": 55893,
+            "unit": "B/op",
+            "extra": "4360 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearch_WithCursor (Qingyu_backend/test/performance) - allocs/op",
+            "value": 1079,
+            "unit": "allocs/op",
+            "extra": "4360 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearch_WithCursor (Qingyu_backend/test/performance)",
+            "value": 259195,
+            "unit": "ns/op\t   55896 B/op\t    1079 allocs/op",
+            "extra": "4339 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearch_WithCursor (Qingyu_backend/test/performance) - ns/op",
+            "value": 259195,
+            "unit": "ns/op",
+            "extra": "4339 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearch_WithCursor (Qingyu_backend/test/performance) - B/op",
+            "value": 55896,
+            "unit": "B/op",
+            "extra": "4339 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearch_WithCursor (Qingyu_backend/test/performance) - allocs/op",
+            "value": 1079,
+            "unit": "allocs/op",
+            "extra": "4339 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCursorEncoding (Qingyu_backend/test/performance)",
+            "value": 1928,
+            "unit": "ns/op\t     984 B/op\t      21 allocs/op",
+            "extra": "668766 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCursorEncoding (Qingyu_backend/test/performance) - ns/op",
+            "value": 1928,
+            "unit": "ns/op",
+            "extra": "668766 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCursorEncoding (Qingyu_backend/test/performance) - B/op",
+            "value": 984,
+            "unit": "B/op",
+            "extra": "668766 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCursorEncoding (Qingyu_backend/test/performance) - allocs/op",
+            "value": 21,
+            "unit": "allocs/op",
+            "extra": "668766 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCursorEncoding (Qingyu_backend/test/performance)",
+            "value": 1704,
+            "unit": "ns/op\t     984 B/op\t      21 allocs/op",
+            "extra": "667629 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCursorEncoding (Qingyu_backend/test/performance) - ns/op",
+            "value": 1704,
+            "unit": "ns/op",
+            "extra": "667629 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCursorEncoding (Qingyu_backend/test/performance) - B/op",
+            "value": 984,
+            "unit": "B/op",
+            "extra": "667629 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCursorEncoding (Qingyu_backend/test/performance) - allocs/op",
+            "value": 21,
+            "unit": "allocs/op",
+            "extra": "667629 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCursorEncoding (Qingyu_backend/test/performance)",
+            "value": 1695,
+            "unit": "ns/op\t     984 B/op\t      21 allocs/op",
+            "extra": "677067 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCursorEncoding (Qingyu_backend/test/performance) - ns/op",
+            "value": 1695,
+            "unit": "ns/op",
+            "extra": "677067 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCursorEncoding (Qingyu_backend/test/performance) - B/op",
+            "value": 984,
+            "unit": "B/op",
+            "extra": "677067 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCursorEncoding (Qingyu_backend/test/performance) - allocs/op",
+            "value": 21,
+            "unit": "allocs/op",
+            "extra": "677067 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCursorEncoding (Qingyu_backend/test/performance)",
+            "value": 1707,
+            "unit": "ns/op\t     984 B/op\t      21 allocs/op",
+            "extra": "696963 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCursorEncoding (Qingyu_backend/test/performance) - ns/op",
+            "value": 1707,
+            "unit": "ns/op",
+            "extra": "696963 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCursorEncoding (Qingyu_backend/test/performance) - B/op",
+            "value": 984,
+            "unit": "B/op",
+            "extra": "696963 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCursorEncoding (Qingyu_backend/test/performance) - allocs/op",
+            "value": 21,
+            "unit": "allocs/op",
+            "extra": "696963 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCursorEncoding (Qingyu_backend/test/performance)",
+            "value": 1704,
+            "unit": "ns/op\t     984 B/op\t      21 allocs/op",
+            "extra": "684121 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCursorEncoding (Qingyu_backend/test/performance) - ns/op",
+            "value": 1704,
+            "unit": "ns/op",
+            "extra": "684121 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCursorEncoding (Qingyu_backend/test/performance) - B/op",
+            "value": 984,
+            "unit": "B/op",
+            "extra": "684121 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCursorEncoding (Qingyu_backend/test/performance) - allocs/op",
+            "value": 21,
+            "unit": "allocs/op",
+            "extra": "684121 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCursorDecoding (Qingyu_backend/test/performance)",
+            "value": 1362,
+            "unit": "ns/op\t     712 B/op\t      16 allocs/op",
+            "extra": "843176 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCursorDecoding (Qingyu_backend/test/performance) - ns/op",
+            "value": 1362,
+            "unit": "ns/op",
+            "extra": "843176 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCursorDecoding (Qingyu_backend/test/performance) - B/op",
+            "value": 712,
+            "unit": "B/op",
+            "extra": "843176 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCursorDecoding (Qingyu_backend/test/performance) - allocs/op",
+            "value": 16,
+            "unit": "allocs/op",
+            "extra": "843176 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCursorDecoding (Qingyu_backend/test/performance)",
+            "value": 1380,
+            "unit": "ns/op\t     712 B/op\t      16 allocs/op",
+            "extra": "834020 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCursorDecoding (Qingyu_backend/test/performance) - ns/op",
+            "value": 1380,
+            "unit": "ns/op",
+            "extra": "834020 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCursorDecoding (Qingyu_backend/test/performance) - B/op",
+            "value": 712,
+            "unit": "B/op",
+            "extra": "834020 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCursorDecoding (Qingyu_backend/test/performance) - allocs/op",
+            "value": 16,
+            "unit": "allocs/op",
+            "extra": "834020 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCursorDecoding (Qingyu_backend/test/performance)",
+            "value": 1368,
+            "unit": "ns/op\t     712 B/op\t      16 allocs/op",
+            "extra": "805000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCursorDecoding (Qingyu_backend/test/performance) - ns/op",
+            "value": 1368,
+            "unit": "ns/op",
+            "extra": "805000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCursorDecoding (Qingyu_backend/test/performance) - B/op",
+            "value": 712,
+            "unit": "B/op",
+            "extra": "805000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCursorDecoding (Qingyu_backend/test/performance) - allocs/op",
+            "value": 16,
+            "unit": "allocs/op",
+            "extra": "805000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCursorDecoding (Qingyu_backend/test/performance)",
+            "value": 1521,
+            "unit": "ns/op\t     712 B/op\t      16 allocs/op",
+            "extra": "840260 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCursorDecoding (Qingyu_backend/test/performance) - ns/op",
+            "value": 1521,
+            "unit": "ns/op",
+            "extra": "840260 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCursorDecoding (Qingyu_backend/test/performance) - B/op",
+            "value": 712,
+            "unit": "B/op",
+            "extra": "840260 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCursorDecoding (Qingyu_backend/test/performance) - allocs/op",
+            "value": 16,
+            "unit": "allocs/op",
+            "extra": "840260 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCursorDecoding (Qingyu_backend/test/performance)",
+            "value": 1364,
+            "unit": "ns/op\t     712 B/op\t      16 allocs/op",
+            "extra": "820684 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCursorDecoding (Qingyu_backend/test/performance) - ns/op",
+            "value": 1364,
+            "unit": "ns/op",
+            "extra": "820684 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCursorDecoding (Qingyu_backend/test/performance) - B/op",
+            "value": 712,
+            "unit": "B/op",
+            "extra": "820684 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkCursorDecoding (Qingyu_backend/test/performance) - allocs/op",
+            "value": 16,
+            "unit": "allocs/op",
+            "extra": "820684 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkNDJSONParsing (Qingyu_backend/test/performance)",
+            "value": 205513,
+            "unit": "ns/op\t   92832 B/op\t    2310 allocs/op",
+            "extra": "5691 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkNDJSONParsing (Qingyu_backend/test/performance) - ns/op",
+            "value": 205513,
+            "unit": "ns/op",
+            "extra": "5691 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkNDJSONParsing (Qingyu_backend/test/performance) - B/op",
+            "value": 92832,
+            "unit": "B/op",
+            "extra": "5691 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkNDJSONParsing (Qingyu_backend/test/performance) - allocs/op",
+            "value": 2310,
+            "unit": "allocs/op",
+            "extra": "5691 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkNDJSONParsing (Qingyu_backend/test/performance)",
+            "value": 201896,
+            "unit": "ns/op\t   92834 B/op\t    2310 allocs/op",
+            "extra": "5684 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkNDJSONParsing (Qingyu_backend/test/performance) - ns/op",
+            "value": 201896,
+            "unit": "ns/op",
+            "extra": "5684 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkNDJSONParsing (Qingyu_backend/test/performance) - B/op",
+            "value": 92834,
+            "unit": "B/op",
+            "extra": "5684 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkNDJSONParsing (Qingyu_backend/test/performance) - allocs/op",
+            "value": 2310,
+            "unit": "allocs/op",
+            "extra": "5684 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkNDJSONParsing (Qingyu_backend/test/performance)",
+            "value": 202876,
+            "unit": "ns/op\t   92833 B/op\t    2310 allocs/op",
+            "extra": "5655 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkNDJSONParsing (Qingyu_backend/test/performance) - ns/op",
+            "value": 202876,
+            "unit": "ns/op",
+            "extra": "5655 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkNDJSONParsing (Qingyu_backend/test/performance) - B/op",
+            "value": 92833,
+            "unit": "B/op",
+            "extra": "5655 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkNDJSONParsing (Qingyu_backend/test/performance) - allocs/op",
+            "value": 2310,
+            "unit": "allocs/op",
+            "extra": "5655 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkNDJSONParsing (Qingyu_backend/test/performance)",
+            "value": 202382,
+            "unit": "ns/op\t   92833 B/op\t    2310 allocs/op",
+            "extra": "5529 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkNDJSONParsing (Qingyu_backend/test/performance) - ns/op",
+            "value": 202382,
+            "unit": "ns/op",
+            "extra": "5529 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkNDJSONParsing (Qingyu_backend/test/performance) - B/op",
+            "value": 92833,
+            "unit": "B/op",
+            "extra": "5529 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkNDJSONParsing (Qingyu_backend/test/performance) - allocs/op",
+            "value": 2310,
+            "unit": "allocs/op",
+            "extra": "5529 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkNDJSONParsing (Qingyu_backend/test/performance)",
+            "value": 204109,
+            "unit": "ns/op\t   92833 B/op\t    2310 allocs/op",
+            "extra": "5901 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkNDJSONParsing (Qingyu_backend/test/performance) - ns/op",
+            "value": 204109,
+            "unit": "ns/op",
+            "extra": "5901 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkNDJSONParsing (Qingyu_backend/test/performance) - B/op",
+            "value": 92833,
+            "unit": "B/op",
+            "extra": "5901 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkNDJSONParsing (Qingyu_backend/test/performance) - allocs/op",
+            "value": 2310,
+            "unit": "allocs/op",
+            "extra": "5901 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearchLargeDataset (Qingyu_backend/test/performance)",
+            "value": 37194320,
+            "unit": "ns/op\t22936874 B/op\t  503164 allocs/op",
+            "extra": "30 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearchLargeDataset (Qingyu_backend/test/performance) - ns/op",
+            "value": 37194320,
+            "unit": "ns/op",
+            "extra": "30 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearchLargeDataset (Qingyu_backend/test/performance) - B/op",
+            "value": 22936874,
+            "unit": "B/op",
+            "extra": "30 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearchLargeDataset (Qingyu_backend/test/performance) - allocs/op",
+            "value": 503164,
+            "unit": "allocs/op",
+            "extra": "30 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearchLargeDataset (Qingyu_backend/test/performance)",
+            "value": 37538743,
+            "unit": "ns/op\t22937690 B/op\t  503173 allocs/op",
+            "extra": "36 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearchLargeDataset (Qingyu_backend/test/performance) - ns/op",
+            "value": 37538743,
+            "unit": "ns/op",
+            "extra": "36 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearchLargeDataset (Qingyu_backend/test/performance) - B/op",
+            "value": 22937690,
+            "unit": "B/op",
+            "extra": "36 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearchLargeDataset (Qingyu_backend/test/performance) - allocs/op",
+            "value": 503173,
+            "unit": "allocs/op",
+            "extra": "36 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearchLargeDataset (Qingyu_backend/test/performance)",
+            "value": 36275461,
+            "unit": "ns/op\t22936077 B/op\t  503149 allocs/op",
+            "extra": "28 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearchLargeDataset (Qingyu_backend/test/performance) - ns/op",
+            "value": 36275461,
+            "unit": "ns/op",
+            "extra": "28 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearchLargeDataset (Qingyu_backend/test/performance) - B/op",
+            "value": 22936077,
+            "unit": "B/op",
+            "extra": "28 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearchLargeDataset (Qingyu_backend/test/performance) - allocs/op",
+            "value": 503149,
+            "unit": "allocs/op",
+            "extra": "28 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearchLargeDataset (Qingyu_backend/test/performance)",
+            "value": 37664422,
+            "unit": "ns/op\t22935660 B/op\t  503150 allocs/op",
+            "extra": "34 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearchLargeDataset (Qingyu_backend/test/performance) - ns/op",
+            "value": 37664422,
+            "unit": "ns/op",
+            "extra": "34 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearchLargeDataset (Qingyu_backend/test/performance) - B/op",
+            "value": 22935660,
+            "unit": "B/op",
+            "extra": "34 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearchLargeDataset (Qingyu_backend/test/performance) - allocs/op",
+            "value": 503150,
+            "unit": "allocs/op",
+            "extra": "34 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearchLargeDataset (Qingyu_backend/test/performance)",
+            "value": 36961246,
+            "unit": "ns/op\t22936098 B/op\t  503153 allocs/op",
+            "extra": "31 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearchLargeDataset (Qingyu_backend/test/performance) - ns/op",
+            "value": 36961246,
+            "unit": "ns/op",
+            "extra": "31 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearchLargeDataset (Qingyu_backend/test/performance) - B/op",
+            "value": 22936098,
+            "unit": "B/op",
+            "extra": "31 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkStreamSearchLargeDataset (Qingyu_backend/test/performance) - allocs/op",
+            "value": 503153,
+            "unit": "allocs/op",
+            "extra": "31 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentStreamRequests (Qingyu_backend/test/performance)",
+            "value": 100702,
+            "unit": "ns/op\t   58019 B/op\t    1088 allocs/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentStreamRequests (Qingyu_backend/test/performance) - ns/op",
+            "value": 100702,
+            "unit": "ns/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentStreamRequests (Qingyu_backend/test/performance) - B/op",
+            "value": 58019,
+            "unit": "B/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentStreamRequests (Qingyu_backend/test/performance) - allocs/op",
+            "value": 1088,
+            "unit": "allocs/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentStreamRequests (Qingyu_backend/test/performance)",
+            "value": 100424,
+            "unit": "ns/op\t   58063 B/op\t    1088 allocs/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentStreamRequests (Qingyu_backend/test/performance) - ns/op",
+            "value": 100424,
+            "unit": "ns/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentStreamRequests (Qingyu_backend/test/performance) - B/op",
+            "value": 58063,
+            "unit": "B/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentStreamRequests (Qingyu_backend/test/performance) - allocs/op",
+            "value": 1088,
+            "unit": "allocs/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentStreamRequests (Qingyu_backend/test/performance)",
+            "value": 100069,
+            "unit": "ns/op\t   57940 B/op\t    1088 allocs/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentStreamRequests (Qingyu_backend/test/performance) - ns/op",
+            "value": 100069,
+            "unit": "ns/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentStreamRequests (Qingyu_backend/test/performance) - B/op",
+            "value": 57940,
+            "unit": "B/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentStreamRequests (Qingyu_backend/test/performance) - allocs/op",
+            "value": 1088,
+            "unit": "allocs/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentStreamRequests (Qingyu_backend/test/performance)",
+            "value": 100792,
+            "unit": "ns/op\t   58026 B/op\t    1088 allocs/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentStreamRequests (Qingyu_backend/test/performance) - ns/op",
+            "value": 100792,
+            "unit": "ns/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentStreamRequests (Qingyu_backend/test/performance) - B/op",
+            "value": 58026,
+            "unit": "B/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentStreamRequests (Qingyu_backend/test/performance) - allocs/op",
+            "value": 1088,
+            "unit": "allocs/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentStreamRequests (Qingyu_backend/test/performance)",
+            "value": 102311,
+            "unit": "ns/op\t   57958 B/op\t    1088 allocs/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentStreamRequests (Qingyu_backend/test/performance) - ns/op",
+            "value": 102311,
+            "unit": "ns/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentStreamRequests (Qingyu_backend/test/performance) - B/op",
+            "value": 57958,
+            "unit": "B/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentStreamRequests (Qingyu_backend/test/performance) - allocs/op",
+            "value": 1088,
+            "unit": "allocs/op",
+            "extra": "10000 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGenerateToken (Qingyu_backend/test/service/user)",
+            "value": 365.8,
+            "unit": "ns/op\t     192 B/op\t       3 allocs/op",
+            "extra": "3589449 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGenerateToken (Qingyu_backend/test/service/user) - ns/op",
+            "value": 365.8,
+            "unit": "ns/op",
+            "extra": "3589449 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGenerateToken (Qingyu_backend/test/service/user) - B/op",
+            "value": 192,
+            "unit": "B/op",
+            "extra": "3589449 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGenerateToken (Qingyu_backend/test/service/user) - allocs/op",
+            "value": 3,
+            "unit": "allocs/op",
+            "extra": "3589449 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGenerateToken (Qingyu_backend/test/service/user)",
+            "value": 337.9,
+            "unit": "ns/op\t     192 B/op\t       3 allocs/op",
+            "extra": "3561970 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGenerateToken (Qingyu_backend/test/service/user) - ns/op",
+            "value": 337.9,
+            "unit": "ns/op",
+            "extra": "3561970 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGenerateToken (Qingyu_backend/test/service/user) - B/op",
+            "value": 192,
+            "unit": "B/op",
+            "extra": "3561970 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGenerateToken (Qingyu_backend/test/service/user) - allocs/op",
+            "value": 3,
+            "unit": "allocs/op",
+            "extra": "3561970 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGenerateToken (Qingyu_backend/test/service/user)",
+            "value": 341.2,
+            "unit": "ns/op\t     192 B/op\t       3 allocs/op",
+            "extra": "3543277 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGenerateToken (Qingyu_backend/test/service/user) - ns/op",
+            "value": 341.2,
+            "unit": "ns/op",
+            "extra": "3543277 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGenerateToken (Qingyu_backend/test/service/user) - B/op",
+            "value": 192,
+            "unit": "B/op",
+            "extra": "3543277 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGenerateToken (Qingyu_backend/test/service/user) - allocs/op",
+            "value": 3,
+            "unit": "allocs/op",
+            "extra": "3543277 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGenerateToken (Qingyu_backend/test/service/user)",
+            "value": 348.2,
+            "unit": "ns/op\t     192 B/op\t       3 allocs/op",
+            "extra": "3011116 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGenerateToken (Qingyu_backend/test/service/user) - ns/op",
+            "value": 348.2,
+            "unit": "ns/op",
+            "extra": "3011116 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGenerateToken (Qingyu_backend/test/service/user) - B/op",
+            "value": 192,
+            "unit": "B/op",
+            "extra": "3011116 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGenerateToken (Qingyu_backend/test/service/user) - allocs/op",
+            "value": 3,
+            "unit": "allocs/op",
+            "extra": "3011116 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGenerateToken (Qingyu_backend/test/service/user)",
+            "value": 336.3,
+            "unit": "ns/op\t     192 B/op\t       3 allocs/op",
+            "extra": "3563854 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGenerateToken (Qingyu_backend/test/service/user) - ns/op",
+            "value": 336.3,
+            "unit": "ns/op",
+            "extra": "3563854 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGenerateToken (Qingyu_backend/test/service/user) - B/op",
+            "value": 192,
+            "unit": "B/op",
+            "extra": "3563854 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGenerateToken (Qingyu_backend/test/service/user) - allocs/op",
+            "value": 3,
+            "unit": "allocs/op",
+            "extra": "3563854 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateToken (Qingyu_backend/test/service/user)",
+            "value": 70.74,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "17003364 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateToken (Qingyu_backend/test/service/user) - ns/op",
+            "value": 70.74,
+            "unit": "ns/op",
+            "extra": "17003364 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateToken (Qingyu_backend/test/service/user) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "17003364 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateToken (Qingyu_backend/test/service/user) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "17003364 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateToken (Qingyu_backend/test/service/user)",
+            "value": 70.77,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "16989414 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateToken (Qingyu_backend/test/service/user) - ns/op",
+            "value": 70.77,
+            "unit": "ns/op",
+            "extra": "16989414 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateToken (Qingyu_backend/test/service/user) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "16989414 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateToken (Qingyu_backend/test/service/user) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "16989414 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateToken (Qingyu_backend/test/service/user)",
+            "value": 72.18,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "17010932 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateToken (Qingyu_backend/test/service/user) - ns/op",
+            "value": 72.18,
+            "unit": "ns/op",
+            "extra": "17010932 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateToken (Qingyu_backend/test/service/user) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "17010932 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateToken (Qingyu_backend/test/service/user) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "17010932 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateToken (Qingyu_backend/test/service/user)",
+            "value": 71,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "16318526 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateToken (Qingyu_backend/test/service/user) - ns/op",
+            "value": 71,
+            "unit": "ns/op",
+            "extra": "16318526 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateToken (Qingyu_backend/test/service/user) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "16318526 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateToken (Qingyu_backend/test/service/user) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "16318526 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateToken (Qingyu_backend/test/service/user)",
+            "value": 70.89,
+            "unit": "ns/op\t       0 B/op\t       0 allocs/op",
+            "extra": "16997642 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateToken (Qingyu_backend/test/service/user) - ns/op",
+            "value": 70.89,
+            "unit": "ns/op",
+            "extra": "16997642 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateToken (Qingyu_backend/test/service/user) - B/op",
+            "value": 0,
+            "unit": "B/op",
+            "extra": "16997642 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkValidateToken (Qingyu_backend/test/service/user) - allocs/op",
+            "value": 0,
+            "unit": "allocs/op",
+            "extra": "16997642 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkBookSearch (Qingyu_backend/tests/benchmark)",
+            "value": 266713,
+            "unit": "ns/op\t    4597 B/op\t      58 allocs/op",
+            "extra": "4376 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkBookSearch (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 266713,
+            "unit": "ns/op",
+            "extra": "4376 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkBookSearch (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 4597,
+            "unit": "B/op",
+            "extra": "4376 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkBookSearch (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 58,
+            "unit": "allocs/op",
+            "extra": "4376 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkBookSearch (Qingyu_backend/tests/benchmark)",
+            "value": 267103,
+            "unit": "ns/op\t    4597 B/op\t      58 allocs/op",
+            "extra": "4732 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkBookSearch (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 267103,
+            "unit": "ns/op",
+            "extra": "4732 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkBookSearch (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 4597,
+            "unit": "B/op",
+            "extra": "4732 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkBookSearch (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 58,
+            "unit": "allocs/op",
+            "extra": "4732 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkBookSearch (Qingyu_backend/tests/benchmark)",
+            "value": 268034,
+            "unit": "ns/op\t    4596 B/op\t      58 allocs/op",
+            "extra": "4753 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkBookSearch (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 268034,
+            "unit": "ns/op",
+            "extra": "4753 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkBookSearch (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 4596,
+            "unit": "B/op",
+            "extra": "4753 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkBookSearch (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 58,
+            "unit": "allocs/op",
+            "extra": "4753 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkBookSearch (Qingyu_backend/tests/benchmark)",
+            "value": 267330,
+            "unit": "ns/op\t    4596 B/op\t      58 allocs/op",
+            "extra": "4766 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkBookSearch (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 267330,
+            "unit": "ns/op",
+            "extra": "4766 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkBookSearch (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 4596,
+            "unit": "B/op",
+            "extra": "4766 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkBookSearch (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 58,
+            "unit": "allocs/op",
+            "extra": "4766 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkBookSearch (Qingyu_backend/tests/benchmark)",
+            "value": 267544,
+            "unit": "ns/op\t    4596 B/op\t      58 allocs/op",
+            "extra": "4766 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkBookSearch (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 267544,
+            "unit": "ns/op",
+            "extra": "4766 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkBookSearch (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 4596,
+            "unit": "B/op",
+            "extra": "4766 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkBookSearch (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 58,
+            "unit": "allocs/op",
+            "extra": "4766 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkProjectSearch (Qingyu_backend/tests/benchmark)",
+            "value": 267462,
+            "unit": "ns/op\t    4596 B/op\t      58 allocs/op",
+            "extra": "4759 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkProjectSearch (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 267462,
+            "unit": "ns/op",
+            "extra": "4759 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkProjectSearch (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 4596,
+            "unit": "B/op",
+            "extra": "4759 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkProjectSearch (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 58,
+            "unit": "allocs/op",
+            "extra": "4759 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkProjectSearch (Qingyu_backend/tests/benchmark)",
+            "value": 267445,
+            "unit": "ns/op\t    4596 B/op\t      58 allocs/op",
+            "extra": "4695 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkProjectSearch (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 267445,
+            "unit": "ns/op",
+            "extra": "4695 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkProjectSearch (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 4596,
+            "unit": "B/op",
+            "extra": "4695 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkProjectSearch (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 58,
+            "unit": "allocs/op",
+            "extra": "4695 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkProjectSearch (Qingyu_backend/tests/benchmark)",
+            "value": 266954,
+            "unit": "ns/op\t    4596 B/op\t      58 allocs/op",
+            "extra": "4735 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkProjectSearch (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 266954,
+            "unit": "ns/op",
+            "extra": "4735 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkProjectSearch (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 4596,
+            "unit": "B/op",
+            "extra": "4735 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkProjectSearch (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 58,
+            "unit": "allocs/op",
+            "extra": "4735 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkProjectSearch (Qingyu_backend/tests/benchmark)",
+            "value": 265332,
+            "unit": "ns/op\t    4595 B/op\t      58 allocs/op",
+            "extra": "4569 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkProjectSearch (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 265332,
+            "unit": "ns/op",
+            "extra": "4569 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkProjectSearch (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 4595,
+            "unit": "B/op",
+            "extra": "4569 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkProjectSearch (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 58,
+            "unit": "allocs/op",
+            "extra": "4569 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkProjectSearch (Qingyu_backend/tests/benchmark)",
+            "value": 267334,
+            "unit": "ns/op\t    4596 B/op\t      58 allocs/op",
+            "extra": "4768 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkProjectSearch (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 267334,
+            "unit": "ns/op",
+            "extra": "4768 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkProjectSearch (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 4596,
+            "unit": "B/op",
+            "extra": "4768 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkProjectSearch (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 58,
+            "unit": "allocs/op",
+            "extra": "4768 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDocumentSearch (Qingyu_backend/tests/benchmark)",
+            "value": 267164,
+            "unit": "ns/op\t    4596 B/op\t      58 allocs/op",
+            "extra": "4556 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDocumentSearch (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 267164,
+            "unit": "ns/op",
+            "extra": "4556 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDocumentSearch (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 4596,
+            "unit": "B/op",
+            "extra": "4556 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDocumentSearch (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 58,
+            "unit": "allocs/op",
+            "extra": "4556 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDocumentSearch (Qingyu_backend/tests/benchmark)",
+            "value": 266902,
+            "unit": "ns/op\t    4595 B/op\t      58 allocs/op",
+            "extra": "4756 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDocumentSearch (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 266902,
+            "unit": "ns/op",
+            "extra": "4756 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDocumentSearch (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 4595,
+            "unit": "B/op",
+            "extra": "4756 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDocumentSearch (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 58,
+            "unit": "allocs/op",
+            "extra": "4756 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDocumentSearch (Qingyu_backend/tests/benchmark)",
+            "value": 267221,
+            "unit": "ns/op\t    4596 B/op\t      58 allocs/op",
+            "extra": "4761 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDocumentSearch (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 267221,
+            "unit": "ns/op",
+            "extra": "4761 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDocumentSearch (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 4596,
+            "unit": "B/op",
+            "extra": "4761 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDocumentSearch (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 58,
+            "unit": "allocs/op",
+            "extra": "4761 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDocumentSearch (Qingyu_backend/tests/benchmark)",
+            "value": 267033,
+            "unit": "ns/op\t    4597 B/op\t      58 allocs/op",
+            "extra": "4568 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDocumentSearch (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 267033,
+            "unit": "ns/op",
+            "extra": "4568 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDocumentSearch (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 4597,
+            "unit": "B/op",
+            "extra": "4568 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDocumentSearch (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 58,
+            "unit": "allocs/op",
+            "extra": "4568 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDocumentSearch (Qingyu_backend/tests/benchmark)",
+            "value": 264982,
+            "unit": "ns/op\t    4596 B/op\t      58 allocs/op",
+            "extra": "4764 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDocumentSearch (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 264982,
+            "unit": "ns/op",
+            "extra": "4764 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDocumentSearch (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 4596,
+            "unit": "B/op",
+            "extra": "4764 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkDocumentSearch (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 58,
+            "unit": "allocs/op",
+            "extra": "4764 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserSearch (Qingyu_backend/tests/benchmark)",
+            "value": 268152,
+            "unit": "ns/op\t    4595 B/op\t      58 allocs/op",
+            "extra": "4570 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserSearch (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 268152,
+            "unit": "ns/op",
+            "extra": "4570 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserSearch (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 4595,
+            "unit": "B/op",
+            "extra": "4570 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserSearch (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 58,
+            "unit": "allocs/op",
+            "extra": "4570 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserSearch (Qingyu_backend/tests/benchmark)",
+            "value": 268075,
+            "unit": "ns/op\t    4596 B/op\t      58 allocs/op",
+            "extra": "4774 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserSearch (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 268075,
+            "unit": "ns/op",
+            "extra": "4774 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserSearch (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 4596,
+            "unit": "B/op",
+            "extra": "4774 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserSearch (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 58,
+            "unit": "allocs/op",
+            "extra": "4774 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserSearch (Qingyu_backend/tests/benchmark)",
+            "value": 266362,
+            "unit": "ns/op\t    4595 B/op\t      58 allocs/op",
+            "extra": "4752 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserSearch (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 266362,
+            "unit": "ns/op",
+            "extra": "4752 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserSearch (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 4595,
+            "unit": "B/op",
+            "extra": "4752 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserSearch (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 58,
+            "unit": "allocs/op",
+            "extra": "4752 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserSearch (Qingyu_backend/tests/benchmark)",
+            "value": 267599,
+            "unit": "ns/op\t    4596 B/op\t      58 allocs/op",
+            "extra": "4764 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserSearch (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 267599,
+            "unit": "ns/op",
+            "extra": "4764 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserSearch (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 4596,
+            "unit": "B/op",
+            "extra": "4764 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserSearch (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 58,
+            "unit": "allocs/op",
+            "extra": "4764 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserSearch (Qingyu_backend/tests/benchmark)",
+            "value": 266603,
+            "unit": "ns/op\t    4596 B/op\t      58 allocs/op",
+            "extra": "4766 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserSearch (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 266603,
+            "unit": "ns/op",
+            "extra": "4766 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserSearch (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 4596,
+            "unit": "B/op",
+            "extra": "4766 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkUserSearch (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 58,
+            "unit": "allocs/op",
+            "extra": "4766 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentSearch (Qingyu_backend/tests/benchmark)",
+            "value": 267570,
+            "unit": "ns/op\t    4596 B/op\t      58 allocs/op",
+            "extra": "4786 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentSearch (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 267570,
+            "unit": "ns/op",
+            "extra": "4786 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentSearch (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 4596,
+            "unit": "B/op",
+            "extra": "4786 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentSearch (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 58,
+            "unit": "allocs/op",
+            "extra": "4786 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentSearch (Qingyu_backend/tests/benchmark)",
+            "value": 267362,
+            "unit": "ns/op\t    4596 B/op\t      58 allocs/op",
+            "extra": "4783 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentSearch (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 267362,
+            "unit": "ns/op",
+            "extra": "4783 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentSearch (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 4596,
+            "unit": "B/op",
+            "extra": "4783 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentSearch (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 58,
+            "unit": "allocs/op",
+            "extra": "4783 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentSearch (Qingyu_backend/tests/benchmark)",
+            "value": 267662,
+            "unit": "ns/op\t    4596 B/op\t      58 allocs/op",
+            "extra": "4758 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentSearch (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 267662,
+            "unit": "ns/op",
+            "extra": "4758 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentSearch (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 4596,
+            "unit": "B/op",
+            "extra": "4758 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentSearch (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 58,
+            "unit": "allocs/op",
+            "extra": "4758 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentSearch (Qingyu_backend/tests/benchmark)",
+            "value": 267143,
+            "unit": "ns/op\t    4596 B/op\t      58 allocs/op",
+            "extra": "4770 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentSearch (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 267143,
+            "unit": "ns/op",
+            "extra": "4770 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentSearch (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 4596,
+            "unit": "B/op",
+            "extra": "4770 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentSearch (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 58,
+            "unit": "allocs/op",
+            "extra": "4770 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentSearch (Qingyu_backend/tests/benchmark)",
+            "value": 267756,
+            "unit": "ns/op\t    4595 B/op\t      58 allocs/op",
+            "extra": "4765 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentSearch (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 267756,
+            "unit": "ns/op",
+            "extra": "4765 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentSearch (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 4595,
+            "unit": "B/op",
+            "extra": "4765 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkConcurrentSearch (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 58,
+            "unit": "allocs/op",
+            "extra": "4765 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHighQPSLoad (Qingyu_backend/tests/benchmark)",
+            "value": 6282,
+            "unit": "ns/op\t    4582 B/op\t      57 allocs/op",
+            "extra": "176749 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHighQPSLoad (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 6282,
+            "unit": "ns/op",
+            "extra": "176749 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHighQPSLoad (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 4582,
+            "unit": "B/op",
+            "extra": "176749 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHighQPSLoad (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 57,
+            "unit": "allocs/op",
+            "extra": "176749 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHighQPSLoad (Qingyu_backend/tests/benchmark)",
+            "value": 4464,
+            "unit": "ns/op\t    4581 B/op\t      57 allocs/op",
+            "extra": "269752 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHighQPSLoad (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 4464,
+            "unit": "ns/op",
+            "extra": "269752 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHighQPSLoad (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 4581,
+            "unit": "B/op",
+            "extra": "269752 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHighQPSLoad (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 57,
+            "unit": "allocs/op",
+            "extra": "269752 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHighQPSLoad (Qingyu_backend/tests/benchmark)",
+            "value": 4478,
+            "unit": "ns/op\t    4580 B/op\t      57 allocs/op",
+            "extra": "248647 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHighQPSLoad (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 4478,
+            "unit": "ns/op",
+            "extra": "248647 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHighQPSLoad (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 4580,
+            "unit": "B/op",
+            "extra": "248647 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHighQPSLoad (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 57,
+            "unit": "allocs/op",
+            "extra": "248647 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHighQPSLoad (Qingyu_backend/tests/benchmark)",
+            "value": 4519,
+            "unit": "ns/op\t    4581 B/op\t      57 allocs/op",
+            "extra": "255759 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHighQPSLoad (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 4519,
+            "unit": "ns/op",
+            "extra": "255759 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHighQPSLoad (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 4581,
+            "unit": "B/op",
+            "extra": "255759 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHighQPSLoad (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 57,
+            "unit": "allocs/op",
+            "extra": "255759 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHighQPSLoad (Qingyu_backend/tests/benchmark)",
+            "value": 4492,
+            "unit": "ns/op\t    4581 B/op\t      57 allocs/op",
+            "extra": "242830 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHighQPSLoad (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 4492,
+            "unit": "ns/op",
+            "extra": "242830 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHighQPSLoad (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 4581,
+            "unit": "B/op",
+            "extra": "242830 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHighQPSLoad (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 57,
+            "unit": "allocs/op",
+            "extra": "242830 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGinRouting (Qingyu_backend/tests/benchmark)",
+            "value": 266933,
+            "unit": "ns/op\t    4515 B/op\t      56 allocs/op",
+            "extra": "4768 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGinRouting (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 266933,
+            "unit": "ns/op",
+            "extra": "4768 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGinRouting (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 4515,
+            "unit": "B/op",
+            "extra": "4768 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGinRouting (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 56,
+            "unit": "allocs/op",
+            "extra": "4768 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGinRouting (Qingyu_backend/tests/benchmark)",
+            "value": 267376,
+            "unit": "ns/op\t    4515 B/op\t      56 allocs/op",
+            "extra": "4723 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGinRouting (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 267376,
+            "unit": "ns/op",
+            "extra": "4723 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGinRouting (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 4515,
+            "unit": "B/op",
+            "extra": "4723 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGinRouting (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 56,
+            "unit": "allocs/op",
+            "extra": "4723 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGinRouting (Qingyu_backend/tests/benchmark)",
+            "value": 266296,
+            "unit": "ns/op\t    4515 B/op\t      56 allocs/op",
+            "extra": "4579 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGinRouting (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 266296,
+            "unit": "ns/op",
+            "extra": "4579 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGinRouting (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 4515,
+            "unit": "B/op",
+            "extra": "4579 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGinRouting (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 56,
+            "unit": "allocs/op",
+            "extra": "4579 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGinRouting (Qingyu_backend/tests/benchmark)",
+            "value": 266605,
+            "unit": "ns/op\t    4514 B/op\t      56 allocs/op",
+            "extra": "4772 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGinRouting (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 266605,
+            "unit": "ns/op",
+            "extra": "4772 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGinRouting (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 4514,
+            "unit": "B/op",
+            "extra": "4772 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGinRouting (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 56,
+            "unit": "allocs/op",
+            "extra": "4772 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGinRouting (Qingyu_backend/tests/benchmark)",
+            "value": 266680,
+            "unit": "ns/op\t    4514 B/op\t      56 allocs/op",
+            "extra": "4578 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGinRouting (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 266680,
+            "unit": "ns/op",
+            "extra": "4578 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGinRouting (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 4514,
+            "unit": "B/op",
+            "extra": "4578 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkGinRouting (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 56,
+            "unit": "allocs/op",
+            "extra": "4578 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkJSONSerialization (Qingyu_backend/tests/benchmark)",
+            "value": 3921,
+            "unit": "ns/op\t    2662 B/op\t      44 allocs/op",
+            "extra": "263205 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkJSONSerialization (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 3921,
+            "unit": "ns/op",
+            "extra": "263205 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkJSONSerialization (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 2662,
+            "unit": "B/op",
+            "extra": "263205 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkJSONSerialization (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 44,
+            "unit": "allocs/op",
+            "extra": "263205 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkJSONSerialization (Qingyu_backend/tests/benchmark)",
+            "value": 4044,
+            "unit": "ns/op\t    3123 B/op\t      44 allocs/op",
+            "extra": "276284 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkJSONSerialization (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 4044,
+            "unit": "ns/op",
+            "extra": "276284 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkJSONSerialization (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 3123,
+            "unit": "B/op",
+            "extra": "276284 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkJSONSerialization (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 44,
+            "unit": "allocs/op",
+            "extra": "276284 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkJSONSerialization (Qingyu_backend/tests/benchmark)",
+            "value": 4076,
+            "unit": "ns/op\t    3125 B/op\t      44 allocs/op",
+            "extra": "275709 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkJSONSerialization (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 4076,
+            "unit": "ns/op",
+            "extra": "275709 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkJSONSerialization (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 3125,
+            "unit": "B/op",
+            "extra": "275709 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkJSONSerialization (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 44,
+            "unit": "allocs/op",
+            "extra": "275709 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkJSONSerialization (Qingyu_backend/tests/benchmark)",
+            "value": 4115,
+            "unit": "ns/op\t    2673 B/op\t      44 allocs/op",
+            "extra": "257378 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkJSONSerialization (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 4115,
+            "unit": "ns/op",
+            "extra": "257378 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkJSONSerialization (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 2673,
+            "unit": "B/op",
+            "extra": "257378 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkJSONSerialization (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 44,
+            "unit": "allocs/op",
+            "extra": "257378 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkJSONSerialization (Qingyu_backend/tests/benchmark)",
+            "value": 4358,
+            "unit": "ns/op\t    3144 B/op\t      44 allocs/op",
+            "extra": "270513 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkJSONSerialization (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 4358,
+            "unit": "ns/op",
+            "extra": "270513 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkJSONSerialization (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 3144,
+            "unit": "B/op",
+            "extra": "270513 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkJSONSerialization (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 44,
+            "unit": "allocs/op",
+            "extra": "270513 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkContextSwitch (Qingyu_backend/tests/benchmark)",
+            "value": 422.8,
+            "unit": "ns/op\t     272 B/op\t       4 allocs/op",
+            "extra": "2871825 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkContextSwitch (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 422.8,
+            "unit": "ns/op",
+            "extra": "2871825 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkContextSwitch (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 272,
+            "unit": "B/op",
+            "extra": "2871825 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkContextSwitch (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 4,
+            "unit": "allocs/op",
+            "extra": "2871825 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkContextSwitch (Qingyu_backend/tests/benchmark)",
+            "value": 420.1,
+            "unit": "ns/op\t     272 B/op\t       4 allocs/op",
+            "extra": "2877792 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkContextSwitch (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 420.1,
+            "unit": "ns/op",
+            "extra": "2877792 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkContextSwitch (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 272,
+            "unit": "B/op",
+            "extra": "2877792 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkContextSwitch (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 4,
+            "unit": "allocs/op",
+            "extra": "2877792 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkContextSwitch (Qingyu_backend/tests/benchmark)",
+            "value": 418.7,
+            "unit": "ns/op\t     272 B/op\t       4 allocs/op",
+            "extra": "2884255 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkContextSwitch (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 418.7,
+            "unit": "ns/op",
+            "extra": "2884255 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkContextSwitch (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 272,
+            "unit": "B/op",
+            "extra": "2884255 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkContextSwitch (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 4,
+            "unit": "allocs/op",
+            "extra": "2884255 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkContextSwitch (Qingyu_backend/tests/benchmark)",
+            "value": 426.8,
+            "unit": "ns/op\t     272 B/op\t       4 allocs/op",
+            "extra": "2869927 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkContextSwitch (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 426.8,
+            "unit": "ns/op",
+            "extra": "2869927 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkContextSwitch (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 272,
+            "unit": "B/op",
+            "extra": "2869927 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkContextSwitch (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 4,
+            "unit": "allocs/op",
+            "extra": "2869927 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkContextSwitch (Qingyu_backend/tests/benchmark)",
+            "value": 417.7,
+            "unit": "ns/op\t     272 B/op\t       4 allocs/op",
+            "extra": "2858833 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkContextSwitch (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 417.7,
+            "unit": "ns/op",
+            "extra": "2858833 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkContextSwitch (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 272,
+            "unit": "B/op",
+            "extra": "2858833 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkContextSwitch (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 4,
+            "unit": "allocs/op",
+            "extra": "2858833 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHTTPRequest (Qingyu_backend/tests/benchmark)",
+            "value": 266280,
+            "unit": "ns/op\t    4515 B/op\t      56 allocs/op",
+            "extra": "4760 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHTTPRequest (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 266280,
+            "unit": "ns/op",
+            "extra": "4760 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHTTPRequest (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 4515,
+            "unit": "B/op",
+            "extra": "4760 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHTTPRequest (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 56,
+            "unit": "allocs/op",
+            "extra": "4760 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHTTPRequest (Qingyu_backend/tests/benchmark)",
+            "value": 266427,
+            "unit": "ns/op\t    4514 B/op\t      56 allocs/op",
+            "extra": "4576 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHTTPRequest (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 266427,
+            "unit": "ns/op",
+            "extra": "4576 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHTTPRequest (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 4514,
+            "unit": "B/op",
+            "extra": "4576 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHTTPRequest (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 56,
+            "unit": "allocs/op",
+            "extra": "4576 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHTTPRequest (Qingyu_backend/tests/benchmark)",
+            "value": 266396,
+            "unit": "ns/op\t    4515 B/op\t      56 allocs/op",
+            "extra": "4576 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHTTPRequest (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 266396,
+            "unit": "ns/op",
+            "extra": "4576 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHTTPRequest (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 4515,
+            "unit": "B/op",
+            "extra": "4576 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHTTPRequest (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 56,
+            "unit": "allocs/op",
+            "extra": "4576 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHTTPRequest (Qingyu_backend/tests/benchmark)",
+            "value": 265825,
+            "unit": "ns/op\t    4515 B/op\t      56 allocs/op",
+            "extra": "4561 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHTTPRequest (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 265825,
+            "unit": "ns/op",
+            "extra": "4561 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHTTPRequest (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 4515,
+            "unit": "B/op",
+            "extra": "4561 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHTTPRequest (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 56,
+            "unit": "allocs/op",
+            "extra": "4561 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHTTPRequest (Qingyu_backend/tests/benchmark)",
+            "value": 265732,
+            "unit": "ns/op\t    4514 B/op\t      56 allocs/op",
+            "extra": "4759 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHTTPRequest (Qingyu_backend/tests/benchmark) - ns/op",
+            "value": 265732,
+            "unit": "ns/op",
+            "extra": "4759 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHTTPRequest (Qingyu_backend/tests/benchmark) - B/op",
+            "value": 4514,
+            "unit": "B/op",
+            "extra": "4759 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkHTTPRequest (Qingyu_backend/tests/benchmark) - allocs/op",
+            "value": 56,
+            "unit": "allocs/op",
+            "extra": "4759 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPermissionCheck (Qingyu_backend/tests/e2e)",
+            "value": 2791,
+            "unit": "ns/op\t    3105 B/op\t      28 allocs/op",
+            "extra": "401815 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPermissionCheck (Qingyu_backend/tests/e2e) - ns/op",
+            "value": 2791,
+            "unit": "ns/op",
+            "extra": "401815 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPermissionCheck (Qingyu_backend/tests/e2e) - B/op",
+            "value": 3105,
+            "unit": "B/op",
+            "extra": "401815 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPermissionCheck (Qingyu_backend/tests/e2e) - allocs/op",
+            "value": 28,
+            "unit": "allocs/op",
+            "extra": "401815 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPermissionCheck (Qingyu_backend/tests/e2e)",
+            "value": 2797,
+            "unit": "ns/op\t    3105 B/op\t      28 allocs/op",
+            "extra": "398301 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPermissionCheck (Qingyu_backend/tests/e2e) - ns/op",
+            "value": 2797,
+            "unit": "ns/op",
+            "extra": "398301 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPermissionCheck (Qingyu_backend/tests/e2e) - B/op",
+            "value": 3105,
+            "unit": "B/op",
+            "extra": "398301 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPermissionCheck (Qingyu_backend/tests/e2e) - allocs/op",
+            "value": 28,
+            "unit": "allocs/op",
+            "extra": "398301 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPermissionCheck (Qingyu_backend/tests/e2e)",
+            "value": 2803,
+            "unit": "ns/op\t    3105 B/op\t      28 allocs/op",
+            "extra": "411285 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPermissionCheck (Qingyu_backend/tests/e2e) - ns/op",
+            "value": 2803,
+            "unit": "ns/op",
+            "extra": "411285 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPermissionCheck (Qingyu_backend/tests/e2e) - B/op",
+            "value": 3105,
+            "unit": "B/op",
+            "extra": "411285 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPermissionCheck (Qingyu_backend/tests/e2e) - allocs/op",
+            "value": 28,
+            "unit": "allocs/op",
+            "extra": "411285 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPermissionCheck (Qingyu_backend/tests/e2e)",
+            "value": 2852,
+            "unit": "ns/op\t    3105 B/op\t      28 allocs/op",
+            "extra": "416185 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPermissionCheck (Qingyu_backend/tests/e2e) - ns/op",
+            "value": 2852,
+            "unit": "ns/op",
+            "extra": "416185 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPermissionCheck (Qingyu_backend/tests/e2e) - B/op",
+            "value": 3105,
+            "unit": "B/op",
+            "extra": "416185 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPermissionCheck (Qingyu_backend/tests/e2e) - allocs/op",
+            "value": 28,
+            "unit": "allocs/op",
+            "extra": "416185 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPermissionCheck (Qingyu_backend/tests/e2e)",
+            "value": 2797,
+            "unit": "ns/op\t    3105 B/op\t      28 allocs/op",
+            "extra": "402637 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPermissionCheck (Qingyu_backend/tests/e2e) - ns/op",
+            "value": 2797,
+            "unit": "ns/op",
+            "extra": "402637 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPermissionCheck (Qingyu_backend/tests/e2e) - B/op",
+            "value": 3105,
+            "unit": "B/op",
+            "extra": "402637 times\n4 procs"
+          },
+          {
+            "name": "BenchmarkPermissionCheck (Qingyu_backend/tests/e2e) - allocs/op",
+            "value": 28,
+            "unit": "allocs/op",
+            "extra": "402637 times\n4 procs"
           }
         ]
       }
