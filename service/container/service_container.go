@@ -35,7 +35,7 @@ import (
 	mongoNotification "Qingyu_backend/repository/mongodb/notification"
 	notificationService "Qingyu_backend/service/notification"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"Qingyu_backend/repository"
 
 	// Shared services
 	"Qingyu_backend/service/admin"
@@ -1390,7 +1390,7 @@ func (a *adminAuditRepositoryAdapter) Create(ctx context.Context, record *admin.
 		UpdatedAt:   record.UpdatedAt,
 	}
 	if record.ID != "" {
-		if oid, err := primitive.ObjectIDFromHex(record.ID); err == nil {
+		if oid, err := repository.ParseID(record.ID); err == nil {
 			adminRecord.ID = oid
 		}
 	}
@@ -1482,7 +1482,7 @@ func (a *adminLogRepositoryAdapter) Create(ctx context.Context, log *admin.Admin
 		CreatedAt: log.CreatedAt,
 	}
 	if log.ID != "" {
-		if oid, err := primitive.ObjectIDFromHex(log.ID); err == nil {
+		if oid, err := repository.ParseID(log.ID); err == nil {
 			adminLog.ID = oid
 		}
 	}

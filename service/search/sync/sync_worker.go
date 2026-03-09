@@ -10,11 +10,11 @@ import (
 
 	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/zap"
 
 	"Qingyu_backend/models/search"
+	"Qingyu_backend/repository"
 	searchengine "Qingyu_backend/service/search/engine"
 )
 
@@ -247,7 +247,7 @@ func (w *WorkerImpl) ProcessEvent(ctx context.Context, event *search.SyncEvent) 
 // handleInsert 处理插入事件
 func (w *WorkerImpl) handleInsert(ctx context.Context, event *search.SyncEvent) error {
 	collection := w.mongoDB.Collection(event.Index)
-	objectID, err := primitive.ObjectIDFromHex(event.ID)
+	objectID, err := repository.ParseID(event.ID)
 	if err != nil {
 		return fmt.Errorf("invalid document ID: %w", err)
 	}
@@ -303,7 +303,7 @@ func (w *WorkerImpl) handleInsert(ctx context.Context, event *search.SyncEvent) 
 // handleUpdate 处理更新事件
 func (w *WorkerImpl) handleUpdate(ctx context.Context, event *search.SyncEvent) error {
 	collection := w.mongoDB.Collection(event.Index)
-	objectID, err := primitive.ObjectIDFromHex(event.ID)
+	objectID, err := repository.ParseID(event.ID)
 	if err != nil {
 		return fmt.Errorf("invalid document ID: %w", err)
 	}

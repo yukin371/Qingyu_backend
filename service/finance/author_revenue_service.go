@@ -1,13 +1,15 @@
 package finance
 
 import (
+	"context"
+	"fmt"
+
 	financeModel "Qingyu_backend/models/finance"
 	"Qingyu_backend/models/shared/types"
 	pkgtransaction "Qingyu_backend/pkg/transaction"
+	"Qingyu_backend/repository"
 	"Qingyu_backend/repository/interfaces/finance"
 	sharedRepo "Qingyu_backend/repository/interfaces/shared"
-	"context"
-	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -72,7 +74,7 @@ func (s *AuthorRevenueServiceImpl) GetEarnings(ctx context.Context, authorID str
 
 // GetBookEarnings 获取某本书的收入
 func (s *AuthorRevenueServiceImpl) GetBookEarnings(ctx context.Context, authorID string, bookID string) ([]*financeModel.AuthorEarning, int64, error) {
-	bookOID, err := primitive.ObjectIDFromHex(bookID)
+	bookOID, err := repository.ParseID(bookID)
 	if err != nil {
 		return nil, 0, fmt.Errorf("无效的书籍ID: %w", err)
 	}
@@ -257,7 +259,7 @@ func (s *AuthorRevenueServiceImpl) GetSettlements(ctx context.Context, authorID 
 
 // GetSettlement 获取结算详情
 func (s *AuthorRevenueServiceImpl) GetSettlement(ctx context.Context, settlementID string) (*financeModel.Settlement, error) {
-	oid, err := primitive.ObjectIDFromHex(settlementID)
+	oid, err := repository.ParseID(settlementID)
 	if err != nil {
 		return nil, fmt.Errorf("无效的结算ID: %w", err)
 	}

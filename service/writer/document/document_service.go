@@ -4,6 +4,7 @@ import (
 	"Qingyu_backend/models/dto"
 	"Qingyu_backend/models/writer"
 	"Qingyu_backend/models/writer/types"
+	"Qingyu_backend/repository"
 	"context"
 	"errors"
 	"fmt"
@@ -89,7 +90,7 @@ func (s *DocumentService) CreateDocument(ctx context.Context, req *CreateDocumen
 	doc := &writer.Document{}
 
 	// 转换 ProjectID string -> ObjectID
-	projectID, err := primitive.ObjectIDFromHex(req.ProjectID)
+	projectID, err := repository.ParseID(req.ProjectID)
 	if err != nil {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "无效的项目ID", "", err)
 	}
@@ -99,7 +100,7 @@ func (s *DocumentService) CreateDocument(ctx context.Context, req *CreateDocumen
 	// 转换 ParentID *string -> ObjectID（如果有）
 	var parentID primitive.ObjectID
 	if req.ParentID != nil && *req.ParentID != "" {
-		parentID, err = primitive.ObjectIDFromHex(*req.ParentID)
+		parentID, err = repository.ParseID(*req.ParentID)
 		if err != nil {
 			return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "无效的父文档ID", "", err)
 		}
@@ -115,7 +116,7 @@ func (s *DocumentService) CreateDocument(ctx context.Context, req *CreateDocumen
 	// 转换 CharacterIDs []string -> []ObjectID
 	doc.CharacterIDs = make([]primitive.ObjectID, 0, len(req.CharacterIDs))
 	for _, id := range req.CharacterIDs {
-		charID, err := primitive.ObjectIDFromHex(id)
+		charID, err := repository.ParseID(id)
 		if err != nil {
 			return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "无效的角色ID: "+id, "", err)
 		}
@@ -125,7 +126,7 @@ func (s *DocumentService) CreateDocument(ctx context.Context, req *CreateDocumen
 	// 转换 LocationIDs []string -> []ObjectID
 	doc.LocationIDs = make([]primitive.ObjectID, 0, len(req.LocationIDs))
 	for _, id := range req.LocationIDs {
-		locID, err := primitive.ObjectIDFromHex(id)
+		locID, err := repository.ParseID(id)
 		if err != nil {
 			return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "无效的地点ID: "+id, "", err)
 		}
@@ -135,7 +136,7 @@ func (s *DocumentService) CreateDocument(ctx context.Context, req *CreateDocumen
 	// 转换 TimelineIDs []string -> []ObjectID
 	doc.TimelineIDs = make([]primitive.ObjectID, 0, len(req.TimelineIDs))
 	for _, id := range req.TimelineIDs {
-		timeID, err := primitive.ObjectIDFromHex(id)
+		timeID, err := repository.ParseID(id)
 		if err != nil {
 			return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "无效的时间线ID: "+id, "", err)
 		}
@@ -615,7 +616,7 @@ func (s *DocumentService) ReorderDocuments(ctx context.Context, req *ReorderDocu
 		}
 		// 如果提供了 ParentID，也更新它
 		if item.ParentID != nil {
-			parentID, err := primitive.ObjectIDFromHex(*item.ParentID)
+			parentID, err := repository.ParseID(*item.ParentID)
 			if err != nil {
 				return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "无效的父文档ID: "+*item.ParentID, "", err)
 			}
@@ -670,7 +671,7 @@ func (s *DocumentService) AutoSaveDocument(ctx context.Context, req *AutoSaveReq
 
 	if content == nil {
 		// 首次保存，创建新DocumentContent
-		documentID, err := primitive.ObjectIDFromHex(req.DocumentID)
+		documentID, err := repository.ParseID(req.DocumentID)
 		if err != nil {
 			return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "无效的文档ID", "", err)
 		}
@@ -878,7 +879,7 @@ func (s *DocumentService) UpdateDocumentContent(ctx context.Context, req *Update
 	// 4. 保存内容
 	if existingContent == nil {
 		// 首次保存，创建新内容
-		documentID, err := primitive.ObjectIDFromHex(req.DocumentID)
+		documentID, err := repository.ParseID(req.DocumentID)
 		if err != nil {
 			return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "无效的文档ID", "", err)
 		}
@@ -958,7 +959,7 @@ func (s *DocumentService) GetDocumentContents(ctx context.Context, documentID st
 		return nil, err
 	}
 
-	docObjectID, err := primitive.ObjectIDFromHex(documentID)
+	docObjectID, err := repository.ParseID(documentID)
 	if err != nil {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "无效的文档ID", "", err)
 	}
@@ -1025,7 +1026,7 @@ func (s *DocumentService) ReplaceDocumentContents(ctx context.Context, req *Repl
 		return nil, err
 	}
 
-	docObjectID, err := primitive.ObjectIDFromHex(req.DocumentID)
+	docObjectID, err := repository.ParseID(req.DocumentID)
 	if err != nil {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "无效的文档ID", "", err)
 	}
@@ -1085,7 +1086,7 @@ func (s *DocumentService) ReplaceDocumentContents(ctx context.Context, req *Repl
 		}
 
 		if paragraph.ID != "" {
-			oid, parseErr := primitive.ObjectIDFromHex(paragraph.ID)
+			oid, parseErr := repository.ParseID(paragraph.ID)
 			if parseErr == nil {
 				newRow.ID = oid
 				keepIDs[paragraph.ID] = struct{}{}
@@ -1150,7 +1151,7 @@ func (s *DocumentService) ReindexDocumentContents(ctx context.Context, documentI
 		return nil, err
 	}
 
-	docObjectID, err := primitive.ObjectIDFromHex(documentID)
+	docObjectID, err := repository.ParseID(documentID)
 	if err != nil {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "无效的文档ID", "", err)
 	}

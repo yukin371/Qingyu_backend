@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"Qingyu_backend/models/writer"
+	"Qingyu_backend/repository"
 	writerInterface "Qingyu_backend/repository/interfaces/writer"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -103,7 +104,7 @@ func (s *PreflightServiceImpl) ValidateBatchOperation(
 	// 2. 验证每个目标ID
 	for _, id := range normalizedIDs {
 		// 将字符串ID转换为ObjectID验证格式
-		_, err := primitive.ObjectIDFromHex(id)
+		_, err := repository.ParseID(id)
 		if err != nil {
 			result.InvalidIDs = append(result.InvalidIDs, InvalidTarget{
 				ID:     id,
@@ -214,7 +215,7 @@ func (s *PreflightServiceImpl) NormalizeTargetIDs(
 
 	for id := range uniqueIDs {
 		// 验证ID格式
-		_, err := primitive.ObjectIDFromHex(id)
+		_, err := repository.ParseID(id)
 		if err != nil {
 			continue
 		}

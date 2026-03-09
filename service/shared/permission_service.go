@@ -4,10 +4,9 @@ import (
 	"context"
 	"errors"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
-
 	"Qingyu_backend/models/auth"
 	authrepo "Qingyu_backend/repository/interfaces/auth"
+	"Qingyu_backend/repository"
 )
 
 var (
@@ -238,7 +237,7 @@ func (s *PermissionServiceImpl) GetRolePermissions(ctx context.Context, roleID s
 // ==================== 用户角色管理 ====================
 
 func (s *PermissionServiceImpl) GetUserRoles(ctx context.Context, userID string) ([]string, error) {
-	oid, err := primitive.ObjectIDFromHex(userID)
+	oid, err := repository.ParseID(userID)
 	if err != nil {
 		return nil, errors.New("invalid user ID")
 	}
@@ -247,7 +246,7 @@ func (s *PermissionServiceImpl) GetUserRoles(ctx context.Context, userID string)
 }
 
 func (s *PermissionServiceImpl) AssignRoleToUser(ctx context.Context, userID, roleName string) error {
-	oid, err := primitive.ObjectIDFromHex(userID)
+	oid, err := repository.ParseID(userID)
 	if err != nil {
 		return errors.New("invalid user ID")
 	}
@@ -262,7 +261,7 @@ func (s *PermissionServiceImpl) AssignRoleToUser(ctx context.Context, userID, ro
 }
 
 func (s *PermissionServiceImpl) RemoveRoleFromUser(ctx context.Context, userID, roleName string) error {
-	oid, err := primitive.ObjectIDFromHex(userID)
+	oid, err := repository.ParseID(userID)
 	if err != nil {
 		return errors.New("invalid user ID")
 	}
@@ -271,7 +270,7 @@ func (s *PermissionServiceImpl) RemoveRoleFromUser(ctx context.Context, userID, 
 }
 
 func (s *PermissionServiceImpl) ClearUserRoles(ctx context.Context, userID string) error {
-	oid, err := primitive.ObjectIDFromHex(userID)
+	oid, err := repository.ParseID(userID)
 	if err != nil {
 		return errors.New("invalid user ID")
 	}
@@ -282,7 +281,7 @@ func (s *PermissionServiceImpl) ClearUserRoles(ctx context.Context, userID strin
 // ==================== 权限检查 ====================
 
 func (s *PermissionServiceImpl) UserHasPermission(ctx context.Context, userID, permissionCode string) (bool, error) {
-	oid, err := primitive.ObjectIDFromHex(userID)
+	oid, err := repository.ParseID(userID)
 	if err != nil {
 		return false, errors.New("invalid user ID")
 	}
@@ -291,7 +290,7 @@ func (s *PermissionServiceImpl) UserHasPermission(ctx context.Context, userID, p
 }
 
 func (s *PermissionServiceImpl) UserHasAnyPermission(ctx context.Context, userID string, permissionCodes []string) (bool, error) {
-	oid, err := primitive.ObjectIDFromHex(userID)
+	oid, err := repository.ParseID(userID)
 	if err != nil {
 		return false, errors.New("invalid user ID")
 	}
@@ -300,7 +299,7 @@ func (s *PermissionServiceImpl) UserHasAnyPermission(ctx context.Context, userID
 }
 
 func (s *PermissionServiceImpl) UserHasAllPermissions(ctx context.Context, userID string, permissionCodes []string) (bool, error) {
-	oid, err := primitive.ObjectIDFromHex(userID)
+	oid, err := repository.ParseID(userID)
 	if err != nil {
 		return false, errors.New("invalid user ID")
 	}
@@ -309,7 +308,7 @@ func (s *PermissionServiceImpl) UserHasAllPermissions(ctx context.Context, userI
 }
 
 func (s *PermissionServiceImpl) GetUserPermissions(ctx context.Context, userID string) ([]*auth.Permission, error) {
-	oid, err := primitive.ObjectIDFromHex(userID)
+	oid, err := repository.ParseID(userID)
 	if err != nil {
 		return nil, errors.New("invalid user ID")
 	}

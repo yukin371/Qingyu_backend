@@ -2,15 +2,16 @@ package document
 
 import (
 	"Qingyu_backend/models/writer"
+	"Qingyu_backend/repository"
+	writerRepo "Qingyu_backend/repository/interfaces/writer"
+	serviceBase "Qingyu_backend/service/base"
 	"context"
 	"fmt"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
-
 	pkgErrors "Qingyu_backend/pkg/errors"
-	writerRepo "Qingyu_backend/repository/interfaces/writer"
-	serviceBase "Qingyu_backend/service/base"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // BatchOperationService 批量操作服务
@@ -81,7 +82,7 @@ func (s *BatchOperationService) Submit(ctx context.Context, req *SubmitBatchOper
 	}
 
 	// 4. 转换ProjectID
-	projectID, err := primitive.ObjectIDFromHex(req.ProjectID)
+	projectID, err := repository.ParseID(req.ProjectID)
 	if err != nil {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "无效的项目ID", "", err)
 	}

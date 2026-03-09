@@ -7,12 +7,12 @@ import (
 	"fmt"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 
 	"Qingyu_backend/models/shared"
 	"Qingyu_backend/models/shared/types"
 	BookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
+	"Qingyu_backend/repository"
 )
 
 // BookStatisticsService 书籍统计服务接口
@@ -166,7 +166,7 @@ func (s *BookStatisticsServiceImpl) GetStatisticsByBookID(ctx context.Context, b
 	// 如果不存在，创建默认统计数据
 	if stats == nil {
 		// 将 string bookID 转换为 primitive.ObjectID
-		objectID, err := primitive.ObjectIDFromHex(bookID)
+		objectID, err := repository.ParseID(bookID)
 		if err != nil {
 			return nil, fmt.Errorf("invalid book ID: %w", err)
 		}
