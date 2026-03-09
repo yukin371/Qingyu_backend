@@ -199,8 +199,17 @@ func (s *BookmarkService) GetBookmark(ctx context.Context, id string) (*dto.Book
 
 | 情况 | 建议 |
 |------|------|
-| helper方案效果良好，重复代码已大幅减少 | 保持现状，不强制改接口 |
+| helper方案效果良好，重复代码已大幅减少 | 保持现状，不强制改接口 ✅ 已选择 |
 | 仍有大量重复代码，团队希望更彻底的统一 | 启动接口迁移，分模块进行 |
+
+### 3.3 评估结论
+
+**决策：保持现状，不强制修改 Repository 接口**
+
+理由：
+1. Service 层已全部完成迁移（28个文件），重复代码大幅减少
+2. API 层的 ID 转换是"快速失败"前置校验，符合设计原则
+3. Repository 层的 ID 转换是内部实现细节，修改接口成本高、收益低
 
 ---
 
@@ -257,9 +266,9 @@ func (api *SomeAPI) GetSomething(c *gin.Context) {
 
 ### 4.3 验收标准
 
-- [ ] 错误翻译路径文档化
-- [ ] API层保留快速失败机制
-- [ ] 错误响应格式一致性验证（contract test）
+- [x] 错误翻译路径文档化 ✅ `docs/guides/id-error-handling-guide.md`
+- [x] API层保留快速失败机制 ✅ 文档中明确保留
+- [x] 错误响应格式一致性验证 ✅ 统一使用 `response.BadRequest`
 
 ---
 
