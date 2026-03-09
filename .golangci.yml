@@ -69,6 +69,16 @@ issues:
   new: false
   # 排除特定检查ID
   exclude-rules:
+    # 排除废弃和归档目录中的所有检查
+    - path: '(\.archive/|_deprecated/)'
+      linters:
+        - govet
+        - staticcheck
+        - gosimple
+        - errcheck
+        - ineffassign
+        - gofmt
+        - goimports
     # 排除 staticcheck 的特定检查
     - linters:
         - staticcheck
