@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/alicebob/miniredis/v2 v2.36.1
-	github.com/brianvoe/gofakeit/v7 v7.14.0
+	github.com/brianvoe/gofakeit/v7 v7.14.1
 	github.com/disintegration/imaging v1.6.2
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/gin-gonic/gin v1.11.0
