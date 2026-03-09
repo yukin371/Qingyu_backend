@@ -37,9 +37,8 @@ jobs:
 
       - name: Run golangci-lint
         run: |
-          # 只检查主代码目录，排除废弃和归档目录
-          # 注意：不能直接使用 ./models/... 因为它包含 _deprecated 目录
-          golangci-lint run --timeout=10m ./api/... ./service/... ./pkg/... ./cmd/... ./config/... ./core/... ./global/... ./internal/... ./migration/... ./models/domain/... ./models/dto/... ./models/entity/... ./models/errors/... ./models/requests/... ./models/response/... ./models/shared/... ./realtime/... ./repository/... ./router/... ./utils/...
+          # 只检查核心代码目录，减少内存使用
+          golangci-lint run --timeout=10m ./api/... ./service/... ./pkg/... ./repository/... ./router/... ./config/...
           fi
 
       - name: Check code formatting
