@@ -39,7 +39,6 @@ jobs:
         run: |
           # 只检查核心代码目录，减少内存使用
           golangci-lint run --timeout=10m ./api/... ./service/... ./pkg/... ./repository/... ./router/... ./config/...
-          fi
 
       - name: Check code formatting
         run: |
