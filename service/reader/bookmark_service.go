@@ -371,7 +371,7 @@ func (s *BookmarkServiceImpl) ImportBookmarks(ctx context.Context, userID string
 		}
 
 		// 创建书签
-		s.bookmarkRepo.Create(ctx, bookmark)
+		_ = s.bookmarkRepo.Create(ctx, bookmark)
 	}
 
 	return nil

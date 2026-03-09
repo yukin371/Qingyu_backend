@@ -5,12 +5,13 @@ import (
 	"strconv"
 
 	"Qingyu_backend/models/ai"
-	aiDto "Qingyu_backend/service/ai/dto" // Imported for Swagger annotations
 	aiService "Qingyu_backend/service/ai"
+	aiDto "Qingyu_backend/service/ai/dto" // Imported for Swagger annotations
+
+	"Qingyu_backend/pkg/response"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"Qingyu_backend/pkg/response"
 )
 
 // ChatApi AI聊天API
@@ -48,7 +49,7 @@ type ChatRequest struct {
 func (api *ChatApi) Chat(c *gin.Context) {
 	var req ChatRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -89,7 +90,7 @@ func (api *ChatApi) Chat(c *gin.Context) {
 func (api *ChatApi) ChatStream(c *gin.Context) {
 	var req ChatRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -218,18 +219,18 @@ func (api *ChatApi) GetChatSessions(c *gin.Context) {
 func (api *ChatApi) GetChatHistory(c *gin.Context) {
 	sessionID := c.Param("sessionId")
 	if sessionID == "" {
-		response.BadRequest(c,  "参数错误", "会话ID不能为空")
+		response.BadRequest(c, "参数错误", "会话ID不能为空")
 		return
 	}
 
 	// 获取分页参数，设置默认值和最大值
-	limit := 50  // 默认50条
-	offset := 0  // 默认从头开始
+	limit := 50 // 默认50条
+	offset := 0 // 默认从头开始
 
 	if l, ok := c.GetQuery("limit"); ok {
 		if n, err := strconv.Atoi(l); err == nil && n > 0 {
 			if n > 100 {
-				limit = 100  // 最大100条
+				limit = 100 // 最大100条
 			} else {
 				limit = n
 			}
@@ -263,7 +264,7 @@ func (api *ChatApi) GetChatHistory(c *gin.Context) {
 func (api *ChatApi) DeleteChatSession(c *gin.Context) {
 	sessionID := c.Param("sessionId")
 	if sessionID == "" {
-		response.BadRequest(c,  "参数错误", "会话ID不能为空")
+		response.BadRequest(c, "参数错误", "会话ID不能为空")
 		return
 	}
 

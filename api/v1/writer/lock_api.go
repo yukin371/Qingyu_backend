@@ -39,13 +39,13 @@ func NewLockAPI(lockService lock.DocumentLockService) *LockAPI {
 func (api *LockAPI) LockDocument(c *gin.Context) {
 	documentID := c.Param("id")
 	if documentID == "" {
-		response.BadRequest(c,  "参数错误", "文档ID不能为空")
+		response.BadRequest(c, "参数错误", "文档ID不能为空")
 		return
 	}
 
 	var req LockDocumentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -102,7 +102,7 @@ func (api *LockAPI) LockDocument(c *gin.Context) {
 func (api *LockAPI) UnlockDocument(c *gin.Context) {
 	documentID := c.Param("id")
 	if documentID == "" {
-		response.BadRequest(c,  "参数错误", "文档ID不能为空")
+		response.BadRequest(c, "参数错误", "文档ID不能为空")
 		return
 	}
 
@@ -141,7 +141,7 @@ func (api *LockAPI) UnlockDocument(c *gin.Context) {
 func (api *LockAPI) RefreshLock(c *gin.Context) {
 	documentID := c.Param("id")
 	if documentID == "" {
-		response.BadRequest(c,  "参数错误", "文档ID不能为空")
+		response.BadRequest(c, "参数错误", "文档ID不能为空")
 		return
 	}
 
@@ -177,7 +177,7 @@ func (api *LockAPI) RefreshLock(c *gin.Context) {
 func (api *LockAPI) GetLockStatus(c *gin.Context) {
 	documentID := c.Param("id")
 	if documentID == "" {
-		response.BadRequest(c,  "参数错误", "文档ID不能为空")
+		response.BadRequest(c, "参数错误", "文档ID不能为空")
 		return
 	}
 
@@ -212,7 +212,7 @@ func (api *LockAPI) GetLockStatus(c *gin.Context) {
 func (api *LockAPI) ForceUnlock(c *gin.Context) {
 	documentID := c.Param("id")
 	if documentID == "" {
-		response.BadRequest(c,  "参数错误", "文档ID不能为空")
+		response.BadRequest(c, "参数错误", "文档ID不能为空")
 		return
 	}
 
@@ -252,13 +252,13 @@ func (api *LockAPI) ForceUnlock(c *gin.Context) {
 func (api *LockAPI) ExtendLock(c *gin.Context) {
 	documentID := c.Param("id")
 	if documentID == "" {
-		response.BadRequest(c,  "参数错误", "文档ID不能为空")
+		response.BadRequest(c, "参数错误", "文档ID不能为空")
 		return
 	}
 
 	var req ExtendLockRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 

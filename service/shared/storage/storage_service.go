@@ -163,7 +163,7 @@ func (s *StorageServiceImpl) Download(ctx context.Context, fileID string) (io.Re
 
 	// 3. 更新最后访问时间（可选）
 	go func() {
-		s.fileRepo.Update(context.Background(), fileID, map[string]interface{}{
+		_ = s.fileRepo.Update(context.Background(), fileID, map[string]interface{}{
 			"updated_at": time.Now(),
 		})
 	}()

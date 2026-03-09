@@ -69,4 +69,3 @@ func TestWritingAPI_Validation(t *testing.T) {
 		assert.Equal(t, http.StatusBadRequest, w.Code)
 	})
 }
-

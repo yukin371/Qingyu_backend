@@ -33,11 +33,11 @@ type ChangeStreamListenerImpl struct {
 	mongoDB        *mongo.Database
 	redisClient    *redis.Client
 	zapLogger      *zap.Logger
-	logger         *log.Logger     // 保持兼容性
-	collections    []string        // 监听的集合列表
+	logger         *log.Logger        // 保持兼容性
+	collections    []string           // 监听的集合列表
 	eventBuffer    []search.SyncEvent // 事件缓冲区
-	bufferMutex    sync.Mutex      // 缓冲区互斥锁
-	resumeTokenMap map[string][]byte // 每个集合的 resume token
+	bufferMutex    sync.Mutex         // 缓冲区互斥锁
+	resumeTokenMap map[string][]byte  // 每个集合的 resume token
 	ctx            context.Context
 	cancel         context.CancelFunc
 	wg             sync.WaitGroup
@@ -251,16 +251,16 @@ func (l *ChangeStreamListenerImpl) ProcessChange(ctx context.Context, change *Ch
 // ConvertEventToSyncEvent 将 MongoDB 变更事件转换为 SyncEvent
 func (l *ChangeStreamListenerImpl) ConvertEventToSyncEvent(collection string, event *bson.Raw) (*search.SyncEvent, error) {
 	var changeEvent struct {
-		ID             primitive.ObjectID `bson:"_id"`
-		OperationType  string             `bson:"operationType"`
-		FullDocument   bson.M             `bson:"fullDocument,omitempty"`
-		DocumentKey    bson.M             `bson:"documentKey"`
-		NS             struct {
+		ID            primitive.ObjectID `bson:"_id"`
+		OperationType string             `bson:"operationType"`
+		FullDocument  bson.M             `bson:"fullDocument,omitempty"`
+		DocumentKey   bson.M             `bson:"documentKey"`
+		NS            struct {
 			DB         string `bson:"db"`
 			Collection string `bson:"collection"`
 		} `bson:"ns"`
 		UpdateDescription *struct {
-			UpdatedFields bson.M `bson:"updatedFields"`
+			UpdatedFields bson.M   `bson:"updatedFields"`
 			RemovedFields []string `bson:"removedFields"`
 		} `bson:"updateDescription,omitempty"`
 		ClusterTime primitive.Timestamp `bson:"clusterTime"`

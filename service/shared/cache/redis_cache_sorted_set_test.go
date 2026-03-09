@@ -357,14 +357,14 @@ func TestRedisCacheService_ConcurrentSortedSet(t *testing.T) {
 // TestRedisCacheService_SortedSetTableDriven 有序集合表格驱动测试
 func TestRedisCacheService_SortedSetTableDriven(t *testing.T) {
 	tests := []struct {
-		name        string
-		setup       func(*RedisCacheService, context.Context) error
-		action      func(*RedisCacheService, context.Context) error
-		validate    func(*testing.T, interface{}, error)
-		cleanup     func(*RedisCacheService, context.Context) error
+		name     string
+		setup    func(*RedisCacheService, context.Context) error
+		action   func(*RedisCacheService, context.Context) error
+		validate func(*testing.T, interface{}, error)
+		cleanup  func(*RedisCacheService, context.Context) error
 	}{
 		{
-			name: "ZAdd 添加单个成员成功",
+			name:  "ZAdd 添加单个成员成功",
 			setup: nil,
 			action: func(s *RedisCacheService, ctx context.Context) error {
 				return s.ZAdd(ctx, "test:zset", 1.0, "member1")

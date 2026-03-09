@@ -109,8 +109,8 @@ func TestDatabaseConfig_OldFormatWithDefaults(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "mongodb://localhost:27017", mongoConfig.URI)
 	assert.Equal(t, "qingyu", mongoConfig.Database)
-	assert.Equal(t, uint64(100), mongoConfig.MaxPoolSize)   // 默认值
-	assert.Equal(t, uint64(10), mongoConfig.MinPoolSize)    // 默认值（注意：旧文档说5，但应该与MongoDBConfig一致）
+	assert.Equal(t, uint64(100), mongoConfig.MaxPoolSize)           // 默认值
+	assert.Equal(t, uint64(10), mongoConfig.MinPoolSize)            // 默认值（注意：旧文档说5，但应该与MongoDBConfig一致）
 	assert.Equal(t, 10*1000000000, int(mongoConfig.ConnectTimeout)) // 10秒
 }
 

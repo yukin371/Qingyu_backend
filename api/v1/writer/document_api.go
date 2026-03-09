@@ -7,9 +7,9 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/models/dto"
-	"Qingyu_backend/service/writer/document"
 	writerModels "Qingyu_backend/models/writer" // Import for Swagger annotations
 	"Qingyu_backend/pkg/response"
+	"Qingyu_backend/service/writer/document"
 	"errors"
 )
 
@@ -56,7 +56,7 @@ func (api *DocumentApi) CreateDocument(c *gin.Context) {
 
 	// 验证项目ID
 	if projectID == "" {
-		response.BadRequest(c,  "参数错误", "项目ID不能为空")
+		response.BadRequest(c, "参数错误", "项目ID不能为空")
 		return
 	}
 
@@ -69,7 +69,7 @@ func (api *DocumentApi) CreateDocument(c *gin.Context) {
 
 	userIDStr, ok := userID.(string)
 	if !ok || userIDStr == "" {
-		response.BadRequest(c,  "参数错误", "无效的用户ID")
+		response.BadRequest(c, "参数错误", "无效的用户ID")
 		return
 	}
 
@@ -78,7 +78,7 @@ func (api *DocumentApi) CreateDocument(c *gin.Context) {
 
 	var req document.CreateDocumentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -154,7 +154,7 @@ func (api *DocumentApi) UpdateDocument(c *gin.Context) {
 
 	var req document.UpdateDocumentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -248,7 +248,7 @@ func (api *DocumentApi) MoveDocument(c *gin.Context) {
 
 	var req document.MoveDocumentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -279,7 +279,7 @@ func (api *DocumentApi) ReorderDocuments(c *gin.Context) {
 
 	var req document.ReorderDocumentsRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -321,7 +321,7 @@ func (api *DocumentApi) DuplicateDocument(c *gin.Context) {
 
 	userIDStr, ok := userID.(string)
 	if !ok || userIDStr == "" {
-		response.BadRequest(c,  "参数错误", "无效的用户ID")
+		response.BadRequest(c, "参数错误", "无效的用户ID")
 		return
 	}
 
@@ -330,7 +330,7 @@ func (api *DocumentApi) DuplicateDocument(c *gin.Context) {
 
 	var req document.DuplicateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 

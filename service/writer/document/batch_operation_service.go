@@ -451,12 +451,12 @@ func (s *BatchOperationService) Undo(ctx context.Context, operationID string, us
 		s.eventBus.PublishAsync(ctx, &serviceBase.BaseEvent{
 			EventType: "batch_operation.undone",
 			EventData: map[string]interface{}{
-				"operation_id":   operationID,
-				"project_id":     batchOp.ProjectID.Hex(),
-				"type":           string(batchOp.Type),
-				"restore_count":  restoreCount,
-				"failed_count":   failedCount,
-				"undo_by":        userID,
+				"operation_id":  operationID,
+				"project_id":    batchOp.ProjectID.Hex(),
+				"type":          string(batchOp.Type),
+				"restore_count": restoreCount,
+				"failed_count":  failedCount,
+				"undo_by":       userID,
 			},
 			Timestamp: time.Now(),
 			Source:    s.serviceName,
@@ -590,7 +590,7 @@ func (s *BatchOperationService) executeDelete(ctx context.Context, batchOp *writ
 
 			// 更新状态为处理中
 			item.Status = writer.BatchItemStatusProcessing
-			s.batchOpRepo.UpdateItemStatus(ctx, batchOp.ID.Hex(), item.TargetID, item.Status, "", "")
+			_ = s.batchOpRepo.UpdateItemStatus(ctx, batchOp.ID.Hex(), item.TargetID, item.Status, "", "")
 
 			// 执行删除
 			err := s.docRepo.SoftDelete(ctx, item.TargetID, batchOp.ProjectID.Hex())
@@ -598,7 +598,7 @@ func (s *BatchOperationService) executeDelete(ctx context.Context, batchOp *writ
 				// 删除成功
 				item.Status = writer.BatchItemStatusSucceeded
 				item.Retryable = false
-				s.batchOpRepo.UpdateItemStatus(ctx, batchOp.ID.Hex(), item.TargetID, item.Status, "", "")
+				_ = s.batchOpRepo.UpdateItemStatus(ctx, batchOp.ID.Hex(), item.TargetID, item.Status, "", "")
 				break // 成功，跳出重试循环
 			}
 
@@ -615,7 +615,7 @@ func (s *BatchOperationService) executeDelete(ctx context.Context, batchOp *writ
 					item.Status = writer.BatchItemStatusFailed
 					item.ErrorCode = "CANCELLED"
 					item.ErrorMsg = "操作被取消"
-					s.batchOpRepo.UpdateItemStatus(ctx, batchOp.ID.Hex(), item.TargetID, item.Status, item.ErrorCode, item.ErrorMsg)
+					_ = s.batchOpRepo.UpdateItemStatus(ctx, batchOp.ID.Hex(), item.TargetID, item.Status, item.ErrorCode, item.ErrorMsg)
 					if batchOp.Atomic {
 						return fmt.Errorf("删除目标 %s 被取消: %w", item.TargetID, ctx.Err())
 					}
@@ -629,7 +629,7 @@ func (s *BatchOperationService) executeDelete(ctx context.Context, batchOp *writ
 				item.Status = writer.BatchItemStatusFailed
 				item.ErrorCode = "DELETE_FAILED"
 				item.ErrorMsg = err.Error()
-				s.batchOpRepo.UpdateItemStatus(ctx, batchOp.ID.Hex(), item.TargetID, item.Status, item.ErrorCode, item.ErrorMsg)
+				_ = s.batchOpRepo.UpdateItemStatus(ctx, batchOp.ID.Hex(), item.TargetID, item.Status, item.ErrorCode, item.ErrorMsg)
 
 				if batchOp.Atomic {
 					// 原子操作：任何失败都返回错误
@@ -724,30 +724,30 @@ func (s *BatchOperationService) GetVersion() string {
 
 // SubmitBatchOperationRequest 提交批量操作请求
 type SubmitBatchOperationRequest struct {
-	ProjectID          string                      `json:"projectId" validate:"required"`
-	Type               writer.BatchOperationType   `json:"type" validate:"required"`
-	TargetIDs          []string                    `json:"targetIds" validate:"required,min=1,max=1000"`
-	Payload            map[string]interface{}      `json:"payload,omitempty"`
-	Atomic             bool                        `json:"atomic"`
-	ConflictPolicy     writer.ConflictPolicy       `json:"conflictPolicy,omitempty"`
-	ExpectedVersions   map[string]int              `json:"expectedVersions,omitempty"`
-	ClientRequestID    string                      `json:"clientRequestId,omitempty"`
-	UserID             string                      `json:"userId,omitempty"`
-	IncludeDescendants bool                        `json:"includeDescendants"`
-	RetryConfig        *RetryConfig                `json:"retryConfig,omitempty"`
+	ProjectID          string                    `json:"projectId" validate:"required"`
+	Type               writer.BatchOperationType `json:"type" validate:"required"`
+	TargetIDs          []string                  `json:"targetIds" validate:"required,min=1,max=1000"`
+	Payload            map[string]interface{}    `json:"payload,omitempty"`
+	Atomic             bool                      `json:"atomic"`
+	ConflictPolicy     writer.ConflictPolicy     `json:"conflictPolicy,omitempty"`
+	ExpectedVersions   map[string]int            `json:"expectedVersions,omitempty"`
+	ClientRequestID    string                    `json:"clientRequestId,omitempty"`
+	UserID             string                    `json:"userId,omitempty"`
+	IncludeDescendants bool                      `json:"includeDescendants"`
+	RetryConfig        *RetryConfig              `json:"retryConfig,omitempty"`
 }
 
 // ListBatchOperationsRequest 获取批量操作列表请求
 type ListBatchOperationsRequest struct {
-	ProjectID string                        `json:"projectId" validate:"required"`
-	Type      writer.BatchOperationType     `json:"type,omitempty"`
-	Status    writer.BatchOperationStatus   `json:"status,omitempty"`
-	Limit     int64                         `json:"limit,omitempty"`
-	Offset    int64                         `json:"offset,omitempty"`
+	ProjectID string                      `json:"projectId" validate:"required"`
+	Type      writer.BatchOperationType   `json:"type,omitempty"`
+	Status    writer.BatchOperationStatus `json:"status,omitempty"`
+	Limit     int64                       `json:"limit,omitempty"`
+	Offset    int64                       `json:"offset,omitempty"`
 }
 
 // ListBatchOperationsResponse 获取批量操作列表响应
 type ListBatchOperationsResponse struct {
 	Operations []*writer.BatchOperation `json:"operations"`
-	Total      int                     `json:"total"`
+	Total      int                      `json:"total"`
 }

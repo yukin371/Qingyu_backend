@@ -77,12 +77,12 @@ func TestRetryService_GetRetryDelay_ExponentialBackoff(t *testing.T) {
 		expectedMin time.Duration
 		expectedMax time.Duration
 	}{
-		{"attempt 0", 0, 1000 * time.Millisecond, 1000 * time.Millisecond},   // 2^0 * 1s = 1s
-		{"attempt 1", 1, 2000 * time.Millisecond, 2000 * time.Millisecond},   // 2^1 * 1s = 2s
-		{"attempt 2", 2, 4000 * time.Millisecond, 4000 * time.Millisecond},   // 2^2 * 1s = 4s
-		{"attempt 3", 3, 8000 * time.Millisecond, 8000 * time.Millisecond},   // 2^3 * 1s = 8s
-		{"attempt 10", 10, 60 * time.Second, 60 * time.Second},                // 超过最大值
-		{"attempt 20", 20, 60 * time.Second, 60 * time.Second},                // 远超最大值
+		{"attempt 0", 0, 1000 * time.Millisecond, 1000 * time.Millisecond}, // 2^0 * 1s = 1s
+		{"attempt 1", 1, 2000 * time.Millisecond, 2000 * time.Millisecond}, // 2^1 * 1s = 2s
+		{"attempt 2", 2, 4000 * time.Millisecond, 4000 * time.Millisecond}, // 2^2 * 1s = 4s
+		{"attempt 3", 3, 8000 * time.Millisecond, 8000 * time.Millisecond}, // 2^3 * 1s = 8s
+		{"attempt 10", 10, 60 * time.Second, 60 * time.Second},             // 超过最大值
+		{"attempt 20", 20, 60 * time.Second, 60 * time.Second},             // 远超最大值
 	}
 
 	for _, tt := range tests {

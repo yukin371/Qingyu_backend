@@ -602,7 +602,7 @@ func (r *MongoBookStatisticsRepository) UpdateRatingValues(ctx context.Context, 
 		"$set": bson.M{
 			"average_rating": avgRating,
 			"rating_count":   count,
-			"updated_at":    time.Now(),
+			"updated_at":     time.Now(),
 		},
 	}
 	opts := options.Update().SetUpsert(true)

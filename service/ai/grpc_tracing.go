@@ -8,11 +8,11 @@ import (
 
 // Tracer 请求追踪器
 type Tracer struct {
-	mu         sync.RWMutex
-	traces     map[string]*RequestTrace
+	mu           sync.RWMutex
+	traces       map[string]*RequestTrace
 	activeTraces map[string]*ActiveTrace
-	maxSize    int
-	maxAge     time.Duration
+	maxSize      int
+	maxAge       time.Duration
 }
 
 // RequestTrace 请求追踪信息
@@ -322,11 +322,11 @@ func sortTracesByStartTime(traces []*RequestTrace) {
 
 // TraceStats 追踪统计信息
 type TraceStats struct {
-	TotalTraces  int            // 总追踪数
-	ActiveTraces int            // 活动追踪数
-	MaxSize      int            // 最大容量
+	TotalTraces   int            // 总追踪数
+	ActiveTraces  int            // 活动追踪数
+	MaxSize       int            // 最大容量
 	ServiceCounts map[string]int // 服务调用次数
-	StatusCounts map[string]int // 状态分布
+	StatusCounts  map[string]int // 状态分布
 }
 
 // generateRequestID 生成请求ID

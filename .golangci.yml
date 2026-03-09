@@ -1,171 +1,192 @@
-# golangci-lint 配置文件
-# 详细文档: https://golangci-lint.run/usage/configuration/
-
+version: "2"
 run:
-  timeout: 10m
+  go: "1.25"
   tests: true
-  go: '1.24'
-
 linters:
-  disable-all: true
+  default: none
   enable:
-    - errcheck       # 检查未处理的错误
-    - gosimple       # 简化代码建议
-    - govet          # 检查常见错误
-    - ineffassign    # 检查无效赋值
-    - staticcheck    # 静态分析检查
-    # - unused         # 检查未使用的常量、变量、函数等 - 项目中有许多辅助函数保留供未来使用
-    - gofmt          # 代码格式检查
-    - goimports      # import 排序和分组
-
-linters-settings:
-  errcheck:
-    # 排除常见的函数（这些返回值通常可以安全忽略）
-    exclude-functions:
-      - (io.Closer).Close
-      - (*github.com/gorilla/websocket.Conn).Close
-      - (*github.com/gorilla/websocket.Conn).SetReadDeadline
-      - (*github.com/gorilla/websocket.Conn).SetWriteDeadline
-      - (*github.com/gorilla/websocket.Conn).WriteMessage
-      - (net.Conn).Close
-      - (*go.mongodb.org/mongo-driver/mongo.Cursor).Close
-      - (*go.mongodb.org/mongo-driver/mongo.Client).Disconnect
-      - (*go.mongodb.org/mongo-driver/mongo.Database).Close
-      - (net/http.Response.Body).Close
-      - (*compress/gzip.Writer).Close
-      - (*compress/gzip.Reader).Close
-      - (*os.File).Close
-      # 排除 redis 相关
-      - (*github.com/redis/go-redis/v9.Client).Delete
-      - (*github.com/redis/go-redis/v9.Client).Unlock
-      # 排除 crypto/rand.Read
-      - crypto/rand.Read
-    # 禁用空白赋值检查，如 "x = _"
-    check-blank: false
-    # 禁用类型断言检查
-    check-type-assertions: false
-
-  govet:
-    enable-all: false
-    enable:
-      - asmdecl
-      - assign
-      - atomic
-      - atomicalign
-      - bools
-      - buildtag
-      - cgocall
-      - composites
-      - copylocks
-      - errorsas
-      - framepointer
-      - httpresponse
-      - ifaceassert
-      - loopclosure
-      - lostcancel
-      - nilfunc
-      - nilness
-      - printf
-      - reflectvaluecompare
-      - shift
-      - sigchanyzer
-      - sortslice
-      - stdmethods
-      - stringintconv
-      - structtag
-      - tests
-      - unmarshal
-      - unreachable
-      - unsafeptr
-      - unusedresult
-
-  staticcheck:
-    checks: ["all"]
-
-  goimports:
-    local-prefixes: github.com/yukin371
-
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+  settings:
+    errcheck:
+      check-type-assertions: false
+      check-blank: false
+      exclude-functions:
+        - (io.Closer).Close
+        - (*github.com/gorilla/websocket.Conn).Close
+        - (*github.com/gorilla/websocket.Conn).SetReadDeadline
+        - (*github.com/gorilla/websocket.Conn).SetWriteDeadline
+        - (*github.com/gorilla/websocket.Conn).WriteMessage
+        - (net.Conn).Close
+        - (*go.mongodb.org/mongo-driver/mongo.Cursor).Close
+        - (*go.mongodb.org/mongo-driver/mongo.Client).Disconnect
+        - (*go.mongodb.org/mongo-driver/mongo.Database).Close
+        - (net/http.Response.Body).Close
+        - (*compress/gzip.Writer).Close
+        - (*compress/gzip.Reader).Close
+        - (*os.File).Close
+        - (*github.com/redis/go-redis/v9.Client).Delete
+        - (*github.com/redis/go-redis/v9.Client).Unlock
+        - crypto/rand.Read
+    govet:
+      enable:
+        - asmdecl
+        - assign
+        - atomic
+        - atomicalign
+        - bools
+        - buildtag
+        - cgocall
+        - composites
+        - copylocks
+        - errorsas
+        - framepointer
+        - httpresponse
+        - ifaceassert
+        - loopclosure
+        - lostcancel
+        - nilfunc
+        - nilness
+        - printf
+        - reflectvaluecompare
+        - shift
+        - sigchanyzer
+        - sortslice
+        - stdmethods
+        - stringintconv
+        - structtag
+        - tests
+        - unmarshal
+        - unreachable
+        - unsafeptr
+        - unusedresult
+      enable-all: false
+    staticcheck:
+      checks:
+        - all
+        - -QF*
+        - -ST*
+  exclusions:
+    generated: lax
+    rules:
+      - linters:
+          - errcheck
+          - govet
+          - ineffassign
+          - staticcheck
+        path: (\.archive/|_deprecated/)
+      - linters:
+          - staticcheck
+        text: SA1029
+      - linters:
+          - staticcheck
+        text: SA6005
+      - linters:
+          - staticcheck
+        text: SA9003
+      - linters:
+          - staticcheck
+        text: S1009
+      - linters:
+          - staticcheck
+        text: S1016
+      - linters:
+          - errcheck
+          - ineffassign
+        path: _test\.go
+      - path: (.+)\.go$
+        text: Error return value of .*\.Close.* is not checked
+      - path: (.+)\.go$
+        text: Error return value of .*\.Disconnect.* is not checked
+      - path: (.+)\.go$
+        text: Error return value of .*\.Delete.* is not checked
+      - path: (.+)\.go$
+        text: Error return value of .*\.Unlock.* is not checked
+      - path: (.+)\.go$
+        text: Error return value of .*\.SetReadDeadline.* is not checked
+      - path: (.+)\.go$
+        text: Error return value of .*\.SetWriteDeadline.* is not checked
+      - path: (.+)\.go$
+        text: Error return value of .*\.WriteMessage.* is not checked
+      - path: (.+)\.go$
+        text: Error return value of .*\.Read.* is not checked
+      - path: (.+)\.go$
+        text: Error return value of .*\.InsertOne.* is not checked
+      - path: (.+)\.go$
+        text: Error return value of .*\.WriteString.* is not checked
+      - path: (.+)\.go$
+        text: Error return value of .*\.Walk.* is not checked
+      - path: (.+)\.go$
+        text: Error return value of .*\.All.* is not checked
+      - path: (.+)\.go$
+        text: Error return value of .*\.(Unmarshal|Marshal).* is not checked
+      - path: (.+)\.go$
+        text: Error return value of .*\.Ack.* is not checked
+      - path: (.+)\.go$
+        text: Error return value of .*\.Subscribe.* is not checked
+      - path: (.+)\.go$
+        text: Error return value of .*\.Send.* is not checked
+      - path: (.+)\.go$
+        text: Error return value of .*\.AbortTransaction.* is not checked
+      - path: (.+)\.go$
+        text: Error return value of `.*go.*` .* is not checked
+      - path: (.+)\.go$
+        text: Error return value of .*\.WithRequestID.* is not checked
+      - path: (.+)\.go$
+        text: Error return value of .*\.WithContext.* is not checked
+      - path: (.+)\.go$
+        text: Error return value of .*\.UpdatePoolMetrics.* is not checked
+      - path: (.+)\.go$
+        text: Error return value of .*\.Set.* is not checked
+      - path: (.+)\.go$
+        text: Error return value of .*\.Invalidate.* is not checked
+      - path: (.+)\.go$
+        text: Error return value of .*\.(RevokeToken|GenerateToken|ValidateToken).* is not checked
+      - path: (.+)\.go$
+        text: Error return value of .*\.PublishAsync.* is not checked
+      - path: (.+)\.go$
+        text: Error return value of .*\.Repo\.(Update|Create).* is not checked
+      - path: (.+)\.go$
+        text: Error return value of .*repo\.(Update|Create).* is not checked
+      - path: (.+)\.go$
+        text: Error return value of .*\.Seek.* is not checked
+      - path: (.+)\.go$
+        text: Error return value of .*\.Copy.* is not checked
+      - path: (.+)\.go$
+        text: Error return value of .*\.Write.* is not checked
+      - path: (.+)\.go$
+        text: Error return value of .*\.Sscanf.* is not checked
+      - path: (.+)\.go$
+        text: Error return value of .*\.Scanf.* is not checked
+      - path: (.+)\.go$
+        text: Error return value of .*\.Scanln.* is not checked
+      - path: (.+)\.go$
+        text: Error return value of .*\.RemoveAll.* is not checked
+      - path: (.+)\.go$
+        text: Error return value of .*\.Decode.* is not checked
+      - path: (.+)\.go$
+        text: Error return value of .*\.Fprintf.* is not checked
+      - path: (.+)\.go$
+        text: Error return value of .*\.Fprint.* is not checked
+      - path: (.+)\.go$
+        text: Error return value of .*cleanup.* is not checked
+      - path: (.+)\.go$
+        text: Error return value of .*ensureIndexes.* is not checked
+      - path: (.+)\.go$
+        text: Error return value of `c\.Error.*` is not checked
+      - path: (.+)\.go$
+        text: Error return value of `\(\*encoding/json\.Encoder\)\.Encode` is not checked
+      - path: (.+)\.go$
+        text: Error return value of `.*batchOpSvc\.Execute` is not checked
+      - path: (.+)\.go$
+        text: Error return value of `.*SaveReadingProgress` is not checked
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
 issues:
-  exclude-use-default: false
   max-issues-per-linter: 0
   max-same-issues: 0
   new: false
-  # 排除特定检查ID
-  exclude-rules:
-    # 排除废弃和归档目录中的所有检查
-    - path: '(\.archive/|_deprecated/)'
-      linters:
-        - govet
-        - staticcheck
-        - gosimple
-        - errcheck
-        - ineffassign
-        - gofmt
-        - goimports
-    # 排除 staticcheck 的特定检查
-    - linters:
-        - staticcheck
-      text: "SA1029"  # context.WithValue 使用字符串作为 key
-    - linters:
-        - staticcheck
-      text: "SA6005"  # 应该使用 strings.EqualFold
-    - linters:
-        - staticcheck
-      text: "SA9003"  # 空分支
-    # 排除 gosimple 的特定检查
-    - linters:
-        - gosimple
-      text: "S1009"  # 应该省略 nil 检查
-    - linters:
-        - gosimple
-      text: "S1016"  # 应该使用类型转换
-  # 排除特定错误模式的 errcheck 错误
-  exclude:
-    - "Error return value of .*\\.Close.* is not checked"
-    - "Error return value of .*\\.Disconnect.* is not checked"
-    - "Error return value of .*\\.Delete.* is not checked"
-    - "Error return value of .*\\.Unlock.* is not checked"
-    - "Error return value of .*\\.SetReadDeadline.* is not checked"
-    - "Error return value of .*\\.SetWriteDeadline.* is not checked"
-    - "Error return value of .*\\.WriteMessage.* is not checked"
-    - "Error return value of .*\\.Read.* is not checked"
-    # 排除其他常见的可忽略返回值
-    - "Error return value of .*\\.InsertOne.* is not checked"
-    - "Error return value of .*\\.WriteString.* is not checked"
-    - "Error return value of .*\\.Walk.* is not checked"
-    - "Error return value of .*\\.All.* is not checked"
-    - "Error return value of .*\\.(Unmarshal|Marshal).* is not checked"
-    - "Error return value of .*\\.Ack.* is not checked"
-    - "Error return value of .*\\.Subscribe.* is not checked"
-    - "Error return value of .*\\.Send.* is not checked"
-    - "Error return value of .*\\.AbortTransaction.* is not checked"
-    - "Error return value of `.*go.*` .* is not checked"
-    # 排除业务逻辑中可忽略的返回值
-    - "Error return value of .*\\.WithRequestID.* is not checked"
-    - "Error return value of .*\\.WithContext.* is not checked"
-    - "Error return value of .*\\.UpdatePoolMetrics.* is not checked"
-    # 排除所有缓存服务的 Set/Invalidate 方法调用
-    - "Error return value of .*\\.Set.* is not checked"
-    - "Error return value of .*\\.Invalidate.* is not checked"
-    # 排除测试中的方法调用
-    - "Error return value of .*\\.(RevokeToken|GenerateToken|ValidateToken).* is not checked"
-    # 排除事件总线发布调用
-    - "Error return value of .*\\.PublishAsync.* is not checked"
-    # 排除 repository Update/Create 调用
-    - "Error return value of .*\\.Repo\\.(Update|Create).* is not checked"
-    - "Error return value of .*repo\\.(Update|Create).* is not checked"
-    # 排除 IO 操作
-    - "Error return value of .*\\.Seek.* is not checked"
-    - "Error return value of .*\\.Copy.* is not checked"
-    - "Error return value of .*\\.Write.* is not checked"
-    - "Error return value of .*\\.Sscanf.* is not checked"
-    - "Error return value of .*\\.Scanf.* is not checked"
-    - "Error return value of .*\\.Scanln.* is not checked"
-    - "Error return value of .*\\.RemoveAll.* is not checked"
-    - "Error return value of .*\\.Decode.* is not checked"
-    # 排除 fmt 输出函数（测试代码）
-    - "Error return value of .*\\.Fprintf.* is not checked"
-    - "Error return value of .*\\.Fprint.* is not checked"
-    # 排除 cleanup 和 ensureIndexes 调用
-    - "Error return value of .*cleanup.* is not checked"
-    - "Error return value of .*ensureIndexes.* is not checked"

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"Qingyu_backend/models/bookstore"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
@@ -116,7 +117,6 @@ func (m *MockBookStreamRepository) CountWithFilter(ctx context.Context, filter *
 func (m *MockBookStreamRepository) GetCursorManager() CursorManagerInterface {
 	return m.cursorMgr
 }
-
 
 func createMockCursor(books []*bookstore.Book, err error) *MockBookCursor {
 	cursor := &MockBookCursor{
@@ -455,8 +455,8 @@ func TestBookstoreStreamService_CountWithFilter(t *testing.T) {
 			wantErr:   false,
 		},
 		{
-			name:      "nil filter",
-			filter:    nil,
+			name:   "nil filter",
+			filter: nil,
 			setupMock: func(repo *MockBookStreamRepository) {
 				repo.On("CountWithFilter", mock.Anything, mock.MatchedBy(func(f *bookstore.BookFilter) bool {
 					return f != nil
@@ -552,4 +552,3 @@ func TestBookstoreStreamService_getCursorType(t *testing.T) {
 		})
 	}
 }
-

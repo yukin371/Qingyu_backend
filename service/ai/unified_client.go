@@ -7,11 +7,11 @@ import (
 
 	pb "Qingyu_backend/pkg/grpc/pb"
 
+	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/status"
-	"github.com/sirupsen/logrus"
 )
 
 // QuotaServiceInterface 配额服务接口
@@ -28,8 +28,8 @@ type UnifiedClient struct {
 	endpoint        string
 	timeout         time.Duration
 	// 监控与追踪（可选）
-	metrics      *GRPCMetrics
-	tracer       *Tracer
+	metrics       *GRPCMetrics
+	tracer        *Tracer
 	enableMonitor bool // 是否启用监控
 	// 配额管理（可选）
 	quotaService QuotaServiceInterface
@@ -658,12 +658,12 @@ func (c *UnifiedClient) consumeQuotaIfNeeded(ctx context.Context, userID string,
 			}
 
 			logrus.WithFields(logrus.Fields{
-				"user_id":     userID,
-				"tokens":      tokens,
-				"service":     service,
-				"model":       model,
-				"request_id":  requestID,
-				"error":       err.Error(),
+				"user_id":    userID,
+				"tokens":     tokens,
+				"service":    service,
+				"model":      model,
+				"request_id": requestID,
+				"error":      err.Error(),
 			}).Error("配额扣除失败")
 		} else {
 			logrus.WithFields(logrus.Fields{
@@ -718,4 +718,3 @@ func (c *UnifiedClient) endTrace(requestID string, status string, err error) {
 		c.tracer.EndTrace(requestID, status, err)
 	}
 }
-

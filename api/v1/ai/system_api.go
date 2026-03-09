@@ -5,8 +5,9 @@ import (
 
 	aiService "Qingyu_backend/service/ai"
 
-	"github.com/gin-gonic/gin"
 	"Qingyu_backend/pkg/response"
+
+	"github.com/gin-gonic/gin"
 )
 
 // SystemApi AI系统API

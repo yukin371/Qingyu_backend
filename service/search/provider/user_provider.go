@@ -351,13 +351,13 @@ func (p *UserProvider) buildSortOptions(sortFields []search.SortField) []searche
 // validateSortField 验证排序字段
 func (p *UserProvider) validateSortField(field string) string {
 	validFields := map[string]string{
-		"username":    "username",
-		"nickname":    "nickname",
-		"created_at":  "created_at",
-		"updated_at":  "updated_at",
-		"vip_level":   "vip_level",
-		"last_login":  "last_login_at",
-		"_score":      "_score",
+		"username":   "username",
+		"nickname":   "nickname",
+		"created_at": "created_at",
+		"updated_at": "updated_at",
+		"vip_level":  "vip_level",
+		"last_login": "last_login_at",
+		"_score":     "_score",
 	}
 
 	if normalized, ok := validFields[field]; ok {

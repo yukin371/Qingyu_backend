@@ -26,7 +26,7 @@ const (
 	ErrContextExceeded AIErrorType = 3003 // 上下文超限
 
 	// 模型相关错误 4001-4099
-	ErrModelNotFound   AIErrorType = 4001 // 模型不存在
+	ErrModelNotFound     AIErrorType = 4001 // 模型不存在
 	ErrModelNotAvailable AIErrorType = 4002 // 模型不可用
 )
 

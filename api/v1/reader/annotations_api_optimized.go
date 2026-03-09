@@ -1,8 +1,8 @@
 package reader
 
 import (
-	"net/http"
 	readerModels "Qingyu_backend/models/reader"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -74,7 +74,7 @@ func (api *AnnotationsAPI) BatchCreateAnnotations(c *gin.Context) {
 		userOID, _ := primitive.ObjectIDFromHex(userIDStr)
 		bookOID, _ := primitive.ObjectIDFromHex(annReq.BookID)
 		chapterOID, _ := primitive.ObjectIDFromHex(annReq.ChapterID)
-		
+
 		annotations[i] = &readerModels.Annotation{
 			UserID:    userOID,
 			BookID:    bookOID,
@@ -188,7 +188,7 @@ func (api *AnnotationsAPI) GetAnnotationStats(c *gin.Context) {
 
 	bookID := c.Query("bookId")
 	if bookID == "" {
-		response.BadRequest(c,  "参数错误", "书籍ID不能为空")
+		response.BadRequest(c, "参数错误", "书籍ID不能为空")
 		return
 	}
 
@@ -226,13 +226,13 @@ func (api *AnnotationsAPI) ExportAnnotations(c *gin.Context) {
 
 	bookID := c.Query("bookId")
 	if bookID == "" {
-		response.BadRequest(c,  "参数错误", "书籍ID不能为空")
+		response.BadRequest(c, "参数错误", "书籍ID不能为空")
 		return
 	}
 
 	format := c.DefaultQuery("format", "json")
 	if format != "json" && format != "markdown" && format != "txt" {
-		response.BadRequest(c,  "参数错误", "不支持的导出格式")
+		response.BadRequest(c, "参数错误", "不支持的导出格式")
 		return
 	}
 

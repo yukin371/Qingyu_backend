@@ -192,6 +192,7 @@ func BindJSON(c *gin.Context, req interface{}) bool {
 // 返回: (ok) - false表示已发送错误响应
 //
 // 使用示例：
+//
 //	var params struct {
 //	    BookID string `uri:"bookId" binding:"required"`
 //	    Page   int    `form:"page" binding:"min=1"`

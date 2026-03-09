@@ -252,8 +252,8 @@ func (m *elasticsearchIndexVersionManager) GetActiveVersion(ctx context.Context,
 		Name:      activeIndex,
 		Alias:     alias,
 		Status:    StatusActive,
-		CreatedAt: time.Now(),   // 实际应从索引 settings 获取
-		UpdatedAt: time.Now(),   // 实际应从索引 settings 获取
+		CreatedAt: time.Now(), // 实际应从索引 settings 获取
+		UpdatedAt: time.Now(), // 实际应从索引 settings 获取
 	}
 
 	// 从索引设置中获取创建时间

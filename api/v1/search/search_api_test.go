@@ -16,9 +16,9 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"Qingyu_backend/models/bookstore"
+	searchService "Qingyu_backend/service/search"
 	searchengine "Qingyu_backend/service/search/engine"
 	searchprovider "Qingyu_backend/service/search/provider"
-	searchService "Qingyu_backend/service/search"
 )
 
 // mockGrayScaleDecision 是一个简单的灰度决策器 mock 实现

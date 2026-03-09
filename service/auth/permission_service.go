@@ -10,8 +10,8 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/sync/singleflight"
 
-	authModel "Qingyu_backend/models/auth"
 	middlewareAuth "Qingyu_backend/internal/middleware/auth"
+	authModel "Qingyu_backend/models/auth"
 	sharedRepo "Qingyu_backend/repository/interfaces/shared"
 )
 
@@ -333,4 +333,3 @@ func (s *PermissionServiceImpl) getRoleFromCache(roleName string) (*authModel.Ro
 func (s *PermissionServiceImpl) RefreshRoleCache(ctx context.Context) error {
 	return s.initializeMemoryCache(ctx)
 }
-

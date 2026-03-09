@@ -55,7 +55,9 @@ func (m *MockReadingProgressPort) GetReadingHistory(ctx context.Context, req *Ge
 		TotalPages: 0,
 	}, nil
 }
-func (m *MockReadingProgressPort) GetTotalReadingTime(ctx context.Context, userID string) (int64, error) { return 0, nil }
+func (m *MockReadingProgressPort) GetTotalReadingTime(ctx context.Context, userID string) (int64, error) {
+	return 0, nil
+}
 func (m *MockReadingProgressPort) GetReadingTimeByPeriod(ctx context.Context, req *GetReadingTimeByPeriodRequest) (int64, error) {
 	return 0, nil
 }
@@ -65,8 +67,12 @@ func (m *MockReadingProgressPort) GetUnfinishedBooks(ctx context.Context, userID
 func (m *MockReadingProgressPort) GetFinishedBooks(ctx context.Context, userID string) ([]*readerModel.ReadingProgress, error) {
 	return []*readerModel.ReadingProgress{}, nil
 }
-func (m *MockReadingProgressPort) DeleteReadingProgress(ctx context.Context, userID, bookID string) error { return nil }
-func (m *MockReadingProgressPort) UpdateBookStatus(ctx context.Context, req *UpdateBookStatusRequest) error     { return nil }
+func (m *MockReadingProgressPort) DeleteReadingProgress(ctx context.Context, userID, bookID string) error {
+	return nil
+}
+func (m *MockReadingProgressPort) UpdateBookStatus(ctx context.Context, req *UpdateBookStatusRequest) error {
+	return nil
+}
 func (m *MockReadingProgressPort) BatchUpdateBookStatus(ctx context.Context, req *BatchUpdateBookStatusRequest) error {
 	return nil
 }
@@ -97,7 +103,9 @@ func (m *MockAnnotationPort) CreateAnnotation(ctx context.Context, annotation *r
 func (m *MockAnnotationPort) UpdateAnnotation(ctx context.Context, annotationID string, updates map[string]interface{}) error {
 	return nil
 }
-func (m *MockAnnotationPort) DeleteAnnotation(ctx context.Context, annotationID string) error { return nil }
+func (m *MockAnnotationPort) DeleteAnnotation(ctx context.Context, annotationID string) error {
+	return nil
+}
 func (m *MockAnnotationPort) GetAnnotationsByChapter(ctx context.Context, userID, bookID, chapterID string) ([]*readerModel.Annotation, error) {
 	return []*readerModel.Annotation{}, nil
 }
@@ -131,7 +139,9 @@ func (m *MockAnnotationPort) GetAnnotationStats(ctx context.Context, userID, boo
 func (m *MockAnnotationPort) BatchCreateAnnotations(ctx context.Context, annotations []*readerModel.Annotation) error {
 	return nil
 }
-func (m *MockAnnotationPort) BatchDeleteAnnotations(ctx context.Context, annotationIDs []string) error { return nil }
+func (m *MockAnnotationPort) BatchDeleteAnnotations(ctx context.Context, annotationIDs []string) error {
+	return nil
+}
 
 // MockChapterContentPort Mock 实现
 type MockChapterContentPort struct {

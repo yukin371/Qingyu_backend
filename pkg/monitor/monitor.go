@@ -78,9 +78,9 @@ func (m *DataQualityMonitor) CheckOrphanedRecords(ctx context.Context) (*DataQua
 
 	// 定义需要检查的外键关系
 	checks := []struct {
-		collection        string
-		foreignKey        string
-		targetCollection  string
+		collection       string
+		foreignKey       string
+		targetCollection string
 	}{
 		// 阅读进度
 		{"reading_progress", "user_id", "users"},

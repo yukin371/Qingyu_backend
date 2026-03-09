@@ -14,7 +14,7 @@ import (
 
 // MockEngineForDocument 是用于测试 DocumentProvider 的模拟搜索引擎
 type MockEngineForDocument struct {
-	shouldFail bool
+	shouldFail  bool
 	emptyResult bool
 }
 
@@ -38,34 +38,34 @@ func (m *MockEngineForDocument) Search(ctx context.Context, index string, query 
 				ID:    "507f1f77bcf86cd799439011",
 				Score: 1.0,
 				Source: map[string]interface{}{
-					"title":       "第一章 开始",
-					"content":     "这是第一章的内容",
-					"project_id":  "507f1f77bcf86cd799439011",
-					"user_id":     "user123",
-					"status":      "writing",
-					"type":        "chapter",
-					"word_count":  1000,
-					"level":       1,
-					"order":       1,
-					"created_at":  "2024-01-01T00:00:00Z",
-					"updated_at":  "2024-01-02T00:00:00Z",
+					"title":      "第一章 开始",
+					"content":    "这是第一章的内容",
+					"project_id": "507f1f77bcf86cd799439011",
+					"user_id":    "user123",
+					"status":     "writing",
+					"type":       "chapter",
+					"word_count": 1000,
+					"level":      1,
+					"order":      1,
+					"created_at": "2024-01-01T00:00:00Z",
+					"updated_at": "2024-01-02T00:00:00Z",
 				},
 			},
 			{
 				ID:    "507f1f77bcf86cd799439012",
 				Score: 0.8,
 				Source: map[string]interface{}{
-					"title":       "第二章 继续",
-					"content":     "这是第二章的内容",
-					"project_id":  "507f1f77bcf86cd799439011",
-					"user_id":     "user123",
-					"status":      "completed",
-					"type":        "chapter",
-					"word_count":  2000,
-					"level":       1,
-					"order":       2,
-					"created_at":  "2024-01-01T00:00:00Z",
-					"updated_at":  "2024-01-03T00:00:00Z",
+					"title":      "第二章 继续",
+					"content":    "这是第二章的内容",
+					"project_id": "507f1f77bcf86cd799439011",
+					"user_id":    "user123",
+					"status":     "completed",
+					"type":       "chapter",
+					"word_count": 2000,
+					"level":      1,
+					"order":      2,
+					"created_at": "2024-01-01T00:00:00Z",
+					"updated_at": "2024-01-03T00:00:00Z",
 				},
 			},
 		},
@@ -584,22 +584,22 @@ func TestDocumentProvider_ExtractUserID(t *testing.T) {
 	require.NoError(t, err)
 
 	tests := []struct {
-		name     string
-		filter   map[string]interface{}
-		wantOK   bool
-		wantID   string
+		name   string
+		filter map[string]interface{}
+		wantOK bool
+		wantID string
 	}{
 		{
-			name:     "no filter",
-			filter:   nil,
-			wantOK:   false,
-			wantID:   "",
+			name:   "no filter",
+			filter: nil,
+			wantOK: false,
+			wantID: "",
 		},
 		{
-			name: "empty filter",
-			filter:   map[string]interface{}{},
-			wantOK:   false,
-			wantID:   "",
+			name:   "empty filter",
+			filter: map[string]interface{}{},
+			wantOK: false,
+			wantID: "",
 		},
 		{
 			name: "valid user_id",

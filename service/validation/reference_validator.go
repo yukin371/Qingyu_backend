@@ -28,10 +28,10 @@ type CommentRepository interface {
 
 // ReferenceValidator 引用验证器 - 用于验证外键引用的有效性
 type ReferenceValidator struct {
-	userRepo     UserRepository
-	bookRepo     BookRepository
-	chapterRepo  ChapterRepository
-	commentRepo  CommentRepository
+	userRepo    UserRepository
+	bookRepo    BookRepository
+	chapterRepo ChapterRepository
+	commentRepo CommentRepository
 }
 
 // NewReferenceValidator 创建引用验证器

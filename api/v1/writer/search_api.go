@@ -7,8 +7,8 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/models/search"
-	searchservice "Qingyu_backend/service/search"
 	"Qingyu_backend/pkg/response"
+	searchservice "Qingyu_backend/service/search"
 )
 
 // SearchAPI 搜索API处理器（写作端）

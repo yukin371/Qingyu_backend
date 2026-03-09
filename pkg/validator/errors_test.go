@@ -11,7 +11,7 @@ import (
 func TestValidationErrors(t *testing.T) {
 	// 创建一个会导致验证错误的请求
 	type TestRequest struct {
-		Username string `validate:"username"`
+		Username string  `validate:"username"`
 		Amount   float64 `validate:"positive_amount"`
 	}
 
@@ -211,7 +211,7 @@ func TestMultipleValidators(t *testing.T) {
 // TestEdgeCases 测试边界情况
 func TestEdgeCases(t *testing.T) {
 	type TestRequest struct {
-		StringField string `validate:"username"`
+		StringField string  `validate:"username"`
 		FloatField  float64 `validate:"amount"`
 		IntField    int64   `validate:"file_size"`
 	}

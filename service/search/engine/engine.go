@@ -37,11 +37,11 @@ type Engine interface {
 
 // SearchOptions 搜索选项
 type SearchOptions struct {
-	From     int                    // 分页起始
-	Size     int                    // 返回数量
-	Sort     []SortField            // 排序
-	Filter   map[string]interface{} // 过滤条件
-	Highlight *HighlightConfig      // 高亮配置
+	From      int                    // 分页起始
+	Size      int                    // 返回数量
+	Sort      []SortField            // 排序
+	Filter    map[string]interface{} // 过滤条件
+	Highlight *HighlightConfig       // 高亮配置
 }
 
 // SortField 排序字段
@@ -68,10 +68,10 @@ type SearchResult struct {
 
 // Hit 搜索命中项
 type Hit struct {
-	ID       string                 `json:"id"`
-	Score    float64                `json:"score"`
-	Source   map[string]interface{} `json:"source"`
-	Highlight map[string][]string   `json:"highlight,omitempty"`
+	ID        string                 `json:"id"`
+	Score     float64                `json:"score"`
+	Source    map[string]interface{} `json:"source"`
+	Highlight map[string][]string    `json:"highlight,omitempty"`
 }
 
 // Document 文档

@@ -4,8 +4,8 @@ import (
 	bookstoreApi "Qingyu_backend/api/v1/bookstore"
 	"Qingyu_backend/internal/middleware/auth"
 	"Qingyu_backend/pkg/logger"
-	searchService "Qingyu_backend/service/search"
 	"Qingyu_backend/service/bookstore"
+	searchService "Qingyu_backend/service/search"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -103,15 +103,15 @@ func InitBookstoreRouter(
 			// 书籍列表和搜索 - 注意：具体路由必须放在参数化路由之前
 			public.GET("/books", bookstoreApiHandler.GetBooks) // 必须放在 /books/:id 之前
 			public.GET("/books/search", bookstoreApiHandler.SearchBooks)
-			public.GET("/books/stream", bookstoreApiHandler.StreamSearchBooks) // 新增：流式搜索
+			public.GET("/books/stream", bookstoreApiHandler.StreamSearchBooks)            // 新增：流式搜索
 			public.GET("/books/stream-batch", bookstoreApiHandler.StreamSearchBooksBatch) // 新增：批量流式搜索
-			public.GET("/books/search/title", bookstoreApiHandler.SearchByTitle) // 新增：按标题搜索
-			public.GET("/books/search/author", bookstoreApiHandler.SearchByAuthor) // 新增：按作者搜索
+			public.GET("/books/search/title", bookstoreApiHandler.SearchByTitle)          // 新增：按标题搜索
+			public.GET("/books/search/author", bookstoreApiHandler.SearchByAuthor)        // 新增：按作者搜索
 			public.GET("/books/recommended", bookstoreApiHandler.GetRecommendedBooks)
 			public.GET("/books/featured", bookstoreApiHandler.GetFeaturedBooks)
-			public.GET("/books/tags", bookstoreApiHandler.GetBooksByTags) // 新增：按标签筛选
+			public.GET("/books/tags", bookstoreApiHandler.GetBooksByTags)     // 新增：按标签筛选
 			public.GET("/books/status", bookstoreApiHandler.GetBooksByStatus) // 新增：按状态筛选
-			public.GET("/books/years", bookstoreApiHandler.GetYears) // 新增：获取年份列表（必须在 /books/:id 之前）
+			public.GET("/books/years", bookstoreApiHandler.GetYears)          // 新增：获取年份列表（必须在 /books/:id 之前）
 
 			// 书籍详情接口（当BookDetailAPI可用时）- 必须在 /books/:id 之前注册
 			if bookDetailApiHandler != nil {
@@ -150,10 +150,10 @@ func InitBookstoreRouter(
 
 			// ✅ Chapter API（章节管理）- 公开接口（优先注册，不需要PurchaseService）
 			if chapterApiHandler != nil {
-				public.GET("/books/:id/chapters", chapterApiHandler.GetChaptersByBookID)              // 获取章节列表（使用ChapterAPI）
-				public.GET("/books/:id/chapters/list", chapterApiHandler.GetChaptersByBookID)         // 别名路由
-				public.GET("/chapters/:id", chapterApiHandler.GetChapter)                             // 获取章节详情
-				public.GET("/chapters/:id/content", chapterApiHandler.GetChapterContent)             // 获取章节内容（公开接口）
+				public.GET("/books/:id/chapters", chapterApiHandler.GetChaptersByBookID)      // 获取章节列表（使用ChapterAPI）
+				public.GET("/books/:id/chapters/list", chapterApiHandler.GetChaptersByBookID) // 别名路由
+				public.GET("/chapters/:id", chapterApiHandler.GetChapter)                     // 获取章节详情
+				public.GET("/chapters/:id/content", chapterApiHandler.GetChapterContent)      // 获取章节内容（公开接口）
 			}
 
 			// ✅ Chapter Catalog API（章节目录和购买）- 需要ChapterService和PurchaseService

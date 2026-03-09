@@ -96,14 +96,14 @@ type UserAdminService interface {
 
 // UserAdminServiceImpl 用户管理服务实现
 type UserAdminServiceImpl struct {
-	userRepo     adminrepo.UserAdminRepository
+	userRepo      adminrepo.UserAdminRepository
 	banRecordRepo adminrepo.BanRecordRepository
 }
 
 // NewUserAdminService 创建用户管理服务
 func NewUserAdminService(userRepo adminrepo.UserAdminRepository) UserAdminService {
 	return &UserAdminServiceImpl{
-		userRepo:     userRepo,
+		userRepo:      userRepo,
 		banRecordRepo: nil, // 需要通过依赖注入设置
 	}
 }
@@ -111,7 +111,7 @@ func NewUserAdminService(userRepo adminrepo.UserAdminRepository) UserAdminServic
 // NewUserAdminServiceWithBanRepo 创建带封禁记录仓储的用户管理服务
 func NewUserAdminServiceWithBanRepo(userRepo adminrepo.UserAdminRepository, banRecordRepo adminrepo.BanRecordRepository) UserAdminService {
 	return &UserAdminServiceImpl{
-		userRepo:     userRepo,
+		userRepo:      userRepo,
 		banRecordRepo: banRecordRepo,
 	}
 }

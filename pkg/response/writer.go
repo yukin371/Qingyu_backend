@@ -18,11 +18,11 @@ type APIResponse struct {
 
 // PaginatedResponse 分页响应格式
 type PaginatedResponse struct {
-	Code      int         `json:"code"`
-	Message   string      `json:"message"`
-	Data      interface{} `json:"data,omitempty"`
-	Timestamp int64       `json:"timestamp"`
-	RequestID string      `json:"request_id,omitempty"`
+	Code       int         `json:"code"`
+	Message    string      `json:"message"`
+	Data       interface{} `json:"data,omitempty"`
+	Timestamp  int64       `json:"timestamp"`
+	RequestID  string      `json:"request_id,omitempty"`
 	Pagination *Pagination `json:"pagination"`
 }
 
@@ -157,8 +157,8 @@ func InternalError(c *gin.Context, err error) {
 		errorDetail = err.Error()
 	}
 	c.JSON(http.StatusInternalServerError, APIResponse{
-		Code:      CodeInternalError, // 内部错误
-		Message:   message,
+		Code:    CodeInternalError, // 内部错误
+		Message: message,
 		Data: map[string]interface{}{
 			"error": errorDetail,
 		},

@@ -40,6 +40,7 @@ func (s *ProofreadService) ProofreadContent(ctx context.Context, req *dto.Proofr
 	if len(checkTypes) == 0 {
 		checkTypes = []string{"spelling", "grammar", "punctuation"}
 	}
+	req.CheckTypes = checkTypes
 
 	// 构建校对提示词
 	prompt := s.buildProofreadPrompt(req)

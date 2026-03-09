@@ -3,8 +3,8 @@ package writer
 import (
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/service/interfaces"
 	"Qingyu_backend/pkg/response"
+	"Qingyu_backend/service/interfaces"
 )
 
 // TimelineApi 时间线API处理器
@@ -23,13 +23,13 @@ func NewTimelineApi(timelineService interfaces.TimelineService) *TimelineApi {
 func (api *TimelineApi) CreateTimeline(c *gin.Context) {
 	projectID := c.Param("projectId")
 	if projectID == "" {
-		response.BadRequest(c,  "项目ID不能为空", "")
+		response.BadRequest(c, "项目ID不能为空", "")
 		return
 	}
 
 	var req interfaces.CreateTimelineRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -48,7 +48,7 @@ func (api *TimelineApi) GetTimeline(c *gin.Context) {
 	projectID := c.Query("projectId")
 
 	if timelineID == "" || projectID == "" {
-		response.BadRequest(c,  "参数错误", "timelineId和projectId不能为空")
+		response.BadRequest(c, "参数错误", "timelineId和projectId不能为空")
 		return
 	}
 
@@ -65,7 +65,7 @@ func (api *TimelineApi) GetTimeline(c *gin.Context) {
 func (api *TimelineApi) ListTimelines(c *gin.Context) {
 	projectID := c.Param("projectId")
 	if projectID == "" {
-		response.BadRequest(c,  "项目ID不能为空", "")
+		response.BadRequest(c, "项目ID不能为空", "")
 		return
 	}
 
@@ -84,7 +84,7 @@ func (api *TimelineApi) DeleteTimeline(c *gin.Context) {
 	projectID := c.Query("projectId")
 
 	if timelineID == "" || projectID == "" {
-		response.BadRequest(c,  "参数错误", "timelineId和projectId不能为空")
+		response.BadRequest(c, "参数错误", "timelineId和projectId不能为空")
 		return
 	}
 
@@ -103,13 +103,13 @@ func (api *TimelineApi) CreateTimelineEvent(c *gin.Context) {
 	projectID := c.Query("projectId")
 
 	if timelineID == "" || projectID == "" {
-		response.BadRequest(c,  "参数错误", "timelineId和projectId不能为空")
+		response.BadRequest(c, "参数错误", "timelineId和projectId不能为空")
 		return
 	}
 
 	var req interfaces.CreateTimelineEventRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -131,7 +131,7 @@ func (api *TimelineApi) GetTimelineEvent(c *gin.Context) {
 	projectID := c.Query("projectId")
 
 	if eventID == "" || projectID == "" {
-		response.BadRequest(c,  "参数错误", "eventId和projectId不能为空")
+		response.BadRequest(c, "参数错误", "eventId和projectId不能为空")
 		return
 	}
 
@@ -148,7 +148,7 @@ func (api *TimelineApi) GetTimelineEvent(c *gin.Context) {
 func (api *TimelineApi) ListTimelineEvents(c *gin.Context) {
 	timelineID := c.Param("timelineId")
 	if timelineID == "" {
-		response.BadRequest(c,  "时间线ID不能为空", "")
+		response.BadRequest(c, "时间线ID不能为空", "")
 		return
 	}
 
@@ -167,13 +167,13 @@ func (api *TimelineApi) UpdateTimelineEvent(c *gin.Context) {
 	projectID := c.Query("projectId")
 
 	if eventID == "" || projectID == "" {
-		response.BadRequest(c,  "参数错误", "eventId和projectId不能为空")
+		response.BadRequest(c, "参数错误", "eventId和projectId不能为空")
 		return
 	}
 
 	var req interfaces.UpdateTimelineEventRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -192,7 +192,7 @@ func (api *TimelineApi) DeleteTimelineEvent(c *gin.Context) {
 	projectID := c.Query("projectId")
 
 	if eventID == "" || projectID == "" {
-		response.BadRequest(c,  "参数错误", "eventId和projectId不能为空")
+		response.BadRequest(c, "参数错误", "eventId和projectId不能为空")
 		return
 	}
 
@@ -209,7 +209,7 @@ func (api *TimelineApi) DeleteTimelineEvent(c *gin.Context) {
 func (api *TimelineApi) GetTimelineVisualization(c *gin.Context) {
 	timelineID := c.Param("timelineId")
 	if timelineID == "" {
-		response.BadRequest(c,  "时间线ID不能为空", "")
+		response.BadRequest(c, "时间线ID不能为空", "")
 		return
 	}
 

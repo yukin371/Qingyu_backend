@@ -669,7 +669,7 @@ func (r *MongoCollectionRepository) isReplicaSet(ctx context.Context) bool {
 	adminDB := client.Database("admin")
 
 	var result struct {
-		Ok     int    `bson:"ok"`
+		Ok      int    `bson:"ok"`
 		SetName string `bson:"setName,omitempty"`
 	}
 

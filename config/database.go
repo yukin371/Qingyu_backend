@@ -28,15 +28,15 @@ type DatabaseConfig struct {
 	Sync       SynchronizationConfig `yaml:"sync" json:"sync" mapstructure:"sync"`
 
 	// 旧格式（扁平）- 原始版本兼容
-	URI             string        `yaml:"uri,omitempty" json:"uri,omitempty" mapstructure:"uri,omitempty"`
-	Name            string        `yaml:"name,omitempty" json:"name,omitempty" mapstructure:"name,omitempty"`
-	ConnectTimeout  time.Duration `yaml:"connect_timeout,omitempty" json:"connect_timeout,omitempty" mapstructure:"connect_timeout,omitempty"`
-	MaxPoolSize     int           `yaml:"max_pool_size,omitempty" json:"max_pool_size,omitempty" mapstructure:"max_pool_size,omitempty"`
-	MinPoolSize     int           `yaml:"min_pool_size,omitempty" json:"min_pool_size,omitempty" mapstructure:"min_pool_size,omitempty"`
+	URI            string        `yaml:"uri,omitempty" json:"uri,omitempty" mapstructure:"uri,omitempty"`
+	Name           string        `yaml:"name,omitempty" json:"name,omitempty" mapstructure:"name,omitempty"`
+	ConnectTimeout time.Duration `yaml:"connect_timeout,omitempty" json:"connect_timeout,omitempty" mapstructure:"connect_timeout,omitempty"`
+	MaxPoolSize    int           `yaml:"max_pool_size,omitempty" json:"max_pool_size,omitempty" mapstructure:"max_pool_size,omitempty"`
+	MinPoolSize    int           `yaml:"min_pool_size,omitempty" json:"min_pool_size,omitempty" mapstructure:"min_pool_size,omitempty"`
 
 	// 配置解析后使用的实际配置
-	resolved     bool
-	mongoConfig  *MongoDBConfig
+	resolved    bool
+	mongoConfig *MongoDBConfig
 }
 
 // DatabaseConnection 数据库连接配置
@@ -49,17 +49,17 @@ type DatabaseConnection struct {
 
 // MongoDBConfig MongoDB配置
 type MongoDBConfig struct {
-	URI             string        `yaml:"uri" json:"uri" mapstructure:"uri"`
-	Database        string        `yaml:"database" json:"database" mapstructure:"database"`
-	MaxPoolSize     uint64        `yaml:"max_pool_size" json:"max_pool_size" mapstructure:"max_pool_size"`
-	MinPoolSize     uint64        `yaml:"min_pool_size" json:"min_pool_size" mapstructure:"min_pool_size"`
-	ConnectTimeout  time.Duration `yaml:"connect_timeout" json:"connect_timeout" mapstructure:"connect_timeout"`
-	ServerTimeout   time.Duration `yaml:"server_timeout" json:"server_timeout" mapstructure:"server_timeout"`
+	URI            string        `yaml:"uri" json:"uri" mapstructure:"uri"`
+	Database       string        `yaml:"database" json:"database" mapstructure:"database"`
+	MaxPoolSize    uint64        `yaml:"max_pool_size" json:"max_pool_size" mapstructure:"max_pool_size"`
+	MinPoolSize    uint64        `yaml:"min_pool_size" json:"min_pool_size" mapstructure:"min_pool_size"`
+	ConnectTimeout time.Duration `yaml:"connect_timeout" json:"connect_timeout" mapstructure:"connect_timeout"`
+	ServerTimeout  time.Duration `yaml:"server_timeout" json:"server_timeout" mapstructure:"server_timeout"`
 
 	// Profiling配置
-	ProfilingLevel  int           `yaml:"profiling_level" json:"profiling_level" mapstructure:"profiling_level"`   // 0=off, 1=slow only, 2=all
-	SlowMS          int64         `yaml:"slow_ms" json:"slow_ms" mapstructure:"slow_ms"`                           // 慢查询阈值（毫秒）
-	ProfilerSizeMB  int64         `yaml:"profiler_size_mb" json:"profiler_size_mb" mapstructure:"profiler_size_mb"` // Profiler存储大小限制（MB）
+	ProfilingLevel int   `yaml:"profiling_level" json:"profiling_level" mapstructure:"profiling_level"`    // 0=off, 1=slow only, 2=all
+	SlowMS         int64 `yaml:"slow_ms" json:"slow_ms" mapstructure:"slow_ms"`                            // 慢查询阈值（毫秒）
+	ProfilerSizeMB int64 `yaml:"profiler_size_mb" json:"profiler_size_mb" mapstructure:"profiler_size_mb"` // Profiler存储大小限制（MB）
 }
 
 // PostgreSQLConfig PostgreSQL配置
@@ -231,15 +231,15 @@ func getDefaultDatabaseConfig() *DatabaseConfig {
 		Primary: DatabaseConnection{
 			Type: DatabaseTypeMongoDB,
 			MongoDB: &MongoDBConfig{
-				URI:             getEnvOrDefault("MONGODB_URI", "mongodb://localhost:27017"),
-				Database:        getEnvOrDefault("MONGODB_DATABASE", "qingyu"),
-				MaxPoolSize:     100,
-				MinPoolSize:     5,
-				ConnectTimeout:  10 * time.Second,
-				ServerTimeout:   30 * time.Second,
-				ProfilingLevel:  getEnvIntOrDefault("MONGODB_PROFILING_LEVEL", 1),
-				SlowMS:          getEnvInt64OrDefault("MONGODB_SLOW_MS", 100),
-				ProfilerSizeMB:  getEnvInt64OrDefault("MONGODB_PROFILER_SIZE_MB", 100),
+				URI:            getEnvOrDefault("MONGODB_URI", "mongodb://localhost:27017"),
+				Database:       getEnvOrDefault("MONGODB_DATABASE", "qingyu"),
+				MaxPoolSize:    100,
+				MinPoolSize:    5,
+				ConnectTimeout: 10 * time.Second,
+				ServerTimeout:  30 * time.Second,
+				ProfilingLevel: getEnvIntOrDefault("MONGODB_PROFILING_LEVEL", 1),
+				SlowMS:         getEnvInt64OrDefault("MONGODB_SLOW_MS", 100),
+				ProfilerSizeMB: getEnvInt64OrDefault("MONGODB_PROFILER_SIZE_MB", 100),
 			},
 		},
 		Replicas: []DatabaseConnection{},
@@ -483,16 +483,16 @@ func (c *MySQLConfig) Validate() error {
 // ToRepositoryConfig 转换为仓储配置 - 返回通用配置接口
 func (c *MongoDBConfig) ToRepositoryConfig() map[string]interface{} {
 	return map[string]interface{}{
-		"type":              "mongodb",
-		"uri":               c.URI,
-		"database":          c.Database,
-		"max_pool_size":     c.MaxPoolSize,
-		"min_pool_size":     c.MinPoolSize,
-		"connect_timeout":   c.ConnectTimeout,
-		"server_timeout":    c.ServerTimeout,
-		"profiling_level":   c.ProfilingLevel,
-		"slow_ms":           c.SlowMS,
-		"profiler_size_mb":  c.ProfilerSizeMB,
+		"type":             "mongodb",
+		"uri":              c.URI,
+		"database":         c.Database,
+		"max_pool_size":    c.MaxPoolSize,
+		"min_pool_size":    c.MinPoolSize,
+		"connect_timeout":  c.ConnectTimeout,
+		"server_timeout":   c.ServerTimeout,
+		"profiling_level":  c.ProfilingLevel,
+		"slow_ms":          c.SlowMS,
+		"profiler_size_mb": c.ProfilerSizeMB,
 	}
 }
 

@@ -4,9 +4,9 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
-	authsvc "Qingyu_backend/service/auth"
 	"Qingyu_backend/pkg/emailcode"
 	"Qingyu_backend/pkg/response"
+	authsvc "Qingyu_backend/service/auth"
 )
 
 // AuthAPI 认证服务API处理器
@@ -250,9 +250,9 @@ func (api *AuthAPI) SendVerificationCode(c *gin.Context) {
 
 // RegisterRequest 注册请求（用于swagger文档）
 type RegisterRequest struct {
-	Username        string `json:"username" binding:"required,min=3,max=50" example:"testuser"`
-	Email           string `json:"email" binding:"required,email" example:"test@example.com"`
-	Password        string `json:"password" binding:"required,min=6" example:"password123"`
+	Username         string `json:"username" binding:"required,min=3,max=50" example:"testuser"`
+	Email            string `json:"email" binding:"required,email" example:"test@example.com"`
+	Password         string `json:"password" binding:"required,min=6" example:"password123"`
 	VerificationCode string `json:"verification_code" example:"123456"`
 }
 

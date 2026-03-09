@@ -1,8 +1,8 @@
 package reader
 
 import (
-	"context"
 	readerModel "Qingyu_backend/models/reader"
+	"context"
 	"time"
 )
 
@@ -221,9 +221,9 @@ type GetChapterContentRequest struct {
 
 // SyncAnnotationsRequest 同步标注请求
 type SyncAnnotationsRequest struct {
-	UserID           string                 `json:"user_id" validate:"required"`
-	BookID           string                 `json:"book_id" validate:"required"`
-	LastSyncTime     int64                  `json:"last_sync_time"`
+	UserID           string                    `json:"user_id" validate:"required"`
+	BookID           string                    `json:"book_id" validate:"required"`
+	LastSyncTime     int64                     `json:"last_sync_time"`
 	LocalAnnotations []*readerModel.Annotation `json:"local_annotations"`
 }
 

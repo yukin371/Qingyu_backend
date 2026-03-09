@@ -1,9 +1,10 @@
 package search
 
 import (
-	"github.com/gin-gonic/gin"
 	"Qingyu_backend/internal/middleware/auth"
 	searchService "Qingyu_backend/service/search"
+
+	"github.com/gin-gonic/gin"
 )
 
 // RegisterSearchRoutes 注册搜索路由

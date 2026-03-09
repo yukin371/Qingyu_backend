@@ -43,9 +43,9 @@ func BenchmarkBookQuery_WithoutIndex(b *testing.B) {
 	books := make([]interface{}, 1000)
 	for i := 0; i < 1000; i++ {
 		book := bookstore.Book{
-			Title:     "测试书籍",
-			Author:    "测试作者",
-			Status:    bookstore.BookStatusOngoing,
+			Title:  "测试书籍",
+			Author: "测试作者",
+			Status: bookstore.BookStatusOngoing,
 		}
 		// 使用 BaseEntity 的方法设置时间戳
 		book.TouchForCreate()
@@ -91,9 +91,9 @@ func BenchmarkBookQuery_WithIndex(b *testing.B) {
 	books := make([]interface{}, 1000)
 	for i := 0; i < 1000; i++ {
 		book := bookstore.Book{
-			Title:     "测试书籍",
-			Author:    "测试作者",
-			Status:    bookstore.BookStatusOngoing,
+			Title:  "测试书籍",
+			Author: "测试作者",
+			Status: bookstore.BookStatusOngoing,
 		}
 		book.TouchForCreate()
 		books[i] = book
@@ -141,9 +141,9 @@ func BenchmarkBookQuery_CompoundIndex(b *testing.B) {
 	books := make([]interface{}, 1000)
 	for i := 0; i < 1000; i++ {
 		book := bookstore.Book{
-			Title:      "测试书籍",
-			Author:     "测试作者",
-			Status:     bookstore.BookStatusOngoing,
+			Title:  "测试书籍",
+			Author: "测试作者",
+			Status: bookstore.BookStatusOngoing,
 		}
 		// 设置不同的创建时间以便测试排序
 		book.TouchForCreate()
@@ -196,9 +196,9 @@ func BenchmarkBookRepository_GetByStatus_WithIndex(b *testing.B) {
 	ctx := context.Background()
 	for i := 0; i < 1000; i++ {
 		book := &bookstore.Book{
-			Title:     "测试书籍",
-			Author:    "测试作者",
-			Status:    bookstore.BookStatusOngoing,
+			Title:  "测试书籍",
+			Author: "测试作者",
+			Status: bookstore.BookStatusOngoing,
 		}
 		book.TouchForCreate()
 		repo.Create(ctx, book)

@@ -13,4 +13,3 @@ func TestGetRepliesByCommentID_InvalidID(t *testing.T) {
 		t.Fatal("expected error for invalid comment id")
 	}
 }
-

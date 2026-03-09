@@ -47,7 +47,7 @@ func TestMongoEventStore_Replay_ValidationErrors(t *testing.T) {
 			errorContains: "filter offset cannot be negative",
 		},
 		{
-			name: "无效时间范围返回错误(StartTime > EndTime)",
+			name:    "无效时间范围返回错误(StartTime > EndTime)",
 			handler: &MockEventHandler{},
 			filter: EventFilter{
 				StartTime: timePtr(time.Now().Add(1 * time.Hour)),
@@ -57,7 +57,7 @@ func TestMongoEventStore_Replay_ValidationErrors(t *testing.T) {
 			errorContains: "start time cannot be after end time",
 		},
 		{
-			name: "有效时间范围(StartTime < EndTime)",
+			name:    "有效时间范围(StartTime < EndTime)",
 			handler: &MockEventHandler{},
 			filter: EventFilter{
 				StartTime: timePtr(time.Now().Add(-1 * time.Hour)),
@@ -242,8 +242,6 @@ func TestContextTimeoutControl(t *testing.T) {
 	})
 }
 
-
-
 // TestParameterValidationCombinations 测试参数验证组合（P1-3补充）
 func TestParameterValidationCombinations(t *testing.T) {
 	handler := &MockEventHandler{}
@@ -285,7 +283,7 @@ func TestParameterValidationCombinations(t *testing.T) {
 			errorContains: "limit cannot be negative",
 		},
 		{
-			name: "时间范围错误",
+			name:    "时间范围错误",
 			handler: handler,
 			filter: EventFilter{
 				StartTime: timePtr(time.Now()),

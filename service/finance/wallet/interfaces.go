@@ -70,7 +70,7 @@ type Wallet struct {
 type Transaction struct {
 	ID              string    `json:"id" bson:"_id,omitempty"`
 	UserID          string    `json:"user_id" bson:"user_id"`
-	Type            string    `json:"type" bson:"type"` // recharge, consume, transfer_in, transfer_out
+	Type            string    `json:"type" bson:"type"`       // recharge, consume, transfer_in, transfer_out
 	Amount          int64     `json:"amount" bson:"amount"`   // 交易金额 (分)
 	Balance         int64     `json:"balance" bson:"balance"` // 交易后余额 (分)
 	RelatedUserID   string    `json:"related_user_id,omitempty" bson:"related_user_id,omitempty"`
@@ -85,7 +85,7 @@ type Transaction struct {
 type WithdrawRequest struct {
 	ID            string    `json:"id" bson:"_id,omitempty"`
 	UserID        string    `json:"user_id" bson:"user_id"`
-	Amount        int64     `json:"amount" bson:"amount"` // 提现金额 (分)
+	Amount        int64     `json:"amount" bson:"amount"`   // 提现金额 (分)
 	Account       string    `json:"account" bson:"account"` // 提现账号
 	Status        string    `json:"status" bson:"status"`   // pending, approved, rejected, processed
 	ReviewedBy    string    `json:"reviewed_by,omitempty" bson:"reviewed_by,omitempty"`

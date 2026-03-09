@@ -48,7 +48,7 @@ func NewSensitiveOperationService(auditLogService AuditLogService) SensitiveOper
 	return &sensitiveOperationServiceImpl{
 		auditLogService: auditLogService,
 		whitelist:       make(map[string]bool),
-		alertedBatches:   make(map[string]bool),
+		alertedBatches:  make(map[string]bool),
 	}
 }
 

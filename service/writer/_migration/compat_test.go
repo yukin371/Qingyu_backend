@@ -69,18 +69,18 @@ func (m *mockProjectPort) RecalculateProjectStatistics(ctx context.Context, proj
 
 func (m *mockProjectPort) Initialize(ctx context.Context) error { return nil }
 func (m *mockProjectPort) Health(ctx context.Context) error     { return nil }
-func (m *mockProjectPort) Close(ctx context.Context) error       { return nil }
+func (m *mockProjectPort) Close(ctx context.Context) error      { return nil }
 func (m *mockProjectPort) GetServiceName() string               { return "mock-project" }
-func (m *mockProjectPort) GetVersion() string                  { return "1.0.0" }
+func (m *mockProjectPort) GetVersion() string                   { return "1.0.0" }
 
 // 其他 Port 的简化 Mock
 type mockDocumentPort struct{}
 
 func (m *mockDocumentPort) Initialize(ctx context.Context) error { return nil }
 func (m *mockDocumentPort) Health(ctx context.Context) error     { return nil }
-func (m *mockDocumentPort) Close(ctx context.Context) error       { return nil }
+func (m *mockDocumentPort) Close(ctx context.Context) error      { return nil }
 func (m *mockDocumentPort) GetServiceName() string               { return "mock-document" }
-func (m *mockDocumentPort) GetVersion() string                  { return "1.0.0" }
+func (m *mockDocumentPort) GetVersion() string                   { return "1.0.0" }
 
 func (m *mockDocumentPort) CreateDocument(ctx context.Context, req *writeriface.CreateDocumentRequest) (*writeriface.CreateDocumentResponse, error) {
 	return &writeriface.CreateDocumentResponse{}, nil
@@ -210,9 +210,9 @@ type mockCollaborationPort struct{}
 
 func (m *mockCollaborationPort) Initialize(ctx context.Context) error { return nil }
 func (m *mockCollaborationPort) Health(ctx context.Context) error     { return nil }
-func (m *mockCollaborationPort) Close(ctx context.Context) error       { return nil }
+func (m *mockCollaborationPort) Close(ctx context.Context) error      { return nil }
 func (m *mockCollaborationPort) GetServiceName() string               { return "mock-collab" }
-func (m *mockCollaborationPort) GetVersion() string                  { return "1.0.0" }
+func (m *mockCollaborationPort) GetVersion() string                   { return "1.0.0" }
 
 func (m *mockCollaborationPort) CreateComment(ctx context.Context, comment *writer.DocumentComment) (*writer.DocumentComment, error) {
 	return &writer.DocumentComment{}, nil
@@ -278,9 +278,9 @@ type mockContentPort struct{}
 
 func (m *mockContentPort) Initialize(ctx context.Context) error { return nil }
 func (m *mockContentPort) Health(ctx context.Context) error     { return nil }
-func (m *mockContentPort) Close(ctx context.Context) error       { return nil }
+func (m *mockContentPort) Close(ctx context.Context) error      { return nil }
 func (m *mockContentPort) GetServiceName() string               { return "mock-content" }
-func (m *mockContentPort) GetVersion() string                  { return "1.0.0" }
+func (m *mockContentPort) GetVersion() string                   { return "1.0.0" }
 
 func (m *mockContentPort) CreateCharacter(ctx context.Context, projectID, userID string, req *writeriface.CreateCharacterRequest) (*writer.Character, error) {
 	return &writer.Character{}, nil
@@ -402,9 +402,9 @@ type mockPublishExportPort struct{}
 
 func (m *mockPublishExportPort) Initialize(ctx context.Context) error { return nil }
 func (m *mockPublishExportPort) Health(ctx context.Context) error     { return nil }
-func (m *mockPublishExportPort) Close(ctx context.Context) error       { return nil }
+func (m *mockPublishExportPort) Close(ctx context.Context) error      { return nil }
 func (m *mockPublishExportPort) GetServiceName() string               { return "mock-publish" }
-func (m *mockPublishExportPort) GetVersion() string                  { return "1.0.0" }
+func (m *mockPublishExportPort) GetVersion() string                   { return "1.0.0" }
 
 func (m *mockPublishExportPort) PublishProject(ctx context.Context, projectID, userID string, req *writeriface.PublishProjectRequest) (*writeriface.PublicationRecord, error) {
 	return &writeriface.PublicationRecord{}, nil

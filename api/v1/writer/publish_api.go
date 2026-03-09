@@ -1,13 +1,13 @@
 package writer
 
 import (
-	"strconv"
 	"regexp"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/service/interfaces"
 	"Qingyu_backend/pkg/response"
+	"Qingyu_backend/service/interfaces"
 )
 
 // PublishApi 发布管理API处理器
@@ -45,13 +45,13 @@ func (api *PublishApi) PublishProject(c *gin.Context) {
 	projectID := c.Param("id")
 
 	if projectID == "" {
-		response.BadRequest(c,  "参数错误", "项目ID不能为空")
+		response.BadRequest(c, "参数错误", "项目ID不能为空")
 		return
 	}
 
 	var req interfaces.PublishProjectRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -87,7 +87,7 @@ func (api *PublishApi) UnpublishProject(c *gin.Context) {
 	projectID := c.Param("id")
 
 	if projectID == "" {
-		response.BadRequest(c,  "参数错误", "项目ID不能为空")
+		response.BadRequest(c, "参数错误", "项目ID不能为空")
 		return
 	}
 
@@ -122,7 +122,7 @@ func (api *PublishApi) GetProjectPublicationStatus(c *gin.Context) {
 	projectID := c.Param("id")
 
 	if projectID == "" {
-		response.BadRequest(c,  "参数错误", "项目ID不能为空")
+		response.BadRequest(c, "参数错误", "项目ID不能为空")
 		return
 	}
 	if !isValidProjectID(projectID) {
@@ -208,13 +208,13 @@ func (api *PublishApi) UpdateDocumentPublishStatus(c *gin.Context) {
 	projectID := c.Query("projectId")
 
 	if documentID == "" || projectID == "" {
-		response.BadRequest(c,  "参数错误", "documentId和projectId不能为空")
+		response.BadRequest(c, "参数错误", "documentId和projectId不能为空")
 		return
 	}
 
 	var req interfaces.UpdateDocumentPublishStatusRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -251,13 +251,13 @@ func (api *PublishApi) BatchPublishDocuments(c *gin.Context) {
 	projectID := c.Param("id")
 
 	if projectID == "" {
-		response.BadRequest(c,  "参数错误", "项目ID不能为空")
+		response.BadRequest(c, "参数错误", "项目ID不能为空")
 		return
 	}
 
 	var req interfaces.BatchPublishDocumentsRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -293,7 +293,7 @@ func (api *PublishApi) BatchPublishDocuments(c *gin.Context) {
 func (api *PublishApi) GetPublicationRecords(c *gin.Context) {
 	projectID := c.Param("id")
 	if projectID == "" {
-		response.BadRequest(c,  "参数错误", "项目ID不能为空")
+		response.BadRequest(c, "参数错误", "项目ID不能为空")
 		return
 	}
 	if !isValidProjectID(projectID) {
@@ -328,7 +328,7 @@ func (api *PublishApi) GetPublicationRecord(c *gin.Context) {
 	recordID := c.Param("id")
 
 	if recordID == "" {
-		response.BadRequest(c,  "参数错误", "记录ID不能为空")
+		response.BadRequest(c, "参数错误", "记录ID不能为空")
 		return
 	}
 

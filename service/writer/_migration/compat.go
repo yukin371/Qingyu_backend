@@ -3,8 +3,8 @@ package migration
 import (
 	"context"
 
-	writeriface "Qingyu_backend/service/interfaces/writer"
 	"Qingyu_backend/models/writer"
+	writeriface "Qingyu_backend/service/interfaces/writer"
 )
 
 // ============================================================================
@@ -14,10 +14,10 @@ import (
 // WriterServiceAdapter 旧 WriterService 接口的适配器
 // 将旧的 WriterService 方法调用委托给新的 Port 接口
 type WriterServiceAdapter struct {
-	projectPort      writeriface.ProjectManagementPort
-	documentPort     writeriface.DocumentManagementPort
+	projectPort       writeriface.ProjectManagementPort
+	documentPort      writeriface.DocumentManagementPort
 	collaborationPort writeriface.CollaborationPort
-	contentPort      writeriface.ContentManagementPort
+	contentPort       writeriface.ContentManagementPort
 	publishExportPort writeriface.PublishExportPort
 }
 
@@ -75,10 +75,10 @@ func NewWriterServiceAdapter(
 	publishExportPort writeriface.PublishExportPort,
 ) *WriterServiceAdapter {
 	return &WriterServiceAdapter{
-		projectPort:      projectPort,
-		documentPort:     documentPort,
+		projectPort:       projectPort,
+		documentPort:      documentPort,
 		collaborationPort: collaborationPort,
-		contentPort:      contentPort,
+		contentPort:       contentPort,
 		publishExportPort: publishExportPort,
 	}
 }

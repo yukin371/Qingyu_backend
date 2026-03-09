@@ -7,8 +7,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/models/bookstore"
+	"Qingyu_backend/pkg/response"
 	bookstoreService "Qingyu_backend/service/bookstore"
 )
 
@@ -463,6 +463,8 @@ func (api *BookRatingAPI) SearchRatings(c *gin.Context) {
 	if limit < 1 || limit > 100 {
 		limit = 10
 	}
+	_ = page
+	_ = limit
 
 	// TODO: SearchByKeyword方法尚未在Service层实现
 	// 暂时返回空结果

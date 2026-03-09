@@ -24,13 +24,13 @@ func (a *ConsoleAlerter) SendAlert(ctx context.Context, message string) error {
 
 // EmailAlerter 邮件告警（用于生产环境）
 type EmailAlerter struct {
-	smtpHost     string
-	smtpPort     int
-	from         string
-	to           []string
-	username     string
-	password     string
-	fromName     string
+	smtpHost string
+	smtpPort int
+	from     string
+	to       []string
+	username string
+	password string
+	fromName string
 }
 
 // EmailConfig 邮件配置

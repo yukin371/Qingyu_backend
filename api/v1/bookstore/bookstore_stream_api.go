@@ -6,8 +6,8 @@ import (
 	"strconv"
 
 	"Qingyu_backend/models/bookstore"
-	streamService "Qingyu_backend/service/bookstore"
 	"Qingyu_backend/pkg/response"
+	streamService "Qingyu_backend/service/bookstore"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"

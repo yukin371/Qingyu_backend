@@ -183,7 +183,7 @@ func (s *ContentAuditService) AuditDocument(ctx context.Context, documentID stri
 		RiskLevel:        checkResult.RiskLevel,
 		RiskScore:        checkResult.RiskScore,
 		Violations:       checkResult.Violations,
-		}
+	}
 
 	// 4. 确定审核状态和结果
 	// 修复: 优先根据风险等级判断，高风险直接拒绝
@@ -288,7 +288,7 @@ func (s *ContentAuditService) BatchAuditDocuments(ctx context.Context, documentI
 				RiskLevel:        1,
 				RiskScore:        0.0,
 				Violations:       []audit.ViolationDetail{},
-				}
+			}
 
 			// 保存审核记录
 			err = s.auditRecordRepo.Create(ctx, record)
@@ -649,7 +649,7 @@ func (s *ContentAuditService) createViolationRecord(ctx context.Context, record 
 		Description:    fmt.Sprintf("内容违规，风险等级：%d", record.RiskLevel),
 		CreatedAt:      now,
 		UpdatedAt:      now,
-		}
+	}
 
 	// 根据风险等级确定处罚
 	if record.RiskLevel >= audit.LevelBanned {

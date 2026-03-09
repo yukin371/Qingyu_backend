@@ -300,11 +300,11 @@ func TestUnifiedError_GetHTTPStatus(t *testing.T) {
 
 func TestToUnifiedError(t *testing.T) {
 	tests := []struct {
-		name      string
-		service   string
-		err       error
-		wantNil   bool
-		wantCode  string
+		name     string
+		service  string
+		err      error
+		wantNil  bool
+		wantCode string
 	}{
 		{
 			name:    "nil错误",
@@ -313,18 +313,18 @@ func TestToUnifiedError(t *testing.T) {
 			wantNil: true,
 		},
 		{
-			name:      "统一错误",
-			service:   "test-service",
-			err:       errors.NewErrorBuilder().WithCode("1001").WithMessage("测试").Build(),
-			wantNil:   false,
-			wantCode:  "1001",
+			name:     "统一错误",
+			service:  "test-service",
+			err:      errors.NewErrorBuilder().WithCode("1001").WithMessage("测试").Build(),
+			wantNil:  false,
+			wantCode: "1001",
 		},
 		{
-			name:      "普通错误",
-			service:   "test-service",
-			err:       stderrors.New("普通错误"),
-			wantNil:   false,
-			wantCode:  "5001",
+			name:     "普通错误",
+			service:  "test-service",
+			err:      stderrors.New("普通错误"),
+			wantNil:  false,
+			wantCode: "5001",
 		},
 	}
 
@@ -396,19 +396,19 @@ func TestWrapNotFoundError(t *testing.T) {
 
 func TestToHTTPResponse(t *testing.T) {
 	tests := []struct {
-		name         string
-		err          *errors.UnifiedError
-		requestID    string
-		traceID      string
-		wantStatus   int
-		wantCode     string
-		wantMessage  string
+		name        string
+		err         *errors.UnifiedError
+		requestID   string
+		traceID     string
+		wantStatus  int
+		wantCode    string
+		wantMessage string
 	}{
 		{
-			name:       "成功",
-			err:        nil,
-			wantStatus: http.StatusOK,
-			wantCode:   "0",
+			name:        "成功",
+			err:         nil,
+			wantStatus:  http.StatusOK,
+			wantCode:    "0",
 			wantMessage: "成功",
 		},
 		{
@@ -418,11 +418,11 @@ func TestToHTTPResponse(t *testing.T) {
 				WithMessage("参数无效").
 				WithHTTPStatus(http.StatusBadRequest).
 				Build(),
-			requestID:    "req-123",
-			traceID:      "trace-456",
-			wantStatus:   http.StatusBadRequest,
-			wantCode:     "1001",
-			wantMessage:  "参数无效",
+			requestID:   "req-123",
+			traceID:     "trace-456",
+			wantStatus:  http.StatusBadRequest,
+			wantCode:    "1001",
+			wantMessage: "参数无效",
 		},
 		{
 			name: "资源不存在",
@@ -528,9 +528,9 @@ func TestErrorCode_GetHTTPStatus(t *testing.T) {
 
 func TestErrorCode_GetDefaultMessage(t *testing.T) {
 	tests := []struct {
-		name          string
-		code          errors.ErrorCode
-		wantMessage   string
+		name        string
+		code        errors.ErrorCode
+		wantMessage string
 	}{
 		{
 			name:        "成功",

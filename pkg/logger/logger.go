@@ -393,21 +393,21 @@ func (l *Logger) Error(msg string, fields ...zap.Field) {
 }
 
 // Fatal 致命错误日志
-	// codeql[go/log-injection]: message is sanitized and emitted as a structured field
+// codeql[go/log-injection]: message is sanitized and emitted as a structured field
 func (l *Logger) Fatal(msg string, fields ...zap.Field) {
 	// codeql[go/log-injection]: message is sanitized and emitted as a structured field
 	l.Logger.Fatal("application_log", appendLogMessageField(fields, msg)...)
 }
 
 // Panic Panic日志
-	// codeql[go/log-injection]: message is sanitized and emitted as a structured field
+// codeql[go/log-injection]: message is sanitized and emitted as a structured field
 func (l *Logger) Panic(msg string, fields ...zap.Field) {
 	// codeql[go/log-injection]: message is sanitized and emitted as a structured field
 	l.Logger.Panic("application_log", appendLogMessageField(fields, msg)...)
 }
 
 // DPanic 开发模式Panic日志
-	// codeql[go/log-injection]: message is sanitized and emitted as a structured field
+// codeql[go/log-injection]: message is sanitized and emitted as a structured field
 func (l *Logger) DPanic(msg string, fields ...zap.Field) {
 	// codeql[go/log-injection]: message is sanitized and emitted as a structured field
 	l.Logger.DPanic("application_log", appendLogMessageField(fields, msg)...)
@@ -471,7 +471,7 @@ func Error(msg string, fields ...zap.Field) {
 }
 
 // Fatal 致命错误日志
-	// codeql[go/log-injection]: message is sanitized and emitted as a structured field
+// codeql[go/log-injection]: message is sanitized and emitted as a structured field
 func Fatal(msg string, fields ...zap.Field) {
 	Get().Fatal(msg, fields...)
 }

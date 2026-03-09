@@ -8,11 +8,11 @@ import (
 // MockEmailService Mock邮件服务
 // 用于集成测试中模拟邮件发送，避免实际发送邮件
 type MockEmailService struct {
-	mu               sync.Mutex
-	lastToken        string
-	lastResetToken   string
-	sentEmails       []EmailRecord
-	emailEnabled     bool
+	mu             sync.Mutex
+	lastToken      string
+	lastResetToken string
+	sentEmails     []EmailRecord
+	emailEnabled   bool
 }
 
 // EmailRecord 邮件记录

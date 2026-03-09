@@ -155,10 +155,10 @@ func (c *SearchCache) Stats(ctx context.Context) (*CacheStats, error) {
 	}
 
 	return &CacheStats{
-		Hits:       hits,
-		Misses:     misses,
-		Keys:       keys,
-		HitRate:    hitRate,
+		Hits:        hits,
+		Misses:      misses,
+		Keys:        keys,
+		HitRate:     hitRate,
 		MemoryUsage: 0, // Redis 内存使用需要通过 INFO 命令获取
 	}, nil
 }

@@ -292,7 +292,7 @@ func (s *InboxNotificationServiceImpl) setDefaults(notification *messagingModel.
 	}
 
 	// 默认未读
-	if notification.IsRead == false && notification.ReadAt == nil {
+	if !notification.IsRead && notification.ReadAt == nil {
 		notification.IsRead = false
 	}
 }

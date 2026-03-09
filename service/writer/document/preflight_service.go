@@ -39,18 +39,18 @@ type PreflightService interface {
 
 // PreflightOptions 预检查选项
 type PreflightOptions struct {
-	ExpectedVersions   map[string]int         // 版本检查
-	ConflictPolicy     writer.ConflictPolicy  // 冲突策略
-	IncludeDescendants bool                   // 是否包含后代节点
-	UserID             primitive.ObjectID     // 当前用户ID
+	ExpectedVersions   map[string]int        // 版本检查
+	ConflictPolicy     writer.ConflictPolicy // 冲突策略
+	IncludeDescendants bool                  // 是否包含后代节点
+	UserID             primitive.ObjectID    // 当前用户ID
 }
 
 // PreflightResult 预检查结果
 type PreflightResult struct {
-	ValidIDs    []string                   // 有效ID列表
-	InvalidIDs  []InvalidTarget            // 无效ID列表
-	SkippedIDs  []string                   // 跳过的ID列表
-	Warnings    []string                   // 警告信息
+	ValidIDs    []string                    // 有效ID列表
+	InvalidIDs  []InvalidTarget             // 无效ID列表
+	SkippedIDs  []string                    // 跳过的ID列表
+	Warnings    []string                    // 警告信息
 	DocumentMap map[string]*writer.Document // ID -> Document 映射
 }
 

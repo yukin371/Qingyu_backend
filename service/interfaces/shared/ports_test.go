@@ -141,7 +141,7 @@ func TestCachePortBehavior(t *testing.T) {
 
 // MockAuthPort 模拟认证端口（用于测试）
 type MockAuthPort struct {
-	ValidateTokenFunc func(ctx context.Context, token string) (string, error)
+	ValidateTokenFunc   func(ctx context.Context, token string) (string, error)
 	CheckPermissionFunc func(ctx context.Context, userID, permission string) (bool, error)
 }
 

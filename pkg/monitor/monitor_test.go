@@ -200,7 +200,7 @@ func TestDataQualityMonitor_ShouldAlert(t *testing.T) {
 			report: &DataQualityReport{
 				TotalOrphanedRecords: 0,
 				InaccurateStatistics: 50,
-				HasIssues:           true,
+				HasIssues:            true,
 			},
 			expected: true,
 		},
@@ -209,7 +209,7 @@ func TestDataQualityMonitor_ShouldAlert(t *testing.T) {
 			report: &DataQualityReport{
 				TotalOrphanedRecords: 0,
 				InaccurateStatistics: 0,
-				HasIssues:           false,
+				HasIssues:            false,
 			},
 			expected: false,
 		},
@@ -285,10 +285,10 @@ func TestDataQualityMonitor_FormatAlertMessage(t *testing.T) {
 	// Arrange
 	monitor := NewDataQualityMonitor(nil, nil)
 	report := &DataQualityReport{
-		CheckTime:           time.Now(),
+		CheckTime:            time.Now(),
 		TotalOrphanedRecords: 100,
 		InaccurateStatistics: 50,
-		HasIssues:           true,
+		HasIssues:            true,
 	}
 
 	// Act

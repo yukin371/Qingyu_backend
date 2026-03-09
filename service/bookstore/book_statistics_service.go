@@ -288,9 +288,9 @@ func (s *BookStatisticsServiceImpl) GetTopViewedBooks(ctx context.Context, limit
 		for _, stats := range books {
 			// 这里需要根据实际情况构造Book对象，暂时使用基本信息
 			book := &bookstore2.Book{
-    IdentifiedEntity: shared.IdentifiedEntity{ID: stats.BookID},
-    BaseEntity:       shared.BaseEntity{},
-    }
+				IdentifiedEntity: shared.IdentifiedEntity{ID: stats.BookID},
+				BaseEntity:       shared.BaseEntity{},
+			}
 			booksForCache = append(booksForCache, book)
 		}
 		s.cacheService.SetTopViewedBooks(ctx, booksForCache, 5*time.Minute)
@@ -336,9 +336,9 @@ func (s *BookStatisticsServiceImpl) GetTopFavoritedBooks(ctx context.Context, li
 		for _, stats := range books {
 			// 这里需要根据实际情况构造Book对象，暂时使用基本信息
 			book := &bookstore2.Book{
-    IdentifiedEntity: shared.IdentifiedEntity{ID: stats.BookID},
-    BaseEntity:       shared.BaseEntity{},
-    }
+				IdentifiedEntity: shared.IdentifiedEntity{ID: stats.BookID},
+				BaseEntity:       shared.BaseEntity{},
+			}
 			booksForCache = append(booksForCache, book)
 		}
 		s.cacheService.SetTopFavoritedBooks(ctx, booksForCache, 5*time.Minute)
@@ -384,9 +384,9 @@ func (s *BookStatisticsServiceImpl) GetTopRatedBooks(ctx context.Context, limit 
 		for _, stats := range books {
 			// 这里需要根据实际情况构造Book对象，暂时使用基本信息
 			book := &bookstore2.Book{
-    IdentifiedEntity: shared.IdentifiedEntity{ID: stats.BookID},
-    BaseEntity:       shared.BaseEntity{},
-    }
+				IdentifiedEntity: shared.IdentifiedEntity{ID: stats.BookID},
+				BaseEntity:       shared.BaseEntity{},
+			}
 			booksForCache = append(booksForCache, book)
 		}
 		s.cacheService.SetTopRatedBooks(ctx, booksForCache, 5*time.Minute)
@@ -432,9 +432,9 @@ func (s *BookStatisticsServiceImpl) GetHottestBooks(ctx context.Context, limit i
 		for _, stats := range books {
 			// 这里需要根据实际情况构造Book对象，暂时使用基本信息
 			book := &bookstore2.Book{
-    IdentifiedEntity: shared.IdentifiedEntity{ID: stats.BookID},
-    BaseEntity:       shared.BaseEntity{},
-    }
+				IdentifiedEntity: shared.IdentifiedEntity{ID: stats.BookID},
+				BaseEntity:       shared.BaseEntity{},
+			}
 			booksForCache = append(booksForCache, book)
 		}
 		s.cacheService.SetHottestBooks(ctx, booksForCache, 5*time.Minute)

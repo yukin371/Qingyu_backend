@@ -56,13 +56,13 @@ func TestReviewRepository_GetReviewByID(t *testing.T) {
 	defer cleanup()
 
 	review := &social.Review{
-		BookID:     "book123",
-		UserID:     "user123",
-		UserName:   "测试用户",
-		Title:      "测试书评标题",
-		Content:    "测试书评内容",
-		Rating:     4,
-		IsPublic:   true,
+		BookID:   "book123",
+		UserID:   "user123",
+		UserName: "测试用户",
+		Title:    "测试书评标题",
+		Content:  "测试书评内容",
+		Rating:   4,
+		IsPublic: true,
 	}
 	err := repo.CreateReview(ctx, review)
 	require.NoError(t, err)
@@ -507,14 +507,14 @@ func TestReviewRepository_IncrementReviewLikeCount(t *testing.T) {
 	defer cleanup()
 
 	review := &social.Review{
-		BookID:     "book123",
-		UserID:     "user123",
-		UserName:   "测试用户",
-		Title:      "书评标题",
-		Content:    "书评内容",
-		Rating:     5,
-		LikeCount:  0,
-		IsPublic:   true,
+		BookID:    "book123",
+		UserID:    "user123",
+		UserName:  "测试用户",
+		Title:     "书评标题",
+		Content:   "书评内容",
+		Rating:    5,
+		LikeCount: 0,
+		IsPublic:  true,
 	}
 	err := repo.CreateReview(ctx, review)
 	require.NoError(t, err)
@@ -538,14 +538,14 @@ func TestReviewRepository_DecrementReviewLikeCount(t *testing.T) {
 	defer cleanup()
 
 	review := &social.Review{
-		BookID:     "book123",
-		UserID:     "user123",
-		UserName:   "测试用户",
-		Title:      "书评标题",
-		Content:    "书评内容",
-		Rating:     5,
-		LikeCount:  5,
-		IsPublic:   true,
+		BookID:    "book123",
+		UserID:    "user123",
+		UserName:  "测试用户",
+		Title:     "书评标题",
+		Content:   "书评内容",
+		Rating:    5,
+		LikeCount: 5,
+		IsPublic:  true,
 	}
 	err := repo.CreateReview(ctx, review)
 	require.NoError(t, err)

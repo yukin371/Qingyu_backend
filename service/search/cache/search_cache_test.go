@@ -31,36 +31,36 @@ func TestNewSearchCache(t *testing.T) {
 
 func TestGenerateCacheKey(t *testing.T) {
 	tests := []struct {
-		name      string
+		name       string
 		searchType string
-		query     string
-		page      int
-		pageSize  int
-		filter    map[string]interface{}
+		query      string
+		page       int
+		pageSize   int
+		filter     map[string]interface{}
 	}{
 		{
-			name:      "basic search",
+			name:       "basic search",
 			searchType: "books",
-			query:     "哈利波特",
-			page:      1,
-			pageSize:  20,
-			filter:    map[string]interface{}{},
+			query:      "哈利波特",
+			page:       1,
+			pageSize:   20,
+			filter:     map[string]interface{}{},
 		},
 		{
-			name:      "search with filter",
+			name:       "search with filter",
 			searchType: "projects",
-			query:     "test",
-			page:      1,
-			pageSize:  10,
-			filter:    map[string]interface{}{"user_id": "123"},
+			query:      "test",
+			page:       1,
+			pageSize:   10,
+			filter:     map[string]interface{}{"user_id": "123"},
 		},
 		{
-			name:      "second page",
+			name:       "second page",
 			searchType: "documents",
-			query:     "search",
-			page:      2,
-			pageSize:  10,
-			filter:    map[string]interface{}{},
+			query:      "search",
+			page:       2,
+			pageSize:   10,
+			filter:     map[string]interface{}{},
 		},
 	}
 

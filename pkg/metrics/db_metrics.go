@@ -51,16 +51,15 @@ func (c *DbMetricsCollector) GetMonitorCommand() *event.CommandMonitor {
 			})
 		},
 		Succeeded: func(_ context.Context, succeeded *event.CommandSucceededEvent) {
-			c.finishQuery(succeeded.RequestID, succeeded.CommandName, succeeded.DurationNanos, true, "")
+			c.finishQuery(succeeded.RequestID, succeeded.CommandName, succeeded.Duration, true, "")
 		},
 		Failed: func(_ context.Context, failed *event.CommandFailedEvent) {
-			c.finishQuery(failed.RequestID, failed.CommandName, failed.DurationNanos, false, failed.Failure)
+			c.finishQuery(failed.RequestID, failed.CommandName, failed.Duration, false, failed.Failure)
 		},
 	}
 }
 
-func (c *DbMetricsCollector) finishQuery(requestID int64, commandName string, durationNanos int64, success bool, failure string) {
-	duration := time.Duration(durationNanos)
+func (c *DbMetricsCollector) finishQuery(requestID int64, commandName string, duration time.Duration, success bool, failure string) {
 	trace := commandTrace{
 		commandName: commandName,
 		startedAt:   time.Now().Add(-duration),

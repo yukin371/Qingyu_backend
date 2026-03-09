@@ -459,7 +459,7 @@ func (s *DocumentService) updateProjectStatistics(ctx context.Context, projectID
 		"statistics": stats,
 	}
 
-	s.projectRepo.Update(ctx, projectID, updates)
+	_ = s.projectRepo.Update(ctx, projectID, updates)
 }
 
 // BaseService接口实现

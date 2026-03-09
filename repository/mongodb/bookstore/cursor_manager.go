@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"Qingyu_backend/models/bookstore"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -33,10 +34,10 @@ func (cm *CursorManager) EncodeCursor(cursorType bookstore.CursorType, value int
 
 	// 构建游标数据
 	cursorData := map[string]interface{}{
-		"type": cursorType,
+		"type":  cursorType,
 		"value": string(valueJSON),
-		"ts":   time.Now().Unix(),
-		"ttl":  cm.defaultTTL,
+		"ts":    time.Now().Unix(),
+		"ttl":   cm.defaultTTL,
 	}
 
 	// 序列化整个游标数据

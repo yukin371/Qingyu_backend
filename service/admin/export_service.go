@@ -254,10 +254,10 @@ type ExportConfig struct {
 // DefaultExportConfig 默认导出配置
 func DefaultExportConfig() *ExportConfig {
 	return &ExportConfig{
-		Format:         ExportFormatCSV,
-		IncludeHeader:  true,
-		FileName:       "export",
-		SheetName:      "Sheet1",
-		MaxRows:        100000,
+		Format:        ExportFormatCSV,
+		IncludeHeader: true,
+		FileName:      "export",
+		SheetName:     "Sheet1",
+		MaxRows:       100000,
 	}
 }

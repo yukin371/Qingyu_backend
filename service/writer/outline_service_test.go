@@ -147,11 +147,11 @@ func TestOutlineService_Create_RootNode(t *testing.T) {
 	userID := primitive.NewObjectID().Hex()
 
 	req := &serviceInterfaces.CreateOutlineRequest{
-		Title:    "第一卷",
-		Summary:  "这是第一卷的内容",
-		Type:     "volume",
-		Tension:  7,
-		Order:    0,
+		Title:   "第一卷",
+		Summary: "这是第一卷的内容",
+		Type:    "volume",
+		Tension: 7,
+		Order:   0,
 	}
 
 	mockRepo.On("CountByParentID", ctx, projectID, "").Return(int64(0), nil).Maybe()
@@ -434,9 +434,9 @@ func TestOutlineService_Update_Success(t *testing.T) {
 	newTension := 8
 
 	req := &serviceInterfaces.UpdateOutlineRequest{
-		Title:     &newTitle,
-		Summary:   &newSummary,
-		Tension:   &newTension,
+		Title:   &newTitle,
+		Summary: &newSummary,
+		Tension: &newTension,
 	}
 
 	mockRepo.On("FindByID", ctx, outlineID).Return(existingOutline, nil).Once()

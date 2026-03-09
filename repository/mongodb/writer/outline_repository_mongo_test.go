@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"Qingyu_backend/models/writer"
-	writerRepo "Qingyu_backend/repository/mongodb/writer"
 	writerInterfaces "Qingyu_backend/repository/interfaces/writer"
+	writerRepo "Qingyu_backend/repository/mongodb/writer"
 	"Qingyu_backend/test/testutil"
 
 	"github.com/stretchr/testify/assert"
