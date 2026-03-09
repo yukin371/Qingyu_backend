@@ -19,11 +19,11 @@ func TestValidateUsername(t *testing.T) {
 	validator := &UserValidator{}
 
 	tests := []struct {
-		name      string
-		username  string
-		wantErr   bool
-		errCode   string
-		errField  string
+		name     string
+		username string
+		wantErr  bool
+		errCode  string
+		errField string
 	}{
 		{"有效用户名", "validuser", false, "", ""},
 		{"有效用户名带数字", "user123", false, "", ""},

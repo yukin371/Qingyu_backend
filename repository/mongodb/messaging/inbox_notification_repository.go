@@ -15,32 +15,32 @@ import (
 
 // InboxNotificationRepository 站内通知仓储
 type InboxNotificationRepository struct {
-	db                        *mongo.Database
+	db                          *mongo.Database
 	inboxNotificationCollection *mongo.Collection
 }
 
 // NewInboxNotificationRepository 创建站内通知仓储实例
 func NewInboxNotificationRepository(db *mongo.Database) *InboxNotificationRepository {
 	return &InboxNotificationRepository{
-		db:                        db,
+		db:                          db,
 		inboxNotificationCollection: db.Collection("inbox_notifications"),
 	}
 }
 
 // InboxNotificationFilter 站内通知过滤器
 type InboxNotificationFilter struct {
-	ReceiverID string                      // 接收者ID
-	Type       messaging.InboxNotificationType // 通知类型
-	IsRead     *bool                       // 已读状态
-	IsPinned   *bool                       // 是否置顶
+	ReceiverID string                              // 接收者ID
+	Type       messaging.InboxNotificationType     // 通知类型
+	IsRead     *bool                               // 已读状态
+	IsPinned   *bool                               // 是否置顶
 	Priority   messaging.InboxNotificationPriority // 优先级
-	StartDate  *time.Time                  // 开始日期
-	EndDate    *time.Time                  // 结束日期
-	IsExpired  bool                        // 是否包含过期通知
-	Page       int                         // 页码
-	PageSize   int                         // 每页大小
-	Limit      int64                       // 限制数量
-	Offset     int64                       // 偏移量
+	StartDate  *time.Time                          // 开始日期
+	EndDate    *time.Time                          // 结束日期
+	IsExpired  bool                                // 是否包含过期通知
+	Page       int                                 // 页码
+	PageSize   int                                 // 每页大小
+	Limit      int64                               // 限制数量
+	Offset     int64                               // 偏移量
 }
 
 // Create 创建站内通知
@@ -188,9 +188,9 @@ func (r *InboxNotificationRepository) MarkAsRead(ctx context.Context, id, receiv
 
 	now := time.Now()
 	updates := bson.M{
-		"is_read":     true,
-		"read_at":     &now,
-		"updated_at":  now,
+		"is_read":    true,
+		"read_at":    &now,
+		"updated_at": now,
 	}
 
 	// 确保只能标记自己的通知
@@ -215,9 +215,9 @@ func (r *InboxNotificationRepository) MarkAsRead(ctx context.Context, id, receiv
 func (r *InboxNotificationRepository) MarkAllAsRead(ctx context.Context, receiverID string) (int64, error) {
 	now := time.Now()
 	updates := bson.M{
-		"is_read":     true,
-		"read_at":     &now,
-		"updated_at":  now,
+		"is_read":    true,
+		"read_at":    &now,
+		"updated_at": now,
 	}
 
 	filter := bson.M{
@@ -297,7 +297,7 @@ func (r *InboxNotificationRepository) PinNotification(ctx context.Context, id, r
 	}
 
 	updates := bson.M{
-		"is_pinned":   true,
+		"is_pinned":  true,
 		"updated_at": time.Now(),
 	}
 
@@ -326,7 +326,7 @@ func (r *InboxNotificationRepository) UnpinNotification(ctx context.Context, id,
 	}
 
 	updates := bson.M{
-		"is_pinned":   false,
+		"is_pinned":  false,
 		"updated_at": time.Now(),
 	}
 

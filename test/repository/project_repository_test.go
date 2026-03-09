@@ -37,6 +37,8 @@ func newTestProject(authorID, title string) *writer.Project {
 	return &writer.Project{
 		OwnedEntity:  base.OwnedEntity{AuthorID: authorID},
 		TitledEntity: base.TitledEntity{Title: title},
+		Status:       writer.StatusDraft,
+		Visibility:  writer.VisibilityPrivate,
 	}
 }
 
@@ -65,26 +67,28 @@ func TestProjectRepository_Create(t *testing.T) {
 		assert.NotZero(t, project.UpdatedAt)
 	})
 
-	// 3. 测试统计初始化
+	// 3. 测试统计初始化（Repository层不再设置默认值，由Service层负责）
 	t.Run("统计信息初始化", func(t *testing.T) {
 		project := newTestProject("user123", "测试项目2")
 
 		err := repo.Create(ctx, project)
 		require.NoError(t, err)
+		// Repository层不设置默认值，检查零值
 		assert.Equal(t, 0, project.Statistics.TotalWords)
 		assert.Equal(t, 0, project.Statistics.ChapterCount)
 		assert.Equal(t, 0, project.Statistics.DocumentCount)
-		assert.NotZero(t, project.Statistics.LastUpdateAt)
+		assert.Zero(t, project.Statistics.LastUpdateAt) // 零值
 	})
 
-	// 4. 测试设置初始化
+	// 4. 测试设置初始化（Repository层不再设置默认值，由Service层负责）
 	t.Run("设置信息初始化", func(t *testing.T) {
 		project := newTestProject("user123", "测试项目3")
 
 		err := repo.Create(ctx, project)
 		require.NoError(t, err)
-		assert.True(t, project.Settings.AutoBackup)
-		assert.Equal(t, 24, project.Settings.BackupInterval)
+		// Repository层不设置默认值，检查零值
+		assert.False(t, project.Settings.AutoBackup) // 零值
+		assert.Equal(t, 0, project.Settings.BackupInterval) // 零值
 	})
 
 	// 5. 测试空对象创建

@@ -294,12 +294,12 @@ func WrapRateLimitError(limitType string) *UnifiedError {
 
 // HTTPErrorResponse HTTP错误响应
 type HTTPErrorResponse struct {
-	Code       string      `json:"code"`
-	Message    string      `json:"message"`
-	Details    interface{} `json:"details,omitempty"`
-	Timestamp  string      `json:"timestamp"`
-	RequestID  string      `json:"request_id,omitempty"`
-	TraceID    string      `json:"trace_id,omitempty"`
+	Code      string      `json:"code"`
+	Message   string      `json:"message"`
+	Details   interface{} `json:"details,omitempty"`
+	Timestamp string      `json:"timestamp"`
+	RequestID string      `json:"request_id,omitempty"`
+	TraceID   string      `json:"trace_id,omitempty"`
 }
 
 // ToHTTPResponse 将 UnifiedError 转换为 HTTP 响应

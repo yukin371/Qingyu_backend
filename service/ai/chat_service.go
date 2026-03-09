@@ -16,17 +16,17 @@ import (
 
 // ChatRepositoryInterface 聊天仓库接口
 type ChatRepositoryInterface interface {
-	CreateSession(ctx context.Context, session *aiModels.ChatSession) error                                             // 创建会话
-	GetSessionByID(ctx context.Context, sessionID string) (*aiModels.ChatSession, error)                                // 获取会话
-	UpdateSession(ctx context.Context, session *aiModels.ChatSession) error                                             // 更新会话
-	DeleteSession(ctx context.Context, sessionID string) error                                                          // 删除会话
-	GetSessionsByProjectID(ctx context.Context, projectID string, limit, offset int) ([]*aiModels.ChatSession, error)   // 获取项目会话列表
-	CreateMessage(ctx context.Context, message *aiModels.ChatMessage) error                                             // 创建消息
-	GetMessagesBySessionID(ctx context.Context, sessionID string) ([]aiModels.ChatMessage, error)                       // 获取会话的所有消息
-	GetRecentMessagesBySessionID(ctx context.Context, sessionID string, limit int) ([]aiModels.ChatMessage, error)      // 获取会话的最近消息
+	CreateSession(ctx context.Context, session *aiModels.ChatSession) error                                                          // 创建会话
+	GetSessionByID(ctx context.Context, sessionID string) (*aiModels.ChatSession, error)                                             // 获取会话
+	UpdateSession(ctx context.Context, session *aiModels.ChatSession) error                                                          // 更新会话
+	DeleteSession(ctx context.Context, sessionID string) error                                                                       // 删除会话
+	GetSessionsByProjectID(ctx context.Context, projectID string, limit, offset int) ([]*aiModels.ChatSession, error)                // 获取项目会话列表
+	CreateMessage(ctx context.Context, message *aiModels.ChatMessage) error                                                          // 创建消息
+	GetMessagesBySessionID(ctx context.Context, sessionID string) ([]aiModels.ChatMessage, error)                                    // 获取会话的所有消息
+	GetRecentMessagesBySessionID(ctx context.Context, sessionID string, limit int) ([]aiModels.ChatMessage, error)                   // 获取会话的最近消息
 	GetMessagesBySessionIDPaginated(ctx context.Context, sessionID string, limit, offset int) ([]aiModels.ChatMessage, int64, error) // 分页获取消息
-	GetMessageCountBySessionID(ctx context.Context, sessionID string) (int64, error)                                     // 获取会话的消息总数
-	GetSessionStatistics(ctx context.Context, projectID string) (*ChatStatistics, error)                                // 获取会话统计信息
+	GetMessageCountBySessionID(ctx context.Context, sessionID string) (int64, error)                                                 // 获取会话的消息总数
+	GetSessionStatistics(ctx context.Context, projectID string) (*ChatStatistics, error)                                             // 获取会话统计信息
 }
 
 // AIServiceInterface AI服务接口
@@ -249,7 +249,7 @@ func (s *ChatService) StartChatStream(ctx context.Context, req *ChatRequest) (<-
 		aiRequest := &aiInterfaces.GenerateContentRequest{
 			Model:  "gpt-4", // 使用默认模型
 			Prompt: req.Message,
-			Stream: true,    // 流式生成
+			Stream: true, // 流式生成
 			Context: map[string]string{
 				"project_id": req.ProjectID,
 				"session_id": req.SessionID,

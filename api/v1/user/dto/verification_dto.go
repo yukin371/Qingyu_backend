@@ -34,7 +34,7 @@ type UnbindPhoneRequest struct {
 // SendCodeResponse 发送验证码响应
 type SendCodeResponse struct {
 	ExpiresIn int    `json:"expires_in"` // 有效期（秒）
-	Message   string `json:"message"`   // 额外信息
+	Message   string `json:"message"`    // 额外信息
 }
 
 // VerifyEmailResponse 验证邮箱响应

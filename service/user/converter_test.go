@@ -13,19 +13,19 @@ func TestToUserDTO_Normal(t *testing.T) {
 	// 创建测试用的Model对象
 	now := time.Now()
 	userModel := &usersModel.User{
-		Username: "testuser",
-		Email:    "test@example.com",
-		Phone:    "13800138000",
-		Roles:    []string{"user"},
-		VIPLevel: 1,
-		Status:   usersModel.UserStatusActive,
-		Avatar:   "https://example.com/avatar.jpg",
-		Nickname: "Test User",
-		Bio:      "Test bio",
-		Gender:   "male",
-		Birthday: &now,
-		Location: "Beijing",
-		Website:  "https://example.com",
+		Username:      "testuser",
+		Email:         "test@example.com",
+		Phone:         "13800138000",
+		Roles:         []string{"user"},
+		VIPLevel:      1,
+		Status:        usersModel.UserStatusActive,
+		Avatar:        "https://example.com/avatar.jpg",
+		Nickname:      "Test User",
+		Bio:           "Test bio",
+		Gender:        "male",
+		Birthday:      &now,
+		Location:      "Beijing",
+		Website:       "https://example.com",
 		EmailVerified: true,
 		PhoneVerified: false,
 		LastLoginAt:   now,
@@ -214,19 +214,19 @@ func TestToUserDTOsFromSlice_Empty(t *testing.T) {
 func TestToUser_Normal(t *testing.T) {
 	// 创建测试用的DTO对象
 	userDTO := &dto.UserDTO{
-		ID:      "507f1f77bcf86cd799439011",
-		Username: "testuser",
-		Email:   "test@example.com",
-		Phone:   "13800138000",
-		Roles:   []string{"user"},
-		VIPLevel: 1,
-		Status:  "active",
-		Avatar:  "https://example.com/avatar.jpg",
-		Nickname: "Test User",
-		Bio:     "Test bio",
-		Gender:  "male",
-		Location: "Beijing",
-		Website: "https://example.com",
+		ID:            "507f1f77bcf86cd799439011",
+		Username:      "testuser",
+		Email:         "test@example.com",
+		Phone:         "13800138000",
+		Roles:         []string{"user"},
+		VIPLevel:      1,
+		Status:        "active",
+		Avatar:        "https://example.com/avatar.jpg",
+		Nickname:      "Test User",
+		Bio:           "Test bio",
+		Gender:        "male",
+		Location:      "Beijing",
+		Website:       "https://example.com",
 		EmailVerified: true,
 		PhoneVerified: false,
 		LastLoginIP:   "192.168.1.1",
@@ -328,18 +328,18 @@ func TestToUser_AllValidStatuses(t *testing.T) {
 func TestToUserWithoutID_Normal(t *testing.T) {
 	// 创建测试用的DTO对象
 	userDTO := &dto.UserDTO{
-		Username: "testuser",
-		Email:    "test@example.com",
-		Phone:    "13800138000",
-		Roles:    []string{"user"},
-		VIPLevel: 1,
-		Status:   "active",
-		Avatar:   "https://example.com/avatar.jpg",
-		Nickname: "Test User",
-		Bio:      "Test bio",
-		Gender:   "male",
-		Location: "Beijing",
-		Website:  "https://example.com",
+		Username:      "testuser",
+		Email:         "test@example.com",
+		Phone:         "13800138000",
+		Roles:         []string{"user"},
+		VIPLevel:      1,
+		Status:        "active",
+		Avatar:        "https://example.com/avatar.jpg",
+		Nickname:      "Test User",
+		Bio:           "Test bio",
+		Gender:        "male",
+		Location:      "Beijing",
+		Website:       "https://example.com",
 		EmailVerified: true,
 		PhoneVerified: false,
 		LastLoginIP:   "192.168.1.1",
@@ -358,10 +358,10 @@ func TestToUserWithoutID_Normal(t *testing.T) {
 	}
 
 	// 验证ID为零值（由数据库生成）
-// 注意：Go中的零值ObjectId不是完全为空，而是"000000000000000000000000"
-if userModel.ID.Hex() != "000000000000000000000000" {
-	t.Errorf("ID should be zero value ObjectId for ToUserWithoutID, got %v", userModel.ID.Hex())
-}
+	// 注意：Go中的零值ObjectId不是完全为空，而是"000000000000000000000000"
+	if userModel.ID.Hex() != "000000000000000000000000" {
+		t.Errorf("ID should be zero value ObjectId for ToUserWithoutID, got %v", userModel.ID.Hex())
+	}
 
 	if userModel.Username != userDTO.Username {
 		t.Errorf("Username = %v, want %v", userModel.Username, userDTO.Username)
@@ -416,18 +416,18 @@ func TestToUserWithoutID_InvalidStatus(t *testing.T) {
 func TestRoundTrip(t *testing.T) {
 	// 创建原始Model
 	originalUser := &usersModel.User{
-		Username: "testuser",
-		Email:    "test@example.com",
-		Phone:    "13800138000",
-		Roles:    []string{"user", "admin"},
-		VIPLevel: 2,
-		Status:   usersModel.UserStatusActive,
-		Avatar:   "https://example.com/avatar.jpg",
-		Nickname: "Test User",
-		Bio:      "Test bio",
-		Gender:   "male",
-		Location: "Beijing",
-		Website:  "https://example.com",
+		Username:      "testuser",
+		Email:         "test@example.com",
+		Phone:         "13800138000",
+		Roles:         []string{"user", "admin"},
+		VIPLevel:      2,
+		Status:        usersModel.UserStatusActive,
+		Avatar:        "https://example.com/avatar.jpg",
+		Nickname:      "Test User",
+		Bio:           "Test bio",
+		Gender:        "male",
+		Location:      "Beijing",
+		Website:       "https://example.com",
 		EmailVerified: true,
 		PhoneVerified: false,
 		LastLoginIP:   "192.168.1.1",

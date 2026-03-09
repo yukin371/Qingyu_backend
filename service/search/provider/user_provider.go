@@ -11,6 +11,7 @@ import (
 
 	"Qingyu_backend/models/search"
 	"Qingyu_backend/pkg/logger"
+	"Qingyu_backend/repository"
 	searchengine "Qingyu_backend/service/search/engine"
 )
 
@@ -194,7 +195,7 @@ func (p *UserProvider) GetByID(ctx context.Context, id string) (*search.SearchIt
 	}
 
 	// 转换 ID
-	objectID, err := primitive.ObjectIDFromHex(id)
+	objectID, err := repository.ParseID(id)
 	if err != nil {
 		return nil, fmt.Errorf("invalid id format: %w", err)
 	}
@@ -239,7 +240,7 @@ func (p *UserProvider) GetBatch(ctx context.Context, ids []string) ([]search.Sea
 	// 转换 IDs
 	objectIDs := make([]primitive.ObjectID, 0, len(ids))
 	for _, id := range ids {
-		objectID, err := primitive.ObjectIDFromHex(id)
+		objectID, err := repository.ParseID(id)
 		if err != nil {
 			p.logger.Warn("Invalid ID format, skipping",
 				zap.String("id", id),
@@ -351,13 +352,13 @@ func (p *UserProvider) buildSortOptions(sortFields []search.SortField) []searche
 // validateSortField 验证排序字段
 func (p *UserProvider) validateSortField(field string) string {
 	validFields := map[string]string{
-		"username":    "username",
-		"nickname":    "nickname",
-		"created_at":  "created_at",
-		"updated_at":  "updated_at",
-		"vip_level":   "vip_level",
-		"last_login":  "last_login_at",
-		"_score":      "_score",
+		"username":   "username",
+		"nickname":   "nickname",
+		"created_at": "created_at",
+		"updated_at": "updated_at",
+		"vip_level":  "vip_level",
+		"last_login": "last_login_at",
+		"_score":     "_score",
 	}
 
 	if normalized, ok := validFields[field]; ok {

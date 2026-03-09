@@ -87,7 +87,7 @@ func (c *ChapterContentImpl) GetChapterContentWithProgress(ctx context.Context, 
 		Title:       resp.Title,
 		Content:     resp.Content,
 		WordCount:   resp.WordCount,
-		IsVIP:       !resp.CanAccess, // 如果不能访问则为VIP章节
+		IsVIP:       !resp.CanAccess,        // 如果不能访问则为VIP章节
 		PublishedAt: resp.LastReadAt.Unix(), // 使用 LastReadAt 作为近似值
 	}, nil
 }

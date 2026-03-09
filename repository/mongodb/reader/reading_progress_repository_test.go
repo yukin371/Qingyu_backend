@@ -10,8 +10,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	readerModel "Qingyu_backend/models/reader"
-	readerRepo "Qingyu_backend/repository/mongodb/reader"
 	"Qingyu_backend/models/shared/types"
+	readerRepo "Qingyu_backend/repository/mongodb/reader"
 	"Qingyu_backend/test/testutil"
 )
 

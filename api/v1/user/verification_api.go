@@ -6,10 +6,10 @@ import (
 	sharedApi "Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/api/v1/user/dto"
 	"Qingyu_backend/pkg/response"
-	userService "Qingyu_backend/service/user"
-	userConstants "Qingyu_backend/service/user"
-	userServiceInterface "Qingyu_backend/service/interfaces/user"
 	serviceInterfaces "Qingyu_backend/service/interfaces/base"
+	userServiceInterface "Qingyu_backend/service/interfaces/user"
+	userConstants "Qingyu_backend/service/user"
+	userService "Qingyu_backend/service/user"
 )
 
 // VerificationAPI 验证API处理器
@@ -48,8 +48,8 @@ func (api *VerificationAPI) SendEmailVerifyCode(c *gin.Context) {
 	}
 
 	// 检查邮箱是否已被使用
-	exists, err := api.verificationService.EmailExists(c.Request.Context(), req.Email)
-	if err == nil && exists {
+	_, err := api.verificationService.EmailExists(c.Request.Context(), req.Email)
+	if err == nil {
 		// 邮箱已被使用，但仍允许发送验证码（用于验证已有邮箱）
 	}
 

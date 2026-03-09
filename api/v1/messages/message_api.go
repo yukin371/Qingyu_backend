@@ -3,8 +3,8 @@ package messages
 import (
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/service/interfaces"
 	"Qingyu_backend/pkg/response"
+	"Qingyu_backend/service/interfaces"
 	"fmt"
 )
 
@@ -49,7 +49,7 @@ func (api *MessageAPI) GetConversations(c *gin.Context) {
 	params.Size = 20
 
 	if err := c.ShouldBindQuery(&params); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -87,7 +87,7 @@ func (api *MessageAPI) GetConversations(c *gin.Context) {
 func (api *MessageAPI) GetConversationMessages(c *gin.Context) {
 	conversationID := c.Param("conversationId")
 	if conversationID == "" {
-		response.BadRequest(c,  "参数错误", "会话ID不能为空")
+		response.BadRequest(c, "参数错误", "会话ID不能为空")
 		return
 	}
 
@@ -105,7 +105,7 @@ func (api *MessageAPI) GetConversationMessages(c *gin.Context) {
 	params.Size = 50
 
 	if err := c.ShouldBindQuery(&params); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -153,7 +153,7 @@ type SendMessageRequest struct {
 func (api *MessageAPI) SendMessage(c *gin.Context) {
 	var req SendMessageRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -174,7 +174,7 @@ func (api *MessageAPI) SendMessage(c *gin.Context) {
 	if err != nil {
 		errMsg := err.Error()
 		if errMsg == "不能给自己发送消息" {
-			response.BadRequest(c,  "操作失败", errMsg)
+			response.BadRequest(c, "操作失败", errMsg)
 		} else {
 			c.Error(fmt.Errorf("发送消息失败: %s", errMsg))
 		}
@@ -196,7 +196,7 @@ func (api *MessageAPI) SendMessage(c *gin.Context) {
 func (api *MessageAPI) MarkMessageAsRead(c *gin.Context) {
 	messageID := c.Param("id")
 	if messageID == "" {
-		response.BadRequest(c,  "参数错误", "消息ID不能为空")
+		response.BadRequest(c, "参数错误", "消息ID不能为空")
 		return
 	}
 
@@ -232,7 +232,7 @@ func (api *MessageAPI) MarkMessageAsRead(c *gin.Context) {
 func (api *MessageAPI) DeleteMessage(c *gin.Context) {
 	messageID := c.Param("id")
 	if messageID == "" {
-		response.BadRequest(c,  "参数错误", "消息ID不能为空")
+		response.BadRequest(c, "参数错误", "消息ID不能为空")
 		return
 	}
 
@@ -280,7 +280,7 @@ type CreateMentionRequest struct {
 func (api *MessageAPI) CreateMention(c *gin.Context) {
 	var req CreateMentionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -332,7 +332,7 @@ func (api *MessageAPI) GetMentions(c *gin.Context) {
 	params.Size = 20
 
 	if err := c.ShouldBindQuery(&params); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -368,7 +368,7 @@ func (api *MessageAPI) GetMentions(c *gin.Context) {
 func (api *MessageAPI) MarkMentionAsRead(c *gin.Context) {
 	mentionID := c.Param("id")
 	if mentionID == "" {
-		response.BadRequest(c,  "参数错误", "提醒ID不能为空")
+		response.BadRequest(c, "参数错误", "提醒ID不能为空")
 		return
 	}
 

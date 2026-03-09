@@ -151,10 +151,10 @@ func (f *WriterServiceFactory) CreateWithPorts(
 
 // PortImplementations Port 接口实现集合
 type PortImplementations struct {
-	ProjectPort      writeriface.ProjectManagementPort
-	DocumentPort     writeriface.DocumentManagementPort
+	ProjectPort       writeriface.ProjectManagementPort
+	DocumentPort      writeriface.DocumentManagementPort
 	CollaborationPort writeriface.CollaborationPort
-	ContentPort      writeriface.ContentManagementPort
+	ContentPort       writeriface.ContentManagementPort
 	PublishExportPort writeriface.PublishExportPort
 }
 

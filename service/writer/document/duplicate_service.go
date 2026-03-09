@@ -2,12 +2,14 @@ package document
 
 import (
 	"Qingyu_backend/models/writer"
+	"Qingyu_backend/repository"
 	writerRepo "Qingyu_backend/repository/interfaces/writer"
 	"Qingyu_backend/utils"
 	"context"
 	"fmt"
 
 	pkgErrors "Qingyu_backend/pkg/errors"
+
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -123,7 +125,7 @@ func (s *DuplicateService) createDuplicateDocument(sourceDoc *writer.Document, r
 
 	// 处理父节点位置（如果指定）
 	if req.TargetParentID != nil && *req.TargetParentID != "" {
-		if parentID, err := primitive.ObjectIDFromHex(*req.TargetParentID); err == nil {
+		if parentID, err := repository.ParseID(*req.TargetParentID); err == nil {
 			newDoc.ParentID = parentID
 		}
 	} else {

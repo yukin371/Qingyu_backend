@@ -1,6 +1,4 @@
 # CI/测试环境 Docker Compose 配置
-version: '3.8'
-
 services:
   # MongoDB数据库（测试专用）
   mongodb-test:
@@ -12,12 +10,10 @@ services:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: password
       MONGO_INITDB_DATABASE: qingyu_test
-    # 关键：让 MongoDB 绑定到所有网络接口，允许从宿主机访问
-    command: ["mongod", "--bind_ip_all"]
+    command: mongod --bind_ip_all
     networks:
       - test-network
     healthcheck:
-      # MongoDB 7.0使用mongosh而不是mongo
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')", "--quiet"]
       interval: 5s
       timeout: 3s
@@ -25,6 +21,29 @@ services:
       start_period: 10s
     tmpfs:
       - /data/db  # 使用内存存储，测试结束自动清理
+
+  # MongoDB副本集初始化器
+  mongodb-init:
+    image: mongo:7.0
+    container_name: qingyu-mongodb-init
+    depends_on:
+      mongodb-test:
+        condition: service_healthy
+    networks:
+      - test-network
+    entrypoint: >
+      bash -c "
+        sleep 3 &&
+        mongosh --host mongodb-test:27017 -u admin -p password --authenticationDatabase admin --eval '
+          try {
+            rs.status();
+          } catch(e) {
+            rs.initiate({_id: \"rs0\", members: [{_id: 0, host: \"mongodb-test:27017\"}]});
+            print(\"Replica set initialized\");
+          }
+        ' &&
+        echo 'MongoDB replica set ready'
+      "
 
   # Redis缓存（测试专用）
   redis-test:

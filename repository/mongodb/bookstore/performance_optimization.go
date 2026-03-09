@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"Qingyu_backend/models/bookstore"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -41,27 +42,27 @@ func (p *PerformanceOptimizer) EnsureIndexes(ctx context.Context) error {
 		},
 		// 分类索引
 		{
-			Keys: bson.D{{Key: "category_ids", Value: 1}},
+			Keys:    bson.D{{Key: "category_ids", Value: 1}},
 			Options: options.Index().SetName("category_index"),
 		},
 		// 作者索引
 		{
-			Keys: bson.D{{Key: "author", Value: 1}},
+			Keys:    bson.D{{Key: "author", Value: 1}},
 			Options: options.Index().SetName("author_index"),
 		},
 		// 状态索引
 		{
-			Keys: bson.D{{Key: "status", Value: 1}},
+			Keys:    bson.D{{Key: "status", Value: 1}},
 			Options: options.Index().SetName("status_index"),
 		},
 		// 创建时间索引（用于时间戳游标）
 		{
-			Keys: bson.D{{Key: "created_at", Value: -1}},
+			Keys:    bson.D{{Key: "created_at", Value: -1}},
 			Options: options.Index().SetName("created_at_index"),
 		},
 		// 更新时间索引
 		{
-			Keys: bson.D{{Key: "updated_at", Value: -1}},
+			Keys:    bson.D{{Key: "updated_at", Value: -1}},
 			Options: options.Index().SetName("updated_at_index"),
 		},
 		// 复合索引：状态 + 创建时间（常用查询组合）
@@ -83,27 +84,27 @@ func (p *PerformanceOptimizer) EnsureIndexes(ctx context.Context) error {
 		},
 		// 推荐书籍索引
 		{
-			Keys: bson.D{{Key: "is_recommended", Value: 1}},
+			Keys:    bson.D{{Key: "is_recommended", Value: 1}},
 			Options: options.Index().SetName("recommended_index"),
 		},
 		// 热门书籍索引
 		{
-			Keys: bson.D{{Key: "is_hot", Value: 1}},
+			Keys:    bson.D{{Key: "is_hot", Value: 1}},
 			Options: options.Index().SetName("hot_index"),
 		},
 		// 精选书籍索引
 		{
-			Keys: bson.D{{Key: "is_featured", Value: 1}},
+			Keys:    bson.D{{Key: "is_featured", Value: 1}},
 			Options: options.Index().SetName("featured_index"),
 		},
 		// 免费书籍索引
 		{
-			Keys: bson.D{{Key: "is_free", Value: 1}},
+			Keys:    bson.D{{Key: "is_free", Value: 1}},
 			Options: options.Index().SetName("free_index"),
 		},
 		// 标签索引
 		{
-			Keys: bson.D{{Key: "tags", Value: 1}},
+			Keys:    bson.D{{Key: "tags", Value: 1}},
 			Options: options.Index().SetName("tags_index"),
 		},
 	}
@@ -318,9 +319,9 @@ func (p *PerformanceOptimizer) OptimizeCursorBatchSize(filter *bookstore.BookFil
 // OptimizeConnectionPool 优化连接池配置
 func (p *PerformanceOptimizer) OptimizeConnectionPool() *options.ClientOptions {
 	return options.Client().
-		SetMaxPoolSize(100).          // 最大连接数
-		SetMinPoolSize(10).           // 最小连接数
-		SetMaxConnIdleTime(30 * 60)   // 连接最大空闲时间（秒）
+		SetMaxPoolSize(100).        // 最大连接数
+		SetMinPoolSize(10).         // 最小连接数
+		SetMaxConnIdleTime(30 * 60) // 连接最大空闲时间（秒）
 }
 
 // ============================================

@@ -13,7 +13,7 @@ permissions:
   security-events: write
 
 env:
-  GO_VERSION: '1.24'
+  GO_VERSION: '1.25'
   MONGODB_VERSION: '7.0'
   REDIS_VERSION: '7-alpine'
 
@@ -218,6 +218,7 @@ jobs:
           QINGYU_TEST_DB_ISOLATION: ${{ env.QINGYU_TEST_DB_ISOLATION }}
           REDIS_ADDR: localhost:6379
           REDIS_PASSWORD: ""
+          ELASTICSEARCH_ENABLED: "false"
         run: |
           go test -v -race -count=1 \
             -tags=integration \
@@ -611,6 +612,9 @@ jobs:
     name: Benchmark Tests
     runs-on: ubuntu-latest
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+      deployments: write
 
     services:
       mongodb:

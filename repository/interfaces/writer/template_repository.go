@@ -47,5 +47,5 @@ type TemplateFilter struct {
 	Page      int
 	PageSize  int
 	SortBy    string // name, created_at, updated_at
-	SortOrder int // 1: asc, -1: desc
+	SortOrder int    // 1: asc, -1: desc
 }

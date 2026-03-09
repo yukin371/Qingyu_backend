@@ -35,13 +35,13 @@ func NewCharacterApi(characterService interfaces.CharacterService) *CharacterApi
 func (api *CharacterApi) CreateCharacter(c *gin.Context) {
 	projectID := c.Param("projectId")
 	if projectID == "" {
-		response.BadRequest(c,  "项目ID不能为空", "")
+		response.BadRequest(c, "项目ID不能为空", "")
 		return
 	}
 
 	var req interfaces.CreateCharacterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -78,7 +78,7 @@ func (api *CharacterApi) GetCharacter(c *gin.Context) {
 	projectID := c.Query("projectId")
 
 	if characterID == "" || projectID == "" {
-		response.BadRequest(c,  "参数错误", "characterId和projectId不能为空")
+		response.BadRequest(c, "参数错误", "characterId和projectId不能为空")
 		return
 	}
 
@@ -103,7 +103,7 @@ func (api *CharacterApi) GetCharacter(c *gin.Context) {
 func (api *CharacterApi) ListCharacters(c *gin.Context) {
 	projectID := c.Param("projectId")
 	if projectID == "" {
-		response.BadRequest(c,  "项目ID不能为空", "")
+		response.BadRequest(c, "项目ID不能为空", "")
 		return
 	}
 
@@ -134,13 +134,13 @@ func (api *CharacterApi) UpdateCharacter(c *gin.Context) {
 	projectID := c.Query("projectId")
 
 	if characterID == "" || projectID == "" {
-		response.BadRequest(c,  "参数错误", "characterId和projectId不能为空")
+		response.BadRequest(c, "参数错误", "characterId和projectId不能为空")
 		return
 	}
 
 	var req interfaces.UpdateCharacterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -169,7 +169,7 @@ func (api *CharacterApi) DeleteCharacter(c *gin.Context) {
 	projectID := c.Query("projectId")
 
 	if characterID == "" || projectID == "" {
-		response.BadRequest(c,  "参数错误", "characterId和projectId不能为空")
+		response.BadRequest(c, "参数错误", "characterId和projectId不能为空")
 		return
 	}
 
@@ -196,13 +196,13 @@ func (api *CharacterApi) DeleteCharacter(c *gin.Context) {
 func (api *CharacterApi) CreateCharacterRelation(c *gin.Context) {
 	projectID := c.Query("projectId")
 	if projectID == "" {
-		response.BadRequest(c,  "项目ID不能为空", "")
+		response.BadRequest(c, "项目ID不能为空", "")
 		return
 	}
 
 	var req interfaces.CreateRelationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -228,7 +228,7 @@ func (api *CharacterApi) CreateCharacterRelation(c *gin.Context) {
 func (api *CharacterApi) ListCharacterRelations(c *gin.Context) {
 	projectID := c.Param("projectId")
 	if projectID == "" {
-		response.BadRequest(c,  "项目ID不能为空", "")
+		response.BadRequest(c, "项目ID不能为空", "")
 		return
 	}
 
@@ -263,7 +263,7 @@ func (api *CharacterApi) DeleteCharacterRelation(c *gin.Context) {
 	projectID := c.Query("projectId")
 
 	if relationID == "" || projectID == "" {
-		response.BadRequest(c,  "参数错误", "relationId和projectId不能为空")
+		response.BadRequest(c, "参数错误", "relationId和projectId不能为空")
 		return
 	}
 
@@ -288,7 +288,7 @@ func (api *CharacterApi) DeleteCharacterRelation(c *gin.Context) {
 func (api *CharacterApi) GetCharacterGraph(c *gin.Context) {
 	projectID := c.Param("projectId")
 	if projectID == "" {
-		response.BadRequest(c,  "项目ID不能为空", "")
+		response.BadRequest(c, "项目ID不能为空", "")
 		return
 	}
 

@@ -36,11 +36,11 @@ type MarkAsReadResponse struct {
 
 // BatchOperationResponse 批量操作响应
 type BatchOperationResponse struct {
-	Success    bool     `json:"success"`
-	Total      int      `json:"total"`
-	Succeeded  int      `json:"succeeded"`
-	Failed     int      `json:"failed"`
-	Errors     []string `json:"errors,omitempty"`
+	Success   bool     `json:"success"`
+	Total     int      `json:"total"`
+	Succeeded int      `json:"succeeded"`
+	Failed    int      `json:"failed"`
+	Errors    []string `json:"errors,omitempty"`
 }
 
 // WSEndpointResponse WebSocket端点响应
@@ -59,10 +59,10 @@ type ListNotificationsResponse struct {
 // NotificationItem 通知项
 type NotificationItem struct {
 	ID        string      `json:"id"`
-	Type      string      `json:"type"`       // system, comment, like, follow, etc.
+	Type      string      `json:"type"` // system, comment, like, follow, etc.
 	Title     string      `json:"title"`
 	Content   string      `json:"content"`
-	Data      interface{} `json:"data"`       // 额外数据
+	Data      interface{} `json:"data"` // 额外数据
 	Read      bool        `json:"read"`
 	CreatedAt time.Time   `json:"created_at"`
 }

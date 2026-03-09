@@ -239,13 +239,6 @@ func TestMetrics_RecordEventReplayDifferentErrorTypes(t *testing.T) {
 
 // getCounterValue 获取Counter的当前值
 func getCounterValue(counterVec *prometheus.CounterVec, labels map[string]string) float64 {
-	labelValues := make([]string, 0, len(labels))
-	// 注意：这里假设label的顺序与定义时一致，实际使用时需要注意顺序
-	// 为简化测试，这里使用简单的字符串匹配
-	for _, v := range labels {
-		labelValues = append(labelValues, v)
-	}
-
 	counter, err := counterVec.GetMetricWith(labelValuesToLabels(labels))
 	if err != nil {
 		return 0
@@ -284,11 +277,6 @@ func getCounterMetricValue(counter prometheus.Counter) float64 {
 
 // getHistogramValue 获取Histogram的样本数和总和
 func getHistogramValue(histogramVec *prometheus.HistogramVec, labels map[string]string) *histmetricData {
-	labelValues := make([]string, 0, len(labels))
-	for _, v := range labels {
-		labelValues = append(labelValues, v)
-	}
-
 	histogram, err := histogramVec.GetMetricWith(labelValuesToLabels(labels))
 	if err != nil {
 		return nil

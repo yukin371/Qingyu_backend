@@ -4,8 +4,9 @@ import (
 	"context"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"Qingyu_backend/service/interfaces/user"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // TestUserPort_Compiles 验证UserPort接口可以正确编译

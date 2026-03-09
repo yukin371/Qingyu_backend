@@ -8,19 +8,19 @@ import (
 )
 
 var (
-	once         sync.Once
-	validate     *validator.Validate
-	initErr      error
+	once               sync.Once
+	validate           *validator.Validate
+	initErr            error
 	registrationStatus RegistrationStatus
 )
 
 // RegistrationStatus 验证器注册状态
 type RegistrationStatus struct {
-	Total      int                    // 总共需要注册的验证器数量
-	Success    int                    // 成功注册的数量
-	Failed     int                    // 注册失败的数量
-	FailedTags []string               // 注册失败的验证器标签
-	Errors     map[string]error       // 注册失败的错误信息 (tag -> error)
+	Total      int              // 总共需要注册的验证器数量
+	Success    int              // 成功注册的数量
+	Failed     int              // 注册失败的数量
+	FailedTags []string         // 注册失败的验证器标签
+	Errors     map[string]error // 注册失败的错误信息 (tag -> error)
 }
 
 // IsComplete 检查是否所有验证器都注册成功

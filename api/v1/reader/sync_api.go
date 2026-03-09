@@ -7,10 +7,10 @@ import (
 	"github.com/gin-gonic/gin"
 	gorilla_websocket "github.com/gorilla/websocket"
 
+	"Qingyu_backend/pkg/response"
 	progressSync "Qingyu_backend/pkg/sync"
 	ws "Qingyu_backend/pkg/websocket"
 	"Qingyu_backend/service/interfaces"
-	"Qingyu_backend/pkg/response"
 )
 
 // SyncAPI 阅读进度同步API
@@ -65,7 +65,7 @@ func (api *SyncAPI) SyncWebSocket(c *gin.Context) {
 	// 升级到WebSocket
 	conn, err := WebSocketUpgrader.Upgrade(c.Writer, c.Request, nil)
 	if err != nil {
-		response.BadRequest(c,  "WebSocket升级失败", err.Error())
+		response.BadRequest(c, "WebSocket升级失败", err.Error())
 		return
 	}
 
@@ -102,7 +102,7 @@ func (api *SyncAPI) SyncWebSocket(c *gin.Context) {
 func (api *SyncAPI) SyncProgress(c *gin.Context) {
 	var req SyncProgressRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -139,7 +139,7 @@ func (api *SyncAPI) SyncProgress(c *gin.Context) {
 func (api *SyncAPI) MergeOfflineProgresses(c *gin.Context) {
 	var req MergeProgressRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -158,7 +158,7 @@ func (api *SyncAPI) MergeOfflineProgresses(c *gin.Context) {
 		// 解析时间戳
 		timestamp, err := time.Parse(time.RFC3339, p.Timestamp)
 		if err != nil {
-			response.BadRequest(c,  "时间戳格式错误", err.Error())
+			response.BadRequest(c, "时间戳格式错误", err.Error())
 			return
 		}
 

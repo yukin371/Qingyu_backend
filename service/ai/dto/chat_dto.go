@@ -38,7 +38,7 @@ type PaginatedMessagesDTO struct {
 // ChatHistoryDTO 聊天历史 DTO
 // 包含会话信息和分页消息
 type ChatHistoryDTO struct {
-	Session  *ChatSessionDTO      `json:"session"`
+	Session  *ChatSessionDTO       `json:"session"`
 	Messages *PaginatedMessagesDTO `json:"messages"`
 }
 

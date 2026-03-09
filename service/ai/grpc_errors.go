@@ -31,18 +31,18 @@ func (e *GRPCError) Unwrap() error {
 // 错误码常量
 const (
 	// 服务不可用错误
-	ErrCodeUnavailable   = "AI_SERVICE_UNAVAILABLE"
-	ErrCodeTimeout       = "AI_SERVICE_TIMEOUT"
-	ErrCodeNetworkError  = "AI_SERVICE_NETWORK_ERROR"
+	ErrCodeUnavailable  = "AI_SERVICE_UNAVAILABLE"
+	ErrCodeTimeout      = "AI_SERVICE_TIMEOUT"
+	ErrCodeNetworkError = "AI_SERVICE_NETWORK_ERROR"
 
 	// 请求错误
-	ErrCodeInvalidReq    = "INVALID_REQUEST"
-	ErrCodeMissingParam  = "MISSING_PARAMETER"
-	ErrCodeInvalidParam  = "INVALID_PARAMETER"
+	ErrCodeInvalidReq   = "INVALID_REQUEST"
+	ErrCodeMissingParam = "MISSING_PARAMETER"
+	ErrCodeInvalidParam = "INVALID_PARAMETER"
 
 	// 业务逻辑错误
-	ErrCodeExecutionFailed = "EXECUTION_FAILED"
-	ErrCodeWorkflowFailed  = "WORKFLOW_FAILED"
+	ErrCodeExecutionFailed  = "EXECUTION_FAILED"
+	ErrCodeWorkflowFailed   = "WORKFLOW_FAILED"
 	ErrCodeGenerationFailed = "GENERATION_FAILED"
 
 	// 资源错误
@@ -54,45 +54,45 @@ const (
 	ErrCodeForbidden    = "FORBIDDEN"
 
 	// 内部错误
-	ErrCodeInternal   = "INTERNAL_ERROR"
-	ErrCodeUnknown    = "UNKNOWN_ERROR"
+	ErrCodeInternal = "INTERNAL_ERROR"
+	ErrCodeUnknown  = "UNKNOWN_ERROR"
 )
 
 // gRPC状态码到错误码的映射
 var grpcCodeMapping = map[codes.Code]string{
 	codes.Unavailable:        ErrCodeUnavailable,
-	codes.DeadlineExceeded:    ErrCodeTimeout,
-	codes.InvalidArgument:     ErrCodeInvalidReq,
-	codes.NotFound:            ErrCodeInvalidParam,
-	codes.AlreadyExists:       ErrCodeInvalidParam,
-	codes.PermissionDenied:    ErrCodeForbidden,
-	codes.Unauthenticated:     ErrCodeUnauthorized,
-	codes.ResourceExhausted:   ErrCodeResourceExhausted,
-	codes.FailedPrecondition:  ErrCodeExecutionFailed,
-	codes.OutOfRange:          ErrCodeInvalidParam,
-	codes.Unimplemented:       ErrCodeInternal,
-	codes.Internal:            ErrCodeInternal,
-	codes.DataLoss:            ErrCodeInternal,
-	codes.Unknown:             ErrCodeUnknown,
+	codes.DeadlineExceeded:   ErrCodeTimeout,
+	codes.InvalidArgument:    ErrCodeInvalidReq,
+	codes.NotFound:           ErrCodeInvalidParam,
+	codes.AlreadyExists:      ErrCodeInvalidParam,
+	codes.PermissionDenied:   ErrCodeForbidden,
+	codes.Unauthenticated:    ErrCodeUnauthorized,
+	codes.ResourceExhausted:  ErrCodeResourceExhausted,
+	codes.FailedPrecondition: ErrCodeExecutionFailed,
+	codes.OutOfRange:         ErrCodeInvalidParam,
+	codes.Unimplemented:      ErrCodeInternal,
+	codes.Internal:           ErrCodeInternal,
+	codes.DataLoss:           ErrCodeInternal,
+	codes.Unknown:            ErrCodeUnknown,
 }
 
 // 错误码到用户友好消息的映射
 var errorMessages = map[string]string{
-	ErrCodeUnavailable:        "AI服务暂时不可用，请稍后重试",
-	ErrCodeTimeout:            "请求超时，请稍后重试",
-	ErrCodeNetworkError:       "网络连接失败，请检查网络设置",
-	ErrCodeInvalidReq:         "请求参数无效",
-	ErrCodeMissingParam:       "缺少必需参数",
-	ErrCodeInvalidParam:       "参数值无效",
-	ErrCodeExecutionFailed:    "AI执行失败",
-	ErrCodeWorkflowFailed:     "工作流执行失败",
-	ErrCodeGenerationFailed:   "内容生成失败",
-	ErrCodeResourceExhausted:  "服务资源不足，请稍后重试",
-	ErrCodeQuotaExceeded:      "配额已用完，请升级套餐",
-	ErrCodeUnauthorized:       "未授权访问",
-	ErrCodeForbidden:          "无权访问此资源",
-	ErrCodeInternal:           "服务内部错误",
-	ErrCodeUnknown:            "未知错误",
+	ErrCodeUnavailable:       "AI服务暂时不可用，请稍后重试",
+	ErrCodeTimeout:           "请求超时，请稍后重试",
+	ErrCodeNetworkError:      "网络连接失败，请检查网络设置",
+	ErrCodeInvalidReq:        "请求参数无效",
+	ErrCodeMissingParam:      "缺少必需参数",
+	ErrCodeInvalidParam:      "参数值无效",
+	ErrCodeExecutionFailed:   "AI执行失败",
+	ErrCodeWorkflowFailed:    "工作流执行失败",
+	ErrCodeGenerationFailed:  "内容生成失败",
+	ErrCodeResourceExhausted: "服务资源不足，请稍后重试",
+	ErrCodeQuotaExceeded:     "配额已用完，请升级套餐",
+	ErrCodeUnauthorized:      "未授权访问",
+	ErrCodeForbidden:         "无权访问此资源",
+	ErrCodeInternal:          "服务内部错误",
+	ErrCodeUnknown:           "未知错误",
 }
 
 // WrapGRPCError 包装gRPC错误为统一的GRPCError
@@ -157,9 +157,9 @@ func IsRetryableError(err error) bool {
 
 	switch grpcErr.Code {
 	case ErrCodeUnavailable,
-	     ErrCodeTimeout,
-	     ErrCodeNetworkError,
-	     ErrCodeResourceExhausted:
+		ErrCodeTimeout,
+		ErrCodeNetworkError,
+		ErrCodeResourceExhausted:
 		return true
 	default:
 		return false
@@ -180,9 +180,9 @@ func IsTemporaryError(err error) bool {
 
 	switch st.Code() {
 	case codes.Unavailable,
-	     codes.DeadlineExceeded,
-	     codes.ResourceExhausted,
-	     codes.Aborted:
+		codes.DeadlineExceeded,
+		codes.ResourceExhausted,
+		codes.Aborted:
 		return true
 	default:
 		return false

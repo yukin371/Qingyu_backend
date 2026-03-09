@@ -49,26 +49,26 @@ const (
 	// ========== 用户相关错误 (2000-2199) ==========
 
 	// 用户认证 (2000-2019)
-	UserNotFound         ErrorCode = 2001 // 用户不存在
-	InvalidCredentials   ErrorCode = 2002 // 无效凭证（用户名或密码错误）
-	UsernameAlreadyUsed  ErrorCode = 2003 // 用户名已被使用
-	EmailAlreadyUsed     ErrorCode = 2004 // 邮箱已被使用
-	EmailSendFailed      ErrorCode = 2005 // 邮件发送失败
-	InvalidCode          ErrorCode = 2006 // 验证码无效
-	CodeExpired          ErrorCode = 2007 // 验证码过期
-	TokenExpired         ErrorCode = 2008 // Token过期
-	TokenInvalid         ErrorCode = 2009 // Token无效
-	TokenFormatError     ErrorCode = 2010 // Token格式错误
-	TokenMissing         ErrorCode = 2011 // Token缺失
-	RefreshTokenExpired  ErrorCode = 2012 // Refresh Token过期
-	RefreshTokenInvalid  ErrorCode = 2013 // Refresh Token无效
-	PasswordTooWeak      ErrorCode = 2014 // 密码强度不足
-	AccountLocked        ErrorCode = 2015 // 账户已锁定
-	AccountDisabled      ErrorCode = 2016 // 账户已禁用
-	TokenRevoked         ErrorCode = 2017 // Token已被撤销
-	SessionExpired       ErrorCode = 2018 // 会话过期
-	TooManyAttempts      ErrorCode = 2019 // 尝试次数过多
-	AccountNotVerified   ErrorCode = 2020 // 账户未验证
+	UserNotFound        ErrorCode = 2001 // 用户不存在
+	InvalidCredentials  ErrorCode = 2002 // 无效凭证（用户名或密码错误）
+	UsernameAlreadyUsed ErrorCode = 2003 // 用户名已被使用
+	EmailAlreadyUsed    ErrorCode = 2004 // 邮箱已被使用
+	EmailSendFailed     ErrorCode = 2005 // 邮件发送失败
+	InvalidCode         ErrorCode = 2006 // 验证码无效
+	CodeExpired         ErrorCode = 2007 // 验证码过期
+	TokenExpired        ErrorCode = 2008 // Token过期
+	TokenInvalid        ErrorCode = 2009 // Token无效
+	TokenFormatError    ErrorCode = 2010 // Token格式错误
+	TokenMissing        ErrorCode = 2011 // Token缺失
+	RefreshTokenExpired ErrorCode = 2012 // Refresh Token过期
+	RefreshTokenInvalid ErrorCode = 2013 // Refresh Token无效
+	PasswordTooWeak     ErrorCode = 2014 // 密码强度不足
+	AccountLocked       ErrorCode = 2015 // 账户已锁定
+	AccountDisabled     ErrorCode = 2016 // 账户已禁用
+	TokenRevoked        ErrorCode = 2017 // Token已被撤销
+	SessionExpired      ErrorCode = 2018 // 会话过期
+	TooManyAttempts     ErrorCode = 2019 // 尝试次数过多
+	AccountNotVerified  ErrorCode = 2020 // 账户未验证
 
 	// 邮箱和手机 (2020-2039)
 	PhoneAlreadyUsed     ErrorCode = 2021 // 手机号已使用
@@ -131,18 +131,18 @@ const (
 
 	// ========== 限流和配额错误 (4000-4099) ==========
 
-	RateLimitExceeded     ErrorCode = 4000 // 频率限制超出
-	DailyLimitExceeded    ErrorCode = 4001 // 每日限制超出
-	HourlyLimitExceeded   ErrorCode = 4002 // 每小时限制超出
-	MinuteLimitExceeded   ErrorCode = 4003 // 每分钟限制超出
-	UploadLimitExceeded   ErrorCode = 4004 // 上传限制超出
-	StorageLimitExceeded  ErrorCode = 4005 // 存储限制超出
-	ApiQuotaExceeded      ErrorCode = 4006 // API配额超出
+	RateLimitExceeded       ErrorCode = 4000 // 频率限制超出
+	DailyLimitExceeded      ErrorCode = 4001 // 每日限制超出
+	HourlyLimitExceeded     ErrorCode = 4002 // 每小时限制超出
+	MinuteLimitExceeded     ErrorCode = 4003 // 每分钟限制超出
+	UploadLimitExceeded     ErrorCode = 4004 // 上传限制超出
+	StorageLimitExceeded    ErrorCode = 4005 // 存储限制超出
+	ApiQuotaExceeded        ErrorCode = 4006 // API配额超出
 	ConcurrentLimitExceeded ErrorCode = 4007 // 并发限制超出
-	RateLimitLogin        ErrorCode = 4008 // 登录频率限制
-	RateLimitEmailSend    ErrorCode = 4009 // 邮件发送频率限制
-	RateLimitSmsSend      ErrorCode = 4010 // 短信发送频率限制
-	HourlyLimitExceededOld ErrorCode = 4291 // 小时级限制超出（旧版，保留兼容）
+	RateLimitLogin          ErrorCode = 4008 // 登录频率限制
+	RateLimitEmailSend      ErrorCode = 4009 // 邮件发送频率限制
+	RateLimitSmsSend        ErrorCode = 4010 // 短信发送频率限制
+	HourlyLimitExceededOld  ErrorCode = 4291 // 小时级限制超出（旧版，保留兼容）
 
 	// ========== 服务器内部错误 (5000-5099) ==========
 
@@ -152,21 +152,21 @@ const (
 	RedisError    ErrorCode = 5003 // Redis错误
 
 	// 外部服务 (5020-5039)
-	ExternalAPIError  ErrorCode = 5004 // 外部API错误
+	ExternalAPIError   ErrorCode = 5004 // 外部API错误
 	ServiceUnavailable ErrorCode = 5002 // 服务不可用
-	CacheError        ErrorCode = 5005 // 缓存错误
-	QueueError        ErrorCode = 5006 // 队列错误
-	StorageError      ErrorCode = 5007 // 存储错误
-	NetworkError      ErrorCode = 5008 // 网络错误
+	CacheError         ErrorCode = 5005 // 缓存错误
+	QueueError         ErrorCode = 5006 // 队列错误
+	StorageError       ErrorCode = 5007 // 存储错误
+	NetworkError       ErrorCode = 5008 // 网络错误
 	ConfigurationError ErrorCode = 5009 // 配置错误
-	DependencyError   ErrorCode = 5010 // 依赖错误
-	TimeoutError      ErrorCode = 5011 // 超时错误
-	OverloadedError   ErrorCode = 5012 // 过载错误
-	MaintenanceError  ErrorCode = 5013 // 维护中
+	DependencyError    ErrorCode = 5010 // 依赖错误
+	TimeoutError       ErrorCode = 5011 // 超时错误
+	OverloadedError    ErrorCode = 5012 // 过载错误
+	MaintenanceError   ErrorCode = 5013 // 维护中
 
 	// 数据库详细错误 (5040-5059)
-	DatabaseConnectionFailed ErrorCode = 5014 // 数据库连接失败
-	DatabaseQueryTimeout     ErrorCode = 5015 // 数据库查询超时
+	DatabaseConnectionFailed  ErrorCode = 5014 // 数据库连接失败
+	DatabaseQueryTimeout      ErrorCode = 5015 // 数据库查询超时
 	DatabaseTransactionFailed ErrorCode = 5016 // 数据库事务失败
 )
 
@@ -184,25 +184,25 @@ var DefaultErrorMessages = map[ErrorCode]string{
 	Success: "成功",
 
 	// 通用客户端错误 (1000-1099)
-	InvalidParams:     "请求参数无效",
-	MissingParam:      "缺少必填参数",
-	InvalidFormat:     "参数格式无效",
-	InvalidLength:     "参数长度无效",
-	InvalidType:       "参数类型无效",
-	OutOfRange:        "参数超出范围",
-	DuplicateField:    "字段重复",
-	UnknownField:      "未知字段",
-	ValidationFailed:  "验证失败",
-	InvalidValue:      "值无效",
-	InvalidOperation:  "无效操作",
-	Unauthorized:      "未授权访问",
-	Forbidden:         "禁止访问",
-	NotFound:          "资源不存在",
-	AlreadyExists:     "资源已存在",
-	Conflict:          "请求冲突",
-	ResourceGone:      "资源已删除",
-	MethodNotAllowed:  "方法不允许",
-	RequestTimeout:    "请求超时",
+	InvalidParams:    "请求参数无效",
+	MissingParam:     "缺少必填参数",
+	InvalidFormat:    "参数格式无效",
+	InvalidLength:    "参数长度无效",
+	InvalidType:      "参数类型无效",
+	OutOfRange:       "参数超出范围",
+	DuplicateField:   "字段重复",
+	UnknownField:     "未知字段",
+	ValidationFailed: "验证失败",
+	InvalidValue:     "值无效",
+	InvalidOperation: "无效操作",
+	Unauthorized:     "未授权访问",
+	Forbidden:        "禁止访问",
+	NotFound:         "资源不存在",
+	AlreadyExists:    "资源已存在",
+	Conflict:         "请求冲突",
+	ResourceGone:     "资源已删除",
+	MethodNotAllowed: "方法不允许",
+	RequestTimeout:   "请求超时",
 
 	// 用户相关错误 (2000-2199)
 	UserNotFound:         "用户不存在",
@@ -268,36 +268,36 @@ var DefaultErrorMessages = map[ErrorCode]string{
 	AlreadyFollowed:      "已关注",
 
 	// 限流和配额错误 (4000-4099)
-	RateLimitExceeded:      "请求过于频繁",
-	DailyLimitExceeded:     "每日请求次数已达上限",
-	HourlyLimitExceeded:    "每小时请求次数已达上限",
-	MinuteLimitExceeded:    "每分钟请求次数已达上限",
-	UploadLimitExceeded:    "上传次数已达上限",
-	StorageLimitExceeded:   "存储空间已达上限",
-	ApiQuotaExceeded:       "API调用配额已达上限",
+	RateLimitExceeded:       "请求过于频繁",
+	DailyLimitExceeded:      "每日请求次数已达上限",
+	HourlyLimitExceeded:     "每小时请求次数已达上限",
+	MinuteLimitExceeded:     "每分钟请求次数已达上限",
+	UploadLimitExceeded:     "上传次数已达上限",
+	StorageLimitExceeded:    "存储空间已达上限",
+	ApiQuotaExceeded:        "API调用配额已达上限",
 	ConcurrentLimitExceeded: "并发请求数已达上限",
-	RateLimitLogin:         "登录过于频繁，请稍后再试",
-	RateLimitEmailSend:     "邮件发送过于频繁",
-	RateLimitSmsSend:       "短信发送过于频繁",
-	HourlyLimitExceededOld: "小时级限制超出",
+	RateLimitLogin:          "登录过于频繁，请稍后再试",
+	RateLimitEmailSend:      "邮件发送过于频繁",
+	RateLimitSmsSend:        "短信发送过于频繁",
+	HourlyLimitExceededOld:  "小时级限制超出",
 
 	// 服务器内部错误 (5000-5099)
-	InternalError:           "服务器内部错误",
-	DatabaseError:           "数据库错误",
-	RedisError:              "缓存服务错误",
-	ExternalAPIError:        "外部服务错误",
-	ServiceUnavailable:      "服务暂时不可用",
-	CacheError:              "缓存错误",
-	QueueError:              "队列错误",
-	StorageError:            "存储错误",
-	NetworkError:            "网络错误",
-	ConfigurationError:      "配置错误",
-	DependencyError:         "依赖服务错误",
-	TimeoutError:            "操作超时",
-	OverloadedError:         "服务过载",
-	MaintenanceError:        "系统维护中",
-	DatabaseConnectionFailed: "数据库连接失败",
-	DatabaseQueryTimeout:    "数据库查询超时",
+	InternalError:             "服务器内部错误",
+	DatabaseError:             "数据库错误",
+	RedisError:                "缓存服务错误",
+	ExternalAPIError:          "外部服务错误",
+	ServiceUnavailable:        "服务暂时不可用",
+	CacheError:                "缓存错误",
+	QueueError:                "队列错误",
+	StorageError:              "存储错误",
+	NetworkError:              "网络错误",
+	ConfigurationError:        "配置错误",
+	DependencyError:           "依赖服务错误",
+	TimeoutError:              "操作超时",
+	OverloadedError:           "服务过载",
+	MaintenanceError:          "系统维护中",
+	DatabaseConnectionFailed:  "数据库连接失败",
+	DatabaseQueryTimeout:      "数据库查询超时",
 	DatabaseTransactionFailed: "数据库事务失败",
 }
 
@@ -307,25 +307,25 @@ var DefaultHTTPStatus = map[ErrorCode]int{
 	Success: http.StatusOK,
 
 	// 通用客户端错误 (1000-1099)
-	InvalidParams:     http.StatusBadRequest,
-	MissingParam:      http.StatusBadRequest,
-	InvalidFormat:     http.StatusBadRequest,
-	InvalidLength:     http.StatusBadRequest,
-	InvalidType:       http.StatusBadRequest,
-	OutOfRange:        http.StatusBadRequest,
-	DuplicateField:    http.StatusConflict,
-	UnknownField:      http.StatusBadRequest,
-	ValidationFailed:  http.StatusBadRequest,
-	InvalidValue:      http.StatusBadRequest,
-	InvalidOperation:  http.StatusBadRequest,
-	Unauthorized:      http.StatusUnauthorized,
-	Forbidden:         http.StatusForbidden,
-	NotFound:          http.StatusNotFound,
-	AlreadyExists:     http.StatusConflict,
-	Conflict:          http.StatusConflict,
-	ResourceGone:      http.StatusGone,
-	MethodNotAllowed:  http.StatusMethodNotAllowed,
-	RequestTimeout:    http.StatusRequestTimeout,
+	InvalidParams:    http.StatusBadRequest,
+	MissingParam:     http.StatusBadRequest,
+	InvalidFormat:    http.StatusBadRequest,
+	InvalidLength:    http.StatusBadRequest,
+	InvalidType:      http.StatusBadRequest,
+	OutOfRange:       http.StatusBadRequest,
+	DuplicateField:   http.StatusConflict,
+	UnknownField:     http.StatusBadRequest,
+	ValidationFailed: http.StatusBadRequest,
+	InvalidValue:     http.StatusBadRequest,
+	InvalidOperation: http.StatusBadRequest,
+	Unauthorized:     http.StatusUnauthorized,
+	Forbidden:        http.StatusForbidden,
+	NotFound:         http.StatusNotFound,
+	AlreadyExists:    http.StatusConflict,
+	Conflict:         http.StatusConflict,
+	ResourceGone:     http.StatusGone,
+	MethodNotAllowed: http.StatusMethodNotAllowed,
+	RequestTimeout:   http.StatusRequestTimeout,
 
 	// 用户相关错误 (2000-2199)
 	UserNotFound:         http.StatusNotFound,

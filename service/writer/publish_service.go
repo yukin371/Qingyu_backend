@@ -3,9 +3,9 @@ package writer
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
-	"regexp"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 

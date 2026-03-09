@@ -3,12 +3,13 @@ package response
 // 业务错误码常量定义
 // 错误码格式：4位数字
 // 分类规则：
-//   0       - 成功
-//   1xxx    - 通用客户端错误 (1000-1999)
-//   2xxx    - 用户相关错误 (2000-2999)
-//   3xxx    - 业务逻辑错误 (3000-3999)
-//   4xxx    - 频率限制错误 (4000-4999)
-//   5xxx    - 服务端错误 (5000-5999)
+//
+//	0       - 成功
+//	1xxx    - 通用客户端错误 (1000-1999)
+//	2xxx    - 用户相关错误 (2000-2999)
+//	3xxx    - 业务逻辑错误 (3000-3999)
+//	4xxx    - 频率限制错误 (4000-4999)
+//	5xxx    - 服务端错误 (5000-5999)
 const (
 	// 成功
 	CodeSuccess = 0 // 成功
@@ -43,16 +44,16 @@ const (
 	CodeRatingTargetNotFound = 2505 // 评分目标不存在
 
 	// 业务逻辑错误 (3000-3999)
-	CodeBookNotFound        = 3001 // 书籍不存在
-	CodeChapterNotFound     = 3002 // 章节不存在
-	CodeInsufficientBalance = 3003 // 余额不足
-	CodeInsufficientQuota   = 3010 // 配额不足
-	CodeWalletFrozen        = 3011 // 钱包已冻结
-	CodeContentNotPublished = 3012 // 内容未发布
-	CodeChapterLocked       = 3013 // 章节已锁定
+	CodeBookNotFound         = 3001 // 书籍不存在
+	CodeChapterNotFound      = 3002 // 章节不存在
+	CodeInsufficientBalance  = 3003 // 余额不足
+	CodeInsufficientQuota    = 3010 // 配额不足
+	CodeWalletFrozen         = 3011 // 钱包已冻结
+	CodeContentNotPublished  = 3012 // 内容未发布
+	CodeChapterLocked        = 3013 // 章节已锁定
 	CodeContentPendingReview = 3014 // 内容待审核
-	CodeContentRejected     = 3015 // 内容被拒绝
-	CodeContentViolation    = 3016 // 内容违规
+	CodeContentRejected      = 3015 // 内容被拒绝
+	CodeContentViolation     = 3016 // 内容违规
 
 	// 频率限制错误 (4000-4999)
 	CodeRateLimitExceeded   = 4290 // 频率限制超出

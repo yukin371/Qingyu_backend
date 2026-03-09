@@ -16,9 +16,9 @@ import (
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 
+	"Qingyu_backend/models/dto"
 	serviceInterfaces "Qingyu_backend/service/interfaces/base"
 	userServiceInterface "Qingyu_backend/service/interfaces/user"
-	"Qingyu_backend/models/dto"
 )
 
 // MockUserService 模拟用户服务
@@ -465,9 +465,9 @@ func TestProfileHandler_UploadAvatar_WithStorage(t *testing.T) {
 // 测试RFC3339日期格式解析
 func TestParseBirthdayRFC3339(t *testing.T) {
 	testCases := []struct {
-		name      string
-		input     string
-		expectOK  bool
+		name     string
+		input    string
+		expectOK bool
 	}{
 		{"Valid RFC3339", "1990-01-01T00:00:00Z", true},
 		{"Valid RFC3339 with offset", "1990-01-01T00:00:00+08:00", true},

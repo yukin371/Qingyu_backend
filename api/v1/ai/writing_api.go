@@ -7,9 +7,10 @@ import (
 	"Qingyu_backend/models/ai"
 	aiService "Qingyu_backend/service/ai"
 
+	"Qingyu_backend/pkg/response"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"Qingyu_backend/pkg/response"
 )
 
 // WritingApi AI写作API
@@ -47,7 +48,7 @@ type ContinueWritingRequest struct {
 func (api *WritingApi) ContinueWriting(c *gin.Context) {
 	var req ContinueWritingRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -91,7 +92,7 @@ func (api *WritingApi) ContinueWriting(c *gin.Context) {
 func (api *WritingApi) ContinueWritingStream(c *gin.Context) {
 	var req ContinueWritingRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -203,7 +204,7 @@ type RewriteTextRequest struct {
 func (api *WritingApi) RewriteText(c *gin.Context) {
 	var req RewriteTextRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -261,7 +262,7 @@ func (api *WritingApi) RewriteText(c *gin.Context) {
 func (api *WritingApi) RewriteTextStream(c *gin.Context) {
 	var req RewriteTextRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 

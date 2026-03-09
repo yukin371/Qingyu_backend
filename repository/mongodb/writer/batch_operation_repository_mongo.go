@@ -26,7 +26,7 @@ type MongoBatchOperationRepository struct {
 func NewMongoBatchOperationRepository(db *mongo.Database) writingInterface.BatchOperationRepository {
 	return &MongoBatchOperationRepository{
 		BaseMongoRepository: base.NewBaseMongoRepository(db, "batch_operations"),
-		db:                 db,
+		db:                  db,
 	}
 }
 
@@ -359,8 +359,8 @@ func (r *MongoBatchOperationRepository) UpdateItemStatusDirect(ctx context.Conte
 	}
 
 	filter := bson.M{
-		"_id":         objID,
-		"deleted_at":  nil,
+		"_id":             objID,
+		"deleted_at":      nil,
 		"items.target_id": targetID,
 	}
 
@@ -572,7 +572,7 @@ func (r *MongoBatchOperationRepository) EnsureIndexes(ctx context.Context) error
 			},
 		},
 		{
-			Keys: bson.D{{Key: "client_request_id", Value: 1}},
+			Keys:    bson.D{{Key: "client_request_id", Value: 1}},
 			Options: options.Index().SetUnique(true).SetSparse(true),
 		},
 		{

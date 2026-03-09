@@ -33,8 +33,8 @@ type AnalyticsService interface {
 
 // UserGrowthTrendRequest 用户增长趋势请求
 type UserGrowthTrendRequest struct {
-	StartDate time.Time `json:"start_date" binding:"required"` // 开始日期
-	EndDate   time.Time `json:"end_date" binding:"required"`   // 结束日期
+	StartDate time.Time `json:"start_date" binding:"required"`                          // 开始日期
+	EndDate   time.Time `json:"end_date" binding:"required"`                            // 结束日期
 	Interval  string    `json:"interval" binding:"required,oneof=daily weekly monthly"` // 间隔：daily/weekly/monthly
 }
 
@@ -46,15 +46,15 @@ type ContentStatisticsRequest struct {
 
 // RevenueReportRequest 收入报告请求
 type RevenueReportRequest struct {
-	StartDate time.Time `json:"start_date" binding:"required"` // 开始日期
-	EndDate   time.Time `json:"end_date" binding:"required"`   // 结束日期
+	StartDate time.Time `json:"start_date" binding:"required"`                          // 开始日期
+	EndDate   time.Time `json:"end_date" binding:"required"`                            // 结束日期
 	Interval  string    `json:"interval" binding:"required,oneof=daily weekly monthly"` // 间隔：daily/weekly/monthly
 }
 
 // ActiveUsersReportRequest 活跃用户报告请求
 type ActiveUsersReportRequest struct {
-	StartDate time.Time `json:"start_date" binding:"required"` // 开始日期
-	EndDate   time.Time `json:"end_date" binding:"required"`   // 结束日期
+	StartDate time.Time `json:"start_date" binding:"required"`             // 开始日期
+	EndDate   time.Time `json:"end_date" binding:"required"`               // 结束日期
 	Type      string    `json:"type" binding:"required,oneof=dau wau mau"` // 类型：DAU/WAU/MAU
 }
 
@@ -62,12 +62,12 @@ type ActiveUsersReportRequest struct {
 
 // UserGrowthTrendResponse 用户增长趋势响应
 type UserGrowthTrendResponse struct {
-	StartDate    time.Time             `json:"start_date"`
-	EndDate      time.Time             `json:"end_date"`
-	Interval     string                `json:"interval"`
-	TotalNewUsers int64                `json:"total_new_users"` // 新增用户总数
-	Data         []UserGrowthDataPoint `json:"data"`            // 各时间点的数据
-	GrowthRate   float64               `json:"growth_rate"`     // 增长率（与上期相比）
+	StartDate     time.Time             `json:"start_date"`
+	EndDate       time.Time             `json:"end_date"`
+	Interval      string                `json:"interval"`
+	TotalNewUsers int64                 `json:"total_new_users"` // 新增用户总数
+	Data          []UserGrowthDataPoint `json:"data"`            // 各时间点的数据
+	GrowthRate    float64               `json:"growth_rate"`     // 增长率（与上期相比）
 }
 
 // UserGrowthDataPoint 用户增长数据点
@@ -78,14 +78,14 @@ type UserGrowthDataPoint struct {
 
 // ContentStatisticsResponse 内容统计响应
 type ContentStatisticsResponse struct {
-	TotalBooks      int64               `json:"total_books"`       // 书籍总数
-	TotalChapters   int64               `json:"total_chapters"`    // 章节总数
-	TotalComments   int64               `json:"total_comments"`    // 评论总数
-	TotalWords      int64               `json:"total_words"`       // 总字数
-	PendingReviews  int64               `json:"pending_reviews"`   // 待审核数量
-	PublishedToday  int64               `json:"published_today"`   // 今日发布数
-	CategoryStats   []CategoryStat      `json:"category_stats"`    // 分类统计
-	TrendingBooks   []TrendingBook      `json:"trending_books"`    // 热门书籍
+	TotalBooks     int64          `json:"total_books"`     // 书籍总数
+	TotalChapters  int64          `json:"total_chapters"`  // 章节总数
+	TotalComments  int64          `json:"total_comments"`  // 评论总数
+	TotalWords     int64          `json:"total_words"`     // 总字数
+	PendingReviews int64          `json:"pending_reviews"` // 待审核数量
+	PublishedToday int64          `json:"published_today"` // 今日发布数
+	CategoryStats  []CategoryStat `json:"category_stats"`  // 分类统计
+	TrendingBooks  []TrendingBook `json:"trending_books"`  // 热门书籍
 }
 
 // CategoryStat 分类统计
@@ -97,10 +97,10 @@ type CategoryStat struct {
 
 // TrendingBook 热门书籍
 type TrendingBook struct {
-	BookID      string `json:"book_id"`
-	Title       string `json:"title"`
-	AuthorID    string `json:"author_id"`
-	ViewCount   int64  `json:"view_count"`
+	BookID       string `json:"book_id"`
+	Title        string `json:"title"`
+	AuthorID     string `json:"author_id"`
+	ViewCount    int64  `json:"view_count"`
 	ChapterCount int64  `json:"chapter_count"`
 }
 
@@ -116,20 +116,20 @@ type RevenueReportResponse struct {
 
 // RevenueDataPoint 收入数据点
 type RevenueDataPoint struct {
-	Date    string  `json:"date"`
-	Amount  float64 `json:"amount"`
-	Orders  int64   `json:"orders"`  // 订单数
+	Date   string  `json:"date"`
+	Amount float64 `json:"amount"`
+	Orders int64   `json:"orders"` // 订单数
 }
 
 // ActiveUsersReportResponse 活跃用户报告响应
 type ActiveUsersReportResponse struct {
-	StartDate        time.Time             `json:"start_date"`
-	EndDate          time.Time             `json:"end_date"`
-	Type             string                `json:"type"`              // DAU/WAU/MAU
-	AverageActiveUsers float64              `json:"average_active_users"` // 平均活跃用户数
-	PeakActiveUsers  int64                 `json:"peak_active_users"`   // 峰值活跃用户数
-	PeakDate         string                `json:"peak_date"`           // 峰值日期
-	Data             []ActiveUserDataPoint `json:"data"`                // 各时间点的数据
+	StartDate          time.Time             `json:"start_date"`
+	EndDate            time.Time             `json:"end_date"`
+	Type               string                `json:"type"`                 // DAU/WAU/MAU
+	AverageActiveUsers float64               `json:"average_active_users"` // 平均活跃用户数
+	PeakActiveUsers    int64                 `json:"peak_active_users"`    // 峰值活跃用户数
+	PeakDate           string                `json:"peak_date"`            // 峰值日期
+	Data               []ActiveUserDataPoint `json:"data"`                 // 各时间点的数据
 }
 
 // ActiveUserDataPoint 活跃用户数据点
@@ -141,23 +141,23 @@ type ActiveUserDataPoint struct {
 // SystemOverviewResponse 系统概览响应
 type SystemOverviewResponse struct {
 	// 用户统计
-	TotalUsers     int64     `json:"total_users"`     // 总用户数
-	NewUsersToday  int64     `json:"new_users_today"` // 今日新增用户
-	ActiveUsers    int64     `json:"active_users"`    // 活跃用户数（24小时）
+	TotalUsers    int64 `json:"total_users"`     // 总用户数
+	NewUsersToday int64 `json:"new_users_today"` // 今日新增用户
+	ActiveUsers   int64 `json:"active_users"`    // 活跃用户数（24小时）
 
 	// 内容统计
-	TotalBooks     int64     `json:"total_books"`     // 书籍总数
-	TotalChapters  int64     `json:"total_chapters"`  // 章节总数
-	TotalComments  int64     `json:"total_comments"`  // 评论总数
-	PendingReviews int64     `json:"pending_reviews"` // 待审核数量
+	TotalBooks     int64 `json:"total_books"`     // 书籍总数
+	TotalChapters  int64 `json:"total_chapters"`  // 章节总数
+	TotalComments  int64 `json:"total_comments"`  // 评论总数
+	PendingReviews int64 `json:"pending_reviews"` // 待审核数量
 
 	// 收入统计
-	TotalRevenue   float64   `json:"total_revenue"`   // 总收入
-	RevenueToday   float64   `json:"revenue_today"`   // 今日收入
+	TotalRevenue float64 `json:"total_revenue"` // 总收入
+	RevenueToday float64 `json:"revenue_today"` // 今日收入
 
 	// 系统状态
-	SystemStatus   string    `json:"system_status"`   // 系统状态：healthy/degraded/down
-	LastUpdated    time.Time `json:"last_updated"`    // 最后更新时间
+	SystemStatus string    `json:"system_status"` // 系统状态：healthy/degraded/down
+	LastUpdated  time.Time `json:"last_updated"`  // 最后更新时间
 }
 
 // =========================== 服务实现 ===========================
@@ -327,13 +327,13 @@ func (s *AnalyticsServiceImpl) GetActiveUsersReport(ctx context.Context, req *Ac
 	averageActive := float64(totalActive) / float64(len(data))
 
 	return &ActiveUsersReportResponse{
-		StartDate:           req.StartDate,
-		EndDate:             req.EndDate,
-		Type:                req.Type,
-		AverageActiveUsers:  averageActive,
-		PeakActiveUsers:     peakActive,
-		PeakDate:            peakDate,
-		Data:                data,
+		StartDate:          req.StartDate,
+		EndDate:            req.EndDate,
+		Type:               req.Type,
+		AverageActiveUsers: averageActive,
+		PeakActiveUsers:    peakActive,
+		PeakDate:           peakDate,
+		Data:               data,
 	}, nil
 }
 
@@ -344,9 +344,9 @@ func (s *AnalyticsServiceImpl) GetSystemOverview(ctx context.Context) (*SystemOv
 
 	return &SystemOverviewResponse{
 		// 用户统计
-		TotalUsers:     12345,
-		NewUsersToday:  67,
-		ActiveUsers:    890,
+		TotalUsers:    12345,
+		NewUsersToday: 67,
+		ActiveUsers:   890,
 
 		// 内容统计
 		TotalBooks:     1234,
@@ -355,11 +355,11 @@ func (s *AnalyticsServiceImpl) GetSystemOverview(ctx context.Context) (*SystemOv
 		PendingReviews: 45,
 
 		// 收入统计
-		TotalRevenue:   123456.78,
-		RevenueToday:   1234.56,
+		TotalRevenue: 123456.78,
+		RevenueToday: 1234.56,
 
 		// 系统状态
-		SystemStatus:   "healthy",
-		LastUpdated:    time.Now(),
+		SystemStatus: "healthy",
+		LastUpdated:  time.Now(),
 	}, nil
 }

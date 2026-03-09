@@ -127,7 +127,7 @@ func TestExportService_ExportWithCustomColumns_Success(t *testing.T) {
 	reader := csv.NewReader(bytes.NewReader(csvResult))
 	records, err := reader.ReadAll()
 	assert.NoError(t, err)
-	assert.Equal(t, 2, len(records)) // Header + 1 row
+	assert.Equal(t, 2, len(records))    // Header + 1 row
 	assert.Equal(t, 2, len(records[0])) // 只有两列
 	assert.Equal(t, "姓名", records[0][0])
 	assert.Equal(t, "邮箱", records[0][1])
@@ -382,7 +382,7 @@ func TestExportService_ExportDataWithInconsistentColumns_Success(t *testing.T) {
 	reader := csv.NewReader(bytes.NewReader(result))
 	records, err := reader.ReadAll()
 	assert.NoError(t, err)
-	assert.Equal(t, 3, len(records)) // Header + 2 rows
+	assert.Equal(t, 3, len(records))    // Header + 2 rows
 	assert.Equal(t, 2, len(records[0])) // Only 2 columns
 }
 
@@ -443,11 +443,11 @@ func TestExportService_DefaultExportConfig(t *testing.T) {
 
 func TestExportService_ExportConfig_Fields(t *testing.T) {
 	config := &ExportConfig{
-		Format:         ExportFormatExcel,
-		IncludeHeader:  false,
-		FileName:       "test_export",
-		SheetName:      "TestData",
-		MaxRows:        50000,
+		Format:        ExportFormatExcel,
+		IncludeHeader: false,
+		FileName:      "test_export",
+		SheetName:     "TestData",
+		MaxRows:       50000,
 	}
 
 	assert.Equal(t, ExportFormatExcel, config.Format)
@@ -562,7 +562,7 @@ func TestExportService_ExportDataWithMoreColumns(t *testing.T) {
 	reader := csv.NewReader(bytes.NewReader(result))
 	records, err := reader.ReadAll()
 	assert.NoError(t, err)
-	assert.Equal(t, 2, len(records)) // Header + 1 row
+	assert.Equal(t, 2, len(records))    // Header + 1 row
 	assert.Equal(t, 4, len(records[0])) // 4 columns
 
 	// 验证最后一列为空（因为数据只有4列，刚好匹配）
@@ -594,7 +594,7 @@ func TestExportService_ExportDataWithLessColumns(t *testing.T) {
 	reader := csv.NewReader(bytes.NewReader(result))
 	records, err := reader.ReadAll()
 	assert.NoError(t, err)
-	assert.Equal(t, 2, len(records)) // Header + 1 row
+	assert.Equal(t, 2, len(records))    // Header + 1 row
 	assert.Equal(t, 2, len(records[0])) // 2 columns
 	assert.Equal(t, "Alice", records[1][1])
 }

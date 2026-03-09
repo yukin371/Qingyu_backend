@@ -6,14 +6,21 @@ on:
   # 允许手动触发（用于测试）
   workflow_dispatch:
 
+# 并发控制：同一分支只运行最新的工作流，取消旧的
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 env:
-  GO_VERSION: '1.24'
+  GO_VERSION: '1.25'
 
 jobs:
-  # 代码检查和格式化
+  # 代码检查和格式化 - 在所有测试作业后运行以避免资源争用
   lint:
     name: Code Linting
+    needs: [security, unit-tests, e2e-tests, api-tests]
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -27,16 +34,25 @@ jobs:
 
       - name: Install golangci-lint
         run: |
-          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.64.2
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v2.11.0
 
-      - name: Run golangci-lint
-        run: |
-          if git rev-parse --verify HEAD~1 >/dev/null 2>&1; then
-            golangci-lint run --timeout=10m --new-from-rev=HEAD~1
-          else
-            # Fallback for shallow/manual runs without history
-            golangci-lint run --timeout=10m ./api/... ./service/... ./pkg/...
-          fi
+      - name: Run golangci-lint (api)
+        run: golangci-lint run --timeout=5m --concurrency=1 ./api/...
+
+      - name: Run golangci-lint (service)
+        run: golangci-lint run --timeout=5m --concurrency=1 ./service/...
+
+      - name: Run golangci-lint (pkg)
+        run: golangci-lint run --timeout=5m --concurrency=1 ./pkg/...
+
+      - name: Run golangci-lint (repository)
+        run: golangci-lint run --timeout=5m --concurrency=1 ./repository/...
+
+      - name: Run golangci-lint (router)
+        run: golangci-lint run --timeout=5m --concurrency=1 ./router/...
+
+      - name: Run golangci-lint (config)
+        run: golangci-lint run --timeout=5m --concurrency=1 ./config/...
 
       - name: Check code formatting
         run: |

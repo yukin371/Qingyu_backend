@@ -253,6 +253,7 @@ func TestFollowRepository_GetFollowers_Pagination(t *testing.T) {
 
 	// Act - 获取第二页
 	page2, total2, err := repo.GetFollowers(ctx, userID, "user", 2, 10)
+	require.NoError(t, err)
 
 	// Assert
 	assert.Equal(t, int64(15), total1)

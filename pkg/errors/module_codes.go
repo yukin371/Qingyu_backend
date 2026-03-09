@@ -2,7 +2,7 @@ package errors
 
 // ============================================================================
 // 模块专属错误码
-// 
+//
 // 本文件定义了各模块的专属错误码，补充 codes.go 中的通用错误码
 // 错误码分配规则：
 // - Writer模块: 3300-3399
@@ -104,12 +104,12 @@ const (
 	SocialFollowNotFound  ErrorCode = 3603 // 关注不存在
 
 	// Social验证错误 (3620-3639)
-	SocialInvalidComment   ErrorCode = 3620 // 无效的评论
-	SocialInvalidRating    ErrorCode = 3621 // 无效的评分
-	SocialInvalidRelation  ErrorCode = 3622 // 无效的关系
+	SocialInvalidComment  ErrorCode = 3620 // 无效的评论
+	SocialInvalidRating   ErrorCode = 3621 // 无效的评分
+	SocialInvalidRelation ErrorCode = 3622 // 无效的关系
 
 	// Social冲突错误 (3640-3659)
-	SocialAlreadyLiked  ErrorCode = 3640 // 已点赞
+	SocialAlreadyLiked    ErrorCode = 3640 // 已点赞
 	SocialAlreadyFollowed ErrorCode = 3641 // 已关注
 
 	// ========== Messaging模块错误 (3700-3799) ==========
@@ -133,8 +133,8 @@ const (
 	AdminReportNotFound   ErrorCode = 3802 // 举报记录不存在
 
 	// Admin验证错误 (3820-3839)
-	AdminInvalidAction    ErrorCode = 3820 // 无效的管理操作
-	AdminInvalidStatus    ErrorCode = 3821 // 无效的状态
+	AdminInvalidAction     ErrorCode = 3820 // 无效的管理操作
+	AdminInvalidStatus     ErrorCode = 3821 // 无效的状态
 	AdminInvalidPermission ErrorCode = 3822 // 无效的权限设置
 
 	// Admin授权错误 (3840-3859)
@@ -149,33 +149,33 @@ const (
 // ModuleErrorMessages 模块专属错误消息映射
 var ModuleErrorMessages = map[ErrorCode]string{
 	// Writer模块
-	WriterProjectNotFound:     "项目不存在",
-	WriterDocumentNotFound:    "文档不存在",
-	WriterCommentNotFound:     "批注不存在",
-	WriterCharacterNotFound:   "角色不存在",
-	WriterLocationNotFound:    "地点不存在",
-	WriterTimelineNotFound:    "时间线不存在",
-	WriterVersionNotFound:     "版本不存在",
-	WriterPublicationNotFound: "发布记录不存在",
-	WriterExportTaskNotFound:  "导出任务不存在",
-	WriterInvalidProjectID:    "无效的项目ID",
-	WriterInvalidDocumentID:   "无效的文档ID",
-	WriterInvalidContent:      "内容无效",
-	WriterInvalidVersion:      "无效的版本号",
-	WriterInvalidExportFormat: "无效的导出格式",
-	WriterInvalidRelationType: "无效的关系类型",
-	WriterProjectAlreadyExists: "项目已存在",
+	WriterProjectNotFound:       "项目不存在",
+	WriterDocumentNotFound:      "文档不存在",
+	WriterCommentNotFound:       "批注不存在",
+	WriterCharacterNotFound:     "角色不存在",
+	WriterLocationNotFound:      "地点不存在",
+	WriterTimelineNotFound:      "时间线不存在",
+	WriterVersionNotFound:       "版本不存在",
+	WriterPublicationNotFound:   "发布记录不存在",
+	WriterExportTaskNotFound:    "导出任务不存在",
+	WriterInvalidProjectID:      "无效的项目ID",
+	WriterInvalidDocumentID:     "无效的文档ID",
+	WriterInvalidContent:        "内容无效",
+	WriterInvalidVersion:        "无效的版本号",
+	WriterInvalidExportFormat:   "无效的导出格式",
+	WriterInvalidRelationType:   "无效的关系类型",
+	WriterProjectAlreadyExists:  "项目已存在",
 	WriterDocumentAlreadyExists: "文档已存在",
-	WriterNameAlreadyExists:    "名称已存在",
-	WriterVersionConflict:      "版本冲突",
-	WriterEditConflict:         "编辑冲突",
-	WriterUnauthorized:         "未授权",
-	WriterForbidden:            "禁止访问",
-	WriterNoPermission:         "无权限",
-	WriterPublishFailed:        "发布失败",
-	WriterExportFailed:         "导出失败",
-	WriterStorageError:         "存储错误",
-	WriterExternalServiceErr:   "外部服务错误",
+	WriterNameAlreadyExists:     "名称已存在",
+	WriterVersionConflict:       "版本冲突",
+	WriterEditConflict:          "编辑冲突",
+	WriterUnauthorized:          "未授权",
+	WriterForbidden:             "禁止访问",
+	WriterNoPermission:          "无权限",
+	WriterPublishFailed:         "发布失败",
+	WriterExportFailed:          "导出失败",
+	WriterStorageError:          "存储错误",
+	WriterExternalServiceErr:    "外部服务错误",
 
 	// Reader模块
 	ReaderProgressNotFound:     "阅读进度不存在",
@@ -193,26 +193,26 @@ var ModuleErrorMessages = map[ErrorCode]string{
 	ReaderSyncFailed:           "同步失败",
 
 	// AIService模块
-	AIServiceUnavailable:  "AI服务不可用",
-	AIServiceTimeout:      "AI服务超时",
-	AIServiceRateLimit:    "AI服务频率限制",
-	AIQuotaExhausted:      "AI配额不足",
-	AIQuotaCheckFail:      "AI配额检查失败",
-	AIInvalidRequest:      "AI请求参数无效",
-	AIRequestTooLarge:     "AI请求过大",
-	AIContextExceeded:     "AI上下文超限",
-	AIModelNotFound:       "AI模型不存在",
-	AIModelNotAvailable:   "AI模型不可用",
+	AIServiceUnavailable: "AI服务不可用",
+	AIServiceTimeout:     "AI服务超时",
+	AIServiceRateLimit:   "AI服务频率限制",
+	AIQuotaExhausted:     "AI配额不足",
+	AIQuotaCheckFail:     "AI配额检查失败",
+	AIInvalidRequest:     "AI请求参数无效",
+	AIRequestTooLarge:    "AI请求过大",
+	AIContextExceeded:    "AI上下文超限",
+	AIModelNotFound:      "AI模型不存在",
+	AIModelNotAvailable:  "AI模型不可用",
 
 	// Social模块
-	SocialCommentNotFound:  "评论不存在",
-	SocialLikeNotFound:     "点赞不存在",
-	SocialFollowNotFound:   "关注不存在",
-	SocialInvalidComment:   "无效的评论",
-	SocialInvalidRating:    "无效的评分",
-	SocialInvalidRelation:  "无效的关系",
-	SocialAlreadyLiked:     "已点赞",
-	SocialAlreadyFollowed:  "已关注",
+	SocialCommentNotFound: "评论不存在",
+	SocialLikeNotFound:    "点赞不存在",
+	SocialFollowNotFound:  "关注不存在",
+	SocialInvalidComment:  "无效的评论",
+	SocialInvalidRating:   "无效的评分",
+	SocialInvalidRelation: "无效的关系",
+	SocialAlreadyLiked:    "已点赞",
+	SocialAlreadyFollowed: "已关注",
 
 	// Messaging模块
 	MessagingConversationNotFound: "会话不存在",
@@ -223,13 +223,13 @@ var ModuleErrorMessages = map[ErrorCode]string{
 	MessagingSendFailed:           "消息发送失败",
 
 	// Admin模块
-	AdminAuditLogNotFound:    "审计日志不存在",
-	AdminReportNotFound:      "举报记录不存在",
-	AdminInvalidAction:       "无效的管理操作",
-	AdminInvalidStatus:       "无效的状态",
-	AdminInvalidPermission:   "无效的权限设置",
-	AdminUnauthorized:        "未授权的管理操作",
-	AdminInsufficientRole:    "角色权限不足",
+	AdminAuditLogNotFound:  "审计日志不存在",
+	AdminReportNotFound:    "举报记录不存在",
+	AdminInvalidAction:     "无效的管理操作",
+	AdminInvalidStatus:     "无效的状态",
+	AdminInvalidPermission: "无效的权限设置",
+	AdminUnauthorized:      "未授权的管理操作",
+	AdminInsufficientRole:  "角色权限不足",
 }
 
 // GetModuleMessage 获取模块专属错误消息

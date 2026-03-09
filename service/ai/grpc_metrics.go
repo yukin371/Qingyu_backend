@@ -9,12 +9,12 @@ import (
 
 // 服务类型常量
 const (
-	ServiceExecuteAgent         = "ExecuteAgent"
-	ServiceGenerateOutline      = "GenerateOutline"
-	ServiceGenerateCharacters   = "GenerateCharacters"
-	ServiceGeneratePlot         = "GeneratePlot"
+	ServiceExecuteAgent            = "ExecuteAgent"
+	ServiceGenerateOutline         = "GenerateOutline"
+	ServiceGenerateCharacters      = "GenerateCharacters"
+	ServiceGeneratePlot            = "GeneratePlot"
 	ServiceExecuteCreativeWorkflow = "ExecuteCreativeWorkflow"
-	ServiceHealthCheck          = "HealthCheck"
+	ServiceHealthCheck             = "HealthCheck"
 )
 
 // GRPCMetrics gRPC调用统计
@@ -35,14 +35,14 @@ type ServiceStats struct {
 // PerformanceStats 性能统计
 type PerformanceStats struct {
 	mu           sync.RWMutex
-	TotalLatency int64     // 总延迟（毫秒）
-	Count        int64     // 请求数
-	Timeouts     int64     // 超时次数
-	Retries      int64     // 重试次数
-	MinLatency   int64     // 最小延迟
-	MaxLatency   int64     // 最大延迟
-	latencies    []int64   // 延迟记录（用于计算百分位）
-	maxLatencies int       // 保留的延迟记录数量
+	TotalLatency int64   // 总延迟（毫秒）
+	Count        int64   // 请求数
+	Timeouts     int64   // 超时次数
+	Retries      int64   // 重试次数
+	MinLatency   int64   // 最小延迟
+	MaxLatency   int64   // 最大延迟
+	latencies    []int64 // 延迟记录（用于计算百分位）
+	maxLatencies int     // 保留的延迟记录数量
 }
 
 // NewGRPCMetrics 创建新的gRPC指标收集器
@@ -123,7 +123,7 @@ func (m *GRPCMetrics) RecordLatency(serviceName string, duration time.Duration) 
 	perf, exists := m.perf[serviceName]
 	if !exists {
 		perf = &PerformanceStats{
-			MinLatency:   -1, // 初始化为-1表示未设置
+			MinLatency:   -1,   // 初始化为-1表示未设置
 			maxLatencies: 1000, // 默认保留1000条延迟记录
 			latencies:    make([]int64, 0, 1000),
 		}
@@ -378,23 +378,23 @@ type QuotaConsumptionRecord struct {
 
 // QuotaMetrics 配额使用统计
 type QuotaMetrics struct {
-	mu                   sync.RWMutex
-	TotalConsumed        int64
-	ByService            map[string]int64
-	ByModel              map[string]int64
-	ShortageCount        int64
-	ConsumptionHistory   []QuotaConsumptionRecord
-	maxHistoryRecords    int // 最大历史记录数
+	mu                 sync.RWMutex
+	TotalConsumed      int64
+	ByService          map[string]int64
+	ByModel            map[string]int64
+	ShortageCount      int64
+	ConsumptionHistory []QuotaConsumptionRecord
+	maxHistoryRecords  int // 最大历史记录数
 }
 
 // QuotaReport 配额使用报告
 type QuotaReport struct {
-	TotalConsumed     int64                         `json:"total_consumed"`
-	ByService         map[string]int64              `json:"by_service"`
-	ByModel           map[string]int64              `json:"by_model"`
-	ShortageCount     int64                         `json:"shortage_count"`
-	RecentConsumption []QuotaConsumptionRecord      `json:"recent_consumption"`
-	Statistics        *QuotaStatistics              `json:"statistics"`
+	TotalConsumed     int64                    `json:"total_consumed"`
+	ByService         map[string]int64         `json:"by_service"`
+	ByModel           map[string]int64         `json:"by_model"`
+	ShortageCount     int64                    `json:"shortage_count"`
+	RecentConsumption []QuotaConsumptionRecord `json:"recent_consumption"`
+	Statistics        *QuotaStatistics         `json:"statistics"`
 }
 
 // QuotaStatistics 配额统计信息

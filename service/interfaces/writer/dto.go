@@ -75,8 +75,8 @@ type DocumentTreeResponse = dto.DocumentTreeResponse
 // TreeNode 树节点（保留旧定义以兼容）
 // Deprecated: 直接使用 models 中的类型
 type TreeNode struct {
-	Document interface{}   `json:"document"`
-	Children []*TreeNode   `json:"children"`
+	Document interface{} `json:"document"`
+	Children []*TreeNode `json:"children"`
 }
 
 // ListDocumentsRequest 列出文档请求

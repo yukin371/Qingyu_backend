@@ -57,9 +57,22 @@ func EnableStrictLogging() {
 }
 
 // CheckStrictLogViolations adjusts exit code when strict log violations exist.
+// Note: This checks for all violations including warnings. For integration tests
+// that may have expected warnings, use CheckStrictLogViolationsIgnoreWarn.
 func CheckStrictLogViolations(code int) int {
 	stats := logger.GetStrictStats()
 	if stats.WarnCount > 0 || stats.ErrorCount > 0 || stats.PanicCount > 0 || stats.FatalCount > 0 {
+		return 1
+	}
+	return code
+}
+
+// CheckStrictLogViolationsIgnoreWarn adjusts exit code when strict log violations exist,
+// but ignores warning-level logs. Use this for integration tests that may have
+// expected warnings (e.g., deprecated API calls, optional service not configured).
+func CheckStrictLogViolationsIgnoreWarn(code int) int {
+	stats := logger.GetStrictStats()
+	if stats.ErrorCount > 0 || stats.PanicCount > 0 || stats.FatalCount > 0 {
 		return 1
 	}
 	return code

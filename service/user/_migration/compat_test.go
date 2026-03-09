@@ -4,43 +4,43 @@ import (
 	"context"
 	"testing"
 
-	useriface "Qingyu_backend/service/interfaces/user"
 	"Qingyu_backend/models/dto"
+	useriface "Qingyu_backend/service/interfaces/user"
 )
 
 // MockPort 实现 Port 接口的 Mock
 type MockPort struct {
-	createUserCalled    bool
-	getUserCalled       bool
-	updateUserCalled    bool
-	deleteUserCalled    bool
-	listUsersCalled     bool
-	registerUserCalled  bool
-	loginUserCalled     bool
-	logoutUserCalled    bool
-	validateTokenCalled bool
-	updatePasswordCalled bool
-	resetPasswordCalled  bool
-	verifyPasswordCalled bool
-	requestPasswordResetCalled bool
-	confirmPasswordResetCalled bool
+	createUserCalled            bool
+	getUserCalled               bool
+	updateUserCalled            bool
+	deleteUserCalled            bool
+	listUsersCalled             bool
+	registerUserCalled          bool
+	loginUserCalled             bool
+	logoutUserCalled            bool
+	validateTokenCalled         bool
+	updatePasswordCalled        bool
+	resetPasswordCalled         bool
+	verifyPasswordCalled        bool
+	requestPasswordResetCalled  bool
+	confirmPasswordResetCalled  bool
 	sendEmailVerificationCalled bool
-	verifyEmailCalled      bool
-	unbindEmailCalled      bool
-	emailExistsCalled      bool
-	assignRoleCalled       bool
-	removeRoleCalled       bool
-	getUserRolesCalled     bool
-	getUserPermissionsCalled bool
-	downgradeRoleCalled    bool
-	updateLastLoginCalled  bool
-	deleteDeviceCalled     bool
-	unbindPhoneCalled      bool
-	initializeCalled       bool
-	healthCalled           bool
-	closeCalled            bool
-	getServiceNameCalled   bool
-	getVersionCalled       bool
+	verifyEmailCalled           bool
+	unbindEmailCalled           bool
+	emailExistsCalled           bool
+	assignRoleCalled            bool
+	removeRoleCalled            bool
+	getUserRolesCalled          bool
+	getUserPermissionsCalled    bool
+	downgradeRoleCalled         bool
+	updateLastLoginCalled       bool
+	deleteDeviceCalled          bool
+	unbindPhoneCalled           bool
+	initializeCalled            bool
+	healthCalled                bool
+	closeCalled                 bool
+	getServiceNameCalled        bool
+	getVersionCalled            bool
 }
 
 func (m *MockPort) Initialize(ctx context.Context) error {

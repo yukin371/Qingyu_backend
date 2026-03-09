@@ -133,16 +133,16 @@ func (cb *CircuitBreaker) GetStats() map[string]interface{} {
 	defer cb.mu.Unlock()
 
 	return map[string]interface{}{
-		"state":             cb.state.String(),
-		"failureCount":      cb.failureCount,
-		"successCount":      cb.successCount,
-		"failureThreshold":  cb.failureThreshold,
-		"successThreshold":  cb.successThreshold,
-		"totalRequests":     cb.totalRequests,
-		"totalSuccesses":    cb.totalSuccesses,
-		"totalFailures":     cb.totalFailures,
-		"lastFailureTime":   cb.lastFailureTime,
-		"lastStateChange":   cb.lastStateChange,
+		"state":            cb.state.String(),
+		"failureCount":     cb.failureCount,
+		"successCount":     cb.successCount,
+		"failureThreshold": cb.failureThreshold,
+		"successThreshold": cb.successThreshold,
+		"totalRequests":    cb.totalRequests,
+		"totalSuccesses":   cb.totalSuccesses,
+		"totalFailures":    cb.totalFailures,
+		"lastFailureTime":  cb.lastFailureTime,
+		"lastStateChange":  cb.lastStateChange,
 	}
 }
 

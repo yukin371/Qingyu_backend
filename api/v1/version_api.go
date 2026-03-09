@@ -1,9 +1,10 @@
 package v1
 
 import (
-	"github.com/gin-gonic/gin"
 	"Qingyu_backend/internal/middleware"
 	"Qingyu_backend/pkg/response"
+
+	"github.com/gin-gonic/gin"
 )
 
 // VersionAPI 版本信息API
@@ -13,14 +14,14 @@ type VersionAPI struct {
 
 // APIVersionInfo API版本信息
 type APIVersionInfo struct {
-	Version     string    `json:"version"`      // 版本号 (v1, v2)
-	Status      string    `json:"status"`       // 状态 (stable, beta, deprecated)
-	Path        string    `json:"path"`         // 路径前缀 (/api/v1)
-	ReleaseDate string    `json:"release_date"` // 发布日期
-	SunsetDate  *string   `json:"sunset_date,omitempty"`  // 废弃日期（可选）
-	Replacement string    `json:"replacement,omitempty"`  // 替代版本（可选）
-	Description string    `json:"description"`  // 描述
-	DocsURL     string    `json:"docs_url"`      // 文档链接
+	Version     string  `json:"version"`               // 版本号 (v1, v2)
+	Status      string  `json:"status"`                // 状态 (stable, beta, deprecated)
+	Path        string  `json:"path"`                  // 路径前缀 (/api/v1)
+	ReleaseDate string  `json:"release_date"`          // 发布日期
+	SunsetDate  *string `json:"sunset_date,omitempty"` // 废弃日期（可选）
+	Replacement string  `json:"replacement,omitempty"` // 替代版本（可选）
+	Description string  `json:"description"`           // 描述
+	DocsURL     string  `json:"docs_url"`              // 文档链接
 }
 
 // APIVersionsResponse API版本列表响应
@@ -172,9 +173,9 @@ func (api *VersionAPI) VersionStatusHandler(c *gin.Context) {
 func (api *VersionAPI) APIVersionMigrationGuide(c *gin.Context) {
 	guide := gin.H{
 		"versioning_strategy": gin.H{
-			"url_based": "使用URL路径指定版本 (推荐): /api/v1/users, /api/v2/users",
+			"url_based":    "使用URL路径指定版本 (推荐): /api/v1/users, /api/v2/users",
 			"header_based": "使用HTTP Header指定版本: X-API-Version: v1",
-			"priority": "URL路径优先级高于Header",
+			"priority":     "URL路径优先级高于Header",
 		},
 		"best_practices": []string{
 			"优先使用URL路径方式指定版本",
@@ -184,13 +185,13 @@ func (api *VersionAPI) APIVersionMigrationGuide(c *gin.Context) {
 		},
 		"response_headers": gin.H{
 			"X-API-Deprecated":  "标记API是否已废弃",
-			"X-API-Sunset-Date":  "API将移除的日期",
+			"X-API-Sunset-Date": "API将移除的日期",
 			"X-API-Replacement": "替代的API端点",
 			"Warning":           "警告消息",
 		},
 		"example_requests": gin.H{
-			"v1_api": "curl -H 'X-API-Version: v1' http://localhost:8080/api/users",
-			"v2_api": "curl -H 'X-API-Version: v2' http://localhost:8080/api/users",
+			"v1_api":    "curl -H 'X-API-Version: v1' http://localhost:8080/api/users",
+			"v2_api":    "curl -H 'X-API-Version: v2' http://localhost:8080/api/users",
 			"url_based": "curl http://localhost:8080/api/v1/users",
 		},
 	}

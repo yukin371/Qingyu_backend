@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	user2 "Qingyu_backend/service/interfaces/user"
 	usersModel "Qingyu_backend/models/users"
+	user2 "Qingyu_backend/service/interfaces/user"
 )
 
 // TestUserService_EmailVerificationFlow_Integration 完整邮箱验证流程集成测试
@@ -172,7 +172,7 @@ func TestUserService_VerificationCode_Expiration_Integration(t *testing.T) {
 	userID, _, email, _ := env.CreateDefaultTestUser(t)
 
 	tokenManager := NewEmailVerificationTokenManager()
-	_ , err := tokenManager.GenerateCode(ctx, userID, email)
+	_, err := tokenManager.GenerateCode(ctx, userID, email)
 	require.NoError(t, err, "生成验证码应该成功")
 
 	// Act - 等待验证码过期（根据默认配置，验证码15分钟过期）

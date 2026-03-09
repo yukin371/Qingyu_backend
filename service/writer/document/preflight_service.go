@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"Qingyu_backend/models/writer"
+	"Qingyu_backend/repository"
 	writerInterface "Qingyu_backend/repository/interfaces/writer"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -39,18 +40,18 @@ type PreflightService interface {
 
 // PreflightOptions 预检查选项
 type PreflightOptions struct {
-	ExpectedVersions   map[string]int         // 版本检查
-	ConflictPolicy     writer.ConflictPolicy  // 冲突策略
-	IncludeDescendants bool                   // 是否包含后代节点
-	UserID             primitive.ObjectID     // 当前用户ID
+	ExpectedVersions   map[string]int        // 版本检查
+	ConflictPolicy     writer.ConflictPolicy // 冲突策略
+	IncludeDescendants bool                  // 是否包含后代节点
+	UserID             primitive.ObjectID    // 当前用户ID
 }
 
 // PreflightResult 预检查结果
 type PreflightResult struct {
-	ValidIDs    []string                   // 有效ID列表
-	InvalidIDs  []InvalidTarget            // 无效ID列表
-	SkippedIDs  []string                   // 跳过的ID列表
-	Warnings    []string                   // 警告信息
+	ValidIDs    []string                    // 有效ID列表
+	InvalidIDs  []InvalidTarget             // 无效ID列表
+	SkippedIDs  []string                    // 跳过的ID列表
+	Warnings    []string                    // 警告信息
 	DocumentMap map[string]*writer.Document // ID -> Document 映射
 }
 
@@ -103,7 +104,7 @@ func (s *PreflightServiceImpl) ValidateBatchOperation(
 	// 2. 验证每个目标ID
 	for _, id := range normalizedIDs {
 		// 将字符串ID转换为ObjectID验证格式
-		_, err := primitive.ObjectIDFromHex(id)
+		_, err := repository.ParseID(id)
 		if err != nil {
 			result.InvalidIDs = append(result.InvalidIDs, InvalidTarget{
 				ID:     id,
@@ -214,7 +215,7 @@ func (s *PreflightServiceImpl) NormalizeTargetIDs(
 
 	for id := range uniqueIDs {
 		// 验证ID格式
-		_, err := primitive.ObjectIDFromHex(id)
+		_, err := repository.ParseID(id)
 		if err != nil {
 			continue
 		}

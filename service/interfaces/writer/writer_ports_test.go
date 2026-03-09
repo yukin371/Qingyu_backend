@@ -72,9 +72,9 @@ func (m *mockProjectManagementPort) RecalculateProjectStatistics(ctx context.Con
 
 func (m *mockProjectManagementPort) Initialize(ctx context.Context) error { return nil }
 func (m *mockProjectManagementPort) Health(ctx context.Context) error     { return nil }
-func (m *mockProjectManagementPort) Close(ctx context.Context) error       { return nil }
+func (m *mockProjectManagementPort) Close(ctx context.Context) error      { return nil }
 func (m *mockProjectManagementPort) GetServiceName() string               { return "mock" }
-func (m *mockProjectManagementPort) GetVersion() string                  { return "1.0.0" }
+func (m *mockProjectManagementPort) GetVersion() string                   { return "1.0.0" }
 
 type mockDocumentManagementPort struct {
 	base.BaseService
@@ -209,9 +209,9 @@ func (m *mockDocumentManagementPort) SaveImmediately(documentID string) error {
 
 func (m *mockDocumentManagementPort) Initialize(ctx context.Context) error { return nil }
 func (m *mockDocumentManagementPort) Health(ctx context.Context) error     { return nil }
-func (m *mockDocumentManagementPort) Close(ctx context.Context) error       { return nil }
+func (m *mockDocumentManagementPort) Close(ctx context.Context) error      { return nil }
 func (m *mockDocumentManagementPort) GetServiceName() string               { return "mock" }
-func (m *mockDocumentManagementPort) GetVersion() string                  { return "1.0.0" }
+func (m *mockDocumentManagementPort) GetVersion() string                   { return "1.0.0" }
 
 type mockCollaborationPort struct {
 	base.BaseService
@@ -279,9 +279,9 @@ func (m *mockCollaborationPort) SearchComments(ctx context.Context, keyword, doc
 
 func (m *mockCollaborationPort) Initialize(ctx context.Context) error { return nil }
 func (m *mockCollaborationPort) Health(ctx context.Context) error     { return nil }
-func (m *mockCollaborationPort) Close(ctx context.Context) error       { return nil }
+func (m *mockCollaborationPort) Close(ctx context.Context) error      { return nil }
 func (m *mockCollaborationPort) GetServiceName() string               { return "mock" }
-func (m *mockCollaborationPort) GetVersion() string                  { return "1.0.0" }
+func (m *mockCollaborationPort) GetVersion() string                   { return "1.0.0" }
 
 type mockContentManagementPort struct {
 	base.BaseService
@@ -408,9 +408,9 @@ func (m *mockContentManagementPort) GetTimelineVisualization(ctx context.Context
 
 func (m *mockContentManagementPort) Initialize(ctx context.Context) error { return nil }
 func (m *mockContentManagementPort) Health(ctx context.Context) error     { return nil }
-func (m *mockContentManagementPort) Close(ctx context.Context) error       { return nil }
+func (m *mockContentManagementPort) Close(ctx context.Context) error      { return nil }
 func (m *mockContentManagementPort) GetServiceName() string               { return "mock" }
-func (m *mockContentManagementPort) GetVersion() string                  { return "1.0.0" }
+func (m *mockContentManagementPort) GetVersion() string                   { return "1.0.0" }
 
 type mockPublishExportPort struct {
 	base.BaseService
@@ -479,9 +479,9 @@ func (m *mockPublishExportPort) CancelExportTask(ctx context.Context, taskID, us
 
 func (m *mockPublishExportPort) Initialize(ctx context.Context) error { return nil }
 func (m *mockPublishExportPort) Health(ctx context.Context) error     { return nil }
-func (m *mockPublishExportPort) Close(ctx context.Context) error       { return nil }
+func (m *mockPublishExportPort) Close(ctx context.Context) error      { return nil }
 func (m *mockPublishExportPort) GetServiceName() string               { return "mock" }
-func (m *mockPublishExportPort) GetVersion() string                  { return "1.0.0" }
+func (m *mockPublishExportPort) GetVersion() string                   { return "1.0.0" }
 
 // TestProjectManagementPort 测试 ProjectManagementPort 接口
 func TestProjectManagementPort(t *testing.T) {

@@ -1,13 +1,13 @@
 package ai
 
 import (
-
 	aiService "Qingyu_backend/service/ai"
 	"Qingyu_backend/service/ai/dto"
 
+	"Qingyu_backend/pkg/response"
+
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"Qingyu_backend/pkg/response"
 )
 
 // WritingAssistantApi 写作辅助API
@@ -49,7 +49,7 @@ func NewWritingAssistantApi(
 func (api *WritingAssistantApi) SummarizeContent(c *gin.Context) {
 	var req dto.SummarizeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -86,7 +86,7 @@ func (api *WritingAssistantApi) SummarizeContent(c *gin.Context) {
 func (api *WritingAssistantApi) SummarizeChapter(c *gin.Context) {
 	var req dto.ChapterSummaryRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -127,7 +127,7 @@ func (api *WritingAssistantApi) SummarizeChapter(c *gin.Context) {
 func (api *WritingAssistantApi) ProofreadContent(c *gin.Context) {
 	var req dto.ProofreadRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -165,7 +165,7 @@ func (api *WritingAssistantApi) ProofreadContent(c *gin.Context) {
 func (api *WritingAssistantApi) GetProofreadSuggestion(c *gin.Context) {
 	suggestionID := c.Param("id")
 	if suggestionID == "" {
-		response.BadRequest(c,  "参数错误", "建议ID不能为空")
+		response.BadRequest(c, "参数错误", "建议ID不能为空")
 		return
 	}
 
@@ -197,7 +197,7 @@ func (api *WritingAssistantApi) GetProofreadSuggestion(c *gin.Context) {
 func (api *WritingAssistantApi) CheckSensitiveWords(c *gin.Context) {
 	var req dto.SensitiveWordsCheckRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -237,7 +237,7 @@ func (api *WritingAssistantApi) CheckSensitiveWords(c *gin.Context) {
 func (api *WritingAssistantApi) GetSensitiveWordsDetail(c *gin.Context) {
 	checkID := c.Param("id")
 	if checkID == "" {
-		response.BadRequest(c,  "参数错误", "检测ID不能为空")
+		response.BadRequest(c, "参数错误", "检测ID不能为空")
 		return
 	}
 

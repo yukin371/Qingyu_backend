@@ -49,9 +49,9 @@ func TestRegistrationStatus(t *testing.T) {
 // TestAmountValidation 使用实际验证器测试金额验证
 func TestAmountValidation(t *testing.T) {
 	type TestCase struct {
-		Name    string
-		Amount  float64 `validate:"amount"`
-		Valid   bool
+		Name   string
+		Amount float64 `validate:"amount"`
+		Valid  bool
 	}
 
 	tests := []TestCase{
@@ -322,8 +322,8 @@ func TestStrongPasswordValidation(t *testing.T) {
 // TestTransactionTypeValidation 使用实际验证器测试交易类型验证
 func TestTransactionTypeValidation(t *testing.T) {
 	type TestCase struct {
-		Name string
-		Type string `validate:"transaction_type"`
+		Name  string
+		Type  string `validate:"transaction_type"`
 		Valid bool
 	}
 
@@ -392,9 +392,9 @@ func TestWithdrawAccountValidation(t *testing.T) {
 // TestContentTypeValidation 使用实际验证器测试内容类型验证
 func TestContentTypeValidation(t *testing.T) {
 	type TestCase struct {
-		Name       string
+		Name        string
 		ContentType string `validate:"content_type"`
-		Valid      bool
+		Valid       bool
 	}
 
 	tests := []TestCase{}
@@ -491,7 +491,9 @@ func BenchmarkValidateAmount(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		v.Struct(tc)
+		if err := v.Struct(tc); err != nil {
+			b.Fatalf("expected benchmark input to validate: %v", err)
+		}
 	}
 }
 
@@ -505,7 +507,9 @@ func BenchmarkValidatePhone(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		v.Struct(tc)
+		if err := v.Struct(tc); err != nil {
+			b.Fatalf("expected benchmark input to validate: %v", err)
+		}
 	}
 }
 
@@ -519,7 +523,9 @@ func BenchmarkValidateStrongPassword(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		v.Struct(tc)
+		if err := v.Struct(tc); err != nil {
+			b.Fatalf("expected benchmark input to validate: %v", err)
+		}
 	}
 }
 
@@ -541,6 +547,8 @@ func BenchmarkValidateComplex(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		v.Struct(req)
+		if err := v.Struct(req); err != nil {
+			b.Fatalf("expected benchmark input to validate: %v", err)
+		}
 	}
 }

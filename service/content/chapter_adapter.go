@@ -45,7 +45,7 @@ func (a *ChapterAdapter) GetChapter(ctx context.Context, bookID, chapterID strin
 	response := &dto.ChapterResponse{
 		ChapterID:   chapterID,
 		BookID:      bookID,
-		ChapterNum:  0, // 需要从章节信息获取
+		ChapterNum:  0,  // 需要从章节信息获取
 		Title:       "", // 需要从章节信息获取
 		Content:     content,
 		WordCount:   len(content), // 简单计算字数

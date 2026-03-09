@@ -179,7 +179,7 @@ func RunReadingFlow(t *testing.T) {
 		token := env.GetTestData("auth_token").(string)
 
 		// 获取章节内容
-		chapterContent := actions.GetChapter(chapter.ID, token)
+		chapterContent := actions.GetChapter(chapter.ID.Hex(), token)
 
 		// 验证响应
 		assertions.AssertResponseContains(chapterContent, "data")
@@ -196,7 +196,7 @@ func RunReadingFlow(t *testing.T) {
 		token := env.GetTestData("auth_token").(string)
 
 		// 保存阅读进度
-		progress := actions.StartReading(user.ID.Hex(), book.ID.Hex(), chapter.ID, token)
+		progress := actions.StartReading(user.ID.Hex(), book.ID.Hex(), chapter.ID.Hex(), token)
 
 		// 验证响应包含code和message字段（data可能为null）
 		assertions.AssertResponseContains(progress, "code")
@@ -393,13 +393,21 @@ func RunWritingFlow(t *testing.T) {
 
 		// 验证响应
 		if data, ok := projectResp["data"].(map[string]interface{}); ok {
-			if projectId, ok := data["projectId"].(string); ok {
+			// 支持驼峰命名 projectId（Go标准）和蛇形命名 id
+			var projectId string
+			if id, ok := data["projectId"].(string); ok {
+				projectId = id
+			} else if id, ok := data["id"].(string); ok {
+				projectId = id
+			}
+
+			if projectId != "" {
 				t.Logf("✓ 写作项目创建成功 (ID: %s)", projectId)
 
 				// 保存项目ID
 				env.SetTestData("project_id", projectId)
 			} else {
-				t.Error("项目响应中未找到projectId字段")
+				t.Error("项目响应中未找到projectId或id字段")
 			}
 		} else {
 			t.Error("项目响应格式不正确")

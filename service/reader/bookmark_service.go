@@ -10,9 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
-
 	readermodels "Qingyu_backend/models/reader"
+	"Qingyu_backend/repository"
 	readerrepo "Qingyu_backend/repository/interfaces/reader"
 )
 
@@ -110,7 +109,7 @@ func (s *BookmarkServiceImpl) CreateBookmark(ctx context.Context, bookmark *read
 
 // GetBookmark 获取书签详情
 func (s *BookmarkServiceImpl) GetBookmark(ctx context.Context, bookmarkID string) (*readermodels.Bookmark, error) {
-	id, err := primitive.ObjectIDFromHex(bookmarkID)
+	id, err := repository.ParseID(bookmarkID)
 	if err != nil {
 		return nil, fmt.Errorf("invalid bookmark ID: %w", err)
 	}
@@ -125,7 +124,7 @@ func (s *BookmarkServiceImpl) GetBookmark(ctx context.Context, bookmarkID string
 
 // GetUserBookmarks 获取用户书签列表
 func (s *BookmarkServiceImpl) GetUserBookmarks(ctx context.Context, userID string, filter *readermodels.BookmarkFilter, page, size int) (*BookmarkListResponse, error) {
-	userOID, err := primitive.ObjectIDFromHex(userID)
+	userOID, err := repository.ParseID(userID)
 	if err != nil {
 		return nil, fmt.Errorf("invalid user ID: %w", err)
 	}
@@ -152,12 +151,12 @@ func (s *BookmarkServiceImpl) GetUserBookmarks(ctx context.Context, userID strin
 
 // GetBookBookmarks 获取书籍书签
 func (s *BookmarkServiceImpl) GetBookBookmarks(ctx context.Context, userID, bookID string, page, size int) (*BookmarkListResponse, error) {
-	userOID, err := primitive.ObjectIDFromHex(userID)
+	userOID, err := repository.ParseID(userID)
 	if err != nil {
 		return nil, fmt.Errorf("invalid user ID: %w", err)
 	}
 
-	bookOID, err := primitive.ObjectIDFromHex(bookID)
+	bookOID, err := repository.ParseID(bookID)
 	if err != nil {
 		return nil, fmt.Errorf("invalid book ID: %w", err)
 	}
@@ -184,7 +183,7 @@ func (s *BookmarkServiceImpl) GetBookBookmarks(ctx context.Context, userID, book
 
 // UpdateBookmark 更新书签
 func (s *BookmarkServiceImpl) UpdateBookmark(ctx context.Context, bookmarkID string, bookmark *readermodels.Bookmark) error {
-	id, err := primitive.ObjectIDFromHex(bookmarkID)
+	id, err := repository.ParseID(bookmarkID)
 	if err != nil {
 		return fmt.Errorf("invalid bookmark ID: %w", err)
 	}
@@ -216,7 +215,7 @@ func (s *BookmarkServiceImpl) UpdateBookmark(ctx context.Context, bookmarkID str
 
 // DeleteBookmark 删除书签
 func (s *BookmarkServiceImpl) DeleteBookmark(ctx context.Context, bookmarkID string) error {
-	id, err := primitive.ObjectIDFromHex(bookmarkID)
+	id, err := repository.ParseID(bookmarkID)
 	if err != nil {
 		return fmt.Errorf("invalid bookmark ID: %w", err)
 	}
@@ -226,7 +225,7 @@ func (s *BookmarkServiceImpl) DeleteBookmark(ctx context.Context, bookmarkID str
 
 // ExportBookmarks 导出书签
 func (s *BookmarkServiceImpl) ExportBookmarks(ctx context.Context, userID, format string) ([]byte, string, error) {
-	userOID, err := primitive.ObjectIDFromHex(userID)
+	userOID, err := repository.ParseID(userID)
 	if err != nil {
 		return nil, "", fmt.Errorf("invalid user ID: %w", err)
 	}
@@ -289,7 +288,7 @@ func (s *BookmarkServiceImpl) exportCSV(bookmarks []*readermodels.Bookmark) ([]b
 
 // GetBookmarkStats 获取书签统计
 func (s *BookmarkServiceImpl) GetBookmarkStats(ctx context.Context, userID string) (*readermodels.BookmarkStats, error) {
-	userOID, err := primitive.ObjectIDFromHex(userID)
+	userOID, err := repository.ParseID(userID)
 	if err != nil {
 		return nil, fmt.Errorf("invalid user ID: %w", err)
 	}
@@ -304,7 +303,7 @@ func (s *BookmarkServiceImpl) GetBookmarkStats(ctx context.Context, userID strin
 
 // SearchBookmarks 搜索书签
 func (s *BookmarkServiceImpl) SearchBookmarks(ctx context.Context, userID, keyword string, page, size int) (*BookmarkListResponse, error) {
-	userOID, err := primitive.ObjectIDFromHex(userID)
+	userOID, err := repository.ParseID(userID)
 	if err != nil {
 		return nil, fmt.Errorf("invalid user ID: %w", err)
 	}
@@ -331,7 +330,7 @@ func (s *BookmarkServiceImpl) SearchBookmarks(ctx context.Context, userID, keywo
 
 // ImportBookmarks 导入书签
 func (s *BookmarkServiceImpl) ImportBookmarks(ctx context.Context, userID string, reader io.Reader) error {
-	userOID, err := primitive.ObjectIDFromHex(userID)
+	userOID, err := repository.ParseID(userID)
 	if err != nil {
 		return fmt.Errorf("invalid user ID: %w", err)
 	}
@@ -363,15 +362,15 @@ func (s *BookmarkServiceImpl) ImportBookmarks(ctx context.Context, userID string
 		}
 
 		// 尝试解析ID
-		if bookID, err := primitive.ObjectIDFromHex(record[0]); err == nil {
+		if bookID, err := repository.ParseID(record[0]); err == nil {
 			bookmark.BookID = bookID
 		}
-		if chapterID, err := primitive.ObjectIDFromHex(record[1]); err == nil {
+		if chapterID, err := repository.ParseID(record[1]); err == nil {
 			bookmark.ChapterID = chapterID
 		}
 
 		// 创建书签
-		s.bookmarkRepo.Create(ctx, bookmark)
+		_ = s.bookmarkRepo.Create(ctx, bookmark)
 	}
 
 	return nil

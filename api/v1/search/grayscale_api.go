@@ -23,21 +23,21 @@ func NewGrayscaleAPI(searchService *searchService.SearchService) *GrayscaleAPI {
 
 // UpdateGrayscaleConfigRequest 更新灰度配置请求
 type UpdateGrayscaleConfigRequest struct {
-	Enabled bool   `json:"enabled" binding:"required"` // 是否启用灰度
+	Enabled bool   `json:"enabled" binding:"required"`               // 是否启用灰度
 	Percent int    `json:"percent" binding:"required,min=0,max=100"` // 灰度百分比(0-100)
-	Reason  string `json:"reason"`                     // 更新原因
+	Reason  string `json:"reason"`                                   // 更新原因
 }
 
 // GrayscaleStatusResponse 灰度状态响应
 type GrayscaleStatusResponse struct {
-	Enabled         bool    `json:"enabled"`           // 是否启用灰度
-	Percent         int     `json:"percent"`           // 灰度百分比
-	ESCount         int64   `json:"es_count"`          // ES 使用次数
-	MongoDBCount    int64   `json:"mongodb_count"`     // MongoDB 使用次数
-	ESTraffic       float64 `json:"es_traffic"`        // ES 流量百分比
-	MongoDBTraffic  float64 `json:"mongodb_traffic"`   // MongoDB 流量百分比
-	ESAvgTook       int64   `json:"es_avg_took_ms"`    // ES 平均耗时（毫秒）
-	MongoDBAvgTook  int64   `json:"mongodb_avg_took_ms"` // MongoDB 平均耗时（毫秒）
+	Enabled        bool    `json:"enabled"`             // 是否启用灰度
+	Percent        int     `json:"percent"`             // 灰度百分比
+	ESCount        int64   `json:"es_count"`            // ES 使用次数
+	MongoDBCount   int64   `json:"mongodb_count"`       // MongoDB 使用次数
+	ESTraffic      float64 `json:"es_traffic"`          // ES 流量百分比
+	MongoDBTraffic float64 `json:"mongodb_traffic"`     // MongoDB 流量百分比
+	ESAvgTook      int64   `json:"es_avg_took_ms"`      // ES 平均耗时（毫秒）
+	MongoDBAvgTook int64   `json:"mongodb_avg_took_ms"` // MongoDB 平均耗时（毫秒）
 }
 
 // GrayscaleMetricsResponse 灰度指标响应
@@ -46,8 +46,8 @@ type GrayscaleMetricsResponse struct {
 	Config GrayscaleConfig `json:"config"`
 
 	// 使用统计
-	ESCount        int64   `json:"es_count"`
-	MongoDBCount   int64   `json:"mongodb_count"`
+	ESCount      int64 `json:"es_count"`
+	MongoDBCount int64 `json:"mongodb_count"`
 
 	// 流量分配
 	ESTraffic      float64 `json:"es_traffic"`
@@ -58,8 +58,8 @@ type GrayscaleMetricsResponse struct {
 	MongoDBAvgTook float64 `json:"mongodb_avg_took_ms"`
 
 	// 决策统计
-	TotalDecisions  int64 `json:"total_decisions"`
-	ESDecisions     int64 `json:"es_decisions"`
+	TotalDecisions   int64 `json:"total_decisions"`
+	ESDecisions      int64 `json:"es_decisions"`
 	MongoDBDecisions int64 `json:"mongodb_decisions"`
 }
 
@@ -314,14 +314,14 @@ func (api *GrayscaleAPI) GetGrayscaleMetrics(c *gin.Context) {
 			Enabled: config.Enabled,
 			Percent: config.Percent,
 		},
-		ESCount:         metrics.ESCount,
-		MongoDBCount:    metrics.MongoDBCount,
-		ESTraffic:       esTraffic,
-		MongoDBTraffic:  mongoTraffic,
-		ESAvgTook:       esAvgTook,
-		MongoDBAvgTook:  mongoAvgTook,
-		TotalDecisions:  totalDecisions,
-		ESDecisions:     metrics.ESCount,
+		ESCount:          metrics.ESCount,
+		MongoDBCount:     metrics.MongoDBCount,
+		ESTraffic:        esTraffic,
+		MongoDBTraffic:   mongoTraffic,
+		ESAvgTook:        esAvgTook,
+		MongoDBAvgTook:   mongoAvgTook,
+		TotalDecisions:   totalDecisions,
+		ESDecisions:      metrics.ESCount,
 		MongoDBDecisions: metrics.MongoDBCount,
 	}
 

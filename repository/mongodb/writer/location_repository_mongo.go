@@ -7,8 +7,8 @@ import (
 
 	"Qingyu_backend/models/writer"
 	"Qingyu_backend/pkg/errors"
-	"Qingyu_backend/repository/mongodb/base"
 	writerRepo "Qingyu_backend/repository/interfaces/writer"
+	"Qingyu_backend/repository/mongodb/base"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -17,7 +17,7 @@ import (
 
 // LocationRepositoryMongo Location Repository的MongoDB实现
 type LocationRepositoryMongo struct {
-	*base.BaseMongoRepository // 嵌入location集合的基类
+	*base.BaseMongoRepository                   // 嵌入location集合的基类
 	relationCollection        *mongo.Collection // relation集合单独管理
 }
 

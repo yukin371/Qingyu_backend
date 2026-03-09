@@ -31,11 +31,11 @@ type Repository[T Cacheable] interface {
 
 // CacheConfig 缓存配置结构体
 type CacheConfig struct {
-	Enabled           bool                // 总开关
-	DoubleDeleteDelay time.Duration       // 双删策略延迟
-	NullCacheTTL      time.Duration       // 空值缓存TTL
-	NullCachePrefix   string              // 空值缓存前缀 (@@NULL@@)
-	BreakerSettings   gobreaker.Settings  // 熔断器设置
+	Enabled           bool               // 总开关
+	DoubleDeleteDelay time.Duration      // 双删策略延迟
+	NullCacheTTL      time.Duration      // 空值缓存TTL
+	NullCachePrefix   string             // 空值缓存前缀 (@@NULL@@)
+	BreakerSettings   gobreaker.Settings // 熔断器设置
 }
 
 // CachedRepository 缓存装饰器

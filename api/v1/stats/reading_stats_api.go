@@ -6,8 +6,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	readingStatsService "Qingyu_backend/service/reader/stats"
 	"Qingyu_backend/pkg/response"
+	readingStatsService "Qingyu_backend/service/reader/stats"
 )
 
 // ReadingStatsAPI 阅读统计API处理器

@@ -118,7 +118,7 @@ func (s *BookstoreCachedService) WarmUpCache(ctx context.Context) error {
 		data := make(map[string]interface{})
 		for _, book := range hotBooks {
 			// book.ID 是 primitive.ObjectID，需要转换为 string
-		bookID := book.ID.Hex()
+			bookID := book.ID.Hex()
 			cacheKey := cache.BuildBookKey(bookID, "detail")
 			data[cacheKey] = book
 		}

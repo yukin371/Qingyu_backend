@@ -7,8 +7,8 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/models/stats"
-	readingStats "Qingyu_backend/service/reader/stats"
 	"Qingyu_backend/pkg/response"
+	readingStats "Qingyu_backend/service/reader/stats"
 )
 
 // StatsApi 阅读/书店统计API
@@ -38,7 +38,7 @@ func NewStatsApi(statsService *readingStats.ReadingStatsService) *StatsApi {
 func (api *StatsApi) GetBookStats(c *gin.Context) {
 	bookID := c.Param("book_id")
 	if bookID == "" {
-		response.BadRequest(c,  "参数错误", "作品ID不能为空")
+		response.BadRequest(c, "参数错误", "作品ID不能为空")
 		return
 	}
 
@@ -71,7 +71,7 @@ func (api *StatsApi) GetBookStats(c *gin.Context) {
 func (api *StatsApi) GetChapterStats(c *gin.Context) {
 	chapterID := c.Param("chapter_id")
 	if chapterID == "" {
-		response.BadRequest(c,  "参数错误", "章节ID不能为空")
+		response.BadRequest(c, "参数错误", "章节ID不能为空")
 		return
 	}
 
@@ -104,7 +104,7 @@ func (api *StatsApi) GetChapterStats(c *gin.Context) {
 func (api *StatsApi) GetBookHeatmap(c *gin.Context) {
 	bookID := c.Param("book_id")
 	if bookID == "" {
-		response.BadRequest(c,  "参数错误", "作品ID不能为空")
+		response.BadRequest(c, "参数错误", "作品ID不能为空")
 		return
 	}
 
@@ -134,7 +134,7 @@ func (api *StatsApi) GetBookHeatmap(c *gin.Context) {
 func (api *StatsApi) GetBookRevenue(c *gin.Context) {
 	bookID := c.Param("book_id")
 	if bookID == "" {
-		response.BadRequest(c,  "参数错误", "作品ID不能为空")
+		response.BadRequest(c, "参数错误", "作品ID不能为空")
 		return
 	}
 
@@ -148,7 +148,7 @@ func (api *StatsApi) GetBookRevenue(c *gin.Context) {
 	if startDateStr != "" {
 		startDate, err = time.Parse("2006-01-02", startDateStr)
 		if err != nil {
-			response.BadRequest(c,  "参数错误", "开始日期格式错误")
+			response.BadRequest(c, "参数错误", "开始日期格式错误")
 			return
 		}
 	} else {
@@ -159,7 +159,7 @@ func (api *StatsApi) GetBookRevenue(c *gin.Context) {
 	if endDateStr != "" {
 		endDate, err = time.Parse("2006-01-02", endDateStr)
 		if err != nil {
-			response.BadRequest(c,  "参数错误", "结束日期格式错误")
+			response.BadRequest(c, "参数错误", "结束日期格式错误")
 			return
 		}
 	} else {
@@ -190,7 +190,7 @@ func (api *StatsApi) GetBookRevenue(c *gin.Context) {
 func (api *StatsApi) GetTopChapters(c *gin.Context) {
 	bookID := c.Param("book_id")
 	if bookID == "" {
-		response.BadRequest(c,  "参数错误", "作品ID不能为空")
+		response.BadRequest(c, "参数错误", "作品ID不能为空")
 		return
 	}
 
@@ -219,7 +219,7 @@ func (api *StatsApi) GetTopChapters(c *gin.Context) {
 func (api *StatsApi) GetDailyStats(c *gin.Context) {
 	bookID := c.Param("book_id")
 	if bookID == "" {
-		response.BadRequest(c,  "参数错误", "作品ID不能为空")
+		response.BadRequest(c, "参数错误", "作品ID不能为空")
 		return
 	}
 
@@ -227,7 +227,7 @@ func (api *StatsApi) GetDailyStats(c *gin.Context) {
 	daysStr := c.DefaultQuery("days", "7")
 	days, err := strconv.Atoi(daysStr)
 	if err != nil || days < 1 || days > 365 {
-		response.BadRequest(c,  "参数错误", "天数必须在1-365之间")
+		response.BadRequest(c, "参数错误", "天数必须在1-365之间")
 		return
 	}
 
@@ -255,7 +255,7 @@ func (api *StatsApi) GetDailyStats(c *gin.Context) {
 func (api *StatsApi) GetDropOffPoints(c *gin.Context) {
 	bookID := c.Param("book_id")
 	if bookID == "" {
-		response.BadRequest(c,  "参数错误", "作品ID不能为空")
+		response.BadRequest(c, "参数错误", "作品ID不能为空")
 		return
 	}
 
@@ -283,7 +283,7 @@ func (api *StatsApi) GetDropOffPoints(c *gin.Context) {
 func (api *StatsApi) RecordBehavior(c *gin.Context) {
 	var behavior stats.ReaderBehavior
 	if err := c.ShouldBindJSON(&behavior); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -318,7 +318,7 @@ func (api *StatsApi) RecordBehavior(c *gin.Context) {
 func (api *StatsApi) GetRetentionRate(c *gin.Context) {
 	bookID := c.Param("book_id")
 	if bookID == "" {
-		response.BadRequest(c,  "参数错误", "作品ID不能为空")
+		response.BadRequest(c, "参数错误", "作品ID不能为空")
 		return
 	}
 
@@ -326,7 +326,7 @@ func (api *StatsApi) GetRetentionRate(c *gin.Context) {
 	daysStr := c.DefaultQuery("days", "7")
 	days, err := strconv.Atoi(daysStr)
 	if err != nil || days < 1 || days > 90 {
-		response.BadRequest(c,  "参数错误", "天数必须在1-90之间")
+		response.BadRequest(c, "参数错误", "天数必须在1-90之间")
 		return
 	}
 

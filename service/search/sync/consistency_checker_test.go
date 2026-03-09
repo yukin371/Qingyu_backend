@@ -91,32 +91,32 @@ func TestGetElasticsearchIndex(t *testing.T) {
 	checker := NewConsistencyChecker(nil, nil, mockEngine, nil, logger, nil)
 
 	tests := []struct {
-		name     string
+		name       string
 		collection string
 		expected   string
 	}{
 		{
-			name:     "books collection",
+			name:       "books collection",
 			collection: "books",
 			expected:   "books_search",
 		},
 		{
-			name:     "projects collection",
+			name:       "projects collection",
 			collection: "projects",
 			expected:   "projects_search",
 		},
 		{
-			name:     "documents collection",
+			name:       "documents collection",
 			collection: "documents",
 			expected:   "documents_search",
 		},
 		{
-			name:     "users collection",
+			name:       "users collection",
 			collection: "users",
 			expected:   "users_search",
 		},
 		{
-			name:     "unknown collection",
+			name:       "unknown collection",
 			collection: "unknown",
 			expected:   "unknown_search",
 		},
@@ -174,7 +174,7 @@ func TestStartScheduledCheck(t *testing.T) {
 	logger := zaptest.NewLogger(t)
 	config := &CheckerConfig{
 		CheckInterval: 100 * time.Millisecond, // 快速测试
-		AutoRepair:     false,
+		AutoRepair:    false,
 	}
 
 	checker := NewConsistencyChecker(nil, nil, mockEngine, nil, logger, config)

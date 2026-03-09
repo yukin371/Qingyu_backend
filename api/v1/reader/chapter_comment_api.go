@@ -8,9 +8,10 @@ import (
 
 	readerModels "Qingyu_backend/models/reader"
 
+	"Qingyu_backend/pkg/response"
+
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"Qingyu_backend/pkg/response"
 )
 
 // ChapterCommentAPI 章节评论API
@@ -89,6 +90,7 @@ func (api *ChapterCommentAPI) GetChapterComments(c *gin.Context) {
 	if sortOrder != "asc" && sortOrder != "desc" {
 		sortOrder = "desc"
 	}
+	_ = sortOrder
 
 	// 获取父评论ID参数
 	var _ *string

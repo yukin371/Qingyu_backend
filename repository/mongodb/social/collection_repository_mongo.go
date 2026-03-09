@@ -663,8 +663,34 @@ func (r *MongoCollectionRepository) Health(ctx context.Context) error {
 	return r.GetDB().Client().Ping(ctx, nil)
 }
 
+// isReplicaSet 检查 MongoDB 是否是副本集（支持事务）
+func (r *MongoCollectionRepository) isReplicaSet(ctx context.Context) bool {
+	client := r.GetDB().Client()
+	adminDB := client.Database("admin")
+
+	var result struct {
+		Ok      int    `bson:"ok"`
+		SetName string `bson:"setName,omitempty"`
+	}
+
+	err := adminDB.RunCommand(ctx, map[string]interface{}{"isMaster": 1}).Decode(&result)
+	if err != nil {
+		return false
+	}
+
+	return result.SetName != ""
+}
+
 // RunInTransaction 在事务中执行收藏相关操作
+// 如果 MongoDB 不支持事务（单节点），则直接执行操作（降级模式）
 func (r *MongoCollectionRepository) RunInTransaction(ctx context.Context, fn func(context.Context) error) error {
+	// 检查是否支持事务
+	if !r.isReplicaSet(ctx) {
+		// 降级模式：直接执行操作，不使用事务
+		return fn(ctx)
+	}
+
+	// 副本集模式：使用事务
 	session, err := r.GetDB().Client().StartSession()
 	if err != nil {
 		return fmt.Errorf("failed to start collection transaction session: %w", err)
