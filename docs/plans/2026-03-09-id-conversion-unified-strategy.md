@@ -172,11 +172,10 @@ func (s *BookmarkService) GetBookmark(ctx context.Context, id string) (*dto.Book
 ```
 
 ### 2.3 验收标准
-
-- [ ] 1-2个试点模块完成迁移
-- [ ] Service层使用统一ParseID替代ObjectIDFromHex
-- [ ] 所有现有测试通过
-- [ ] Mock编译检查通过
+- [x] 1-2个试点模块完成迁移 ✅
+- [x] Service层使用统一ParseID替代ObjectIDFromHex ✅
+- [x] 所有现有测试通过 ✅
+- [x] Mock编译检查通过 ✅
 
 ---
 
