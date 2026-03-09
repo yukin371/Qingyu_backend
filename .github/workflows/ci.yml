@@ -173,7 +173,7 @@ jobs:
   integration-tests:
     name: Integration Tests
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
 
     steps:
       - name: Checkout code
@@ -219,6 +219,11 @@ jobs:
 
       - name: Wait for gRPC AI Service
         run: |
+          if ! docker ps --format '{{.Names}}' | grep -qx 'qingyu-grpc-ai-test'; then
+            echo "gRPC AI Service container is not started in this workflow. Skipping readiness check."
+            exit 0
+          fi
+
           for i in {1..30}; do
             if docker exec qingyu-grpc-ai-test python -c "import socket; s=socket.socket(); s.settimeout(2); s.connect(('localhost', 50051)); s.close()" 2>/dev/null; then
               echo "gRPC AI Service is ready!"
@@ -227,6 +232,7 @@ jobs:
             echo "Waiting for gRPC AI Service... ($i/30)"
             sleep 2
           done
+
           echo "gRPC AI Service check skipped (integration tests may not require it)"
           docker compose -f docker/docker-compose.test.yml logs grpc-ai-service || true
 
@@ -250,7 +256,8 @@ jobs:
           GRPC_AI_SERVICE_ADDR: localhost:50051
           ENVIRONMENT: test
         run: |
-          go test -v -race -timeout 10m \
+          # Keep Simple CI at smoke-test depth. The full integration suite runs in test.yml.
+          go test -v -race -count=1 -short -timeout 8m \
             ./test/integration/...
 
       - name: Show logs on failure
@@ -316,6 +323,11 @@ jobs:
 
       - name: Wait for gRPC AI Service
         run: |
+          if ! docker ps --format '{{.Names}}' | grep -qx 'qingyu-grpc-ai-test'; then
+            echo "gRPC AI Service container is not started in this workflow. Skipping readiness check."
+            exit 0
+          fi
+
           for i in {1..30}; do
             if docker exec qingyu-grpc-ai-test python -c "import socket; s=socket.socket(); s.settimeout(2); s.connect(('localhost', 50051)); s.close()" 2>/dev/null; then
               echo "gRPC AI Service is ready!"
@@ -324,6 +336,7 @@ jobs:
             echo "Waiting for gRPC AI Service... ($i/30)"
             sleep 2
           done
+
           echo "gRPC AI Service check skipped (may not be needed for API tests)"
 
       - name: Download dependencies
