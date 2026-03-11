@@ -378,6 +378,43 @@ func TestProgressAPI_SaveReadingProgress_Success(t *testing.T) {
 	mockService.AssertExpectations(t)
 }
 
+// TestProgressAPI_SaveReadingProgress_ZeroProgress 测试保存阅读进度-允许0进度
+func TestProgressAPI_SaveReadingProgress_ZeroProgress(t *testing.T) {
+	// Given
+	mockService := new(MockReaderService)
+	userID := primitive.NewObjectID().Hex()
+	bookID := primitive.NewObjectID().Hex()
+	chapterID := primitive.NewObjectID().Hex()
+	router := setupProgressTestRouter(mockService, userID)
+
+	mockService.On("SaveReadingProgress", mock.Anything, userID, bookID, chapterID, 0.0).
+		Return(nil)
+
+	reqBody := map[string]interface{}{
+		"bookId":    bookID,
+		"chapterId": chapterID,
+		"progress":  0.0,
+	}
+
+	jsonBody, _ := json.Marshal(reqBody)
+	req, _ := http.NewRequest("POST", "/api/v1/reader/progress", bytes.NewBuffer(jsonBody))
+	req.Header.Set("Content-Type", "application/json")
+
+	// When
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, float64(0), response["code"])
+
+	mockService.AssertExpectations(t)
+}
+
 // TestProgressAPI_SaveReadingProgress_MissingBookID 测试保存阅读进度-缺少bookId
 func TestProgressAPI_SaveReadingProgress_MissingBookID(t *testing.T) {
 	// Given

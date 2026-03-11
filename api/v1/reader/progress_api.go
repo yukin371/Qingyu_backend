@@ -33,7 +33,7 @@ func NewProgressAPI(readerService interfaces.ReaderService) *ProgressAPI {
 type SaveProgressRequest struct {
 	BookID    string  `json:"bookId" binding:"required"`
 	ChapterID string  `json:"chapterId" binding:"required"`
-	Progress  float64 `json:"progress" binding:"required,min=0,max=1"`
+	Progress  float64 `json:"progress" binding:"min=0,max=1"`
 }
 
 // UpdateReadingTimeRequest 更新阅读时长请求

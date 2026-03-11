@@ -24,4 +24,9 @@ func InitSystemRoutes(router *gin.RouterGroup) {
 		systemGroup.GET("/metrics", healthAPI.AllMetrics)
 		systemGroup.GET("/metrics/:service", healthAPI.ServiceMetrics)
 	}
+
+	errorGroup := router.Group("/errors")
+	{
+		errorGroup.POST("/report", healthAPI.ReportClientErrors)
+	}
 }
