@@ -27,6 +27,7 @@ go build -o seeder .
 |------|------|------|
 | `all` | 填充所有基础数据（用户、书籍、订阅关系） | - |
 | `users` | 只填充用户数据 | - |
+| `categories` | 填充标准分类数据（8个分类） | - |
 | `bookstore` | 只填充书籍数据和Banner | - |
 | `chapters` | 填充章节数据和内容 | books |
 | `social` | 填充社交数据（评论、点赞、收藏、关注） | users, books |
@@ -80,6 +81,9 @@ go build -o seeder .
 ```bash
 # 只填充用户
 ./seeder users -s medium
+
+# 只填充分类
+./seeder categories --clean
 
 # 只填充书籍
 ./seeder bookstore -s large
@@ -155,16 +159,24 @@ go build -o seeder .
 
 ### 书籍数据 (bookstore)
 - **分类比例**：
-  - 仙侠: 30%
-  - 都市: 25%
-  - 科幻: 20%
-  - 历史: 15%
-  - 其他: 10%
+  - 仙侠: 25%
+  - 都市: 20%
+  - 科幻: 15%
+  - 历史: 10%
+  - 玄幻: 10%
+  - 武侠: 8%
+  - 游戏: 7%
+  - 奇幻: 5%
 - **热度等级**：
   - 高热度：评分 8.5-9.5，200-500 订阅
   - 中热度：评分 6.0-8.5，20-200 订阅
   - 低热度：评分 4.0-6.0，0-20 订阅
 - **Banner 数据**: 2个轮播图
+
+### 分类数据 (categories)
+- 标准 8 个顶级分类
+- 书籍写入真实 `category_ids`
+- 同时保留 `categories` 名称快照便于展示
 
 ### 章节数据 (chapters)
 - 为每本书生成 30-500 章（根据书籍状态）
@@ -319,6 +331,7 @@ sudo systemctl start mongod  # Linux
 
 某些命令需要先运行其他命令：
 - `chapters` 需要先运行 `bookstore`
+- `bookstore` 会自动确保 `categories` 已填充
 - `social` 需要先运行 `users` 和 `bookstore`
 - `wallets` 需要先运行 `users`
 - `rankings` 需要先运行 `bookstore`

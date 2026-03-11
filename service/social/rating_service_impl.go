@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
+	"strconv"
 	"time"
 
 	"Qingyu_backend/models/social"
@@ -154,19 +155,9 @@ func (s *RatingServiceImplementation) aggregateBookRatings(ctx context.Context, 
 		return nil, fmt.Errorf("获取书籍评分统计失败: %w", err)
 	}
 
-	// 解析评分统计
-	averageRating, _ := statsMap["average_rating"].(float64)
-	totalRatings, _ := statsMap["total_ratings"].(int64)
-
-	// 解析评分分布
-	distribution := make(map[int]int64)
-	if distMap, ok := statsMap["distribution"].(map[string]int64); ok {
-		for ratingStr, count := range distMap {
-			var rating int
-			fmt.Sscanf(ratingStr, "%d", &rating)
-			distribution[rating] = count
-		}
-	}
+	averageRating := getFloat64FromMap(statsMap, "average", "average_rating")
+	totalRatings := getInt64FromMap(statsMap, "total_count", "total_ratings")
+	distribution := buildRatingDistribution(statsMap)
 
 	return &social.RatingStats{
 		TargetID:      bookID,
@@ -262,4 +253,79 @@ func (s *RatingServiceImplementation) calculateTTLWithJitter(baseTTL time.Durati
 		ttl = 0
 	}
 	return time.Duration(ttl)
+}
+
+func getFloat64FromMap(data map[string]interface{}, keys ...string) float64 {
+	for _, key := range keys {
+		value, ok := data[key]
+		if !ok {
+			continue
+		}
+		switch typed := value.(type) {
+		case float64:
+			return typed
+		case float32:
+			return float64(typed)
+		case int:
+			return float64(typed)
+		case int32:
+			return float64(typed)
+		case int64:
+			return float64(typed)
+		}
+	}
+	return 0
+}
+
+func getInt64FromMap(data map[string]interface{}, keys ...string) int64 {
+	for _, key := range keys {
+		value, ok := data[key]
+		if !ok {
+			continue
+		}
+		switch typed := value.(type) {
+		case int:
+			return int64(typed)
+		case int32:
+			return int64(typed)
+		case int64:
+			return typed
+		case float32:
+			return int64(typed)
+		case float64:
+			return int64(typed)
+		}
+	}
+	return 0
+}
+
+func buildRatingDistribution(statsMap map[string]interface{}) map[int]int64 {
+	distribution := map[int]int64{
+		1: getInt64FromMap(statsMap, "one_star"),
+		2: getInt64FromMap(statsMap, "two_star"),
+		3: getInt64FromMap(statsMap, "three_star"),
+		4: getInt64FromMap(statsMap, "four_star"),
+		5: getInt64FromMap(statsMap, "five_star"),
+	}
+
+	if rawDistribution, ok := statsMap["distribution"]; ok {
+		switch typed := rawDistribution.(type) {
+		case map[string]int64:
+			for ratingStr, count := range typed {
+				rating, err := strconv.Atoi(ratingStr)
+				if err == nil {
+					distribution[rating] = count
+				}
+			}
+		case map[string]interface{}:
+			for ratingStr, count := range typed {
+				rating, err := strconv.Atoi(ratingStr)
+				if err == nil {
+					distribution[rating] = getInt64FromMap(map[string]interface{}{"value": count}, "value")
+				}
+			}
+		}
+	}
+
+	return distribution
 }

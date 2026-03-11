@@ -466,22 +466,47 @@ func (api *ChapterAPI) GetChapterContent(c *gin.Context) {
 	}
 
 	// 获取用户ID（从中间件设置的上下文中）
-	var userID primitive.ObjectID
+	userID := ""
 	if userIDValue, exists := c.Get("user_id"); exists {
 		if uid, ok := userIDValue.(string); ok {
-			userID, _ = primitive.ObjectIDFromHex(uid)
+			userID = uid
 		}
 	}
 
-	content, err := api.service.GetChapterContent(c.Request.Context(), id.Hex(), userID.Hex())
+	content, err := api.service.GetChapterContent(c.Request.Context(), id.Hex(), userID)
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
+	paragraphRows, err := api.service.GetChapterParagraphs(c.Request.Context(), id.Hex(), userID)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	paragraphs := make([]map[string]interface{}, 0, len(paragraphRows))
+	for idx, row := range paragraphRows {
+		if row == nil {
+			continue
+		}
+		order := row.ParagraphOrder
+		if order <= 0 {
+			order = idx + 1
+		}
+		paragraphs = append(paragraphs, map[string]interface{}{
+			"id":             row.ID.Hex(),
+			"paragraphOrder": order,
+			"content":        row.Content,
+			"format":         row.Format,
+			"wordCount":      row.WordCount,
+		})
+	}
+
 	response.SuccessWithMessage(c, "获取成功", map[string]interface{}{
 		"chapter_id": id.Hex(),
 		"content":    content,
+		"paragraphs": paragraphs,
 	})
 }
 

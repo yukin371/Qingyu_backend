@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strings"
 	"time"
 
 	bookstoreModel "Qingyu_backend/models/bookstore"
@@ -72,6 +73,12 @@ func (a *PublishDocumentRepositoryAdapter) FindByProjectID(ctx context.Context, 
 // LocalBookstoreClient 直接写入本地书城集合，用于发布 MVP。
 type LocalBookstoreClient struct {
 	db *mongo.Database
+}
+
+type publishedParagraph struct {
+	Order   int
+	Content string
+	Format  string
 }
 
 type PublishEventBusAdapter struct {
@@ -371,10 +378,11 @@ func (c *LocalBookstoreClient) rebuildProjectChapters(ctx context.Context, book 
 
 	totalWords := int64(0)
 	for idx, doc := range documents {
-		content, err := c.getDocumentContent(ctx, doc.ID.Hex())
+		paragraphs, err := c.getDocumentParagraphs(ctx, doc.ID.Hex())
 		if err != nil {
 			return err
 		}
+		content := joinPublishedParagraphs(paragraphs)
 		chapterNum := idx + 1
 		isFree := chapterNum <= freeChapters
 		price := 0.0
@@ -404,16 +412,7 @@ func (c *LocalBookstoreClient) rebuildProjectChapters(ctx context.Context, book 
 		chapterObjectID := insertResult.InsertedID.(primitive.ObjectID)
 		totalWords += int64(chapter.WordCount)
 
-		chapterContent := &bookstoreModel.ChapterContent{
-			ChapterID: chapterObjectID,
-			Content:   content,
-			Format:    bookstoreModel.ContentFormatMarkdown,
-			Version:   1,
-			WordCount: len([]rune(content)),
-		}
-		chapterContent.Hash = chapterContent.CalculateHash()
-		chapterContent.BeforeCreate()
-		if _, err := c.db.Collection("chapter_contents").InsertOne(ctx, chapterContent); err != nil {
+		if err := c.replaceChapterContents(ctx, chapterObjectID, paragraphs, 1); err != nil {
 			return err
 		}
 	}
@@ -429,10 +428,11 @@ func (c *LocalBookstoreClient) upsertSingleChapter(ctx context.Context, book *bo
 		return "", fmt.Errorf("invalid document id: %w", err)
 	}
 
-	content, err := c.getDocumentContent(ctx, req.DocumentID)
+	paragraphs, err := c.getDocumentParagraphs(ctx, req.DocumentID)
 	if err != nil {
 		return "", err
 	}
+	content := joinPublishedParagraphs(paragraphs)
 
 	filter := bson.M{"book_id": book.ID.Hex(), "project_chapter_id": req.DocumentID}
 	chapterDoc := bson.M{}
@@ -470,19 +470,12 @@ func (c *LocalBookstoreClient) upsertSingleChapter(ctx context.Context, book *bo
 		}
 	}
 
-	contentFilter := bson.M{"chapter_id": chapterObjectID}
-	contentUpdates := bson.M{"content": content, "format": bookstoreModel.ContentFormatMarkdown, "word_count": len([]rune(content)), "hash": calculateContentHash(content), "updated_at": now}
-	if count, _ := c.db.Collection("chapter_contents").CountDocuments(ctx, contentFilter); count == 0 {
-		contentUpdates["created_at"] = now
-		contentUpdates["version"] = 1
-		contentUpdates["chapter_id"] = chapterObjectID
-		if _, err := c.db.Collection("chapter_contents").InsertOne(ctx, contentUpdates); err != nil {
-			return "", err
-		}
-	} else {
-		if _, err := c.db.Collection("chapter_contents").UpdateOne(ctx, contentFilter, bson.M{"$set": contentUpdates, "$inc": bson.M{"version": 1}}); err != nil {
-			return "", err
-		}
+	version := 1
+	if latestVersion, latestErr := c.getChapterContentVersion(ctx, chapterObjectID); latestErr == nil && latestVersion > 0 {
+		version = latestVersion + 1
+	}
+	if err := c.replaceChapterContents(ctx, chapterObjectID, paragraphs, version); err != nil {
+		return "", err
 	}
 
 	_, _ = c.db.Collection("books").UpdateOne(ctx, bson.M{"_id": book.ID}, bson.M{"$set": bson.M{"last_synced_at": now, "last_update_at": now, "updated_at": now}, "$inc": bson.M{"chapter_count": 0}})
@@ -552,20 +545,64 @@ func (c *LocalBookstoreClient) listProjectDocuments(ctx context.Context, project
 }
 
 func (c *LocalBookstoreClient) getDocumentContent(ctx context.Context, documentID string) (string, error) {
-	objectID, err := repository.ParseID(documentID)
+	paragraphs, err := c.getDocumentParagraphs(ctx, documentID)
 	if err != nil {
-		return "", fmt.Errorf("invalid document id: %w", err)
-	}
-	var result struct {
-		Content string `bson:"content"`
-	}
-	if err := c.db.Collection("document_contents").FindOne(ctx, bson.M{"document_id": objectID}).Decode(&result); err != nil {
-		if err == mongo.ErrNoDocuments {
-			return "", nil
-		}
 		return "", err
 	}
-	return result.Content, nil
+	return joinPublishedParagraphs(paragraphs), nil
+}
+
+func (c *LocalBookstoreClient) getDocumentParagraphs(ctx context.Context, documentID string) ([]publishedParagraph, error) {
+	objectID, err := repository.ParseID(documentID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid document id: %w", err)
+	}
+
+	filter := bson.M{
+		"document_id":  objectID,
+		"content_type": bookstoreModel.ContentFormatTiptap,
+	}
+	opts := options.Find().SetSort(bson.D{{Key: "paragraph_order", Value: 1}, {Key: "created_at", Value: 1}})
+	cursor, err := c.db.Collection("document_contents").Find(ctx, filter, opts)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var rows []struct {
+		Content        string `bson:"content"`
+		ContentType    string `bson:"content_type"`
+		ParagraphOrder int    `bson:"paragraph_order"`
+	}
+	if err := cursor.All(ctx, &rows); err != nil {
+		return nil, err
+	}
+	if len(rows) > 0 {
+		paragraphs := make([]publishedParagraph, 0, len(rows))
+		for idx, row := range rows {
+			order := row.ParagraphOrder
+			if order <= 0 {
+				order = idx + 1
+			}
+			paragraphs = append(paragraphs, publishedParagraph{
+				Order:   order,
+				Content: strings.TrimSpace(row.Content),
+				Format:  row.ContentType,
+			})
+		}
+		return paragraphs, nil
+	}
+
+	var legacy struct {
+		Content string `bson:"content"`
+	}
+	if err := c.db.Collection("document_contents").FindOne(ctx, bson.M{"document_id": objectID}).Decode(&legacy); err != nil {
+		if err == mongo.ErrNoDocuments {
+			return []publishedParagraph{}, nil
+		}
+		return nil, err
+	}
+	return splitPublishedParagraphs(legacy.Content), nil
 }
 
 func (c *LocalBookstoreClient) listChapterObjectIDs(ctx context.Context, bookID string) ([]primitive.ObjectID, error) {
@@ -616,6 +653,97 @@ func safeTime(ts *time.Time) time.Time {
 func calculateContentHash(content string) string {
 	cc := bookstoreModel.ChapterContent{Content: content}
 	return cc.CalculateHash()
+}
+
+func (c *LocalBookstoreClient) getChapterContentVersion(ctx context.Context, chapterID primitive.ObjectID) (int, error) {
+	opts := options.FindOne().SetSort(bson.D{{Key: "version", Value: -1}})
+	var row struct {
+		Version int `bson:"version"`
+	}
+	if err := c.db.Collection("chapter_contents").FindOne(ctx, bson.M{"chapter_id": chapterID}, opts).Decode(&row); err != nil {
+		if err == mongo.ErrNoDocuments {
+			return 0, nil
+		}
+		return 0, err
+	}
+	return row.Version, nil
+}
+
+func splitPublishedParagraphs(content string) []publishedParagraph {
+	normalized := strings.ReplaceAll(content, "\r\n", "\n")
+	normalized = strings.TrimSpace(normalized)
+	if normalized == "" {
+		return []publishedParagraph{}
+	}
+
+	blocks := strings.Split(normalized, "\n\n")
+	paragraphs := make([]publishedParagraph, 0, len(blocks))
+	order := 1
+	for _, block := range blocks {
+		paragraph := strings.TrimSpace(block)
+		if paragraph == "" {
+			continue
+		}
+		paragraphs = append(paragraphs, publishedParagraph{
+			Order:   order,
+			Content: paragraph,
+			Format:  bookstoreModel.ContentFormatMarkdown,
+		})
+		order++
+	}
+	if len(paragraphs) == 0 {
+		paragraphs = append(paragraphs, publishedParagraph{
+			Order:   1,
+			Content: normalized,
+			Format:  bookstoreModel.ContentFormatMarkdown,
+		})
+	}
+	return paragraphs
+}
+
+func joinPublishedParagraphs(paragraphs []publishedParagraph) string {
+	if len(paragraphs) == 0 {
+		return ""
+	}
+	parts := make([]string, 0, len(paragraphs))
+	for _, paragraph := range paragraphs {
+		parts = append(parts, paragraph.Content)
+	}
+	return strings.Join(parts, "\n\n")
+}
+
+func (c *LocalBookstoreClient) replaceChapterContents(ctx context.Context, chapterID primitive.ObjectID, paragraphs []publishedParagraph, version int) error {
+	if _, err := c.db.Collection("chapter_contents").DeleteMany(ctx, bson.M{"chapter_id": chapterID}); err != nil {
+		return err
+	}
+	if len(paragraphs) == 0 {
+		return nil
+	}
+
+	now := time.Now()
+	docs := make([]interface{}, 0, len(paragraphs))
+	for idx, paragraph := range paragraphs {
+		order := paragraph.Order
+		if order <= 0 {
+			order = idx + 1
+		}
+		content := bookstoreModel.ChapterContent{
+			ID:             primitive.NewObjectID(),
+			ChapterID:      chapterID,
+			Content:        paragraph.Content,
+			Format:         paragraph.Format,
+			Version:        version,
+			ParagraphOrder: order,
+			WordCount:      len([]rune(paragraph.Content)),
+			CreatedAt:      now,
+			UpdatedAt:      now,
+		}
+		content.Hash = calculateContentHash(paragraph.Content)
+		docs = append(docs, content)
+	}
+
+	_, err := c.db.Collection("chapter_contents").InsertMany(ctx, docs)
+	return err
 }
 
 type genericPublishEvent struct {

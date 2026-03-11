@@ -103,26 +103,7 @@ func (s *CommentService) PublishComment(ctx context.Context, userID, bookID, cha
 		comment.ChapterID = chapterID
 	}
 
-	// 自动审核
-	state, reason, err := s.AutoReviewComment(ctx, comment)
-	if err != nil {
-		return nil, fmt.Errorf("评论审核失败: %w", err)
-	}
-
-	comment.State = state
-	if reason != "" {
-		comment.RejectReason = reason
-	}
-
-	// 保存评论
-	if err := s.commentRepo.Create(ctx, comment); err != nil {
-		return nil, fmt.Errorf("保存评论失败: %w", err)
-	}
-
-	// 发布事件
-	s.publishCommentEvent(ctx, "comment.created", comment)
-
-	return comment, nil
+	return s.createAndPersistComment(ctx, comment, "")
 }
 
 // ReplyComment 回复评论
@@ -170,36 +151,78 @@ func (s *CommentService) ReplyComment(ctx context.Context, userID, parentComment
 	comment.RootID = rootID
 	comment.ReplyToUserID = &replyToUserID
 
-	// 自动审核
-	state, reason, err := s.AutoReviewComment(ctx, comment)
-	if err != nil {
-		return nil, fmt.Errorf("回复审核失败: %w", err)
+	return s.createAndPersistComment(ctx, comment, parentCommentID)
+}
+
+// CreateTargetedComment 创建面向任意目标的评论，可附带段落元数据
+func (s *CommentService) CreateTargetedComment(ctx context.Context, comment *social.Comment) (*social.Comment, error) {
+	if comment == nil {
+		return nil, fmt.Errorf("评论不能为空")
+	}
+	if comment.AuthorID == "" {
+		return nil, fmt.Errorf("用户ID不能为空")
+	}
+	if comment.TargetID == "" {
+		return nil, fmt.Errorf("评论目标不能为空")
 	}
 
-	comment.State = state
-	if reason != "" {
-		comment.RejectReason = reason
+	comment.Content = strings.TrimSpace(comment.Content)
+	if len(comment.Content) < 1 || len(comment.Content) > 5000 {
+		return nil, fmt.Errorf("评论内容长度必须在1-5000字之间")
+	}
+	if comment.Rating < 0 || comment.Rating > 5 {
+		return nil, fmt.Errorf("评分必须在0-5之间")
 	}
 
-	if err := s.commentRepo.RunInTransaction(ctx, func(txCtx context.Context) error {
-		if err := s.commentRepo.Create(txCtx, comment); err != nil {
-			return fmt.Errorf("保存回复失败: %w", err)
+	parentCommentID := ""
+	if comment.ParentID != nil && *comment.ParentID != "" {
+		parentCommentID = *comment.ParentID
+		parentComment, err := s.commentRepo.GetByID(ctx, parentCommentID)
+		if err != nil {
+			return nil, fmt.Errorf("父评论不存在: %w", err)
+		}
+		if !parentComment.CanBeReplied() {
+			return nil, fmt.Errorf("该评论当前不可回复")
 		}
 
-		if comment.State == social.CommentStateNormal {
-			if err := s.commentRepo.IncrementReplyCount(txCtx, parentCommentID); err != nil {
-				return fmt.Errorf("更新父评论回复数失败: %w", err)
+		replyToSnapshot := parentComment.AuthorSnapshot
+		if replyToSnapshot == nil {
+			replyToSnapshot = &social.CommentAuthorSnapshot{
+				ID:       parentComment.AuthorID,
+				Username: "",
+				Avatar:   "",
 			}
 		}
-		return nil
-	}); err != nil {
-		return nil, err
+
+		comment.TargetType = parentComment.TargetType
+		comment.TargetID = parentComment.TargetID
+		if comment.BookID == "" {
+			comment.BookID = parentComment.BookID
+		}
+		if comment.ChapterID == "" {
+			comment.ChapterID = parentComment.ChapterID
+		}
+		comment.SetReplyTarget(parentComment, replyToSnapshot)
+		if comment.RichContent == nil {
+			comment.RichContent = parentComment.RichContent
+		}
 	}
 
-	// 发布事件
-	s.publishCommentEvent(ctx, "comment.replied", comment)
+	return s.createAndPersistComment(ctx, comment, parentCommentID)
+}
 
-	return comment, nil
+// ListCommentsByFilter 按过滤器查询评论
+func (s *CommentService) ListCommentsByFilter(ctx context.Context, filter *social.CommentFilter) ([]*social.Comment, int64, error) {
+	if filter == nil {
+		filter = &social.CommentFilter{}
+	}
+	if filter.Limit <= 0 || filter.Limit > 200 {
+		filter.Limit = 20
+	}
+	if filter.Offset < 0 {
+		filter.Offset = 0
+	}
+	return s.commentRepo.ListByFilter(ctx, filter)
 }
 
 // GetCommentList 获取评论列表
@@ -499,6 +522,44 @@ func (s *CommentService) publishCommentEvent(ctx context.Context, eventType stri
 	}
 
 	s.eventBus.PublishAsync(ctx, event)
+}
+
+func (s *CommentService) createAndPersistComment(ctx context.Context, comment *social.Comment, parentCommentID string) (*social.Comment, error) {
+	state, reason, err := s.AutoReviewComment(ctx, comment)
+	if err != nil {
+		return nil, fmt.Errorf("评论审核失败: %w", err)
+	}
+
+	comment.State = state
+	if reason != "" {
+		comment.RejectReason = reason
+	}
+
+	if parentCommentID == "" {
+		if err := s.commentRepo.Create(ctx, comment); err != nil {
+			return nil, fmt.Errorf("保存评论失败: %w", err)
+		}
+		s.publishCommentEvent(ctx, "comment.created", comment)
+		return comment, nil
+	}
+
+	if err := s.commentRepo.RunInTransaction(ctx, func(txCtx context.Context) error {
+		if err := s.commentRepo.Create(txCtx, comment); err != nil {
+			return fmt.Errorf("保存回复失败: %w", err)
+		}
+
+		if comment.State == social.CommentStateNormal {
+			if err := s.commentRepo.IncrementReplyCount(txCtx, parentCommentID); err != nil {
+				return fmt.Errorf("更新父评论回复数失败: %w", err)
+			}
+		}
+		return nil
+	}); err != nil {
+		return nil, err
+	}
+
+	s.publishCommentEvent(ctx, "comment.replied", comment)
+	return comment, nil
 }
 
 // =========================

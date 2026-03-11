@@ -73,11 +73,12 @@ func (b *BaseMongoRepository) GetCollection() *mongo.Collection {
 }
 
 // ===== ID转换辅助方法 =====
-// 这些方法封装了 models/shared/types 中的ID转换逻辑，提供统一的错误处理喵~
+
+// 以后应该使用本层的id_coverter.go中的方法进行ID转换
 
 // ParseID 解析ID字符串为ObjectID
 //
-// 使用 models/shared/types.ParseObjectID 进行转换，提供统一的错误处理喵~
+// 使用 models/shared/types.ParseObjectID 进行转换，提供统一的错误处理
 //
 // 参数：
 //   - id: hex格式的ID字符串

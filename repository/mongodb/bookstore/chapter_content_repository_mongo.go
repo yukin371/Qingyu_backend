@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -16,6 +17,12 @@ import (
 
 	BookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
 )
+
+type chapterParagraph struct {
+	Order   int
+	Content string
+	Format  string
+}
 
 // MongoChapterContentRepository MongoDB 章节内容仓储实现
 type MongoChapterContentRepository struct {
@@ -70,20 +77,38 @@ func (r *MongoChapterContentRepository) GetByID(ctx context.Context, id string) 
 
 // GetByChapterID 根据章节 ID 获取内容
 func (r *MongoChapterContentRepository) GetByChapterID(ctx context.Context, chapterID string) (*bookstore.ChapterContent, error) {
+	contents, err := r.ListByChapterID(ctx, chapterID)
+	if err != nil {
+		return nil, err
+	}
+	return aggregateChapterContents(contents), nil
+}
+
+// ListByChapterID 根据章节 ID 获取分段内容
+func (r *MongoChapterContentRepository) ListByChapterID(ctx context.Context, chapterID string) ([]*bookstore.ChapterContent, error) {
 	objectID, err := r.ParseID(chapterID)
 	if err != nil {
 		return nil, err
 	}
 
-	var content bookstore.ChapterContent
-	err = r.GetCollection().FindOne(ctx, bson.M{"chapter_id": objectID}).Decode(&content)
+	opts := options.Find().SetSort(bson.D{
+		{Key: "paragraph_order", Value: 1},
+		{Key: "created_at", Value: 1},
+		{Key: "_id", Value: 1},
+	})
+
+	cursor, err := r.GetCollection().Find(ctx, bson.M{"chapter_id": objectID}, opts)
 	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			return nil, nil
-		}
-		return nil, fmt.Errorf("failed to get chapter content by chapter_id: %w", err)
+		return nil, fmt.Errorf("failed to list chapter content by chapter_id: %w", err)
 	}
-	return &content, nil
+	defer cursor.Close(ctx)
+
+	var contents []*bookstore.ChapterContent
+	if err := cursor.All(ctx, &contents); err != nil {
+		return nil, fmt.Errorf("failed to decode chapter contents: %w", err)
+	}
+
+	return contents, nil
 }
 
 // Update 更新章节内容
@@ -232,36 +257,54 @@ func (r *MongoChapterContentRepository) UpdateContent(ctx context.Context, chapt
 	if err != nil {
 		return nil, fmt.Errorf("invalid chapter ID: %w", err)
 	}
-	// 先查找现有内容
-	existing, err := r.GetByChapterID(ctx, chapterID)
+	existingContents, err := r.ListByChapterID(ctx, chapterID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to find existing content: %w", err)
 	}
 
-	if existing == nil {
-		// 创建新内容
-		newContent := &bookstore.ChapterContent{
-			ChapterID: objectID,
-			Content:   content,
-			Format:    bookstore.ContentFormatMarkdown,
+	paragraphs := splitLegacyContent(content)
+	now := time.Now()
+	nextVersion := 1
+	if len(existingContents) > 0 {
+		latestVersion, latestErr := r.GetLatestVersion(ctx, chapterID)
+		if latestErr != nil {
+			return nil, fmt.Errorf("failed to get latest version: %w", latestErr)
 		}
-		newContent.BeforeCreate()
-
-		if err := r.Create(ctx, newContent); err != nil {
-			return nil, fmt.Errorf("failed to create content: %w", err)
+		nextVersion = latestVersion + 1
+		if _, err := r.GetCollection().DeleteMany(ctx, bson.M{"chapter_id": objectID}); err != nil {
+			return nil, fmt.Errorf("failed to delete previous chapter contents: %w", err)
 		}
-
-		return newContent, nil
 	}
 
-	// 更新现有内容
-	existing.UpdateContent(content)
-
-	if err := r.Update(ctx, existing); err != nil {
-		return nil, fmt.Errorf("failed to update content: %w", err)
+	docs := make([]interface{}, 0, len(paragraphs))
+	for _, paragraph := range paragraphs {
+		wordCount := len([]rune(paragraph.Content))
+		doc := &bookstore.ChapterContent{
+			ID:             primitive.NewObjectID(),
+			ChapterID:      objectID,
+			Content:        paragraph.Content,
+			Format:         paragraph.Format,
+			Version:        nextVersion,
+			ParagraphOrder: paragraph.Order,
+			WordCount:      wordCount,
+			CreatedAt:      now,
+			UpdatedAt:      now,
+		}
+		doc.Hash = doc.CalculateHash()
+		docs = append(docs, doc)
 	}
 
-	return existing, nil
+	if len(docs) > 0 {
+		if _, err := r.GetCollection().InsertMany(ctx, docs); err != nil {
+			return nil, fmt.Errorf("failed to replace chapter contents: %w", err)
+		}
+	}
+
+	aggregate := aggregateParagraphs(objectID, paragraphs, nextVersion, now)
+	if aggregate != nil {
+		aggregate.Hash = aggregate.CalculateHash()
+	}
+	return aggregate, nil
 }
 
 // Health 健康检查
@@ -270,4 +313,109 @@ func (r *MongoChapterContentRepository) Health(ctx context.Context) error {
 	defer cancel()
 
 	return r.client.Ping(ctx, nil)
+}
+
+func aggregateChapterContents(contents []*bookstore.ChapterContent) *bookstore.ChapterContent {
+	if len(contents) == 0 {
+		return nil
+	}
+
+	paragraphs := make([]chapterParagraph, 0, len(contents))
+	chapterID := contents[0].ChapterID
+	version := contents[0].Version
+	createdAt := contents[0].CreatedAt
+	updatedAt := contents[0].UpdatedAt
+	for idx, item := range contents {
+		order := item.ParagraphOrder
+		if order <= 0 {
+			order = idx + 1
+		}
+		paragraphs = append(paragraphs, chapterParagraph{
+			Order:   order,
+			Content: item.Content,
+			Format:  item.Format,
+		})
+		if item.Version > version {
+			version = item.Version
+		}
+		if item.CreatedAt.Before(createdAt) {
+			createdAt = item.CreatedAt
+		}
+		if item.UpdatedAt.After(updatedAt) {
+			updatedAt = item.UpdatedAt
+		}
+	}
+
+	aggregate := aggregateParagraphs(chapterID, paragraphs, version, updatedAt)
+	if aggregate != nil {
+		aggregate.CreatedAt = createdAt
+	}
+	return aggregate
+}
+
+func aggregateParagraphs(chapterID primitive.ObjectID, paragraphs []chapterParagraph, version int, ts time.Time) *bookstore.ChapterContent {
+	if len(paragraphs) == 0 {
+		return nil
+	}
+
+	contentParts := make([]string, 0, len(paragraphs))
+	wordCount := 0
+	format := paragraphs[0].Format
+	for _, paragraph := range paragraphs {
+		contentParts = append(contentParts, paragraph.Content)
+		wordCount += len([]rune(paragraph.Content))
+		if format == "" && paragraph.Format != "" {
+			format = paragraph.Format
+		}
+	}
+
+	aggregate := &bookstore.ChapterContent{
+		ChapterID: chapterID,
+		Content:   strings.Join(contentParts, "\n\n"),
+		Format:    format,
+		Version:   version,
+		WordCount: wordCount,
+		CreatedAt: ts,
+		UpdatedAt: ts,
+	}
+	aggregate.Hash = aggregate.CalculateHash()
+	return aggregate
+}
+
+func splitLegacyContent(content string) []chapterParagraph {
+	normalized := strings.ReplaceAll(content, "\r\n", "\n")
+	normalized = strings.TrimSpace(normalized)
+	if normalized == "" {
+		return []chapterParagraph{{
+			Order:   1,
+			Content: "",
+			Format:  bookstore.ContentFormatMarkdown,
+		}}
+	}
+
+	blocks := strings.Split(normalized, "\n\n")
+	paragraphs := make([]chapterParagraph, 0, len(blocks))
+	order := 1
+	for _, block := range blocks {
+		paragraph := strings.TrimSpace(block)
+		if paragraph == "" {
+			continue
+		}
+		paragraphs = append(paragraphs, chapterParagraph{
+			Order:   order,
+			Content: paragraph,
+			Format:  bookstore.ContentFormatMarkdown,
+		})
+		order++
+	}
+
+	if len(paragraphs) == 0 {
+		paragraphs = append(paragraphs, chapterParagraph{
+			Order:   1,
+			Content: normalized,
+			Format:  bookstore.ContentFormatMarkdown,
+		})
+	}
+
+	return paragraphs
 }

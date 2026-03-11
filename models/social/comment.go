@@ -90,23 +90,25 @@ type CommentAuthorSnapshot struct {
 
 // CommentFilter 评论查询过滤器
 type CommentFilter struct {
-	TargetType    *CommentTargetType `json:"targetType,omitempty"`
-	TargetID      *string            `json:"targetId,omitempty"`
-	BookID        *string            `json:"bookId,omitempty"`    // 兼容旧版本
-	ChapterID     *string            `json:"chapterId,omitempty"` // 兼容旧版本
-	AuthorID      *string            `json:"authorId,omitempty"`
-	State         *CommentState      `json:"state,omitempty"`
-	ParentID      *string            `json:"parentId,omitempty"` // 只查询顶级评论或指定评论的回复
-	IsPinned      *bool              `json:"isPinned,omitempty"`
-	IsFeatured    *bool              `json:"isFeatured,omitempty"`
-	IsAuthorReply *bool              `json:"isAuthorReply,omitempty"`
-	HasRating     *bool              `json:"hasRating,omitempty"` // 是否有评分
-	StartTime     *time.Time         `json:"startTime,omitempty"`
-	EndTime       *time.Time         `json:"endTime,omitempty"`
-	SortBy        string             `json:"sortBy,omitempty"`
-	SortOrder     string             `json:"sortOrder,omitempty"`
-	Limit         int                `json:"limit,omitempty"`
-	Offset        int                `json:"offset,omitempty"`
+	TargetType     *CommentTargetType `json:"targetType,omitempty"`
+	TargetID       *string            `json:"targetId,omitempty"`
+	BookID         *string            `json:"bookId,omitempty"`    // 兼容旧版本
+	ChapterID      *string            `json:"chapterId,omitempty"` // 兼容旧版本
+	ParagraphID    *string            `json:"paragraphId,omitempty"`
+	ParagraphIndex *int               `json:"paragraphIndex,omitempty"`
+	AuthorID       *string            `json:"authorId,omitempty"`
+	State          *CommentState      `json:"state,omitempty"`
+	ParentID       *string            `json:"parentId,omitempty"` // 只查询顶级评论或指定评论的回复
+	IsPinned       *bool              `json:"isPinned,omitempty"`
+	IsFeatured     *bool              `json:"isFeatured,omitempty"`
+	IsAuthorReply  *bool              `json:"isAuthorReply,omitempty"`
+	HasRating      *bool              `json:"hasRating,omitempty"` // 是否有评分
+	StartTime      *time.Time         `json:"startTime,omitempty"`
+	EndTime        *time.Time         `json:"endTime,omitempty"`
+	SortBy         string             `json:"sortBy,omitempty"`
+	SortOrder      string             `json:"sortOrder,omitempty"`
+	Limit          int                `json:"limit,omitempty"`
+	Offset         int                `json:"offset,omitempty"`
 }
 
 // GetConditions 获取查询条件
@@ -129,6 +131,12 @@ func (f *CommentFilter) GetConditions() map[string]interface{} {
 
 	if f.ChapterID != nil {
 		conditions["chapter_id"] = *f.ChapterID
+	}
+	if f.ParagraphID != nil {
+		conditions["rich_content.paragraph_id"] = *f.ParagraphID
+	}
+	if f.ParagraphIndex != nil {
+		conditions["rich_content.paragraph_index"] = *f.ParagraphIndex
 	}
 
 	if f.AuthorID != nil {

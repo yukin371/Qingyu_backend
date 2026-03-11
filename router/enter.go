@@ -25,10 +25,12 @@ import (
 	userRouter "Qingyu_backend/router/user"
 	writerRouter "Qingyu_backend/router/writer"
 
+	socialRepo "Qingyu_backend/repository/interfaces/social"
 	userRepo "Qingyu_backend/repository/interfaces/user"
 	adminrep "Qingyu_backend/repository/mongodb/admin"
 	authRep "Qingyu_backend/repository/mongodb/auth"
 	recommendationRepo "Qingyu_backend/repository/mongodb/recommendation"
+	mongoSocialRepo "Qingyu_backend/repository/mongodb/social"
 	mongoWriterRepo "Qingyu_backend/repository/mongodb/writer"
 	"Qingyu_backend/service"
 	adminservice "Qingyu_backend/service/admin"
@@ -402,33 +404,45 @@ func RegisterRoutes(r *gin.Engine) {
 		redisClient = rc
 	}
 
-	if redisClient != nil {
-		// 创建RatingService（仓库暂时传nil，待后续集成）
-		ratingSvc := socialService.NewRatingService(
-			nil, // commentRepo - 待实现
-			nil, // reviewRepo - 待实现
-			redisClient,
-			logger,
-		)
-
-		// 创建RatingAPI
-		ratingAPI := socialApi.NewRatingAPI(ratingSvc)
-
-		// 注册评分路由
-		ratingGroup := v1.Group("/ratings")
-		{
-			// 获取评分统计
-			ratingGroup.GET("/:targetType/:targetId/stats", ratingAPI.GetRatingStats)
-
-			// 获取用户评分
-			ratingGroup.GET("/:targetType/:targetId/user-rating", ratingAPI.GetUserRating)
+	ratingRepoFactory := serviceContainer.GetRepositoryFactory()
+	if redisClient != nil && ratingRepoFactory != nil && serviceContainer.GetMongoDB() != nil {
+		var commentRepo socialRepo.CommentRepository
+		if repo := ratingRepoFactory.CreateCommentRepository(); repo != nil {
+			if typedRepo, ok := repo.(socialRepo.CommentRepository); ok {
+				commentRepo = typedRepo
+			}
 		}
+		reviewRepo := mongoSocialRepo.NewMongoReviewRepository(serviceContainer.GetMongoDB())
 
-		logger.Info("✓ 评分路由已注册到: /api/v1/ratings/")
-		logger.Info("  - GET /api/v1/ratings/:targetType/:targetId/stats (获取评分统计)")
-		logger.Info("  - GET /api/v1/ratings/:targetType/:targetId/user-rating (获取用户评分)")
+		if commentRepo == nil || reviewRepo == nil {
+			logger.Warn("⚠ 评分路由依赖未完整初始化，跳过评分路由注册")
+		} else {
+			ratingSvc := socialService.NewRatingService(
+				commentRepo,
+				reviewRepo,
+				redisClient,
+				logger,
+			)
+
+			// 创建RatingAPI
+			ratingAPI := socialApi.NewRatingAPI(ratingSvc)
+
+			// 注册评分路由
+			ratingGroup := v1.Group("/ratings")
+			{
+				// 获取评分统计
+				ratingGroup.GET("/:targetType/:targetId/stats", ratingAPI.GetRatingStats)
+
+				// 获取用户评分
+				ratingGroup.GET("/:targetType/:targetId/user-rating", ratingAPI.GetUserRating)
+			}
+
+			logger.Info("✓ 评分路由已注册到: /api/v1/ratings/")
+			logger.Info("  - GET /api/v1/ratings/:targetType/:targetId/stats (获取评分统计)")
+			logger.Info("  - GET /api/v1/ratings/:targetType/:targetId/user-rating (获取用户评分)")
+		}
 	} else {
-		logger.Warn("⚠ Redis客户端未配置，跳过评分路由注册")
+		logger.Warn("⚠ 评分路由依赖未满足，跳过评分路由注册")
 	}
 
 	// ============ 注册推荐系统路由 ============

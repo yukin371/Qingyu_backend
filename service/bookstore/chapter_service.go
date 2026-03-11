@@ -41,6 +41,7 @@ type ChapterService interface {
 
 	// 章节内容管理
 	GetChapterContent(ctx context.Context, chapterID string, userID string) (string, error)
+	GetChapterParagraphs(ctx context.Context, chapterID string, userID string) ([]*bookstore.ChapterContent, error)
 	UpdateChapterContent(ctx context.Context, chapterID string, content string) error
 	PublishChapter(ctx context.Context, chapterID string) error
 	UnpublishChapter(ctx context.Context, chapterID string) error
@@ -551,7 +552,7 @@ func (s *ChapterServiceImpl) GetChapterContent(ctx context.Context, chapterID st
 		return "", errors.New("user authentication required for paid content")
 	}
 
-	// 从 ChapterContent 表获取内容
+	// 从 ChapterContent 表获取聚合内容
 	content, err := s.contentRepo.GetByChapterID(ctx, chapterID)
 	if err != nil {
 		return "", fmt.Errorf("failed to get chapter content: %w", err)
@@ -561,6 +562,39 @@ func (s *ChapterServiceImpl) GetChapterContent(ctx context.Context, chapterID st
 	}
 
 	return content.Content, nil
+}
+
+// GetChapterParagraphs 获取章节段落内容
+func (s *ChapterServiceImpl) GetChapterParagraphs(ctx context.Context, chapterID string, userID string) ([]*bookstore.ChapterContent, error) {
+	if chapterID == "" {
+		return nil, errors.New("chapter ID cannot be empty")
+	}
+
+	chapter, err := s.chapterRepo.GetByID(ctx, chapterID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get chapter: %w", err)
+	}
+	if chapter == nil {
+		return nil, errors.New("chapter not found")
+	}
+
+	if !chapter.IsPublished() {
+		return nil, errors.New("chapter is not published")
+	}
+
+	if !chapter.IsFree && userID == "" {
+		return nil, errors.New("user authentication required for paid content")
+	}
+
+	contents, err := s.contentRepo.ListByChapterID(ctx, chapterID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to list chapter contents: %w", err)
+	}
+	if len(contents) == 0 {
+		return nil, errors.New("chapter content not found")
+	}
+
+	return contents, nil
 }
 
 // UpdateChapterContent 更新章节内容

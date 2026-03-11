@@ -32,7 +32,7 @@ func NewMongoProjectRepository(db *mongo.Database) writingInterface.ProjectRepos
 
 // Create 创建项目
 // 重构：移除业务逻辑，默认值设置现在由 Service 层的 SetProjectDefaults 方法处理
-// Repository 层只负责数据持久化，参见 Issue #010
+// Repository 层只负责数据持久化
 func (r *MongoProjectRepository) Create(ctx context.Context, project *writer.Project) error {
 	if project == nil {
 		return fmt.Errorf("项目对象不能为空")

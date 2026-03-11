@@ -21,6 +21,7 @@ type CommentRepository interface {
 	GetCommentsByUserID(ctx context.Context, userID string, page, size int) ([]*social.Comment, int64, error)
 	GetRepliesByCommentID(ctx context.Context, commentID string) ([]*social.Comment, error)
 	GetCommentsByChapterID(ctx context.Context, chapterID string, page, size int) ([]*social.Comment, int64, error)
+	ListByFilter(ctx context.Context, filter *social.CommentFilter) ([]*social.Comment, int64, error)
 
 	// 排序查询
 	GetCommentsByBookIDSorted(ctx context.Context, bookID string, sortBy string, page, size int) ([]*social.Comment, int64, error)

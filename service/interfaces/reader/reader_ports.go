@@ -257,14 +257,23 @@ type BaseService interface {
 
 // ChapterContentResponse 章节内容响应
 type ChapterContentResponse struct {
-	ChapterID   string `json:"chapterId"`
-	BookID      string `json:"bookId"`
-	ChapterNum  int    `json:"chapterNum"`
-	Title       string `json:"title"`
-	Content     string `json:"content"`
-	WordCount   int    `json:"wordCount"`
-	IsVIP       bool   `json:"isVip"`
-	PublishedAt int64  `json:"publishedAt"`
+	ChapterID   string             `json:"chapterId"`
+	BookID      string             `json:"bookId"`
+	ChapterNum  int                `json:"chapterNum"`
+	Title       string             `json:"title"`
+	Content     string             `json:"content"`
+	Paragraphs  []ChapterParagraph `json:"paragraphs,omitempty"`
+	WordCount   int                `json:"wordCount"`
+	IsVIP       bool               `json:"isVip"`
+	PublishedAt int64              `json:"publishedAt"`
+}
+
+type ChapterParagraph struct {
+	ID             string `json:"id"`
+	ParagraphOrder int    `json:"paragraphOrder"`
+	Content        string `json:"content"`
+	Format         string `json:"format"`
+	WordCount      int    `json:"wordCount"`
 }
 
 // ChapterInfo 章节信息（不含内容）

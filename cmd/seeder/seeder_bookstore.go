@@ -10,10 +10,27 @@ import (
 	"Qingyu_backend/cmd/seeder/generators"
 	"Qingyu_backend/cmd/seeder/models"
 	"Qingyu_backend/cmd/seeder/utils"
+	bookstoreModel "Qingyu_backend/models/bookstore"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
+type categoryDistribution struct {
+	Name  string
+	Ratio float64
+}
+
+var defaultCategoryDistributions = []categoryDistribution{
+	{Name: "仙侠", Ratio: 0.25},
+	{Name: "都市", Ratio: 0.20},
+	{Name: "科幻", Ratio: 0.15},
+	{Name: "历史", Ratio: 0.10},
+	{Name: "玄幻", Ratio: 0.10},
+	{Name: "武侠", Ratio: 0.08},
+	{Name: "游戏", Ratio: 0.07},
+	{Name: "奇幻", Ratio: 0.05},
+}
 
 // BookstoreSeeder 书城数据填充器
 type BookstoreSeeder struct {
@@ -53,28 +70,39 @@ func (s *BookstoreSeeder) SeedGeneratedBooks() error {
 
 	fmt.Printf("找到 %d 个author用户\n", len(authorIDs))
 
-	// 2. 定义分类和比例
-	categoryRatios := map[string]float64{
-		"仙侠": 0.30, // 30%
-		"都市": 0.25, // 25%
-		"科幻": 0.20, // 20%
-		"历史": 0.15, // 15%
-		"其他": 0.10, // 10%
+	// 2. 读取真实分类，建立标准分类映射
+	categories, err := s.getStandardCategories()
+	if err != nil {
+		return fmt.Errorf("获取分类失败: %w", err)
+	}
+	if len(categories) == 0 {
+		return fmt.Errorf("没有找到分类数据，请先运行分类填充命令")
 	}
 
 	// 3. 存储所有生成的书籍
 	var allBooks []models.Book
 
-	// 4. 按分类生成书籍
-	for category, ratio := range categoryRatios {
-		// 计算该分类的书籍数量
-		count := int(float64(totalBooks) * ratio)
+	remaining := totalBooks
+	for i, distribution := range defaultCategoryDistributions {
+		category, ok := categories[distribution.Name]
+		if !ok {
+			return fmt.Errorf("缺少标准分类: %s", distribution.Name)
+		}
 
-		// 生成该分类的书籍，使用真实的author ID
-		books := s.gen.GenerateBooksFromAuthors(count, category, authorIDs)
+		count := int(float64(totalBooks) * distribution.Ratio)
+		if i == len(defaultCategoryDistributions)-1 {
+			count = remaining
+		}
+		remaining -= count
+		if count <= 0 {
+			continue
+		}
+
+		// 生成该分类的书籍，使用真实分类和 author ID
+		books := s.gen.GenerateBooksFromCategory(count, category, authorIDs)
 		allBooks = append(allBooks, books...)
 
-		fmt.Printf("已生成 %d 本%s类书籍\n", count, category)
+		fmt.Printf("已生成 %d 本%s类书籍\n", count, category.Name)
 	}
 
 	// 5. 批量插入所有书籍
@@ -89,6 +117,26 @@ func (s *BookstoreSeeder) SeedGeneratedBooks() error {
 	s.printAuthorDistributionStats(allBooks, authorIDs)
 
 	return nil
+}
+
+func (s *BookstoreSeeder) getStandardCategories() (map[string]*bookstoreModel.Category, error) {
+	ctx := context.Background()
+	cursor, err := s.db.Collection("categories").Find(ctx, bson.M{"is_active": true})
+	if err != nil {
+		return nil, fmt.Errorf("查询分类失败: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	var categories []*bookstoreModel.Category
+	if err := cursor.All(ctx, &categories); err != nil {
+		return nil, fmt.Errorf("解析分类失败: %w", err)
+	}
+
+	result := make(map[string]*bookstoreModel.Category, len(categories))
+	for _, category := range categories {
+		result[category.Name] = category
+	}
+	return result, nil
 }
 
 // getAuthorUsers 获取author角色的用户ID列表

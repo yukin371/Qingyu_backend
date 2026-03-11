@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"Qingyu_backend/cmd/seeder/models"
+	bookstoreModel "Qingyu_backend/models/bookstore"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -18,6 +19,18 @@ func NewBookGenerator() *BookGenerator {
 	return &BookGenerator{
 		BaseGenerator: NewBaseGenerator(),
 	}
+}
+
+// GenerateBookFromCategory 根据真实分类生成单本书籍。
+func (g *BookGenerator) GenerateBookFromCategory(category *bookstoreModel.Category) models.Book {
+	if category == nil {
+		return g.GenerateBook("仙侠")
+	}
+
+	book := g.GenerateBook(category.Name)
+	book.CategoryIDs = []primitive.ObjectID{category.ID}
+	book.Categories = []string{category.Name}
+	return book
 }
 
 // GenerateBook 根据分类生成单本书籍
@@ -128,10 +141,14 @@ func (g *BookGenerator) GenerateBook(category string) models.Book {
 func (g *BookGenerator) generateTags(category string) []string {
 	// 标签池
 	tagPool := map[string][]string{
+		"玄幻": {"玄幻", "高武", "异界", "热血", "成长", "天才", "冒险", "觉醒", "神通", "争霸"},
 		"仙侠": {"修仙", "玄幻", "热血", "冒险", "升级", "逆天", "天才", "法宝", "丹药", "阵法"},
 		"都市": {"爽文", "系统", "神豪", "异能", "医生", "兵王", "总裁", "重生", "逆袭", "都市"},
 		"科幻": {"未来", "星际", "机甲", "末世", "赛博朋克", "人工智能", "时空", "进化", "战争", "探索"},
+		"武侠": {"江湖", "门派", "刀剑", "侠义", "恩怨", "国术", "秘笈", "宗师", "热血", "历练"},
 		"历史": {"穿越", "权谋", "争霸", "帝王", "名将", "智囊", "建国", "架空", "战争", "策略"},
+		"游戏": {"网游", "电竞", "副本", "升级", "公会", "竞技", "开荒", "职业", "虚拟", "攻略"},
+		"奇幻": {"魔法", "骑士", "巨龙", "精灵", "冒险", "王国", "史诗", "黑暗", "学院", "异界"},
 	}
 
 	// 获取对应分类的标签池
@@ -162,6 +179,25 @@ func (g *BookGenerator) GenerateBooks(count int, category string) []models.Book 
 	return g.GenerateBooksFromAuthors(count, category, nil)
 }
 
+// GenerateBooksFromCategory 批量生成书籍，使用真实分类和作者 ID。
+func (g *BookGenerator) GenerateBooksFromCategory(
+	count int,
+	category *bookstoreModel.Category,
+	authorIDs []primitive.ObjectID,
+) []models.Book {
+	books := make([]models.Book, count)
+
+	for i := 0; i < count; i++ {
+		var authorID primitive.ObjectID
+		if len(authorIDs) > 0 {
+			authorID = authorIDs[i%len(authorIDs)]
+		}
+		books[i] = g.GenerateBookWithCategory(category, authorID)
+	}
+
+	return books
+}
+
 // GenerateBooksFromAuthors 批量生成书籍，使用真实的author用户ID
 func (g *BookGenerator) GenerateBooksFromAuthors(count int, category string, authorIDs []primitive.ObjectID) []models.Book {
 	books := make([]models.Book, count)
@@ -181,6 +217,13 @@ func (g *BookGenerator) GenerateBooksFromAuthors(count int, category string, aut
 // GenerateBookWithAuthor 生成单本书籍，指定author ID
 func (g *BookGenerator) GenerateBookWithAuthor(category string, authorID primitive.ObjectID) models.Book {
 	book := g.GenerateBook(category)
+	book.AuthorID = authorID
+	return book
+}
+
+// GenerateBookWithCategory 生成单本书籍，指定真实分类和作者 ID。
+func (g *BookGenerator) GenerateBookWithCategory(category *bookstoreModel.Category, authorID primitive.ObjectID) models.Book {
+	book := g.GenerateBookFromCategory(category)
 	book.AuthorID = authorID
 	return book
 }

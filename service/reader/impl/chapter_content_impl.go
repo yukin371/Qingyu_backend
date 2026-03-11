@@ -86,6 +86,7 @@ func (c *ChapterContentImpl) GetChapterContentWithProgress(ctx context.Context, 
 		ChapterNum:  resp.ChapterNum,
 		Title:       resp.Title,
 		Content:     resp.Content,
+		Paragraphs:  convertChapterParagraphs(resp.Paragraphs),
 		WordCount:   resp.WordCount,
 		IsVIP:       !resp.CanAccess,        // 如果不能访问则为VIP章节
 		PublishedAt: resp.LastReadAt.Unix(), // 使用 LastReadAt 作为近似值
@@ -107,10 +108,30 @@ func (c *ChapterContentImpl) GetChapterByNumber(ctx context.Context, userID, boo
 		ChapterNum:  resp.ChapterNum,
 		Title:       resp.Title,
 		Content:     resp.Content,
+		Paragraphs:  convertChapterParagraphs(resp.Paragraphs),
 		WordCount:   resp.WordCount,
 		IsVIP:       !resp.CanAccess,
 		PublishedAt: resp.LastReadAt.Unix(),
 	}, nil
+}
+
+func convertChapterParagraphs(paragraphs []readerService.ChapterParagraph) []readerif.ChapterParagraph {
+	if len(paragraphs) == 0 {
+		return nil
+	}
+
+	result := make([]readerif.ChapterParagraph, 0, len(paragraphs))
+	for _, paragraph := range paragraphs {
+		result = append(result, readerif.ChapterParagraph{
+			ID:             paragraph.ID,
+			ParagraphOrder: paragraph.ParagraphOrder,
+			Content:        paragraph.Content,
+			Format:         paragraph.Format,
+			WordCount:      paragraph.WordCount,
+		})
+	}
+
+	return result
 }
 
 // GetNextChapter 获取下一章

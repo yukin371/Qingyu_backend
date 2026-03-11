@@ -45,19 +45,28 @@ type ChapterServiceImpl struct {
 
 // ChapterContentResponse 章节内容响应
 type ChapterContentResponse struct {
-	ChapterID    string    `json:"chapterId"`
-	BookID       string    `json:"bookId"`
-	Title        string    `json:"title"`
-	ChapterNum   int       `json:"chapterNum"`
-	Content      string    `json:"content"`
-	WordCount    int       `json:"wordCount"`
-	HasNext      bool      `json:"hasNext"`
-	HasPrevious  bool      `json:"hasPrevious"`
-	Progress     float64   `json:"progress"`
-	ReadingTime  int64     `json:"readingTime"`
-	LastReadAt   time.Time `json:"lastReadAt"`
-	CanAccess    bool      `json:"canAccess"`
-	AccessReason string    `json:"accessReason,omitempty"`
+	ChapterID    string             `json:"chapterId"`
+	BookID       string             `json:"bookId"`
+	Title        string             `json:"title"`
+	ChapterNum   int                `json:"chapterNum"`
+	Content      string             `json:"content"`
+	Paragraphs   []ChapterParagraph `json:"paragraphs,omitempty"`
+	WordCount    int                `json:"wordCount"`
+	HasNext      bool               `json:"hasNext"`
+	HasPrevious  bool               `json:"hasPrevious"`
+	Progress     float64            `json:"progress"`
+	ReadingTime  int64              `json:"readingTime"`
+	LastReadAt   time.Time          `json:"lastReadAt"`
+	CanAccess    bool               `json:"canAccess"`
+	AccessReason string             `json:"accessReason,omitempty"`
+}
+
+type ChapterParagraph struct {
+	ID             string `json:"id"`
+	ParagraphOrder int    `json:"paragraphOrder"`
+	Content        string `json:"content"`
+	Format         string `json:"format"`
+	WordCount      int    `json:"wordCount"`
 }
 
 // ChapterInfo 章节信息（不含内容）
@@ -127,6 +136,7 @@ func (s *ChapterServiceImpl) GetChapterContent(ctx context.Context, userID, book
 			Title:        chapter.Title,
 			ChapterNum:   chapter.ChapterNum,
 			Content:      "",
+			Paragraphs:   nil,
 			WordCount:    chapter.WordCount,
 			CanAccess:    false,
 			AccessReason: accessReason,
@@ -137,6 +147,28 @@ func (s *ChapterServiceImpl) GetChapterContent(ctx context.Context, userID, book
 	content, err := s.chapterService.GetChapterContent(ctx, chapterID, userID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get chapter content: %w", err)
+	}
+
+	paragraphRows, err := s.chapterService.GetChapterParagraphs(ctx, chapterID, userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get chapter paragraphs: %w", err)
+	}
+	paragraphs := make([]ChapterParagraph, 0, len(paragraphRows))
+	for _, row := range paragraphRows {
+		if row == nil {
+			continue
+		}
+		order := row.ParagraphOrder
+		if order <= 0 {
+			order = len(paragraphs) + 1
+		}
+		paragraphs = append(paragraphs, ChapterParagraph{
+			ID:             row.ID.Hex(),
+			ParagraphOrder: order,
+			Content:        row.Content,
+			Format:         row.Format,
+			WordCount:      row.WordCount,
+		})
 	}
 
 	// 获取导航信息
@@ -165,6 +197,7 @@ func (s *ChapterServiceImpl) GetChapterContent(ctx context.Context, userID, book
 		Title:        chapter.Title,
 		ChapterNum:   chapter.ChapterNum,
 		Content:      content,
+		Paragraphs:   paragraphs,
 		WordCount:    chapter.WordCount,
 		HasNext:      hasNext,
 		HasPrevious:  hasPrevious,

@@ -107,15 +107,13 @@ func BenchmarkGetRatingStats_Book_CacheMiss(b *testing.B) {
 
 	// 设置Comment Repository返回书籍评分统计
 	statsMap := map[string]interface{}{
-		"average_rating": 4.3,
-		"total_ratings":  int64(100),
-		"distribution": map[string]int64{
-			"1": 5,
-			"2": 10,
-			"3": 20,
-			"4": 35,
-			"5": 30,
-		},
+		"average":     4.3,
+		"total_count": int64(100),
+		"one_star":    int64(5),
+		"two_star":    int64(10),
+		"three_star":  int64(20),
+		"four_star":   int64(35),
+		"five_star":   int64(30),
 	}
 	mockCommentRepo.On("GetBookRatingStats", mock.Anything, "book_benchmark").Return(statsMap, nil)
 

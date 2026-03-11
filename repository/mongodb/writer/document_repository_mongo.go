@@ -33,7 +33,7 @@ func NewMongoDocumentRepository(db *mongo.Database) writingInterface.DocumentRep
 
 // Create 创建文档
 // 重构：移除业务逻辑，默认值设置和验证现在由 Service 层处理
-// Repository 层只负责数据持久化，参见 Issue #010
+// Repository 层只负责数据持久化
 func (r *MongoDocumentRepository) Create(ctx context.Context, doc *writer.Document) error {
 	if doc == nil {
 		return fmt.Errorf("文档对象不能为空")

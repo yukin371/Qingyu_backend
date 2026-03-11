@@ -32,6 +32,7 @@ func InitReaderRouter(
 	themeApiHandler := readerApi.NewThemeAPI()
 	fontApiHandler := readerApi.NewFontAPI()
 	chapterCommentApiHandler := readerApi.NewChapterCommentAPI()
+	chapterCommentApiHandler.BindServices(commentService, chapterService)
 
 	// 章节API（使用阅读器专属服务）
 	chapterServiceForReader := readerservice.NewChapterService(chapterService, readerService, nil)

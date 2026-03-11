@@ -12,6 +12,7 @@ type ChapterContentRepository interface {
 	Create(ctx context.Context, content *bookstore.ChapterContent) error
 	GetByID(ctx context.Context, id string) (*bookstore.ChapterContent, error)
 	GetByChapterID(ctx context.Context, chapterID string) (*bookstore.ChapterContent, error)
+	ListByChapterID(ctx context.Context, chapterID string) ([]*bookstore.ChapterContent, error)
 	Update(ctx context.Context, content *bookstore.ChapterContent) error
 	Delete(ctx context.Context, id string) error
 
