@@ -535,8 +535,16 @@ func (s *ContentAuditService) GetUserViolationSummary(ctx context.Context, userI
 
 // GetPendingReviews 获取待复核记录
 func (s *ContentAuditService) GetPendingReviews(ctx context.Context, limit int) ([]*audit.AuditRecord, error) {
+	if s == nil {
+		return []*audit.AuditRecord{}, nil
+	}
+
 	if limit <= 0 {
 		limit = 50
+	}
+
+	if s.auditRecordRepo == nil {
+		return []*audit.AuditRecord{}, nil
 	}
 
 	records, err := s.auditRecordRepo.GetPendingReview(ctx, int64(limit))
@@ -549,11 +557,19 @@ func (s *ContentAuditService) GetPendingReviews(ctx context.Context, limit int) 
 
 // GetHighRiskAudits 获取高风险审核记录
 func (s *ContentAuditService) GetHighRiskAudits(ctx context.Context, minRiskLevel int, limit int) ([]*audit.AuditRecord, error) {
+	if s == nil {
+		return []*audit.AuditRecord{}, nil
+	}
+
 	if minRiskLevel <= 0 {
 		minRiskLevel = audit.LevelHigh
 	}
 	if limit <= 0 {
 		limit = 50
+	}
+
+	if s.auditRecordRepo == nil {
+		return []*audit.AuditRecord{}, nil
 	}
 
 	records, err := s.auditRecordRepo.GetHighRisk(ctx, minRiskLevel, int64(limit))
