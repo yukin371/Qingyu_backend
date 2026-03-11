@@ -28,7 +28,7 @@ func NewMockMongoClient() *MockMongoClient {
 	return &MockMongoClient{
 		events: []bson.M{
 			{
-				"_id": primitive.NewObjectID(),
+				"_id":           primitive.NewObjectID(),
 				"operationType": "insert",
 				"fullDocument": bson.M{
 					"_id":        primitive.NewObjectID(),
@@ -46,7 +46,7 @@ func NewMockMongoClient() *MockMongoClient {
 				"clusterTime": primitive.Timestamp{T: uint32(time.Now().Unix())},
 			},
 			{
-				"_id": primitive.NewObjectID(),
+				"_id":           primitive.NewObjectID(),
 				"operationType": "update",
 				"updateDescription": bson.M{
 					"updatedFields": bson.M{
@@ -63,7 +63,7 @@ func NewMockMongoClient() *MockMongoClient {
 				"clusterTime": primitive.Timestamp{T: uint32(time.Now().Unix())},
 			},
 			{
-				"_id": primitive.NewObjectID(),
+				"_id":           primitive.NewObjectID(),
 				"operationType": "delete",
 				"ns": bson.M{
 					"db":         "testdb",
@@ -254,7 +254,7 @@ func TestFlushEvents(t *testing.T) {
 		})
 
 		listener := &ChangeStreamListenerImpl{
-			zapLogger:      logger,
+			zapLogger:   logger,
 			redisClient: redisClient,
 			eventBuffer: []search.SyncEvent{
 				{
@@ -290,7 +290,7 @@ func TestFlushEvents(t *testing.T) {
 		})
 
 		listener := &ChangeStreamListenerImpl{
-			zapLogger:      logger,
+			zapLogger:   logger,
 			redisClient: redisClient,
 			eventBuffer: []search.SyncEvent{},
 		}

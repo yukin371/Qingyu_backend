@@ -24,13 +24,12 @@ type SearchService struct {
 	config    *Config
 
 	// ES 相关
-	esConfig      *SearchConfig      // ES 配置
-	esEngine      searchengine.Engine // ES 引擎（如果启用）
-	mongoEngine   searchengine.Engine // MongoDB 引擎（fallback）
+	esConfig    *SearchConfig       // ES 配置
+	esEngine    searchengine.Engine // ES 引擎（如果启用）
+	mongoEngine searchengine.Engine // MongoDB 引擎（fallback）
 
 	// 灰度决策
 	grayscaleDecision GrayScaleDecision // 灰度决策器
-	mu                sync.RWMutex     // 读写锁
 }
 
 // Config 搜索服务配置
@@ -54,13 +53,13 @@ func NewSearchService(logger *log.Logger, config *Config, grayscaleDecision Gray
 	}
 
 	return &SearchService{
-		providers:          make(map[search.SearchType]provider.Provider),
-		logger:             logger,
-		config:             config,
-		esConfig:           nil,               // 将通过 SetESConfig 设置
-		esEngine:           nil,               // 将通过 SetESEngine 设置
-		mongoEngine:        nil,               // 将通过 SetMongoEngine 设置
-		grayscaleDecision:  grayscaleDecision, // 灰度决策器
+		providers:         make(map[search.SearchType]provider.Provider),
+		logger:            logger,
+		config:            config,
+		esConfig:          nil,               // 将通过 SetESConfig 设置
+		esEngine:          nil,               // 将通过 SetESEngine 设置
+		mongoEngine:       nil,               // 将通过 SetMongoEngine 设置
+		grayscaleDecision: grayscaleDecision, // 灰度决策器
 	}
 }
 
@@ -462,7 +461,6 @@ func (s *SearchService) ListProviders() []search.SearchType {
 func (s *SearchService) GetGrayscaleDecision() GrayScaleDecision {
 	return s.grayscaleDecision
 }
-
 
 // validateRequest 验证请求参数
 func (s *SearchService) validateRequest(req *search.SearchRequest) error {

@@ -45,10 +45,10 @@ func NewBookstoreStreamService(streamRepo BookStreamRepositoryInterface) *Bookst
 
 // StreamSearchResult 流式搜索结果
 type StreamSearchResult struct {
-	Books     []*bookstore.Book `json:"books"`
-	NextCursor string           `json:"nextCursor,omitempty"`
-	HasMore   bool             `json:"hasMore"`
-	Total     int64            `json:"total,omitempty"`
+	Books      []*bookstore.Book `json:"books"`
+	NextCursor string            `json:"nextCursor,omitempty"`
+	HasMore    bool              `json:"hasMore"`
+	Total      int64             `json:"total,omitempty"`
 }
 
 // StreamSearch 流式搜索书籍

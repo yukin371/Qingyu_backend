@@ -358,12 +358,13 @@ func TestBookListRepository_SearchBookLists(t *testing.T) {
 
 	// Act - 搜索标题
 	bookLists1, total1, err := repo.SearchBookLists(ctx, "三体", 1, 10)
+	require.NoError(t, err)
 
 	// Act - 搜索描述
 	bookLists2, total2, err := repo.SearchBookLists(ctx, "刘慈欣", 1, 10)
+	require.NoError(t, err)
 
 	// Assert
-	require.NoError(t, err)
 	assert.NotNil(t, bookLists1)
 	assert.GreaterOrEqual(t, total1, int64(1))
 
@@ -954,6 +955,7 @@ func TestBookListRepository_IsBookListLiked(t *testing.T) {
 
 	// Act - 点赞前
 	liked1, err := repo.IsBookListLiked(ctx, bookList.ID.Hex(), likerID)
+	require.NoError(t, err)
 
 	// 点赞
 	bookListLike := &social.BookListLike{
@@ -965,6 +967,7 @@ func TestBookListRepository_IsBookListLiked(t *testing.T) {
 
 	// Act - 点赞后
 	liked2, err := repo.IsBookListLiked(ctx, bookList.ID.Hex(), likerID)
+	require.NoError(t, err)
 
 	// Assert
 	require.NoError(t, err)

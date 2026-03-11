@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"errors"
 	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -83,4 +84,77 @@ func ConvertCategoryIdsToString(categoryIds []primitive.ObjectID) []string {
 // ConvertCategoryIdsFromBook 将 string 切片转换为 Book 模型的 CategoryIDs (ObjectID)
 func ConvertCategoryIdsToObjectID(categoryIds []string) ([]primitive.ObjectID, error) {
 	return StringSliceToObjectIDSlice(categoryIds)
+}
+
+// ============================================
+// 统一ID解析函数（推荐使用）
+// ============================================
+
+// ParseID 解析必需的ID，空字符串返回错误
+// 用于必需ID的场景，如GetByID、UpdateByID等
+func ParseID(id string) (primitive.ObjectID, error) {
+	if id == "" {
+		return primitive.NilObjectID, ErrEmptyID
+	}
+	oid, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return primitive.NilObjectID, fmt.Errorf("%w: %s", ErrInvalidIDFormat, id)
+	}
+	return oid, nil
+}
+
+// ParseOptionalID 解析可选ID，空字符串返回nil（不报错）
+// 用于过滤条件等场景，如"不限分类"时category_id为空
+func ParseOptionalID(id string) (*primitive.ObjectID, error) {
+	if id == "" {
+		return nil, nil
+	}
+	oid, err := ParseID(id)
+	if err != nil {
+		return nil, err
+	}
+	return &oid, nil
+}
+
+// ParseIDs 批量解析ID列表，空列表返回nil
+// 每个ID都必须有效，空字符串会报错
+func ParseIDs(ids []string) ([]primitive.ObjectID, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	result := make([]primitive.ObjectID, 0, len(ids))
+	for i, id := range ids {
+		oid, err := ParseID(id)
+		if err != nil {
+			return nil, fmt.Errorf("ids[%d]: %w", i, err)
+		}
+		result = append(result, oid)
+	}
+	return result, nil
+}
+
+// ParseOptionalIDs 批量解析可选ID列表，跳过空字符串
+// 用于批量过滤场景，空字符串被视为"不限制"
+func ParseOptionalIDs(ids []string) ([]primitive.ObjectID, error) {
+	if len(ids) == 0 {
+		return nil, nil
+	}
+	result := make([]primitive.ObjectID, 0, len(ids))
+	for _, id := range ids {
+		if id == "" {
+			continue
+		}
+		oid, err := ParseID(id)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, oid)
+	}
+	return result, nil
+}
+
+// IsIDError 判断是否为ID相关错误
+// 用于API层快速失败和错误分类
+func IsIDError(err error) bool {
+	return errors.Is(err, ErrEmptyID) || errors.Is(err, ErrInvalidIDFormat)
 }

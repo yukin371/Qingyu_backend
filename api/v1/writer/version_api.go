@@ -5,8 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/service/writer/project"
 	"Qingyu_backend/pkg/response"
+	"Qingyu_backend/service/writer/project"
 )
 
 // VersionApi 版本API
@@ -86,7 +86,7 @@ func (api *VersionApi) CompareVersions(c *gin.Context) {
 	toVersion := c.Query("toVersion")
 
 	if fromVersion == "" || toVersion == "" {
-		response.BadRequest(c,  "参数错误", "fromVersion和toVersion不能为空")
+		response.BadRequest(c, "参数错误", "fromVersion和toVersion不能为空")
 		return
 	}
 

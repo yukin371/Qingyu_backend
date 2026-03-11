@@ -277,13 +277,15 @@ func (s *MongoEventStore) GetByTypeAndTimeRange(ctx context.Context, eventType s
 // 返回重放结果，包含成功/失败/跳过的事件数量和执行耗时
 //
 // 参数:
-//   ctx - 上下文，用于超时控制和取消
-//   handler - 事件处理器，用于处理每个重放的事件
-//   filter - 过滤条件，可选的类型、来源、时间范围等
+//
+//	ctx - 上下文，用于超时控制和取消
+//	handler - 事件处理器，用于处理每个重放的事件
+//	filter - 过滤条件，可选的类型、来源、时间范围等
 //
 // 返回:
-//   *ReplayResult - 重放结果统计
-//   error - 错误信息，如果有的话
+//
+//	*ReplayResult - 重放结果统计
+//	error - 错误信息，如果有的话
 //
 // 注意:
 //   - handler不能为nil
@@ -295,10 +297,11 @@ func (s *MongoEventStore) GetByTypeAndTimeRange(ctx context.Context, eventType s
 //   - 事件处理失败时会继续处理下一个事件，不会中断整个回放过程
 //
 // 示例:
-//   result, err := store.Replay(ctx, myHandler, EventFilter{
-//       EventType: "ChapterPublishedEvent",
-//       Limit: 1000,
-//   })
+//
+//	result, err := store.Replay(ctx, myHandler, EventFilter{
+//	    EventType: "ChapterPublishedEvent",
+//	    Limit: 1000,
+//	})
 func (s *MongoEventStore) Replay(ctx context.Context, handler base.EventHandler, filter EventFilter) (*ReplayResult, error) {
 	// 参数验证（P1-2: 防御性检查）
 	if handler == nil {

@@ -89,7 +89,7 @@ func (api *PasswordAPI) ResetPassword(c *gin.Context) {
 
 	response.SuccessWithMessage(c, "密码重置成功", dto.ResetPasswordResponse{
 		Success: true,
-		Message:  "密码重置成功",
+		Message: "密码重置成功",
 	})
 }
 

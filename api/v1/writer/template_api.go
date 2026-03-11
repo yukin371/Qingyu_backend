@@ -10,8 +10,8 @@ import (
 	"go.uber.org/zap"
 
 	"Qingyu_backend/models/writer"
-	"Qingyu_backend/service/writer/document"
 	"Qingyu_backend/pkg/response"
+	"Qingyu_backend/service/writer/document"
 )
 
 // TemplateAPI 模板API
@@ -56,7 +56,7 @@ func (api *TemplateAPI) CreateTemplate(c *gin.Context) {
 
 	userIDStr, ok := userID.(string)
 	if !ok || userIDStr == "" {
-		response.BadRequest(c,  "参数错误", "无效的用户ID")
+		response.BadRequest(c, "参数错误", "无效的用户ID")
 		return
 	}
 
@@ -65,7 +65,7 @@ func (api *TemplateAPI) CreateTemplate(c *gin.Context) {
 
 	var req CreateTemplateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -84,7 +84,7 @@ func (api *TemplateAPI) CreateTemplate(c *gin.Context) {
 	if req.ProjectID != "" {
 		projectID, err := primitive.ObjectIDFromHex(req.ProjectID)
 		if err != nil {
-			response.BadRequest(c,  "参数错误", "无效的项目ID")
+			response.BadRequest(c, "参数错误", "无效的项目ID")
 			return
 		}
 		serviceReq.ProjectID = &projectID
@@ -129,7 +129,7 @@ func (api *TemplateAPI) ListTemplates(c *gin.Context) {
 	if projectID := c.Query("projectId"); projectID != "" {
 		id, err := primitive.ObjectIDFromHex(projectID)
 		if err != nil {
-			response.BadRequest(c,  "参数错误", "无效的项目ID")
+			response.BadRequest(c, "参数错误", "无效的项目ID")
 			return
 		}
 		req.ProjectID = &id
@@ -197,7 +197,7 @@ func (api *TemplateAPI) GetTemplate(c *gin.Context) {
 
 	templateID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		response.BadRequest(c,  "参数错误", "无效的模板ID")
+		response.BadRequest(c, "参数错误", "无效的模板ID")
 		return
 	}
 
@@ -229,13 +229,13 @@ func (api *TemplateAPI) UpdateTemplate(c *gin.Context) {
 
 	templateID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		response.BadRequest(c,  "参数错误", "无效的模板ID")
+		response.BadRequest(c, "参数错误", "无效的模板ID")
 		return
 	}
 
 	var req UpdateTemplateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -293,7 +293,7 @@ func (api *TemplateAPI) DeleteTemplate(c *gin.Context) {
 
 	templateID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		response.BadRequest(c,  "参数错误", "无效的模板ID")
+		response.BadRequest(c, "参数错误", "无效的模板ID")
 		return
 	}
 
@@ -306,7 +306,7 @@ func (api *TemplateAPI) DeleteTemplate(c *gin.Context) {
 
 	userIDStr, ok := userID.(string)
 	if !ok || userIDStr == "" {
-		response.BadRequest(c,  "参数错误", "无效的用户ID")
+		response.BadRequest(c, "参数错误", "无效的用户ID")
 		return
 	}
 
@@ -347,13 +347,13 @@ func (api *TemplateAPI) ApplyTemplate(c *gin.Context) {
 
 	templateID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		response.BadRequest(c,  "参数错误", "无效的模板ID")
+		response.BadRequest(c, "参数错误", "无效的模板ID")
 		return
 	}
 
 	var req ApplyTemplateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -388,22 +388,22 @@ func (api *TemplateAPI) ApplyTemplate(c *gin.Context) {
 
 // CreateTemplateRequest 创建模板请求
 type CreateTemplateRequest struct {
-	ProjectID   string                  `json:"projectId,omitempty" validate:"omitempty,hexadecimal"`
-	Name        string                  `json:"name" validate:"required,max=200"`
-	Description string                  `json:"description" validate:"max=1000"`
-	Type        string                  `json:"type" validate:"required,oneof=chapter outline setting"`
-	Category    string                  `json:"category" validate:"max=100"`
-	Content     string                  `json:"content" validate:"required"`
-	Variables   []TemplateVariableDTO   `json:"variables"`
+	ProjectID   string                `json:"projectId,omitempty" validate:"omitempty,hexadecimal"`
+	Name        string                `json:"name" validate:"required,max=200"`
+	Description string                `json:"description" validate:"max=1000"`
+	Type        string                `json:"type" validate:"required,oneof=chapter outline setting"`
+	Category    string                `json:"category" validate:"max=100"`
+	Content     string                `json:"content" validate:"required"`
+	Variables   []TemplateVariableDTO `json:"variables"`
 }
 
 // UpdateTemplateRequest 更新模板请求
 type UpdateTemplateRequest struct {
-	Name        *string                   `json:"name,omitempty" validate:"omitempty,max=200"`
-	Description *string                   `json:"description,omitempty" validate:"omitempty,max=1000"`
-	Category    *string                   `json:"category,omitempty" validate:"omitempty,max=100"`
-	Content     *string                   `json:"content,omitempty"`
-	Variables   *[]TemplateVariableDTO    `json:"variables,omitempty"`
+	Name        *string                `json:"name,omitempty" validate:"omitempty,max=200"`
+	Description *string                `json:"description,omitempty" validate:"omitempty,max=1000"`
+	Category    *string                `json:"category,omitempty" validate:"omitempty,max=100"`
+	Content     *string                `json:"content,omitempty"`
+	Variables   *[]TemplateVariableDTO `json:"variables,omitempty"`
 }
 
 // ApplyTemplateRequest 应用模板请求
@@ -415,19 +415,19 @@ type ApplyTemplateRequest struct {
 // ApplyTemplateResponse 应用模板响应
 type ApplyTemplateResponse struct {
 	TemplateID      primitive.ObjectID `json:"templateId"`
-	RenderedContent string            `json:"renderedContent"`
-	Variables       map[string]string `json:"variables"`
+	RenderedContent string             `json:"renderedContent"`
+	Variables       map[string]string  `json:"variables"`
 }
 
 // TemplateVariableDTO 模板变量DTO
 type TemplateVariableDTO struct {
-	Name         string  `json:"name" validate:"required,max=50"`
-	Label        string  `json:"label" validate:"required,max=100"`
-	Type         string  `json:"type" validate:"required,oneof=text textarea select number"`
-	Placeholder  string  `json:"placeholder" validate:"max=200"`
-	DefaultValue string  `json:"defaultValue,omitempty"`
-	Required     bool    `json:"required"`
-	Order        int     `json:"order"`
+	Name         string      `json:"name" validate:"required,max=50"`
+	Label        string      `json:"label" validate:"required,max=100"`
+	Type         string      `json:"type" validate:"required,oneof=text textarea select number"`
+	Placeholder  string      `json:"placeholder" validate:"max=200"`
+	DefaultValue string      `json:"defaultValue,omitempty"`
+	Required     bool        `json:"required"`
+	Order        int         `json:"order"`
 	Options      []OptionDTO `json:"options,omitempty"`
 }
 

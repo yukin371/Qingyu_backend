@@ -30,10 +30,10 @@ var (
 
 // Attachment 附件
 type Attachment struct {
-	Type     string `bson:"type" json:"type"`         // image, file
-	URL      string `bson:"url" json:"url"`           // 文件URL
-	Size     int64  `bson:"size" json:"size"`         // 文件大小（字节）
-	Name     string `bson:"name" json:"name"`         // 文件名
+	Type     string `bson:"type" json:"type"`           // image, file
+	URL      string `bson:"url" json:"url"`             // 文件URL
+	Size     int64  `bson:"size" json:"size"`           // 文件大小（字节）
+	Name     string `bson:"name" json:"name"`           // 文件名
 	MimeType string `bson:"mime_type" json:"mime_type"` // MIME类型
 }
 
@@ -62,12 +62,12 @@ type Message struct {
 
 // Conversation 会话模型（服务层使用）
 type Conversation struct {
-	ID            string
-	Participants  []string
-	Type          string
-	LastMessage   *LastMessage
-	UnreadCount   int
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
-	Muted         []string
+	ID           string
+	Participants []string
+	Type         string
+	LastMessage  *LastMessage
+	UnreadCount  int
+	CreatedAt    time.Time
+	UpdatedAt    time.Time
+	Muted        []string
 }

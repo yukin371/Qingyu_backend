@@ -59,11 +59,12 @@ import (
 	readerservice "Qingyu_backend/service/reader"
 	socialService "Qingyu_backend/service/social"
 
+	"log"
+
 	"github.com/gin-gonic/gin"
 	"github.com/olivere/elastic/v7"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"log"
 )
 
 // RegisterRoutes 注册所有路由
@@ -287,12 +288,6 @@ func RegisterRoutes(r *gin.Engine) {
 			logger.Info("    - GET /by-number/:chapterNum (按章节号获取)")
 		}
 		logger.Info("  - /api/v1/reader/progress/* (阅读进度)")
-		if progressSyncSvc != nil {
-			logger.Info("  - /api/v1/reader/progress/ws (WebSocket同步)")
-			logger.Info("  - /api/v1/reader/progress/sync (进度同步)")
-			logger.Info("  - /api/v1/reader/progress/merge (合并离线进度)")
-			logger.Info("  - /api/v1/reader/progress/sync-status (同步状态)")
-		}
 		logger.Info("  - /api/v1/reader/annotations/* (标注管理)")
 		logger.Info("  - /api/v1/reader/settings/* (阅读设置)")
 		if commentSvc != nil {
@@ -397,9 +392,7 @@ func RegisterRoutes(r *gin.Engine) {
 		if collectionAPI != nil {
 			logger.Info("  - /api/v1/social/collections/* (收藏系统)")
 		}
-		if relationAPI != nil {
-			logger.Info("  - /api/v1/social/follow/* (关注系统)")
-		}
+		logger.Info("  - /api/v1/social/follow/* (关注系统)")
 	}
 
 	// ============ 注册评分路由 ============

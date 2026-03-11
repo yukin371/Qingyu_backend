@@ -14,28 +14,28 @@ import (
 
 // Config 存储应用配置
 type Config struct {
-	Database *DatabaseConfig                   `mapstructure:"database"`
-	Redis    *RedisConfig                      `mapstructure:"redis"`
-	Cache    *CacheConfig                      `mapstructure:"cache"`
-	Server   *ServerConfig                     `mapstructure:"server"`
-	Log      *LogConfig                        `mapstructure:"log"`
-	JWT      *JWTConfig                        `mapstructure:"jwt"`
-	AI       *AIConfig                         `mapstructure:"ai"`
-	Elasticsearch *ElasticsearchConfig         `mapstructure:"elasticsearch"`
-	External *ExternalAPIConfig                `mapstructure:"external"`
-	AIQuota  *AIQuotaConfig                    `mapstructure:"ai_quota"`
-	Email    *EmailConfig                      `mapstructure:"email"`
-	Payment  *PaymentConfig                    `mapstructure:"payment"`
-	RateLimit *RateLimitConfig                 `mapstructure:"rate_limit"`
-	OAuth    map[string]*authModel.OAuthConfig `mapstructure:"oauth"`
+	Database      *DatabaseConfig                   `mapstructure:"database"`
+	Redis         *RedisConfig                      `mapstructure:"redis"`
+	Cache         *CacheConfig                      `mapstructure:"cache"`
+	Server        *ServerConfig                     `mapstructure:"server"`
+	Log           *LogConfig                        `mapstructure:"log"`
+	JWT           *JWTConfig                        `mapstructure:"jwt"`
+	AI            *AIConfig                         `mapstructure:"ai"`
+	Elasticsearch *ElasticsearchConfig              `mapstructure:"elasticsearch"`
+	External      *ExternalAPIConfig                `mapstructure:"external"`
+	AIQuota       *AIQuotaConfig                    `mapstructure:"ai_quota"`
+	Email         *EmailConfig                      `mapstructure:"email"`
+	Payment       *PaymentConfig                    `mapstructure:"payment"`
+	RateLimit     *RateLimitConfig                  `mapstructure:"rate_limit"`
+	OAuth         map[string]*authModel.OAuthConfig `mapstructure:"oauth"`
 }
 
 // ElasticsearchConfig Elasticsearch 配置
 type ElasticsearchConfig struct {
-	Enabled     bool                      `mapstructure:"enabled"`
-	URL         string                    `mapstructure:"url"`
-	IndexPrefix string                    `mapstructure:"index_prefix"`
-	GrayScale   *ElasticsearchGrayConfig  `mapstructure:"grayscale"`
+	Enabled     bool                     `mapstructure:"enabled"`
+	URL         string                   `mapstructure:"url"`
+	IndexPrefix string                   `mapstructure:"index_prefix"`
+	GrayScale   *ElasticsearchGrayConfig `mapstructure:"grayscale"`
 }
 
 // ElasticsearchGrayConfig Elasticsearch 灰度配置
@@ -302,8 +302,8 @@ func LoadConfig(configPath string) (*Config, error) {
 
 		// 如果没有找到 test 配置，使用默认配置查找
 		if !testConfigFound {
-			v.SetConfigName("config")       // 配置文件名（不带扩展名）
-			v.SetConfigType("yaml")         // 配置文件类型
+			v.SetConfigName("config")        // 配置文件名（不带扩展名）
+			v.SetConfigType("yaml")          // 配置文件类型
 			v.AddConfigPath(configPath)      // 配置文件路径
 			v.AddConfigPath("./configs")     // configs子目录（新）
 			v.AddConfigPath("./config")      // config子目录（兼容）

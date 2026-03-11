@@ -20,16 +20,18 @@ type MongoReviewRepository struct {
 	likeCollection   *mongo.Collection
 }
 
-func sanitizeReviewQueryToken(field, value string) (primitive.ObjectID, error) {
+func sanitizeReviewQueryToken(field, value string) (string, error) {
 	value = strings.TrimSpace(value)
 	if value == "" {
-		return primitive.ObjectID{}, fmt.Errorf("%s不能为空", field)
+		return "", fmt.Errorf("%s不能为空", field)
 	}
-	objectID, err := primitive.ObjectIDFromHex(value)
+	// 验证是否为有效的ObjectID格式，但返回原始string
+	// 因为模型中BookID、UserID等字段存储为string类型
+	_, err := primitive.ObjectIDFromHex(value)
 	if err != nil {
-		return primitive.ObjectID{}, fmt.Errorf("%s格式无效: %w", field, err)
+		return "", fmt.Errorf("%s格式无效: %w", field, err)
 	}
-	return objectID, nil
+	return value, nil
 }
 
 func sanitizeReviewFilter(filter bson.M) (bson.M, error) {
@@ -41,6 +43,7 @@ func sanitizeReviewFilter(filter bson.M) (bson.M, error) {
 			if !ok {
 				return nil, fmt.Errorf("invalid %s filter type", key)
 			}
+			// 验证格式，但保留string类型（与模型一致）
 			normalized, err := sanitizeReviewQueryToken(key, valueStr)
 			if err != nil {
 				return nil, fmt.Errorf("invalid id: %w", err)

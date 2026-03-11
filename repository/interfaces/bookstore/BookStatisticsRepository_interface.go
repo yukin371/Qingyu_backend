@@ -66,25 +66,25 @@ type BookStatisticsRepository interface {
 
 // BookStatisticsFilter 书籍统计过滤器
 type BookStatisticsFilter struct {
-	BookID           *string `json:"book_id,omitempty"`
-	MinViewCount     *int64  `json:"min_view_count,omitempty"`
-	MaxViewCount     *int64  `json:"max_view_count,omitempty"`
-	MinFavoriteCount *int64  `json:"min_favorite_count,omitempty"`
-	MaxFavoriteCount *int64  `json:"max_favorite_count,omitempty"`
-	MinCommentCount  *int64  `json:"min_comment_count,omitempty"`
-	MaxCommentCount  *int64  `json:"max_comment_count,omitempty"`
-	MinShareCount    *int64  `json:"min_share_count,omitempty"`
-	MaxShareCount    *int64  `json:"max_share_count,omitempty"`
+	BookID           *string  `json:"book_id,omitempty"`
+	MinViewCount     *int64   `json:"min_view_count,omitempty"`
+	MaxViewCount     *int64   `json:"max_view_count,omitempty"`
+	MinFavoriteCount *int64   `json:"min_favorite_count,omitempty"`
+	MaxFavoriteCount *int64   `json:"max_favorite_count,omitempty"`
+	MinCommentCount  *int64   `json:"min_comment_count,omitempty"`
+	MaxCommentCount  *int64   `json:"max_comment_count,omitempty"`
+	MinShareCount    *int64   `json:"min_share_count,omitempty"`
+	MaxShareCount    *int64   `json:"max_share_count,omitempty"`
 	MinAverageRating *float64 `json:"min_average_rating,omitempty"`
 	MaxAverageRating *float64 `json:"max_average_rating,omitempty"`
-	MinRatingCount   *int64  `json:"min_rating_count,omitempty"`
-	MaxRatingCount   *int64  `json:"max_rating_count,omitempty"`
+	MinRatingCount   *int64   `json:"min_rating_count,omitempty"`
+	MaxRatingCount   *int64   `json:"max_rating_count,omitempty"`
 	MinHotScore      *float64 `json:"min_hot_score,omitempty"`
 	MaxHotScore      *float64 `json:"max_hot_score,omitempty"`
 	MinRating        *float64 `json:"min_rating,omitempty"`
 	MaxRating        *float64 `json:"max_rating,omitempty"`
-	Limit            int     `json:"limit,omitempty"`
-	Offset           int     `json:"offset,omitempty"`
-	SortBy           string  `json:"sort_by,omitempty"`
-	SortOrder        string  `json:"sort_order,omitempty"`
+	Limit            int      `json:"limit,omitempty"`
+	Offset           int      `json:"offset,omitempty"`
+	SortBy           string   `json:"sort_by,omitempty"`
+	SortOrder        string   `json:"sort_order,omitempty"`
 }

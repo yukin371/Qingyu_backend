@@ -7,6 +7,7 @@ import (
 	"Qingyu_backend/models/dto"
 	"Qingyu_backend/models/shared"
 	usersModel "Qingyu_backend/models/users"
+
 	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -229,9 +230,9 @@ func TestUserToDTO_TimeFormat(t *testing.T) {
 			IdentifiedEntity: shared.IdentifiedEntity{ID: userID},
 			BaseEntity:       shared.BaseEntity{CreatedAt: createdAt, UpdatedAt: updatedAt},
 
-			Username:   "testuser",
-			Status:    usersModel.UserStatusActive,
-			Roles:     []string{"reader"},
+			Username:    "testuser",
+			Status:      usersModel.UserStatusActive,
+			Roles:       []string{"reader"},
 			LastLoginAt: lastLoginAt,
 		}
 
@@ -265,8 +266,8 @@ func TestUserToDTO_TimeFormat(t *testing.T) {
 			BaseEntity:       shared.BaseEntity{CreatedAt: time.Time{}, UpdatedAt: time.Time{}},
 
 			Username: "testuser",
-			Status:  usersModel.UserStatusActive,
-			Roles:   []string{"reader"},
+			Status:   usersModel.UserStatusActive,
+			Roles:    []string{"reader"},
 		}
 
 		dto := ToUserDTO(userModel)
@@ -287,8 +288,8 @@ func TestUserToDTO_TimeFormat(t *testing.T) {
 			BaseEntity:       shared.BaseEntity{CreatedAt: time.Now(), UpdatedAt: time.Now()},
 
 			Username: "testuser",
-			Status:  usersModel.UserStatusActive,
-			Roles:   []string{"reader"},
+			Status:   usersModel.UserStatusActive,
+			Roles:    []string{"reader"},
 			Birthday: &birthday,
 		}
 
@@ -315,8 +316,8 @@ func TestUserToDTO_IDConversion(t *testing.T) {
 			BaseEntity:       shared.BaseEntity{CreatedAt: time.Now(), UpdatedAt: time.Now()},
 
 			Username: "testuser",
-			Status:  usersModel.UserStatusActive,
-			Roles:   []string{"reader"},
+			Status:   usersModel.UserStatusActive,
+			Roles:    []string{"reader"},
 		}
 
 		dto := ToUserDTO(userModel)
@@ -333,8 +334,8 @@ func TestUserToDTO_IDConversion(t *testing.T) {
 			BaseEntity:       shared.BaseEntity{CreatedAt: time.Now(), UpdatedAt: time.Now()},
 
 			Username: "testuser",
-			Status:  usersModel.UserStatusActive,
-			Roles:   []string{"reader"},
+			Status:   usersModel.UserStatusActive,
+			Roles:    []string{"reader"},
 		}
 
 		dto := ToUserDTO(userModel)
@@ -353,22 +354,22 @@ func TestUserToDTO_IDConversion(t *testing.T) {
 				IdentifiedEntity: shared.IdentifiedEntity{ID: id1},
 				BaseEntity:       shared.BaseEntity{CreatedAt: time.Now(), UpdatedAt: time.Now()},
 				Username:         "user1",
-				Status:          usersModel.UserStatusActive,
-				Roles:           []string{"reader"},
+				Status:           usersModel.UserStatusActive,
+				Roles:            []string{"reader"},
 			},
 			{
 				IdentifiedEntity: shared.IdentifiedEntity{ID: id2},
 				BaseEntity:       shared.BaseEntity{CreatedAt: time.Now(), UpdatedAt: time.Now()},
 				Username:         "user2",
-				Status:          usersModel.UserStatusActive,
-				Roles:           []string{"reader"},
+				Status:           usersModel.UserStatusActive,
+				Roles:            []string{"reader"},
 			},
 			{
 				IdentifiedEntity: shared.IdentifiedEntity{ID: id3},
 				BaseEntity:       shared.BaseEntity{CreatedAt: time.Now(), UpdatedAt: time.Now()},
 				Username:         "user3",
-				Status:          usersModel.UserStatusActive,
-				Roles:           []string{"reader"},
+				Status:           usersModel.UserStatusActive,
+				Roles:            []string{"reader"},
 			},
 		}
 
@@ -387,8 +388,8 @@ func TestUserToDTO_IDConversion(t *testing.T) {
 			IdentifiedEntity: shared.IdentifiedEntity{ID: originalID},
 			BaseEntity:       shared.BaseEntity{CreatedAt: time.Now(), UpdatedAt: time.Now()},
 			Username:         "testuser",
-			Status:          usersModel.UserStatusActive,
-			Roles:           []string{"reader"},
+			Status:           usersModel.UserStatusActive,
+			Roles:            []string{"reader"},
 		}
 
 		// Model -> DTO

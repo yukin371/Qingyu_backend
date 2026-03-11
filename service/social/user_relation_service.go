@@ -66,7 +66,7 @@ func (s *UserRelationServiceImpl) FollowUser(ctx context.Context, followerID, fo
 		updates := map[string]interface{}{
 			"status": "active",
 		}
-	if err := s.repo.Update(ctx, existingRelation.ID.Hex(), updates); err != nil {
+		if err := s.repo.Update(ctx, existingRelation.ID.Hex(), updates); err != nil {
 			return fmt.Errorf("更新关注关系失败: %w", err)
 		}
 		return nil

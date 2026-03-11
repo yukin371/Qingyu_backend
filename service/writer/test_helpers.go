@@ -5,6 +5,7 @@ import (
 
 	"Qingyu_backend/models/writer"
 	"Qingyu_backend/models/writer/base"
+	"Qingyu_backend/repository"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -13,7 +14,7 @@ import (
 
 // createTestDocument 创建测试文档
 func createTestDocument(projectID, title string) *writer.Document {
-	oid, _ := primitive.ObjectIDFromHex(projectID)
+	oid, _ := repository.ParseID(projectID)
 	return &writer.Document{
 		IdentifiedEntity: base.IdentifiedEntity{ID: primitive.NewObjectID()},
 		Timestamps:       base.Timestamps{CreatedAt: time.Now(), UpdatedAt: time.Now()},

@@ -249,9 +249,9 @@ func TestPermissionTemplateService_CreateTemplate_CodeExists(t *testing.T) {
 	}
 
 	existingTemplate := &authModel.PermissionTemplate{
-		ID:     primitive.NewObjectID(),
-		Code:   "existing_code",
-		Name:   "已存在的模板",
+		ID:       primitive.NewObjectID(),
+		Code:     "existing_code",
+		Name:     "已存在的模板",
 		IsSystem: false,
 	}
 

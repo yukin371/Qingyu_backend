@@ -31,7 +31,6 @@ type UpdateProfileRequest struct {
 	Website  *string `json:"website,omitempty" validate:"omitempty,url"`
 }
 
-
 // GetUserBooksResponse 用户作品列表响应
 type GetUserBooksResponse struct {
 	Books interface{} `json:"books"`

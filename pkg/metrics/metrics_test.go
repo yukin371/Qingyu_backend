@@ -215,7 +215,7 @@ func TestSystemResourceMetrics(t *testing.T) {
 	registry.MustRegister(metrics.getAllCollectors()...)
 
 	t.Run("内存使用", func(t *testing.T) {
-		used := uint64(1024 * 1024 * 512) // 512MB
+		used := uint64(1024 * 1024 * 512)       // 512MB
 		total := uint64(1024 * 1024 * 1024 * 8) // 8GB
 
 		metrics.UpdateSystemMemory(used, total)

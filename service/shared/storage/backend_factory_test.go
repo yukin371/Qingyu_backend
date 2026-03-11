@@ -93,4 +93,3 @@ func TestBackendFactorySupportedBackends(t *testing.T) {
 		t.Fatalf("supported backends should include local and minio, got: %v", supported)
 	}
 }
-

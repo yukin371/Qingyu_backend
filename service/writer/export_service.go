@@ -131,7 +131,7 @@ func (s *ExportService) processDocumentExport(
 	task.Status = serviceInterfaces.ExportStatusProcessing
 	task.Progress = 10
 	task.UpdatedAt = time.Now()
-	s.exportTaskRepo.Update(ctx, task)
+	_ = s.exportTaskRepo.Update(ctx, task)
 
 	// 获取文档内容
 	content, err := s.documentContentRepo.FindByID(ctx, document.ID.Hex())
@@ -142,7 +142,7 @@ func (s *ExportService) processDocumentExport(
 
 	task.Progress = 30
 	task.UpdatedAt = time.Now()
-	s.exportTaskRepo.Update(ctx, task)
+	_ = s.exportTaskRepo.Update(ctx, task)
 
 	// 根据格式生成文件
 	var fileContent []byte
@@ -162,7 +162,7 @@ func (s *ExportService) processDocumentExport(
 
 	task.Progress = 80
 	task.UpdatedAt = time.Now()
-	s.exportTaskRepo.Update(ctx, task)
+	_ = s.exportTaskRepo.Update(ctx, task)
 
 	// 上传文件
 	// 这里需要实现文件上传逻辑
@@ -184,7 +184,7 @@ func (s *ExportService) processDocumentExport(
 	task.CompletedAt = &completedAt
 	task.UpdatedAt = time.Now()
 
-	s.exportTaskRepo.Update(ctx, task)
+	_ = s.exportTaskRepo.Update(ctx, task)
 }
 
 // generateTXT 生成TXT格式
@@ -244,7 +244,7 @@ func (s *ExportService) failTask(ctx context.Context, task *serviceInterfaces.Ex
 	task.Status = serviceInterfaces.ExportStatusFailed
 	task.ErrorMsg = errorMsg
 	task.UpdatedAt = time.Now()
-	s.exportTaskRepo.Update(ctx, task)
+	_ = s.exportTaskRepo.Update(ctx, task)
 }
 
 // GetExportTask 获取导出任务
@@ -386,7 +386,7 @@ func (s *ExportService) processProjectExport(
 	task.Status = serviceInterfaces.ExportStatusProcessing
 	task.Progress = 10
 	task.UpdatedAt = time.Now()
-	s.exportTaskRepo.Update(ctx, task)
+	_ = s.exportTaskRepo.Update(ctx, task)
 
 	// 获取所有文档
 	if req.IncludeDocuments {
@@ -398,7 +398,7 @@ func (s *ExportService) processProjectExport(
 
 		task.Progress = 50
 		task.UpdatedAt = time.Now()
-		s.exportTaskRepo.Update(ctx, task)
+		_ = s.exportTaskRepo.Update(ctx, task)
 
 		// 导出所有文档（这里应该打包成ZIP）
 		// 实际实现需要使用archive/zip包
@@ -414,7 +414,7 @@ func (s *ExportService) processProjectExport(
 	task.CompletedAt = &completedAt
 	task.UpdatedAt = time.Now()
 
-	s.exportTaskRepo.Update(ctx, task)
+	_ = s.exportTaskRepo.Update(ctx, task)
 }
 
 // CancelExportTask 取消导出任务

@@ -8,8 +8,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	user2 "Qingyu_backend/service/interfaces/user"
 	usersModel "Qingyu_backend/models/users"
+	user2 "Qingyu_backend/service/interfaces/user"
 )
 
 // TestUserService_LoginUser_Integration 完整用户登录集成测试

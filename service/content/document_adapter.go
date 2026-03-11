@@ -180,7 +180,7 @@ func (a *DocumentAdapter) MoveDocument(ctx context.Context, id string, newParent
 	oldReq := &writerService.MoveDocumentRequest{
 		DocumentID:  id,
 		NewParentID: newParentIDPtr, // 使用*string
-		OrderKey:    orderKey,        // 使用OrderKey
+		OrderKey:    orderKey,       // 使用OrderKey
 	}
 
 	// 调用现有服务

@@ -1,8 +1,8 @@
 package user
 
 import (
-	"Qingyu_backend/service/interfaces/base"
 	"Qingyu_backend/models/dto"
+	"Qingyu_backend/service/interfaces/base"
 	"context"
 	"time"
 )
@@ -120,10 +120,10 @@ type ListUsersRequest struct {
 // ListUsersResponse 列出用户响应
 type ListUsersResponse struct {
 	Users      []*dto.UserDTO `json:"users"`
-	Total      int64                  `json:"total"`
-	Page       int                    `json:"page"`
-	PageSize   int                    `json:"page_size"`
-	TotalPages int                    `json:"total_pages"`
+	Total      int64          `json:"total"`
+	Page       int            `json:"page"`
+	PageSize   int            `json:"page_size"`
+	TotalPages int            `json:"total_pages"`
 }
 
 // RegisterUserRequest 注册用户请求
@@ -136,7 +136,7 @@ type RegisterUserRequest struct {
 // RegisterUserResponse 注册用户响应
 type RegisterUserResponse struct {
 	User  *dto.UserDTO `json:"user"`
-	Token string               `json:"token,omitempty"`
+	Token string       `json:"token,omitempty"`
 }
 
 // LoginUserRequest 登录用户请求
@@ -149,7 +149,7 @@ type LoginUserRequest struct {
 // LoginUserResponse 登录用户响应
 type LoginUserResponse struct {
 	User  *dto.UserDTO `json:"user"`
-	Token string               `json:"token"`
+	Token string       `json:"token"`
 }
 
 // LogoutUserRequest 登出用户请求
@@ -170,7 +170,7 @@ type ValidateTokenRequest struct {
 // ValidateTokenResponse 验证令牌响应
 type ValidateTokenResponse struct {
 	User  *dto.UserDTO `json:"user,omitempty"`
-	Valid bool                 `json:"valid"`
+	Valid bool         `json:"valid"`
 }
 
 // UpdateLastLoginRequest 更新最后登录时间请求
@@ -303,9 +303,9 @@ type ConfirmPasswordResetResponse struct {
 
 // DowngradeRoleRequest 角色降级请求
 type DowngradeRoleRequest struct {
-	UserID     string `json:"user_id" validate:"required"`                                              // 用户ID
+	UserID     string `json:"user_id" validate:"required"`                               // 用户ID
 	TargetRole string `json:"target_role" validate:"required,oneof=reader author admin"` // 目标角色
-	Confirm    bool   `json:"confirm" validate:"required"`                                       // 确认标志
+	Confirm    bool   `json:"confirm" validate:"required"`                               // 确认标志
 }
 
 // DowngradeRoleResponse 角色降级响应

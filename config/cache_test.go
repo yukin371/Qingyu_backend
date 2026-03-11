@@ -35,10 +35,10 @@ func TestSetCacheConfig(t *testing.T) {
 	globalCacheConfig = nil
 
 	customConfig := &CacheConfig{
-		Enabled:           true,
-		DoubleDeleteDelay: 2 * time.Second,
-		NullCacheTTL:      60 * time.Second,
-		NullCachePrefix:   "##NULL##",
+		Enabled:            true,
+		DoubleDeleteDelay:  2 * time.Second,
+		NullCacheTTL:       60 * time.Second,
+		NullCachePrefix:    "##NULL##",
 		BreakerMaxRequests: 5,
 		BreakerInterval:    20 * time.Second,
 		BreakerTimeout:     60 * time.Second,

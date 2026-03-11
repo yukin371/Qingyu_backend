@@ -48,11 +48,11 @@ func TestARCH005_UnifiedErrorStructure(t *testing.T) {
 func TestARCH005_ErrorCodeCategories(t *testing.T) {
 	t.Run("应该有系统级错误码(1-1999)", func(t *testing.T) {
 		systemErrors := []ErrorCode{
-			InvalidParams,     // 1001
-			Unauthorized,      // 1002
-			Forbidden,         // 1003
-			NotFound,          // 1004
-			InternalError,     // 5000 - 这个其实超出1999了
+			InvalidParams, // 1001
+			Unauthorized,  // 1002
+			Forbidden,     // 1003
+			NotFound,      // 1004
+			InternalError, // 5000 - 这个其实超出1999了
 		}
 
 		for _, code := range systemErrors {

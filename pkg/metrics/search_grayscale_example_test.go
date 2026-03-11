@@ -51,7 +51,7 @@ func TestRecordSearch(t *testing.T) {
 	// 记录一些搜索
 	metrics.RecordSearch("elasticsearch", 100*time.Millisecond)
 	metrics.RecordSearch("mongodb", 50*time.Millisecond)
-	metrics.RecordSearch("ES", 150*time.Millisecond) // 测试名称规范化
+	metrics.RecordSearch("ES", 150*time.Millisecond)   // 测试名称规范化
 	metrics.RecordSearch("mongo", 75*time.Millisecond) // 测试名称规范化
 
 	// 获取指标

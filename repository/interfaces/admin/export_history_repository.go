@@ -27,14 +27,14 @@ type ExportHistoryRepository interface {
 
 // ExportHistoryFilter 导出历史过滤器
 type ExportHistoryFilter struct {
-	AdminID    string     `json:"admin_id,omitempty"`    // 管理员ID
-	ExportType string     `json:"export_type,omitempty"` // 导出类型
-	Format     string     `json:"format,omitempty"`      // 导出格式
-	Status     string     `json:"status,omitempty"`      // 状态
-	StartDate  *time.Time `json:"start_date,omitempty"`  // 开始日期
-	EndDate    *time.Time `json:"end_date,omitempty"`    // 结束日期
-	Sort       map[string]int `json:"sort,omitempty"`     // 排序
-	Fields     []string   `json:"fields,omitempty"`      // 字段选择
+	AdminID    string         `json:"admin_id,omitempty"`    // 管理员ID
+	ExportType string         `json:"export_type,omitempty"` // 导出类型
+	Format     string         `json:"format,omitempty"`      // 导出格式
+	Status     string         `json:"status,omitempty"`      // 状态
+	StartDate  *time.Time     `json:"start_date,omitempty"`  // 开始日期
+	EndDate    *time.Time     `json:"end_date,omitempty"`    // 结束日期
+	Sort       map[string]int `json:"sort,omitempty"`        // 排序
+	Fields     []string       `json:"fields,omitempty"`      // 字段选择
 }
 
 // GetConditions 实现Filter接口

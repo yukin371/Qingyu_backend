@@ -455,8 +455,34 @@ func (r *WalletRepositoryImpl) Health(ctx context.Context) error {
 	return r.db.Client().Ping(ctx, nil)
 }
 
+// isReplicaSet 检查 MongoDB 是否是副本集（支持事务）
+func (r *WalletRepositoryImpl) isReplicaSet(ctx context.Context) bool {
+	client := r.db.Client()
+	adminDB := client.Database("admin")
+
+	var result struct {
+		Ok      int    `bson:"ok"`
+		SetName string `bson:"setName,omitempty"`
+	}
+
+	err := adminDB.RunCommand(ctx, map[string]interface{}{"isMaster": 1}).Decode(&result)
+	if err != nil {
+		return false
+	}
+
+	return result.SetName != ""
+}
+
 // RunInTransaction 在事务中执行钱包相关操作
+// 如果 MongoDB 不支持事务（单节点），则直接执行操作（降级模式）
 func (r *WalletRepositoryImpl) RunInTransaction(ctx context.Context, fn func(context.Context) error) error {
+	// 检查是否支持事务
+	if !r.isReplicaSet(ctx) {
+		// 降级模式：直接执行操作，不使用事务
+		return fn(ctx)
+	}
+
+	// 副本集模式：使用事务
 	session, err := r.db.Client().StartSession()
 	if err != nil {
 		return fmt.Errorf("启动事务失败: %w", err)

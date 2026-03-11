@@ -255,11 +255,11 @@ func (a *ProgressAdapter) GetReadingHistory(ctx context.Context, userID string, 
 	}
 
 	return &dto.ReadingHistoryResponse{
-		Progresses:  items,
-		Total:       total,
-		Page:        page,
-		PageSize:    pageSize,
-		TotalPages:  totalPages,
+		Progresses: items,
+		Total:      total,
+		Page:       page,
+		PageSize:   pageSize,
+		TotalPages: totalPages,
 	}, nil
 }
 

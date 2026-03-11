@@ -32,15 +32,15 @@ type (
 	Session           = newauth.Session
 	UserInfo          = newauth.UserInfo
 
-	OAuthService            = newauth.OAuthService
-	AuthServiceImpl         = newauth.AuthServiceImpl
-	JWTServiceImpl          = newauth.JWTServiceImpl
-	PermissionServiceImpl   = newauth.PermissionServiceImpl
-	RoleServiceImpl         = newauth.RoleServiceImpl
-	SessionServiceImpl      = newauth.SessionServiceImpl
-	RedisAdapter            = newauth.RedisAdapter
-	InMemoryTokenBlacklist  = newauth.InMemoryTokenBlacklist
-	PasswordValidator       = newauth.PasswordValidator
+	OAuthService           = newauth.OAuthService
+	AuthServiceImpl        = newauth.AuthServiceImpl
+	JWTServiceImpl         = newauth.JWTServiceImpl
+	PermissionServiceImpl  = newauth.PermissionServiceImpl
+	RoleServiceImpl        = newauth.RoleServiceImpl
+	SessionServiceImpl     = newauth.SessionServiceImpl
+	RedisAdapter           = newauth.RedisAdapter
+	InMemoryTokenBlacklist = newauth.InMemoryTokenBlacklist
+	PasswordValidator      = newauth.PasswordValidator
 )
 
 var (

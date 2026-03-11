@@ -138,11 +138,11 @@ func (s *ContextService) buildChapterInfo(ctx context.Context, projectID string,
 		Title:        doc.Title,
 		Summary:      summary,
 		Content:      content,
-		CharacterIDs: characterIDs,                        // 转换后的字符ID数组
-		LocationIDs:  locationIDs,                         // 转换后的地点ID数组
-		TimelineIDs:  timelineIDs,                         // 转换后的时间线ID数组
-		PlotThreads:  doc.PlotThreads,                     // 使用Document中的PlotThreads字段
-		KeyPoints:    doc.KeyPoints,                       // 使用Document中的KeyPoints字段
+		CharacterIDs: characterIDs,                         // 转换后的字符ID数组
+		LocationIDs:  locationIDs,                          // 转换后的地点ID数组
+		TimelineIDs:  timelineIDs,                          // 转换后的时间线ID数组
+		PlotThreads:  doc.PlotThreads,                      // 使用Document中的PlotThreads字段
+		KeyPoints:    doc.KeyPoints,                        // 使用Document中的KeyPoints字段
 		WritingHints: strings.Join(doc.WritingHints, "\n"), // 将字符串数组转换为单个字符串
 	}
 

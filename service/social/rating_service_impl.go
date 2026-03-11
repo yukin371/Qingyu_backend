@@ -25,11 +25,6 @@ const (
 	TTLJitterPercent = 0.1 // 10%
 )
 
-// init 初始化随机数种子
-func init() {
-	rand.Seed(time.Now().UnixNano())
-}
-
 // RatingServiceImplementation 评分服务实现
 type RatingServiceImplementation struct {
 	commentRepo socialRepo.CommentRepository

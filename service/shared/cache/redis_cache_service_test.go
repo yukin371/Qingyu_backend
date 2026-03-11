@@ -470,14 +470,14 @@ func setupTestService(t *testing.T) (*miniredis.Miniredis, *RedisCacheService) {
 // TestRedisCacheService_TableDriven 表格驱动测试
 func TestRedisCacheService_TableDriven(t *testing.T) {
 	tests := []struct {
-		name        string
-		setup       func(*RedisCacheService, context.Context) error
-		action      func(*RedisCacheService, context.Context) error
-		validate    func(*testing.T, error)
-		cleanup     func(*RedisCacheService, context.Context) error
+		name     string
+		setup    func(*RedisCacheService, context.Context) error
+		action   func(*RedisCacheService, context.Context) error
+		validate func(*testing.T, error)
+		cleanup  func(*RedisCacheService, context.Context) error
 	}{
 		{
-			name: "设置并获取成功",
+			name:  "设置并获取成功",
 			setup: nil,
 			action: func(s *RedisCacheService, ctx context.Context) error {
 				return s.Set(ctx, "test:key", "test:value", 5*time.Minute)
@@ -488,7 +488,7 @@ func TestRedisCacheService_TableDriven(t *testing.T) {
 			cleanup: nil,
 		},
 		{
-			name: "获取不存在的键失败",
+			name:  "获取不存在的键失败",
 			setup: nil,
 			action: func(s *RedisCacheService, ctx context.Context) error {
 				_, err := s.Get(ctx, "nonexistent:key")

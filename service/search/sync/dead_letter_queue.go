@@ -29,9 +29,9 @@ type DeadLetterQueue struct {
 
 // DLQConfig 死信队列配置
 type DLQConfig struct {
-	MaxRetries      int           // 最大重试次数
-	RetryInterval   time.Duration // 重试间隔
-	Expiration      time.Duration // 消息过期时间
+	MaxRetries    int           // 最大重试次数
+	RetryInterval time.Duration // 重试间隔
+	Expiration    time.Duration // 消息过期时间
 }
 
 // DefaultDLQConfig 默认配置
@@ -104,7 +104,7 @@ func (dlq *DeadLetterQueue) Send(event *search.SyncEvent, err error) {
 			zap.String("event_id", event.ID),
 			zap.String("type", string(event.Type)),
 			zap.String("index", event.Index),
-			zap.String("error", err.Error()),
+			zap.String("last_error", dlqEvent.ErrorMessage),
 		)
 	}
 }
@@ -238,12 +238,12 @@ func (dlq *DeadLetterQueue) GetStats(ctx context.Context) (map[string]interface{
 	}
 
 	return map[string]interface{}{
-		"queue_length":    queueLen,
-		"total_received":  atomic.LoadInt64(&dlq.stats.totalReceived),
-		"total_sent":      atomic.LoadInt64(&dlq.stats.totalSent),
-		"total_retried":   atomic.LoadInt64(&dlq.stats.totalRetried),
-		"max_retries":     dlq.config.MaxRetries,
-		"retry_interval":  dlq.config.RetryInterval.String(),
+		"queue_length":   queueLen,
+		"total_received": atomic.LoadInt64(&dlq.stats.totalReceived),
+		"total_sent":     atomic.LoadInt64(&dlq.stats.totalSent),
+		"total_retried":  atomic.LoadInt64(&dlq.stats.totalRetried),
+		"max_retries":    dlq.config.MaxRetries,
+		"retry_interval": dlq.config.RetryInterval.String(),
 	}, nil
 }
 

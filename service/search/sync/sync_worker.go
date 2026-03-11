@@ -10,49 +10,49 @@ import (
 
 	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.uber.org/zap"
 
 	"Qingyu_backend/models/search"
+	"Qingyu_backend/repository"
 	searchengine "Qingyu_backend/service/search/engine"
 )
 
 // WorkerImpl 同步 Worker 实现
 type WorkerImpl struct {
-	mongoClient   *mongo.Client
-	mongoDB       *mongo.Database
-	redisClient   *redis.Client
-	esEngine      searchengine.Engine
-	zapLogger     *zap.Logger
-	logger        *log.Logger       // 保持兼容性
-	dlq           *DeadLetterQueue
-	ctx           context.Context
-	cancel        context.CancelFunc
-	status        *SyncStatus
-	eventCounts   struct {
+	mongoClient *mongo.Client
+	mongoDB     *mongo.Database
+	redisClient *redis.Client
+	esEngine    searchengine.Engine
+	zapLogger   *zap.Logger
+	logger      *log.Logger // 保持兼容性
+	dlq         *DeadLetterQueue
+	ctx         context.Context
+	cancel      context.CancelFunc
+	status      *SyncStatus
+	eventCounts struct {
 		total   int64
 		success int64
 		failed  int64
 	}
-	config        *WorkerConfig
+	config *WorkerConfig
 }
 
 // WorkerConfig Worker 配置
 type WorkerConfig struct {
-	WorkerCount       int           // 工作器数量
-	PollInterval      time.Duration // 轮询间隔
-	RetryMaxAttempts  int           // 最大重试次数
-	RetryDelay        time.Duration // 重试延迟
+	WorkerCount      int           // 工作器数量
+	PollInterval     time.Duration // 轮询间隔
+	RetryMaxAttempts int           // 最大重试次数
+	RetryDelay       time.Duration // 重试延迟
 }
 
 // DefaultWorkerConfig 默认配置
 func DefaultWorkerConfig() *WorkerConfig {
 	return &WorkerConfig{
-		WorkerCount:       5,
-		PollInterval:      100 * time.Millisecond,
-		RetryMaxAttempts:  3,
-		RetryDelay:        1 * time.Second,
+		WorkerCount:      5,
+		PollInterval:     100 * time.Millisecond,
+		RetryMaxAttempts: 3,
+		RetryDelay:       1 * time.Second,
 	}
 }
 
@@ -247,7 +247,7 @@ func (w *WorkerImpl) ProcessEvent(ctx context.Context, event *search.SyncEvent) 
 // handleInsert 处理插入事件
 func (w *WorkerImpl) handleInsert(ctx context.Context, event *search.SyncEvent) error {
 	collection := w.mongoDB.Collection(event.Index)
-	objectID, err := primitive.ObjectIDFromHex(event.ID)
+	objectID, err := repository.ParseID(event.ID)
 	if err != nil {
 		return fmt.Errorf("invalid document ID: %w", err)
 	}
@@ -303,7 +303,7 @@ func (w *WorkerImpl) handleInsert(ctx context.Context, event *search.SyncEvent) 
 // handleUpdate 处理更新事件
 func (w *WorkerImpl) handleUpdate(ctx context.Context, event *search.SyncEvent) error {
 	collection := w.mongoDB.Collection(event.Index)
-	objectID, err := primitive.ObjectIDFromHex(event.ID)
+	objectID, err := repository.ParseID(event.ID)
 	if err != nil {
 		return fmt.Errorf("invalid document ID: %w", err)
 	}
@@ -425,11 +425,11 @@ func (w *WorkerImpl) GetStats(ctx context.Context) (map[string]interface{}, erro
 	}
 
 	return map[string]interface{}{
-		"queue_length": queueLen,
-		"dlq_length":   dlqLen,
-		"total_events": atomic.LoadInt64(&w.eventCounts.total),
+		"queue_length":   queueLen,
+		"dlq_length":     dlqLen,
+		"total_events":   atomic.LoadInt64(&w.eventCounts.total),
 		"success_events": atomic.LoadInt64(&w.eventCounts.success),
-		"failed_events": atomic.LoadInt64(&w.eventCounts.failed),
-		"running": w.status.Running,
+		"failed_events":  atomic.LoadInt64(&w.eventCounts.failed),
+		"running":        w.status.Running,
 	}, nil
 }

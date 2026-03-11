@@ -242,7 +242,6 @@ func (m *MockProjectRepository) CreateWithTransaction(ctx context.Context, proje
 	return args.Error(0)
 }
 
-
 // TestPreflightService_ValidateBatchOperation 测试批量操作验证
 func TestPreflightService_ValidateBatchOperation(t *testing.T) {
 	ctx := context.Background()
@@ -256,7 +255,7 @@ func TestPreflightService_ValidateBatchOperation(t *testing.T) {
 	doc1 := &writer.Document{
 		ProjectID: projectID,
 		Title:     "Test Doc 1",
-		StableRef:  generateStableRef(),
+		StableRef: generateStableRef(),
 		OrderKey:  "a0", // DefaultOrderKey
 		Type:      writer.TypeChapter,
 		Level:     0,

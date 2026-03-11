@@ -7,12 +7,12 @@ import (
 	"fmt"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 
 	"Qingyu_backend/models/shared"
 	"Qingyu_backend/models/shared/types"
 	BookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
+	"Qingyu_backend/repository"
 )
 
 // BookStatisticsService 书籍统计服务接口
@@ -166,7 +166,7 @@ func (s *BookStatisticsServiceImpl) GetStatisticsByBookID(ctx context.Context, b
 	// 如果不存在，创建默认统计数据
 	if stats == nil {
 		// 将 string bookID 转换为 primitive.ObjectID
-		objectID, err := primitive.ObjectIDFromHex(bookID)
+		objectID, err := repository.ParseID(bookID)
 		if err != nil {
 			return nil, fmt.Errorf("invalid book ID: %w", err)
 		}
@@ -288,9 +288,9 @@ func (s *BookStatisticsServiceImpl) GetTopViewedBooks(ctx context.Context, limit
 		for _, stats := range books {
 			// 这里需要根据实际情况构造Book对象，暂时使用基本信息
 			book := &bookstore2.Book{
-    IdentifiedEntity: shared.IdentifiedEntity{ID: stats.BookID},
-    BaseEntity:       shared.BaseEntity{},
-    }
+				IdentifiedEntity: shared.IdentifiedEntity{ID: stats.BookID},
+				BaseEntity:       shared.BaseEntity{},
+			}
 			booksForCache = append(booksForCache, book)
 		}
 		s.cacheService.SetTopViewedBooks(ctx, booksForCache, 5*time.Minute)
@@ -336,9 +336,9 @@ func (s *BookStatisticsServiceImpl) GetTopFavoritedBooks(ctx context.Context, li
 		for _, stats := range books {
 			// 这里需要根据实际情况构造Book对象，暂时使用基本信息
 			book := &bookstore2.Book{
-    IdentifiedEntity: shared.IdentifiedEntity{ID: stats.BookID},
-    BaseEntity:       shared.BaseEntity{},
-    }
+				IdentifiedEntity: shared.IdentifiedEntity{ID: stats.BookID},
+				BaseEntity:       shared.BaseEntity{},
+			}
 			booksForCache = append(booksForCache, book)
 		}
 		s.cacheService.SetTopFavoritedBooks(ctx, booksForCache, 5*time.Minute)
@@ -384,9 +384,9 @@ func (s *BookStatisticsServiceImpl) GetTopRatedBooks(ctx context.Context, limit 
 		for _, stats := range books {
 			// 这里需要根据实际情况构造Book对象，暂时使用基本信息
 			book := &bookstore2.Book{
-    IdentifiedEntity: shared.IdentifiedEntity{ID: stats.BookID},
-    BaseEntity:       shared.BaseEntity{},
-    }
+				IdentifiedEntity: shared.IdentifiedEntity{ID: stats.BookID},
+				BaseEntity:       shared.BaseEntity{},
+			}
 			booksForCache = append(booksForCache, book)
 		}
 		s.cacheService.SetTopRatedBooks(ctx, booksForCache, 5*time.Minute)
@@ -432,9 +432,9 @@ func (s *BookStatisticsServiceImpl) GetHottestBooks(ctx context.Context, limit i
 		for _, stats := range books {
 			// 这里需要根据实际情况构造Book对象，暂时使用基本信息
 			book := &bookstore2.Book{
-    IdentifiedEntity: shared.IdentifiedEntity{ID: stats.BookID},
-    BaseEntity:       shared.BaseEntity{},
-    }
+				IdentifiedEntity: shared.IdentifiedEntity{ID: stats.BookID},
+				BaseEntity:       shared.BaseEntity{},
+			}
 			booksForCache = append(booksForCache, book)
 		}
 		s.cacheService.SetHottestBooks(ctx, booksForCache, 5*time.Minute)

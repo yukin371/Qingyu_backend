@@ -234,10 +234,9 @@ func (f *Fixtures) CreateChapter(bookID string, opts ...ChapterOption) *bookstor
 
 	// 创建章节内容
 	chapterContentRepo := bookstoreRepo.NewMongoChapterContentRepository(global.DB)
-	chapterObjID, _ := primitive.ObjectIDFromHex(chapter.ID)
 	chapterContent := &bookstore.ChapterContent{
 		ID:        primitive.NewObjectID(),
-		ChapterID: chapterObjID,
+		ChapterID: chapter.ID,
 		Content:   "这是 E2E 测试章节内容。这是一段测试文字，用于验证阅读功能。内容需要有足够的长度来模拟真实的章节。",
 		Format:    "markdown",
 		Version:   1,
@@ -311,10 +310,9 @@ func (f *Fixtures) CreateChapters(bookID string, count int) []*bookstore.Chapter
 		require.NoError(f.env.T, err, "创建章节失败")
 
 		// 创建章节内容
-		chapterObjID, _ := primitive.ObjectIDFromHex(chapter.ID)
 		chapterContent := &bookstore.ChapterContent{
 			ID:        primitive.NewObjectID(),
-			ChapterID: chapterObjID,
+			ChapterID: chapter.ID,
 			Content:   "这是章节内容。",
 			Format:    "markdown",
 			Version:   1,

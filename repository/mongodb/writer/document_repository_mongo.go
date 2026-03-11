@@ -27,7 +27,7 @@ type MongoDocumentRepository struct {
 func NewMongoDocumentRepository(db *mongo.Database) writingInterface.DocumentRepository {
 	return &MongoDocumentRepository{
 		BaseMongoRepository: base.NewBaseMongoRepository(db, "documents"),
-		db:                 db,
+		db:                  db,
 	}
 }
 

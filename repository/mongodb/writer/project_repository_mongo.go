@@ -26,7 +26,7 @@ type MongoProjectRepository struct {
 func NewMongoProjectRepository(db *mongo.Database) writingInterface.ProjectRepository {
 	return &MongoProjectRepository{
 		BaseMongoRepository: base.NewBaseMongoRepository(db, "projects"),
-		db:                 db,
+		db:                  db,
 	}
 }
 

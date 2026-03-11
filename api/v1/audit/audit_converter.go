@@ -75,9 +75,9 @@ func ToAuditRecordDTO(record *audit.AuditRecord) *AuditRecordDTO {
 	violationsDTOs := ToViolationDetailDTOs(record.Violations)
 
 	return &AuditRecordDTO{
-		ID:        converter.ModelIDToDTO(record.ID),
-		CreatedAt: converter.TimeToISO8601(record.CreatedAt),
-		UpdatedAt: converter.TimeToISO8601(record.UpdatedAt),
+		ID:         converter.ModelIDToDTO(record.ID),
+		CreatedAt:  converter.TimeToISO8601(record.CreatedAt),
+		UpdatedAt:  converter.TimeToISO8601(record.UpdatedAt),
 		ReviewedAt: reviewedAt,
 
 		// 审核对象
@@ -235,7 +235,7 @@ func ToAuditRecordModelWithoutID(dto *AuditRecordDTO) (*audit.AuditRecord, error
 
 	return &audit.AuditRecord{
 		IdentifiedEntity: shared.IdentifiedEntity{}, // ID 将由数据库生成
-		BaseEntity:       shared.BaseEntity{},        // 时间戳将由数据库设置
+		BaseEntity:       shared.BaseEntity{},       // 时间戳将由数据库设置
 
 		TargetType: dto.TargetType,
 		TargetID:   targetID,

@@ -8,8 +8,8 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	readerModels "Qingyu_backend/models/reader"
-	"Qingyu_backend/service/interfaces"
 	"Qingyu_backend/pkg/response"
+	"Qingyu_backend/service/interfaces"
 )
 
 // AnnotationsAPI 标注API
@@ -96,7 +96,7 @@ func (api *AnnotationsAPI) CreateAnnotation(c *gin.Context) {
 	userOID, _ := primitive.ObjectIDFromHex(userIDStr)
 	bookOID, _ := primitive.ObjectIDFromHex(req.BookID)
 	chapterOID, _ := primitive.ObjectIDFromHex(req.ChapterID)
-	
+
 	annotation := &readerModels.Annotation{
 		UserID:    userOID,
 		BookID:    bookOID,

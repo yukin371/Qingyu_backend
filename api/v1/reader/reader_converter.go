@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"time"
 
+	readerModel "Qingyu_backend/models/reader"
 	"Qingyu_backend/models/shared"
 	"Qingyu_backend/models/shared/types"
-	readerModel "Qingyu_backend/models/reader"
 )
 
 // ===========================
@@ -179,7 +179,7 @@ func ToReadingProgressModelWithoutID(dto *ReadingProgressDTO) (*readerModel.Read
 
 	return &readerModel.ReadingProgress{
 		IdentifiedEntity: shared.IdentifiedEntity{}, // ID 将由数据库生成
-		BaseEntity:       shared.BaseEntity{},        // 时间戳将由数据库设置
+		BaseEntity:       shared.BaseEntity{},       // 时间戳将由数据库设置
 
 		UserID:    userID,
 		BookID:    bookID,

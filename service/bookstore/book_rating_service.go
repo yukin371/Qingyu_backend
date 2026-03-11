@@ -419,6 +419,7 @@ func (s *BookRatingServiceImpl) GetTopRatedBooks(ctx context.Context, limit int)
 	if limit < 1 || limit > 100 {
 		limit = 10
 	}
+	_ = limit
 
 	// 由于BookRatingRepository接口中没有GetTopRatedBooks方法，
 	// 我们使用GetTopRated方法，但需要一个bookID参数

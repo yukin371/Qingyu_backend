@@ -8,11 +8,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"sort"
 	"strings"
 	"sync"
 	"time"
+
+	"Qingyu_backend/repository"
 )
 
 // BookstoreService 书城服务接口 - 专注于书城列表展示和首页聚合
@@ -979,7 +980,7 @@ func ConvertSearchResponseToBooks(items []searchModels.SearchItem) []*bookstore2
 
 		// 从 Data 中提取字段
 		if id, ok := item.Data["id"].(string); ok {
-			if objectID, err := primitive.ObjectIDFromHex(id); err == nil {
+			if objectID, err := repository.ParseID(id); err == nil {
 				book.ID = objectID
 			}
 		}

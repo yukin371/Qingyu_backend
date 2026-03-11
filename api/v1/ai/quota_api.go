@@ -3,12 +3,13 @@ package ai
 import (
 	"strconv"
 
-	aiModel "Qingyu_backend/models/ai" // Imported for Swagger annotations
+	aiModel "Qingyu_backend/models/ai"                     // Imported for Swagger annotations
 	aiInterfaces "Qingyu_backend/repository/interfaces/ai" // Imported for Swagger annotations
 	aiService "Qingyu_backend/service/ai"
 
-	"github.com/gin-gonic/gin"
 	"Qingyu_backend/pkg/response"
+
+	"github.com/gin-gonic/gin"
 )
 
 // QuotaApi 配额API
@@ -159,7 +160,7 @@ func (api *QuotaApi) RechargeQuota(c *gin.Context) {
 
 	var req RechargeRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 

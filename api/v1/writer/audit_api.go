@@ -5,8 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	auditDTO "Qingyu_backend/service/audit"
 	"Qingyu_backend/pkg/response"
+	auditDTO "Qingyu_backend/service/audit"
 )
 
 // AuditApi 审核API
@@ -34,7 +34,7 @@ func NewAuditApi(auditService audit.ContentAuditService) *AuditApi {
 func (api *AuditApi) CheckContent(c *gin.Context) {
 	var req auditDTO.CheckContentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -63,7 +63,7 @@ func (api *AuditApi) AuditDocument(c *gin.Context) {
 
 	var req auditDTO.AuditDocumentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -105,7 +105,7 @@ func (api *AuditApi) GetAuditResult(c *gin.Context) {
 
 	record, err := api.auditService.GetAuditResult(c.Request.Context(), targetType, documentID)
 	if err != nil {
-			response.NotFound(c, err.Error())
+		response.NotFound(c, err.Error())
 		return
 	}
 
@@ -130,7 +130,7 @@ func (api *AuditApi) SubmitAppeal(c *gin.Context) {
 
 	var req auditDTO.SubmitAppealRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -143,7 +143,7 @@ func (api *AuditApi) SubmitAppeal(c *gin.Context) {
 
 	err := api.auditService.SubmitAppeal(c.Request.Context(), auditID, userID.(string), req.Reason)
 	if err != nil {
-		response.BadRequest(c,  "提交申诉失败", err.Error())
+		response.BadRequest(c, "提交申诉失败", err.Error())
 		return
 	}
 
@@ -196,7 +196,7 @@ func (api *AuditApi) ReviewAudit(c *gin.Context) {
 
 	var req auditDTO.ReviewAuditRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 
@@ -231,7 +231,7 @@ func (api *AuditApi) ReviewAppeal(c *gin.Context) {
 
 	var req auditDTO.ReviewAppealRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c,  "参数错误", err.Error())
+		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
 

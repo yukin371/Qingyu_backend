@@ -115,8 +115,8 @@ func TestBatchOperation_GetSummary(t *testing.T) {
 		Status:    writer.BatchOpStatusProcessing,
 		Atomic:    false,
 		PreflightSummary: &writer.PreflightSummary{
-			TotalCount:  5,
-			ValidCount:  5,
+			TotalCount:   5,
+			ValidCount:   5,
 			InvalidCount: 0,
 		},
 		Items: []writer.BatchOperationItem{
@@ -267,7 +267,7 @@ func TestBatchOperationItem_RetryableFields(t *testing.T) {
 	item.Retryable = true
 	item.RetryCount = 1
 
-	if item.Retryable != true {
+	if !item.Retryable {
 		t.Error("VERSION_CONFLICT应该可重试")
 	}
 
@@ -277,7 +277,7 @@ func TestBatchOperationItem_RetryableFields(t *testing.T) {
 	item.Retryable = false
 	item.RetryCount = 2
 
-	if item.Retryable != false {
+	if item.Retryable {
 		t.Error("PERMISSION_DENIED不应该可重试")
 	}
 

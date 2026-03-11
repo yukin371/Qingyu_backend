@@ -59,10 +59,10 @@ func TestUserReadingConsistency(t *testing.T) {
 		// 模拟多次阅读操作
 		for i := 1; i <= 3; i++ {
 			// 更新阅读进度
-			actions.StartReading(user.ID.Hex(), book.ID.Hex(), chapter.ID, token)
+			actions.StartReading(user.ID.Hex(), book.ID.Hex(), chapter.ID.Hex(), token)
 
 			// 获取章节内容（模拟阅读）
-			actions.GetChapter(chapter.ID, token)
+			actions.GetChapter(chapter.ID.Hex(), token)
 		}
 
 		t.Logf("✓ 完成3次阅读操作")

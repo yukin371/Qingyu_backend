@@ -476,8 +476,8 @@ func (s *ProjectService) SetProjectDefaults(project *writer.Project) {
 
 	// 初始化设置
 	project.Settings = writer.ProjectSettings{
-		AutoBackup:     true,  // 业务规则：默认开启自动备份
-		BackupInterval: 24,    // 业务规则：默认24小时备份一次
+		AutoBackup:     true, // 业务规则：默认开启自动备份
+		BackupInterval: 24,   // 业务规则：默认24小时备份一次
 	}
 }
 

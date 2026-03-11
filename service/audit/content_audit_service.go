@@ -12,6 +12,7 @@ import (
 	"Qingyu_backend/models/shared"
 	pkgErrors "Qingyu_backend/pkg/errors"
 	auditRepo "Qingyu_backend/repository/interfaces/audit"
+	"Qingyu_backend/repository"
 	"Qingyu_backend/service/base"
 )
 
@@ -163,11 +164,11 @@ func (s *ContentAuditService) AuditDocument(ctx context.Context, documentID stri
 
 	// 3. 创建审核记录
 	// 转换 ID
-	targetOID, err := primitive.ObjectIDFromHex(documentID)
+	targetOID, err := repository.ParseID(documentID)
 	if err != nil {
 		return nil, fmt.Errorf("invalid document ID: %w", err)
 	}
-	authorOID, err := primitive.ObjectIDFromHex(authorID)
+	authorOID, err := repository.ParseID(authorID)
 	if err != nil {
 		return nil, fmt.Errorf("invalid author ID: %w", err)
 	}
@@ -183,7 +184,7 @@ func (s *ContentAuditService) AuditDocument(ctx context.Context, documentID stri
 		RiskLevel:        checkResult.RiskLevel,
 		RiskScore:        checkResult.RiskScore,
 		Violations:       checkResult.Violations,
-		}
+	}
 
 	// 4. 确定审核状态和结果
 	// 修复: 优先根据风险等级判断，高风险直接拒绝
@@ -271,7 +272,7 @@ func (s *ContentAuditService) BatchAuditDocuments(ctx context.Context, documentI
 
 			// 注意：实际生产环境应该调用 DocumentService 获取文档内容
 			// 当前实现：创建简化的审核记录
-			docOID, err := primitive.ObjectIDFromHex(docID)
+			docOID, err := repository.ParseID(docID)
 			if err != nil {
 				resultChan <- result{err: fmt.Errorf("invalid doc ID: %w", err)}
 				return
@@ -288,7 +289,7 @@ func (s *ContentAuditService) BatchAuditDocuments(ctx context.Context, documentI
 				RiskLevel:        1,
 				RiskScore:        0.0,
 				Violations:       []audit.ViolationDetail{},
-				}
+			}
 
 			// 保存审核记录
 			err = s.auditRecordRepo.Create(ctx, record)
@@ -395,7 +396,7 @@ func (s *ContentAuditService) SubmitAppeal(ctx context.Context, auditID string, 
 	}
 
 	// 3. 验证权限
-	authorOID, err := primitive.ObjectIDFromHex(authorID)
+	authorOID, err := repository.ParseID(authorID)
 	if err != nil {
 		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "无效的作者ID", "", nil)
 	}
@@ -649,7 +650,7 @@ func (s *ContentAuditService) createViolationRecord(ctx context.Context, record 
 		Description:    fmt.Sprintf("内容违规，风险等级：%d", record.RiskLevel),
 		CreatedAt:      now,
 		UpdatedAt:      now,
-		}
+	}
 
 	// 根据风险等级确定处罚
 	if record.RiskLevel >= audit.LevelBanned {

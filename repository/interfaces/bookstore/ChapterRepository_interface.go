@@ -53,22 +53,22 @@ type ChapterRepository interface {
 
 // ChapterFilter 章节过滤器
 type ChapterFilter struct {
-	BookID          *string `json:"book_id,omitempty"`
-	Title           string              `json:"title,omitempty"`
-	IsFree          *bool               `json:"is_free,omitempty"`
-	IsPublished     *bool               `json:"is_published,omitempty"`
-	MinPrice        *float64            `json:"min_price,omitempty"`
-	MaxPrice        *float64            `json:"max_price,omitempty"`
-	MinWordCount    *int                `json:"min_word_count,omitempty"`
-	MaxWordCount    *int                `json:"max_word_count,omitempty"`
-	StartChapter    *int                `json:"start_chapter,omitempty"`
-	EndChapter      *int                `json:"end_chapter,omitempty"`
-	PublishedAfter  *time.Time          `json:"published_after,omitempty"`
-	PublishedBefore *time.Time          `json:"published_before,omitempty"`
-	MinChapterNum   *int                `json:"min_chapter_num,omitempty"`
-	MaxChapterNum   *int                `json:"max_chapter_num,omitempty"`
-	Limit           int                 `json:"limit,omitempty"`
-	Offset          int                 `json:"offset,omitempty"`
-	SortBy          string              `json:"sort_by,omitempty"`
-	SortOrder       string              `json:"sort_order,omitempty"`
+	BookID          *string    `json:"book_id,omitempty"`
+	Title           string     `json:"title,omitempty"`
+	IsFree          *bool      `json:"is_free,omitempty"`
+	IsPublished     *bool      `json:"is_published,omitempty"`
+	MinPrice        *float64   `json:"min_price,omitempty"`
+	MaxPrice        *float64   `json:"max_price,omitempty"`
+	MinWordCount    *int       `json:"min_word_count,omitempty"`
+	MaxWordCount    *int       `json:"max_word_count,omitempty"`
+	StartChapter    *int       `json:"start_chapter,omitempty"`
+	EndChapter      *int       `json:"end_chapter,omitempty"`
+	PublishedAfter  *time.Time `json:"published_after,omitempty"`
+	PublishedBefore *time.Time `json:"published_before,omitempty"`
+	MinChapterNum   *int       `json:"min_chapter_num,omitempty"`
+	MaxChapterNum   *int       `json:"max_chapter_num,omitempty"`
+	Limit           int        `json:"limit,omitempty"`
+	Offset          int        `json:"offset,omitempty"`
+	SortBy          string     `json:"sort_by,omitempty"`
+	SortOrder       string     `json:"sort_order,omitempty"`
 }

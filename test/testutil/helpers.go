@@ -249,16 +249,16 @@ func CreateTestDocumentContent(documentID string, content string) *writer.Docume
 	}
 	now := time.Now()
 	return &writer.DocumentContent{
-		ID:               id,
-		DocumentID:       documentObjectID,
-		Content:          content,
-		ContentType:      "markdown",
-		WordCount:        len([]rune(content)),
-		CharCount:        len(content),
-		Version:          1,
-		CreatedAt:        now,
-		UpdatedAt:        now,
-		LastSavedAt:      now,
+		ID:          id,
+		DocumentID:  documentObjectID,
+		Content:     content,
+		ContentType: "markdown",
+		WordCount:   len([]rune(content)),
+		CharCount:   len(content),
+		Version:     1,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+		LastSavedAt: now,
 	}
 }
 

@@ -58,10 +58,10 @@ func RunUserReadingConsistency(t *testing.T) {
 		// 模拟多次阅读操作
 		for i := 1; i <= 3; i++ {
 			// 更新阅读进度
-			actions.StartReading(user.ID.Hex(), book.ID.Hex(), chapter.ID, token)
+			actions.StartReading(user.ID.Hex(), book.ID.Hex(), chapter.ID.Hex(), token)
 
 			// 获取章节内容（模拟阅读）
-			actions.GetChapter(chapter.ID, token)
+			actions.GetChapter(chapter.ID.Hex(), token)
 		}
 
 		t.Logf("✓ 完成3次阅读操作")
@@ -329,8 +329,8 @@ func RunSocialInteractionConsistency(t *testing.T) {
 		token1 := actions.Login(user1.Username, "Test1234")
 
 		// User1 发表评论
-		actions.AddComment(token1, book.ID.Hex(), chapter.ID, "E2E测试评论1：这本书很有趣！")
-		actions.AddComment(token1, book.ID.Hex(), chapter.ID, "E2E测试评论2：期待后续章节。")
+		actions.AddComment(token1, book.ID.Hex(), chapter.ID.Hex(), "E2E测试评论1：这本书很有趣！")
+		actions.AddComment(token1, book.ID.Hex(), chapter.ID.Hex(), "E2E测试评论2：期待后续章节。")
 
 		// User1 收藏书籍
 		actions.CollectBook(token1, book.ID.Hex())
@@ -344,7 +344,7 @@ func RunSocialInteractionConsistency(t *testing.T) {
 		token2 := actions.Login(user2.Username, "Test1234")
 
 		// User2 发表评论
-		actions.AddComment(token2, book.ID.Hex(), chapter.ID, "E2E测试评论3：我也很喜欢这本书。")
+		actions.AddComment(token2, book.ID.Hex(), chapter.ID.Hex(), "E2E测试评论3：我也很喜欢这本书。")
 
 		// User2 收藏书籍
 		actions.CollectBook(token2, book.ID.Hex())

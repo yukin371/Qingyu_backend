@@ -146,7 +146,7 @@ func ToUserModelWithoutID(dto *UserDTO) (*usersModel.User, error) {
 
 	return &usersModel.User{
 		IdentifiedEntity: shared.IdentifiedEntity{}, // ID 将由数据库生成
-		BaseEntity:       shared.BaseEntity{},        // 时间戳将由数据库设置
+		BaseEntity:       shared.BaseEntity{},       // 时间戳将由数据库设置
 
 		Username: dto.Username,
 		Email:    dto.Email,

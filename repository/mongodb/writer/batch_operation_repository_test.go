@@ -56,11 +56,11 @@ func TestBatchOperationRepository_Create(t *testing.T) {
 	userID := primitive.NewObjectID()
 
 	op := &writer.BatchOperation{
-		ProjectID:   projectID,
-		Type:        writer.BatchOpTypeDelete,
-		TargetIDs:   []string{"doc-1", "doc-2"},
-		Atomic:      true,
-		CreatedBy:   userID.Hex(),
+		ProjectID: projectID,
+		Type:      writer.BatchOpTypeDelete,
+		TargetIDs: []string{"doc-1", "doc-2"},
+		Atomic:    true,
+		CreatedBy: userID.Hex(),
 	}
 
 	err := repo.Create(ctx, op)
@@ -82,10 +82,10 @@ func TestBatchOperationRepository_GetByID(t *testing.T) {
 	userID := primitive.NewObjectID()
 
 	op := &writer.BatchOperation{
-		ProjectID:   projectID,
-		Type:        writer.BatchOpTypeDelete,
-		TargetIDs:   []string{"doc-1"},
-		CreatedBy:   userID.Hex(),
+		ProjectID: projectID,
+		Type:      writer.BatchOpTypeDelete,
+		TargetIDs: []string{"doc-1"},
+		CreatedBy: userID.Hex(),
 	}
 	err := repo.Create(ctx, op)
 	require.NoError(t, err)
@@ -170,11 +170,11 @@ func TestBatchOperationRepository_UpdateStatus(t *testing.T) {
 	userID := primitive.NewObjectID()
 
 	op := &writer.BatchOperation{
-		ProjectID:   projectID,
-		Type:        writer.BatchOpTypeDelete,
-		TargetIDs:   []string{"doc-1"},
-		CreatedBy:   userID.Hex(),
-		Status:      writer.BatchOpStatusPending,
+		ProjectID: projectID,
+		Type:      writer.BatchOpTypeDelete,
+		TargetIDs: []string{"doc-1"},
+		CreatedBy: userID.Hex(),
+		Status:    writer.BatchOpStatusPending,
 	}
 	err := repo.Create(ctx, op)
 	require.NoError(t, err)
@@ -216,11 +216,11 @@ func TestBatchOperationRepository_Update(t *testing.T) {
 	userID := primitive.NewObjectID()
 
 	op := &writer.BatchOperation{
-		ProjectID:   projectID,
-		Type:        writer.BatchOpTypeDelete,
-		TargetIDs:   []string{"doc-1"},
-		CreatedBy:   userID.Hex(),
-		Status:      writer.BatchOpStatusPending,
+		ProjectID: projectID,
+		Type:      writer.BatchOpTypeDelete,
+		TargetIDs: []string{"doc-1"},
+		CreatedBy: userID.Hex(),
+		Status:    writer.BatchOpStatusPending,
 	}
 	err := repo.Create(ctx, op)
 	require.NoError(t, err)
@@ -228,9 +228,9 @@ func TestBatchOperationRepository_Update(t *testing.T) {
 	// 修改状态
 	op.Status = writer.BatchOpStatusRunning
 	now := time.Now()
-		// Convert time.Time to primitive.DateTime
-		dt := primitive.NewDateTimeFromTime(now)
-		op.StartedAt = &dt
+	// Convert time.Time to primitive.DateTime
+	dt := primitive.NewDateTimeFromTime(now)
+	op.StartedAt = &dt
 
 	// 更新
 	err = repo.Update(ctx, op)
@@ -258,11 +258,11 @@ func TestBatchOperationRepository_ListByProject(t *testing.T) {
 	// 创建多个操作
 	for i := 0; i < 3; i++ {
 		op := &writer.BatchOperation{
-			ProjectID:   projectID,
-			Type:        writer.BatchOpTypeDelete,
-			TargetIDs:   []string{primitive.NewObjectID().Hex()},
-			CreatedBy:   userID.Hex(),
-			Status:      writer.BatchOpStatusCompleted,
+			ProjectID: projectID,
+			Type:      writer.BatchOpTypeDelete,
+			TargetIDs: []string{primitive.NewObjectID().Hex()},
+			CreatedBy: userID.Hex(),
+			Status:    writer.BatchOpStatusCompleted,
 		}
 		err := repo.Create(ctx, op)
 		require.NoError(t, err)
@@ -292,21 +292,21 @@ func TestBatchOperationRepository_ListByProject_WithStatus(t *testing.T) {
 
 	// 创建不同状态的操作
 	pendingOp := &writer.BatchOperation{
-		ProjectID:   projectID,
-		Type:        writer.BatchOpTypeDelete,
-		TargetIDs:   []string{"doc-1"},
-		CreatedBy:   userID.Hex(),
-		Status:      writer.BatchOpStatusPending,
+		ProjectID: projectID,
+		Type:      writer.BatchOpTypeDelete,
+		TargetIDs: []string{"doc-1"},
+		CreatedBy: userID.Hex(),
+		Status:    writer.BatchOpStatusPending,
 	}
 	err := repo.Create(ctx, pendingOp)
 	require.NoError(t, err)
 
 	completedOp := &writer.BatchOperation{
-		ProjectID:   projectID,
-		Type:        writer.BatchOpTypeDelete,
-		TargetIDs:   []string{"doc-2"},
-		CreatedBy:   userID.Hex(),
-		Status:      writer.BatchOpStatusCompleted,
+		ProjectID: projectID,
+		Type:      writer.BatchOpTypeDelete,
+		TargetIDs: []string{"doc-2"},
+		CreatedBy: userID.Hex(),
+		Status:    writer.BatchOpStatusCompleted,
 	}
 	err = repo.Create(ctx, completedOp)
 	require.NoError(t, err)
@@ -335,11 +335,11 @@ func TestBatchOperationRepository_GetRunningCount(t *testing.T) {
 	// 创建2个运行中操作
 	for i := 0; i < 2; i++ {
 		op := &writer.BatchOperation{
-			ProjectID:   projectID,
-			Type:        writer.BatchOpTypeDelete,
-			TargetIDs:   []string{"doc-1"},
-			CreatedBy:   userID.Hex(),
-			Status:      writer.BatchOpStatusRunning,
+			ProjectID: projectID,
+			Type:      writer.BatchOpTypeDelete,
+			TargetIDs: []string{"doc-1"},
+			CreatedBy: userID.Hex(),
+			Status:    writer.BatchOpStatusRunning,
 		}
 		err := repo.Create(ctx, op)
 		require.NoError(t, err)
@@ -347,11 +347,11 @@ func TestBatchOperationRepository_GetRunningCount(t *testing.T) {
 
 	// 创建1个已完成操作
 	completedOp := &writer.BatchOperation{
-		ProjectID:   projectID,
-		Type:        writer.BatchOpTypeDelete,
-		TargetIDs:   []string{"doc-2"},
-		CreatedBy:   userID.Hex(),
-		Status:      writer.BatchOpStatusCompleted,
+		ProjectID: projectID,
+		Type:      writer.BatchOpTypeDelete,
+		TargetIDs: []string{"doc-2"},
+		CreatedBy: userID.Hex(),
+		Status:    writer.BatchOpStatusCompleted,
 	}
 	err := repo.Create(ctx, completedOp)
 	require.NoError(t, err)
@@ -377,10 +377,10 @@ func TestOperationLogRepository_Create(t *testing.T) {
 	userID := primitive.NewObjectID()
 
 	log := &writer.OperationLog{
-		ProjectID:    projectID,
-		UserID:       userID,
-		CommandType:  writer.CommandDelete,
-		TargetIDs:    []string{"doc-1"},
+		ProjectID:   projectID,
+		UserID:      userID,
+		CommandType: writer.CommandDelete,
+		TargetIDs:   []string{"doc-1"},
 		CommandPayload: map[string]interface{}{
 			"reason": "test",
 		},
@@ -451,11 +451,11 @@ func TestOperationLogRepository_GetByChainID(t *testing.T) {
 	// 创建多个同链的日志
 	for i := 0; i < 3; i++ {
 		log := &writer.OperationLog{
-			ProjectID:    projectID,
-			UserID:       userID,
-			ChainID:      chainID,
-			CommandType:  writer.CommandDelete,
-			TargetIDs:    []string{primitive.NewObjectID().Hex()},
+			ProjectID:   projectID,
+			UserID:      userID,
+			ChainID:     chainID,
+			CommandType: writer.CommandDelete,
+			TargetIDs:   []string{primitive.NewObjectID().Hex()},
 		}
 		err := repo.Create(ctx, log)
 		require.NoError(t, err)
@@ -514,12 +514,12 @@ func TestOperationLogRepository_UpdateStatus(t *testing.T) {
 	userID := primitive.NewObjectID()
 
 	log := &writer.OperationLog{
-		ProjectID:    projectID,
-		UserID:       userID,
-		CommandType:  writer.CommandDelete,
-		TargetIDs:    []string{"doc-1"},
-		Status:       writer.OpLogStatusExecuted,
-		IsCommitted:  true,
+		ProjectID:   projectID,
+		UserID:      userID,
+		CommandType: writer.CommandDelete,
+		TargetIDs:   []string{"doc-1"},
+		Status:      writer.OpLogStatusExecuted,
+		IsCommitted: true,
 	}
 	err := repo.Create(ctx, log)
 	require.NoError(t, err)
@@ -562,11 +562,11 @@ func TestOperationLogRepository_MarkAsCommitted(t *testing.T) {
 	userID := primitive.NewObjectID()
 
 	log := &writer.OperationLog{
-		ProjectID:    projectID,
-		UserID:       userID,
-		CommandType:  writer.CommandDelete,
-		TargetIDs:    []string{"doc-1"},
-		IsCommitted:  false,
+		ProjectID:   projectID,
+		UserID:      userID,
+		CommandType: writer.CommandDelete,
+		TargetIDs:   []string{"doc-1"},
+		IsCommitted: false,
 	}
 	err := repo.Create(ctx, log)
 	require.NoError(t, err)

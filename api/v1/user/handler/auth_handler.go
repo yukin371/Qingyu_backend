@@ -193,11 +193,6 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 		return
 	}
 
-	// 去除 "Bearer " 前缀
-	if len(token) > 7 && token[:7] == "Bearer " {
-		token = token[7:]
-	}
-
 	// TODO: 将Token加入黑名单或清除服务端会话
 	// 当前JWT是无状态的，主要依赖客户端删除token
 	// 如果需要服务端控制，可以实现token黑名单机制

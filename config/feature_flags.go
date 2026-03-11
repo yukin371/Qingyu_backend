@@ -4,8 +4,8 @@ import "sync"
 
 // FeatureFlags 功能开关，用于控制功能的启用/禁用
 type FeatureFlags struct {
-	mu           sync.RWMutex
-	EnableCache  bool `yaml:"enable_cache" json:"enable_cache"`
+	mu          sync.RWMutex
+	EnableCache bool `yaml:"enable_cache" json:"enable_cache"`
 }
 
 // NewFeatureFlags 创建默认启用的FeatureFlags

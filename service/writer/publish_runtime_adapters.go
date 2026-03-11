@@ -9,8 +9,10 @@ import (
 	bookstoreModel "Qingyu_backend/models/bookstore"
 	"Qingyu_backend/models/dto"
 	writerModel "Qingyu_backend/models/writer"
+	"Qingyu_backend/repository"
 	writerRepo "Qingyu_backend/repository/interfaces/writer"
 	baseInterfaces "Qingyu_backend/service/interfaces/base"
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -45,7 +47,7 @@ func (a *PublishDocumentRepositoryAdapter) FindByID(ctx context.Context, id stri
 }
 
 func (a *PublishDocumentRepositoryAdapter) FindByProjectID(ctx context.Context, projectID string) ([]*writerModel.Document, error) {
-	objectID, err := primitive.ObjectIDFromHex(projectID)
+	objectID, err := repository.ParseID(projectID)
 	if err != nil {
 		return nil, fmt.Errorf("invalid project id: %w", err)
 	}
@@ -204,7 +206,7 @@ func (c *LocalBookstoreClient) UnpublishChapter(ctx context.Context, chapterID, 
 }
 
 func (c *LocalBookstoreClient) UpdateChapter(ctx context.Context, req *BookstoreUpdateChapterRequest) error {
-	chapterObjectID, err := primitive.ObjectIDFromHex(req.ChapterID)
+	chapterObjectID, err := repository.ParseID(req.ChapterID)
 	if err != nil {
 		return fmt.Errorf("invalid chapter id: %w", err)
 	}
@@ -422,7 +424,7 @@ func (c *LocalBookstoreClient) rebuildProjectChapters(ctx context.Context, book 
 }
 
 func (c *LocalBookstoreClient) upsertSingleChapter(ctx context.Context, book *bookstoreModel.Book, req *BookstorePublishChapterRequest) (string, error) {
-	documentID, err := primitive.ObjectIDFromHex(req.DocumentID)
+	documentID, err := repository.ParseID(req.DocumentID)
 	if err != nil {
 		return "", fmt.Errorf("invalid document id: %w", err)
 	}
@@ -489,7 +491,7 @@ func (c *LocalBookstoreClient) upsertSingleChapter(ctx context.Context, book *bo
 }
 
 func (c *LocalBookstoreClient) getProject(ctx context.Context, projectID string) (*writerModel.Project, error) {
-	objectID, err := primitive.ObjectIDFromHex(projectID)
+	objectID, err := repository.ParseID(projectID)
 	if err != nil {
 		return nil, fmt.Errorf("invalid project id: %w", err)
 	}
@@ -512,7 +514,7 @@ func (c *LocalBookstoreClient) getBookByProjectID(ctx context.Context, projectID
 }
 
 func (c *LocalBookstoreClient) listProjectDocuments(ctx context.Context, projectID string) ([]*writerModel.Document, error) {
-	objectID, err := primitive.ObjectIDFromHex(projectID)
+	objectID, err := repository.ParseID(projectID)
 	if err != nil {
 		return nil, fmt.Errorf("invalid project id: %w", err)
 	}
@@ -550,7 +552,7 @@ func (c *LocalBookstoreClient) listProjectDocuments(ctx context.Context, project
 }
 
 func (c *LocalBookstoreClient) getDocumentContent(ctx context.Context, documentID string) (string, error) {
-	objectID, err := primitive.ObjectIDFromHex(documentID)
+	objectID, err := repository.ParseID(documentID)
 	if err != nil {
 		return "", fmt.Errorf("invalid document id: %w", err)
 	}

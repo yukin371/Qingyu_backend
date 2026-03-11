@@ -175,7 +175,7 @@ func TestGrayScaleDistribution_ValidateDistribution(t *testing.T) {
 	totalUsers := 1000
 
 	for i := 0; i < totalUsers; i++ {
-		userID := string(rune('a' + i%26)) + string(rune('a'+(i/26)%26)) + string(rune('a'+(i/676)%26))
+		userID := string(rune('a'+i%26)) + string(rune('a'+(i/26)%26)) + string(rune('a'+(i/676)%26))
 		result := decision.ShouldUseES(ctx, "books", userID)
 		if result {
 			esCount++

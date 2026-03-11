@@ -16,15 +16,15 @@ import (
 
 // MongoReadingProgressRepository 阅读进度仓储MongoDB实现
 type MongoReadingProgressRepository struct {
-	*base.BaseMongoRepository  // 嵌入基类，继承ID转换和通用CRUD方法喵~
-	db *mongo.Database
+	*base.BaseMongoRepository // 嵌入基类，继承ID转换和通用CRUD方法喵~
+	db                        *mongo.Database
 }
 
 // NewMongoReadingProgressRepository 创建阅读进度仓储实例
 func NewMongoReadingProgressRepository(db *mongo.Database) *MongoReadingProgressRepository {
 	return &MongoReadingProgressRepository{
 		BaseMongoRepository: base.NewBaseMongoRepository(db, "reading_progress"),
-		db:                 db,
+		db:                  db,
 	}
 }
 
@@ -47,7 +47,7 @@ func (r *MongoReadingProgressRepository) Create(ctx context.Context, progress *r
 
 // GetByID 根据ID获取阅读进度
 func (r *MongoReadingProgressRepository) GetByID(ctx context.Context, id string) (*reader.ReadingProgress, error) {
-	objectID, err := r.ParseID(id)  // 使用基类的ParseID方法喵~
+	objectID, err := r.ParseID(id) // 使用基类的ParseID方法喵~
 	if err != nil {
 		return nil, err
 	}

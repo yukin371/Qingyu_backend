@@ -125,11 +125,11 @@ func TestOutlineApi_CreateOutline_Success(t *testing.T) {
 	router := setupOutlineTestRouter(mockService, userID)
 
 	reqBody := map[string]interface{}{
-		"title":    "第一卷",
-		"summary":  "这是第一卷的内容",
-		"type":     "volume",
-		"tension":  7,
-		"order":    0,
+		"title":   "第一卷",
+		"summary": "这是第一卷的内容",
+		"type":    "volume",
+		"tension": 7,
+		"order":   0,
 	}
 
 	jsonBody, _ := json.Marshal(reqBody)

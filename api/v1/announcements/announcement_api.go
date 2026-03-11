@@ -1,8 +1,8 @@
 package announcements
 
 import (
-	messagingModel "Qingyu_backend/models/messaging"
 	"Qingyu_backend/api/v1/shared"
+	messagingModel "Qingyu_backend/models/messaging"
 	"Qingyu_backend/pkg/response"
 	messagingService "Qingyu_backend/service/messaging"
 

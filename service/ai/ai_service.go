@@ -11,10 +11,10 @@ import (
 	"Qingyu_backend/service/ai/adapter"
 	aiInterfaces "Qingyu_backend/service/interfaces/ai"
 
+	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"github.com/sirupsen/logrus"
 )
 
 // AIServiceConfig AI服务配置
@@ -30,7 +30,7 @@ type AIServiceConfig struct {
 // AIService AI服务（简化版，使用gRPC）
 type AIService struct {
 	grpcClient      *GRPCClient
-	quotaService    *QuotaService // 假设存在配额服务
+	quotaService    *QuotaService           // 假设存在配额服务
 	fallbackAdapter *adapter.AdapterManager // 废弃的适配器（用于降级）
 	circuitBreaker  *circuitbreaker.CircuitBreaker
 	config          *AIServiceConfig
@@ -169,7 +169,6 @@ func (s *AIService) Close() error {
 
 // Deprecated: Use AIService instead
 type Service struct {
-	legacyService *AIService
 	adapterManager *adapter.AdapterManager
 }
 
@@ -240,11 +239,11 @@ type QuotaInfo struct {
 
 // ContinueWritingRequest 续写请求（向后兼容）
 type ContinueWritingRequest struct {
-	ProjectID      string                `json:"projectId"`
-	ChapterID      string                `json:"chapterId"`
-	CurrentText    string                `json:"currentText"`
-	ContinueLength int                   `json:"continueLength"`
-	Options        interface{}           `json:"options"`
+	ProjectID      string      `json:"projectId"`
+	ChapterID      string      `json:"chapterId"`
+	CurrentText    string      `json:"currentText"`
+	ContinueLength int         `json:"continueLength"`
+	Options        interface{} `json:"options"`
 }
 
 // ContinueWritingResponse 续写响应（向后兼容）
@@ -267,22 +266,22 @@ type OptimizeTextRequest struct {
 
 // OptimizeTextResponse 文本优化响应（向后兼容）
 type OptimizeTextResponse struct {
-	Content      string `json:"content"`
-	TokensUsed   int    `json:"tokensUsed"`
-	Model        string `json:"model"`
-	Changes      []string `json:"changes,omitempty"`
+	Content    string   `json:"content"`
+	TokensUsed int      `json:"tokensUsed"`
+	Model      string   `json:"model"`
+	Changes    []string `json:"changes,omitempty"`
 }
 
 // GenerateContentRequest 内容生成请求（向后兼容）
 type GenerateContentRequest struct {
-	ProjectID  string                 `json:"projectId"`
-	ChapterID  string                 `json:"chapterId"`
-	Prompt     string                 `json:"prompt"`
-	Options    interface{}            `json:"options"`
-	MaxTokens  int                    `json:"maxTokens,omitempty"`
-	Temperature float64               `json:"temperature,omitempty"`
-	Context    map[string]string      `json:"context,omitempty"`
-	UserID     string                 `json:"userId,omitempty"`
+	ProjectID   string            `json:"projectId"`
+	ChapterID   string            `json:"chapterId"`
+	Prompt      string            `json:"prompt"`
+	Options     interface{}       `json:"options"`
+	MaxTokens   int               `json:"maxTokens,omitempty"`
+	Temperature float64           `json:"temperature,omitempty"`
+	Context     map[string]string `json:"context,omitempty"`
+	UserID      string            `json:"userId,omitempty"`
 }
 
 // GenerateContentResponse 内容生成响应（向后兼容）
@@ -315,8 +314,8 @@ func (s *Service) ContinueWriting(ctx context.Context, req *ContinueWritingReque
 
 	// 调用 GenerateContent - 需要转换为接口类型
 	genReq := &aiInterfaces.GenerateContentRequest{
-		Model:    "gpt-4", // 默认模型
-		Prompt:   prompt,
+		Model:     "gpt-4", // 默认模型
+		Prompt:    prompt,
 		MaxTokens: 2000,
 	}
 
@@ -358,8 +357,8 @@ func (s *Service) OptimizeText(ctx context.Context, req *OptimizeTextRequest) (*
 
 	// 调用 GenerateContent - 需要转换为接口类型
 	genReq := &aiInterfaces.GenerateContentRequest{
-		Model:    "gpt-4", // 默认模型
-		Prompt:   prompt,
+		Model:     "gpt-4", // 默认模型
+		Prompt:    prompt,
 		MaxTokens: 2000,
 	}
 

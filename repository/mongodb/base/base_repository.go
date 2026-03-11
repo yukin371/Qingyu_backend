@@ -87,6 +87,7 @@ func (b *BaseMongoRepository) GetCollection() *mongo.Collection {
 //   - error: 转换错误（types.ErrInvalidIDFormat 或 types.ErrEmptyID）
 //
 // 示例：
+//
 //	objectID, err := r.ParseID("507f1f77bcf86cd799439011")
 //	if err != nil {
 //	    return nil, err
@@ -107,6 +108,7 @@ func (b *BaseMongoRepository) ParseID(id string) (primitive.ObjectID, error) {
 //   - error: 如果有任何ID转换失败，返回错误
 //
 // 示例：
+//
 //	oids, err := r.ParseIDs([]string{"id1", "id2", "id3"})
 //	if err != nil {
 //	    return nil, err
@@ -130,6 +132,7 @@ func (b *BaseMongoRepository) ParseIDs(ids []string) ([]primitive.ObjectID, erro
 //   - string: hex格式的ID字符串
 //
 // 示例：
+//
 //	hexID := r.IDToHex(objectID)
 func (b *BaseMongoRepository) IDToHex(id primitive.ObjectID) string {
 	return types.ToHex(id)
@@ -146,6 +149,7 @@ func (b *BaseMongoRepository) IDToHex(id primitive.ObjectID) string {
 //   - []string: hex格式的ID字符串切片
 //
 // 示例：
+//
 //	hexIDs := r.IDsToHex([]primitive.ObjectID{id1, id2})
 func (b *BaseMongoRepository) IDsToHex(ids []primitive.ObjectID) []string {
 	return types.ToHexSlice(ids)
@@ -162,6 +166,7 @@ func (b *BaseMongoRepository) IDsToHex(ids []primitive.ObjectID) []string {
 //   - bool: 是否为有效的ObjectID格式
 //
 // 示例：
+//
 //	if !r.IsValidID("invalid") {
 //	    return nil, types.ErrInvalidIDFormat
 //	}
@@ -177,6 +182,7 @@ func (b *BaseMongoRepository) IsValidID(id string) bool {
 //   - string: 新生成的hex格式ID字符串
 //
 // 示例：
+//
 //	newID := r.GenerateID()
 func (b *BaseMongoRepository) GenerateID() string {
 	return types.GenerateNewObjectID()
@@ -196,6 +202,7 @@ func (b *BaseMongoRepository) GenerateID() string {
 //   - error: 查询错误或mongo.ErrNoDocuments
 //
 // 示例：
+//
 //	var progress reader.ReadingProgress
 //	err := r.FindByID(ctx, id, &progress)
 //	if err != nil {
@@ -222,6 +229,7 @@ func (b *BaseMongoRepository) FindByID(ctx context.Context, id string, result in
 //   - error: 查询错误或mongo.ErrNoDocuments
 //
 // 示例：
+//
 //	opts := options.FindOne().SetProjection(bson.M{"password": 0})
 //	err := r.FindByIDWithOpts(ctx, id, &user, opts)
 func (b *BaseMongoRepository) FindByIDWithOpts(ctx context.Context, id string, result interface{}, opts ...*options.FindOneOptions) error {
@@ -244,6 +252,7 @@ func (b *BaseMongoRepository) FindByIDWithOpts(ctx context.Context, id string, r
 //   - error: 更新错误
 //
 // 示例：
+//
 //	update := bson.M{"$set": bson.M{"status": "completed", "updated_at": time.Now()}}
 //	err := r.UpdateByID(ctx, id, update)
 func (b *BaseMongoRepository) UpdateByID(ctx context.Context, id string, update bson.M) error {
@@ -266,6 +275,7 @@ func (b *BaseMongoRepository) UpdateByID(ctx context.Context, id string, update 
 //   - error: 删除错误
 //
 // 示例：
+//
 //	err := r.DeleteByID(ctx, id)
 func (b *BaseMongoRepository) DeleteByID(ctx context.Context, id string) error {
 	oid, err := b.ParseID(id)
@@ -291,6 +301,7 @@ func (b *BaseMongoRepository) DeleteByID(ctx context.Context, id string) error {
 //   - error: 查询错误
 //
 // 示例：
+//
 //	var progresses []*reader.ReadingProgress
 //	filter := bson.M{"user_id": userOID}
 //	err := r.Find(ctx, filter, &progresses)
@@ -314,6 +325,7 @@ func (b *BaseMongoRepository) Find(ctx context.Context, filter bson.M, results i
 //   - error: 查询错误或mongo.ErrNoDocuments
 //
 // 示例：
+//
 //	var progress reader.ReadingProgress
 //	filter := bson.M{"user_id": userOID, "book_id": bookOID}
 //	err := r.FindOne(ctx, filter, &progress)
@@ -332,6 +344,7 @@ func (b *BaseMongoRepository) FindOne(ctx context.Context, filter bson.M, result
 //   - error: 统计错误
 //
 // 示例：
+//
 //	count, err := r.Count(ctx, bson.M{"status": "active"})
 func (b *BaseMongoRepository) Count(ctx context.Context, filter bson.M) (int64, error) {
 	return b.collection.CountDocuments(ctx, filter)
@@ -348,6 +361,7 @@ func (b *BaseMongoRepository) Count(ctx context.Context, filter bson.M) (int64, 
 //   - error: 查询错误
 //
 // 示例：
+//
 //	exists, err := r.Exists(ctx, id)
 //	if err != nil {
 //	    return false, err
@@ -376,6 +390,7 @@ func (b *BaseMongoRepository) Exists(ctx context.Context, id string) (bool, erro
 //   - error: 查询错误
 //
 // 示例：
+//
 //	filter := bson.M{"user_id": userOID, "book_id": bookOID}
 //	exists, err := r.ExistsByFilter(ctx, filter)
 func (b *BaseMongoRepository) ExistsByFilter(ctx context.Context, filter bson.M) (bool, error) {
@@ -393,6 +408,7 @@ func (b *BaseMongoRepository) ExistsByFilter(ctx context.Context, filter bson.M)
 //   - error: 创建错误
 //
 // 示例：
+//
 //	progress := &reader.ReadingProgress{...}
 //	err := r.Create(ctx, progress)
 func (b *BaseMongoRepository) Create(ctx context.Context, document interface{}) error {
@@ -411,6 +427,7 @@ func (b *BaseMongoRepository) Create(ctx context.Context, document interface{}) 
 //   - error: 创建错误
 //
 // 示例：
+//
 //	progress := &reader.ReadingProgress{...}
 //	id, err := r.CreateWithResult(ctx, progress)
 //	if err != nil {

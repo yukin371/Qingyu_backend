@@ -10,21 +10,21 @@ import (
 
 // GrayScaleMetricsSnapshot 灰度指标快照
 type GrayScaleMetricsSnapshot struct {
-	ESCount         int64         // ES 使用次数
-	MongoDBCount    int64         // MongoDB 使用次数
-	ESTotalTook     time.Duration // ES 总耗时
+	ESCount          int64         // ES 使用次数
+	MongoDBCount     int64         // MongoDB 使用次数
+	ESTotalTook      time.Duration // ES 总耗时
 	MongoDBTotalTook time.Duration // MongoDB 总耗时
-	LastUpdated     time.Time     // 最后更新时间
+	LastUpdated      time.Time     // 最后更新时间
 }
 
 // grayscaleMetricsCollector 灰度指标收集器
 type grayscaleMetricsCollector struct {
-	mu              sync.RWMutex
-	esCount         int64
-	mongoCount      int64
-	esTotalTook     time.Duration
-	mongoTotalTook  time.Duration
-	lastUpdated     time.Time
+	mu             sync.RWMutex
+	esCount        int64
+	mongoCount     int64
+	esTotalTook    time.Duration
+	mongoTotalTook time.Duration
+	lastUpdated    time.Time
 }
 
 var (

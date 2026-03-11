@@ -37,8 +37,8 @@ type LogOperationWithAuditRequest struct {
 	OldValues    map[string]interface{} `json:"old_values,omitempty"`
 	NewValues    map[string]interface{} `json:"new_values,omitempty"`
 	Changes      map[string]adminModel.ChangeRecord
-	IP           string                 `json:"ip"`
-	UserAgent    string                 `json:"user_agent"`
+	IP           string `json:"ip"`
+	UserAgent    string `json:"user_agent"`
 	// 敏感操作相关字段
 	IsSensitive bool   `json:"is_sensitive,omitempty"` // 是否为敏感操作
 	BatchID     string `json:"batch_id,omitempty"`     // 批次ID，用于批量操作去重

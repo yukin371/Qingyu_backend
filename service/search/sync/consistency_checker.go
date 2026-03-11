@@ -27,10 +27,10 @@ type ConsistencyChecker struct {
 
 // CheckerConfig 校验器配置
 type CheckerConfig struct {
-	CheckInterval   time.Duration // 检查间隔（用于定时任务）
-	BatchSize       int           // 批量查询大小
-	MaxMissingDocs  int           // 最大缺失文档数（超过则标记为异常）
-	AutoRepair      bool          // 是否自动修复
+	CheckInterval  time.Duration // 检查间隔（用于定时任务）
+	BatchSize      int           // 批量查询大小
+	MaxMissingDocs int           // 最大缺失文档数（超过则标记为异常）
+	AutoRepair     bool          // 是否自动修复
 }
 
 // DefaultCheckerConfig 默认配置

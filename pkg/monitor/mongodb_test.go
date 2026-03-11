@@ -9,9 +9,9 @@ import (
 // TestCheckResult_Validation 测试CheckResult验证
 func TestCheckResult_Validation(t *testing.T) {
 	tests := []struct {
-		name     string
-		result   CheckResult
-		valid    bool
+		name   string
+		result CheckResult
+		valid  bool
 	}{
 		{
 			name: "有效的检查结果",

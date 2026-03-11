@@ -10,34 +10,34 @@ type ErrorCode int
 
 // 错误码常量
 const (
-	ErrProjectNotFound      ErrorCode = 40401 // 项目不存在
-	ErrDocumentNotFound     ErrorCode = 40402 // 文档不存在
-	ErrCommentNotFound      ErrorCode = 40403 // 批注不存在
-	ErrCharacterNotFound    ErrorCode = 40404 // 角色不存在
-	ErrLocationNotFound     ErrorCode = 40405 // 地点不存在
-	ErrTimelineNotFound     ErrorCode = 40406 // 时间线不存在
-	ErrVersionNotFound      ErrorCode = 40407 // 版本不存在
-	ErrPublicationNotFound  ErrorCode = 40408 // 发布记录不存在
-	ErrExportTaskNotFound   ErrorCode = 40409 // 导出任务不存在
+	ErrProjectNotFound     ErrorCode = 40401 // 项目不存在
+	ErrDocumentNotFound    ErrorCode = 40402 // 文档不存在
+	ErrCommentNotFound     ErrorCode = 40403 // 批注不存在
+	ErrCharacterNotFound   ErrorCode = 40404 // 角色不存在
+	ErrLocationNotFound    ErrorCode = 40405 // 地点不存在
+	ErrTimelineNotFound    ErrorCode = 40406 // 时间线不存在
+	ErrVersionNotFound     ErrorCode = 40407 // 版本不存在
+	ErrPublicationNotFound ErrorCode = 40408 // 发布记录不存在
+	ErrExportTaskNotFound  ErrorCode = 40409 // 导出任务不存在
 
-	ErrInvalidInput         ErrorCode = 40001 // 输入参数无效
-	ErrInvalidProjectID     ErrorCode = 40002 // 无效的项目ID
-	ErrInvalidDocumentID    ErrorCode = 40003 // 无效的文档ID
-	ErrInvalidContent       ErrorCode = 40004 // 内容无效
-	ErrInvalidVersion       ErrorCode = 40005 // 无效的版本号
-	ErrInvalidExportFormat  ErrorCode = 40006 // 无效的导出格式
-	ErrInvalidRelationType  ErrorCode = 40007 // 无效的关系类型
+	ErrInvalidInput        ErrorCode = 40001 // 输入参数无效
+	ErrInvalidProjectID    ErrorCode = 40002 // 无效的项目ID
+	ErrInvalidDocumentID   ErrorCode = 40003 // 无效的文档ID
+	ErrInvalidContent      ErrorCode = 40004 // 内容无效
+	ErrInvalidVersion      ErrorCode = 40005 // 无效的版本号
+	ErrInvalidExportFormat ErrorCode = 40006 // 无效的导出格式
+	ErrInvalidRelationType ErrorCode = 40007 // 无效的关系类型
 
-	ErrProjectAlreadyExists ErrorCode = 40901 // 项目已存在
+	ErrProjectAlreadyExists  ErrorCode = 40901 // 项目已存在
 	ErrDocumentAlreadyExists ErrorCode = 40902 // 文档已存在
-	ErrNameAlreadyExists    ErrorCode = 40903 // 名称已存在
+	ErrNameAlreadyExists     ErrorCode = 40903 // 名称已存在
 
-	ErrVersionConflict      ErrorCode = 40904 // 版本冲突
-	ErrEditConflict         ErrorCode = 40905 // 编辑冲突
+	ErrVersionConflict ErrorCode = 40904 // 版本冲突
+	ErrEditConflict    ErrorCode = 40905 // 编辑冲突
 
-	ErrUnauthorized         ErrorCode = 40101 // 未授权
-	ErrForbidden            ErrorCode = 40301 // 禁止访问
-	ErrNoPermission         ErrorCode = 40302 // 无权限
+	ErrUnauthorized ErrorCode = 40101 // 未授权
+	ErrForbidden    ErrorCode = 40301 // 禁止访问
+	ErrNoPermission ErrorCode = 40302 // 无权限
 
 	ErrPublishFailed        ErrorCode = 50001 // 发布失败
 	ErrExportFailed         ErrorCode = 50002 // 导出失败

@@ -26,12 +26,12 @@ func NewSearchAPI(searchService *searchService.SearchService) *SearchAPI {
 
 // SearchRequest HTTP 搜索请求
 type SearchRequest struct {
-	Type     string                 `json:"type" binding:"required"`     // 搜索类型：books, projects, documents, users
-	Query    string                 `json:"query" binding:"required"`    // 搜索关键词
-	Filter   map[string]interface{} `json:"filter"`                      // 过滤条件
-	Sort     []SortFieldRequest     `json:"sort"`                        // 排序字段
-	Page     int                    `json:"page"`                        // 页码，默认 1
-	PageSize int                    `json:"page_size"`                   // 每页数量，默认 20
+	Type     string                 `json:"type" binding:"required"`  // 搜索类型：books, projects, documents, users
+	Query    string                 `json:"query" binding:"required"` // 搜索关键词
+	Filter   map[string]interface{} `json:"filter"`                   // 过滤条件
+	Sort     []SortFieldRequest     `json:"sort"`                     // 排序字段
+	Page     int                    `json:"page"`                     // 页码，默认 1
+	PageSize int                    `json:"page_size"`                // 每页数量，默认 20
 }
 
 // SortFieldRequest 排序字段请求
@@ -370,6 +370,9 @@ func (api *SearchAPI) Health(c *gin.Context) {
 	// 构造响应
 	healthStatus := gin.H{
 		"status": "healthy",
+	}
+	if requestID != "" {
+		healthStatus["request_id"] = requestID
 	}
 
 	// 检查是否有错误

@@ -188,7 +188,7 @@ func TestPortInterfaceCompileCheck(t *testing.T) {
 	t.Run("端口接口类型检查", func(t *testing.T) {
 		// 使用反射检查接口类型
 		ports := []struct {
-			name     string
+			name      string
 			typeCheck func() bool
 		}{
 			{
@@ -330,10 +330,10 @@ func TestExpectedPortSignatures(t *testing.T) {
 func TestTTDDocumentation(t *testing.T) {
 	t.Run("TDD流程状态检查", func(t *testing.T) {
 		tddState := struct {
-			Phase           string
-			CurrentStep     string
-			CompletedSteps  []string
-			Status          string
+			Phase          string
+			CurrentStep    string
+			CompletedSteps []string
+			Status         string
 		}{
 			Phase:       "阶段1 - 创建领域聚合的 Port 接口",
 			CurrentStep: "步骤1.3 - 验证接口定义（当前步骤）",
@@ -409,11 +409,11 @@ type MockEmailManagementPort struct {
 
 // MockUserPermissionPort Mock 用户权限端口
 type MockUserPermissionPort struct {
-	AssignRoleFunc        func(ctx context.Context, req *AssignRoleRequest) (*AssignRoleResponse, error)
-	RemoveRoleFunc        func(ctx context.Context, req *RemoveRoleRequest) (*RemoveRoleResponse, error)
-	GetUserRolesFunc      func(ctx context.Context, req *GetUserRolesRequest) (*GetUserRolesResponse, error)
+	AssignRoleFunc         func(ctx context.Context, req *AssignRoleRequest) (*AssignRoleResponse, error)
+	RemoveRoleFunc         func(ctx context.Context, req *RemoveRoleRequest) (*RemoveRoleResponse, error)
+	GetUserRolesFunc       func(ctx context.Context, req *GetUserRolesRequest) (*GetUserRolesResponse, error)
 	GetUserPermissionsFunc func(ctx context.Context, req *GetUserPermissionsRequest) (*GetUserPermissionsResponse, error)
-	DowngradeRoleFunc     func(ctx context.Context, req *DowngradeRoleRequest) (*DowngradeRoleResponse, error)
+	DowngradeRoleFunc      func(ctx context.Context, req *DowngradeRoleRequest) (*DowngradeRoleResponse, error)
 }
 
 // MockUserStatusPort Mock 用户状态端口
