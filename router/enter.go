@@ -29,6 +29,7 @@ import (
 	userRepo "Qingyu_backend/repository/interfaces/user"
 	adminrep "Qingyu_backend/repository/mongodb/admin"
 	authRep "Qingyu_backend/repository/mongodb/auth"
+	bookstoreRepo "Qingyu_backend/repository/mongodb/bookstore"
 	recommendationRepo "Qingyu_backend/repository/mongodb/recommendation"
 	mongoSocialRepo "Qingyu_backend/repository/mongodb/social"
 	mongoWriterRepo "Qingyu_backend/repository/mongodb/writer"
@@ -673,11 +674,19 @@ func RegisterRoutes(r *gin.Engine) {
 		permissionRepo := authRep.NewMongoPermissionRepository(mongoDB)
 		permissionSvc := sharedService.NewPermissionService(permissionRepo)
 
+		// 创建Banner管理仓储和服务
+		mongoClient := serviceContainer.GetMongoClient()
+		var bannerSvc bookstore.BannerService
+		if mongoClient != nil {
+			bannerRepo := bookstoreRepo.NewMongoBannerRepository(mongoClient, mongoDB.Name())
+			bannerSvc = bookstore.NewBannerService(bannerRepo)
+		}
+
 		// 注册管理员路由（包含用户管理和权限管理）
-		adminRouter.RegisterAdminRoutes(v1, userSvc, quotaService, auditSvc, adminSvc, configSvc, announcementSvc, userAdminSvc, permissionSvc, serviceContainer.GetPersistedEventBus(), categorySvc, publicationSvc)
+		adminRouter.RegisterAdminRoutes(v1, userSvc, quotaService, auditSvc, adminSvc, configSvc, announcementSvc, userAdminSvc, permissionSvc, serviceContainer.GetPersistedEventBus(), categorySvc, publicationSvc, bannerSvc)
 	} else {
 		// 如果 MongoDB 不可用，不注册用户管理和权限管理路由
-		adminRouter.RegisterAdminRoutes(v1, userSvc, quotaService, auditSvc, adminSvc, configSvc, announcementSvc, nil, nil, serviceContainer.GetPersistedEventBus(), nil, publicationSvc)
+		adminRouter.RegisterAdminRoutes(v1, userSvc, quotaService, auditSvc, adminSvc, configSvc, announcementSvc, nil, nil, serviceContainer.GetPersistedEventBus(), nil, publicationSvc, nil)
 	}
 
 	logger.Info("✓ 管理员路由已注册到: /api/v1/admin/")
