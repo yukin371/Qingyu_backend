@@ -1,12 +1,18 @@
 package admin
 
 import (
+	financeModel "Qingyu_backend/models/finance"
 	adminModel "Qingyu_backend/models/users"
+	financeRepo "Qingyu_backend/repository/interfaces/finance"
+	financeWalletService "Qingyu_backend/service/finance/wallet"
 	"context"
 	"encoding/csv"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // TODO: 完善审核流程
@@ -22,10 +28,13 @@ import (
 
 // AdminServiceImpl 管理服务实现
 type AdminServiceImpl struct {
-	auditRepo   AuditRepository
-	logRepo     LogRepository
-	userRepo    UserRepository
-	initialized bool // 初始化标志
+	auditRepo         AuditRepository
+	logRepo           LogRepository
+	userRepo          UserRepository
+	walletService     financeWalletService.WalletService
+	walletRepo        financeRepo.WalletRepository
+	authorRevenueRepo financeRepo.AuthorRevenueRepository
+	initialized       bool // 初始化标志
 }
 
 // AuditRepository 审核记录Repository
@@ -48,6 +57,20 @@ type UserRepository interface {
 	GetStatistics(ctx context.Context, userID string) (*UserStatistics, error)
 	BanUser(ctx context.Context, userID, reason string, until time.Time) error
 	UnbanUser(ctx context.Context, userID string) error
+	GetBasicProfile(ctx context.Context, userID string) (*UserBasicProfile, error)
+	// Dashboard 统计方法
+	GetTotalCount(ctx context.Context) (int64, error)
+	CountActiveUsers(ctx context.Context, days int) (int64, error)
+	CountNewUsersToday(ctx context.Context) (int64, error)
+	CountAuthors(ctx context.Context) (int64, error)
+}
+
+// UserBasicProfile 用户基础信息
+type UserBasicProfile struct {
+	UserID      string
+	Username    string
+	Email       string
+	DisplayName string
 }
 
 // LogFilter 日志过滤条件
@@ -61,11 +84,21 @@ type LogFilter struct {
 }
 
 // NewAdminService 创建管理服务
-func NewAdminService(auditRepo AuditRepository, logRepo LogRepository, userRepo UserRepository) AdminService {
+func NewAdminService(
+	auditRepo AuditRepository,
+	logRepo LogRepository,
+	userRepo UserRepository,
+	walletService financeWalletService.WalletService,
+	walletRepo financeRepo.WalletRepository,
+	authorRevenueRepo financeRepo.AuthorRevenueRepository,
+) AdminService {
 	return &AdminServiceImpl{
-		auditRepo: auditRepo,
-		logRepo:   logRepo,
-		userRepo:  userRepo,
+		auditRepo:         auditRepo,
+		logRepo:           logRepo,
+		userRepo:          userRepo,
+		walletService:     walletService,
+		walletRepo:        walletRepo,
+		authorRevenueRepo: authorRevenueRepo,
 	}
 }
 
@@ -225,10 +258,79 @@ func (s *AdminServiceImpl) GetUserStatistics(ctx context.Context, userID string)
 
 // ReviewWithdraw 审核提现
 func (s *AdminServiceImpl) ReviewWithdraw(ctx context.Context, withdrawID, adminID string, approved bool, reason string) error {
-	// 记录操作日志
+	if withdrawID == "" {
+		return fmt.Errorf("提现单ID不能为空")
+	}
+
 	operation := adminModel.OperationApproveWithdraw
 	if !approved {
 		operation = adminModel.OperationRejectWithdraw
+	}
+
+	walletRequest, walletErr := s.walletService.GetWithdrawRequest(ctx, withdrawID)
+	if walletErr == nil && walletRequest != nil {
+		if approved {
+			if err := s.walletService.ApproveWithdraw(ctx, withdrawID, adminID); err != nil {
+				return fmt.Errorf("审核钱包提现失败: %w", err)
+			}
+		} else {
+			if strings.TrimSpace(reason) == "" {
+				return fmt.Errorf("拒绝提现时必须填写原因")
+			}
+			if err := s.walletService.RejectWithdraw(ctx, withdrawID, adminID, reason); err != nil {
+				return fmt.Errorf("拒绝钱包提现失败: %w", err)
+			}
+		}
+
+		_ = s.LogOperation(ctx, &LogOperationRequest{
+			AdminID:   adminID,
+			Operation: operation,
+			Target:    withdrawID,
+			Details: map[string]interface{}{
+				"approved": approved,
+				"reason":   reason,
+				"source":   "wallet",
+				"user_id":  walletRequest.UserID,
+			},
+		})
+		return nil
+	}
+
+	objectID, err := primitive.ObjectIDFromHex(withdrawID)
+	if err != nil {
+		return fmt.Errorf("提现单ID格式无效")
+	}
+
+	authorRequest, err := s.authorRevenueRepo.GetWithdrawalRequest(ctx, objectID)
+	if err != nil {
+		if walletErr != nil {
+			return fmt.Errorf("提现申请不存在")
+		}
+		return fmt.Errorf("查询作者提现失败: %w", err)
+	}
+
+	if authorRequest.Status != financeModel.WithdrawStatusPending {
+		return fmt.Errorf("该提现申请已处理，当前状态: %s", authorRequest.Status)
+	}
+
+	now := time.Now()
+	updates := map[string]interface{}{
+		"status":      financeModel.WithdrawStatusApproved,
+		"approved_by": adminID,
+		"approved_at": now,
+		"updated_at":  now,
+	}
+	if !approved {
+		if strings.TrimSpace(reason) == "" {
+			return fmt.Errorf("拒绝提现时必须填写原因")
+		}
+		updates["status"] = financeModel.WithdrawStatusRejected
+		updates["reject_reason"] = reason
+		updates["note"] = reason
+	}
+
+	if err := s.authorRevenueRepo.UpdateWithdrawalRequest(ctx, objectID, updates); err != nil {
+		return fmt.Errorf("审核作者提现失败: %w", err)
 	}
 
 	_ = s.LogOperation(ctx, &LogOperationRequest{
@@ -238,12 +340,73 @@ func (s *AdminServiceImpl) ReviewWithdraw(ctx context.Context, withdrawID, admin
 		Details: map[string]interface{}{
 			"approved": approved,
 			"reason":   reason,
+			"source":   "author",
+			"user_id":  authorRequest.UserID,
 		},
 	})
-
-	// 实际的提现审核逻辑应该调用Wallet服务
-	// 这里简化处理
 	return nil
+}
+
+// ListWithdrawals 获取提现列表
+func (s *AdminServiceImpl) ListWithdrawals(ctx context.Context, req *ListWithdrawalsRequest) ([]*WithdrawalRecord, int64, error) {
+	page, pageSize := normalizeWithdrawalPagination(req)
+
+	records, err := s.collectWithdrawalRecords(ctx, req)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	total := int64(len(records))
+	start := (page - 1) * pageSize
+	if start >= len(records) {
+		return []*WithdrawalRecord{}, total, nil
+	}
+	end := start + pageSize
+	if end > len(records) {
+		end = len(records)
+	}
+
+	return records[start:end], total, nil
+}
+
+// GetWithdrawalStatistics 获取提现统计
+func (s *AdminServiceImpl) GetWithdrawalStatistics(ctx context.Context, req *WithdrawalStatisticsRequest) (*WithdrawalStatistics, error) {
+	listReq := &ListWithdrawalsRequest{
+		Page:      1,
+		PageSize:  1000,
+		Status:    req.Status,
+		Source:    req.Source,
+		StartDate: req.StartDate,
+		EndDate:   req.EndDate,
+	}
+
+	records, err := s.collectWithdrawalRecords(ctx, listReq)
+	if err != nil {
+		return nil, err
+	}
+
+	stats := &WithdrawalStatistics{}
+	now := time.Now()
+	todayStart := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+
+	for _, record := range records {
+		stats.TotalCount++
+		switch record.Status {
+		case financeModel.WithdrawStatusPending:
+			stats.PendingCount++
+			stats.PendingAmount += record.Amount
+		case financeModel.WithdrawStatusApproved, "processed":
+			stats.ApprovedCount++
+			stats.ApprovedAmount += record.Amount
+			if record.ReviewedAt != nil && !record.ReviewedAt.Before(todayStart) {
+				stats.ApprovedTodayCount++
+			}
+		case financeModel.WithdrawStatusRejected, financeModel.WithdrawStatusFailed:
+			stats.RejectedCount++
+		}
+	}
+
+	return stats, nil
 }
 
 // ============ 操作日志 ============
@@ -352,13 +515,38 @@ func (s *AdminServiceImpl) ExportLogs(ctx context.Context, startDate, endDate ti
 
 // GetSystemStats 获取系统统计
 func (s *AdminServiceImpl) GetSystemStats(ctx context.Context) (interface{}, error) {
-	// 返回系统统计数据（临时实现，后续可连接Repository获取真实数据）
+	// 从 repository 获取统计数据
+	totalUsers, err := s.userRepo.GetTotalCount(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("获取总用户数失败: %w", err)
+	}
+
+	// 统计最近7天活跃用户
+	activeUsers, err := s.userRepo.CountActiveUsers(ctx, 7)
+	if err != nil {
+		return nil, fmt.Errorf("获取活跃用户数失败: %w", err)
+	}
+
+	// 统计今日新增用户
+	newUsersToday, err := s.userRepo.CountNewUsersToday(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("获取今日新增用户失败: %w", err)
+	}
+
+	// 统计作者数量
+	authorsCount, err := s.userRepo.CountAuthors(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("获取作者数量失败: %w", err)
+	}
+
 	stats := map[string]interface{}{
-		"totalUsers":    0,
-		"activeUsers":   0,
-		"totalBooks":    0,
-		"totalRevenue":  0.0,
-		"pendingAudits": 0,
+		"totalUsers":    totalUsers,
+		"activeUsers":   activeUsers,
+		"totalBooks":    0,   // TODO: 需要从 BookService 获取
+		"totalRevenue":  0.0, // TODO: 需要从 FinanceService 获取
+		"pendingAudits": 0,   // TODO: 需要从 auditRepo 获取
+		"newUsersToday": newUsersToday,
+		"authorsCount":  authorsCount,
 	}
 	return stats, nil
 }
@@ -448,6 +636,15 @@ func (s *AdminServiceImpl) Initialize(ctx context.Context) error {
 	if s.userRepo == nil {
 		return fmt.Errorf("userRepo is nil")
 	}
+	if s.walletService == nil {
+		return fmt.Errorf("walletService is nil")
+	}
+	if s.walletRepo == nil {
+		return fmt.Errorf("walletRepo is nil")
+	}
+	if s.authorRevenueRepo == nil {
+		return fmt.Errorf("authorRevenueRepo is nil")
+	}
 
 	// 初始化完成
 	s.initialized = true
@@ -479,4 +676,167 @@ func (s *AdminServiceImpl) GetServiceName() string {
 // GetVersion 获取服务版本
 func (s *AdminServiceImpl) GetVersion() string {
 	return "v1.0.0"
+}
+
+func (s *AdminServiceImpl) collectWithdrawalRecords(ctx context.Context, req *ListWithdrawalsRequest) ([]*WithdrawalRecord, error) {
+	result := make([]*WithdrawalRecord, 0)
+
+	if req == nil || req.Source == "" || req.Source == "wallet" {
+		walletRecords, err := s.listWalletWithdrawals(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, walletRecords...)
+	}
+
+	if req == nil || req.Source == "" || req.Source == "author" {
+		authorRecords, err := s.listAuthorWithdrawals(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		result = append(result, authorRecords...)
+	}
+
+	sort.Slice(result, func(i, j int) bool {
+		return result[i].CreatedAt.After(result[j].CreatedAt)
+	})
+
+	return result, nil
+}
+
+func (s *AdminServiceImpl) listWalletWithdrawals(ctx context.Context, req *ListWithdrawalsRequest) ([]*WithdrawalRecord, error) {
+	filter := &financeRepo.WithdrawFilter{
+		Limit: 1000,
+	}
+	if req != nil {
+		filter.Status = req.Status
+		filter.StartDate = req.StartDate
+		filter.EndDate = req.EndDate
+	}
+
+	requests, err := s.walletRepo.ListWithdrawRequests(ctx, filter)
+	if err != nil {
+		return nil, fmt.Errorf("查询钱包提现列表失败: %w", err)
+	}
+
+	records := make([]*WithdrawalRecord, 0, len(requests))
+	for _, item := range requests {
+		profile, _ := s.userRepo.GetBasicProfile(ctx, item.UserID)
+		reviewedAt := timePtrFromValue(item.ReviewedAt)
+		processedAt := timePtrFromValue(item.ProcessedAt)
+		records = append(records, &WithdrawalRecord{
+			ID:            item.ID.Hex(),
+			UserID:        item.UserID,
+			Username:      safeProfileField(profile, func(p *UserBasicProfile) string { return p.Username }),
+			Email:         safeProfileField(profile, func(p *UserBasicProfile) string { return p.Email }),
+			DisplayName:   safeProfileField(profile, func(p *UserBasicProfile) string { return p.DisplayName }),
+			Source:        "wallet",
+			Status:        item.Status,
+			Amount:        item.Amount.ToYuan(),
+			Fee:           item.Fee.ToYuan(),
+			ActualAmount:  item.ActualAmount.ToYuan(),
+			Method:        item.AccountType,
+			Account:       item.Account,
+			AccountType:   item.AccountType,
+			AccountName:   item.AccountName,
+			OrderNo:       item.OrderNo,
+			ReviewedBy:    item.ReviewedBy,
+			ReviewedAt:    reviewedAt,
+			RejectReason:  item.RejectReason,
+			ProcessedAt:   processedAt,
+			TransactionID: item.TransactionID,
+			CreatedAt:     item.CreatedAt,
+			UpdatedAt:     item.UpdatedAt,
+		})
+	}
+
+	return records, nil
+}
+
+func (s *AdminServiceImpl) listAuthorWithdrawals(ctx context.Context, req *ListWithdrawalsRequest) ([]*WithdrawalRecord, error) {
+	filter := map[string]interface{}{}
+	if req != nil {
+		if req.Status != "" {
+			filter["status"] = req.Status
+		}
+		if !req.StartDate.IsZero() || !req.EndDate.IsZero() {
+			createdAt := map[string]interface{}{}
+			if !req.StartDate.IsZero() {
+				createdAt["$gte"] = req.StartDate
+			}
+			if !req.EndDate.IsZero() {
+				createdAt["$lte"] = req.EndDate
+			}
+			filter["created_at"] = createdAt
+		}
+	}
+
+	requests, _, err := s.authorRevenueRepo.ListWithdrawalRequests(ctx, filter, 1, 1000)
+	if err != nil {
+		return nil, fmt.Errorf("查询作者提现列表失败: %w", err)
+	}
+
+	records := make([]*WithdrawalRecord, 0, len(requests))
+	for _, item := range requests {
+		profile, _ := s.userRepo.GetBasicProfile(ctx, item.UserID)
+		records = append(records, &WithdrawalRecord{
+			ID:            item.ID.Hex(),
+			UserID:        item.UserID,
+			Username:      safeProfileField(profile, func(p *UserBasicProfile) string { return p.Username }),
+			Email:         safeProfileField(profile, func(p *UserBasicProfile) string { return p.Email }),
+			DisplayName:   safeProfileField(profile, func(p *UserBasicProfile) string { return p.DisplayName }),
+			Source:        "author",
+			Status:        item.Status,
+			Amount:        item.Amount.ToYuan(),
+			Fee:           item.Fee.ToYuan(),
+			ActualAmount:  item.ActualAmount.ToYuan(),
+			Method:        item.Method,
+			Account:       item.AccountInfo.AccountNo,
+			AccountType:   item.AccountInfo.AccountType,
+			AccountName:   item.AccountInfo.AccountName,
+			BankName:      item.AccountInfo.BankName,
+			ReviewedBy:    item.ApprovedBy,
+			ReviewedAt:    item.ApprovedAt,
+			RejectReason:  item.RejectReason,
+			ProcessedAt:   item.CompletedAt,
+			TransactionID: item.TransactionID,
+			CreatedAt:     item.CreatedAt,
+			UpdatedAt:     item.UpdatedAt,
+		})
+	}
+
+	return records, nil
+}
+
+func normalizeWithdrawalPagination(req *ListWithdrawalsRequest) (int, int) {
+	page := 1
+	pageSize := 20
+	if req == nil {
+		return page, pageSize
+	}
+	if req.Page > 0 {
+		page = req.Page
+	}
+	if req.PageSize > 0 {
+		pageSize = req.PageSize
+	}
+	if pageSize > 100 {
+		pageSize = 100
+	}
+	return page, pageSize
+}
+
+func timePtrFromValue(value time.Time) *time.Time {
+	if value.IsZero() {
+		return nil
+	}
+	copied := value
+	return &copied
+}
+
+func safeProfileField(profile *UserBasicProfile, getter func(*UserBasicProfile) string) string {
+	if profile == nil {
+		return ""
+	}
+	return getter(profile)
 }

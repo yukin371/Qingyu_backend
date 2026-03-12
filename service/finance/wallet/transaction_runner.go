@@ -2,6 +2,7 @@ package wallet
 
 import (
 	"context"
+	"strings"
 
 	pkgtransaction "Qingyu_backend/pkg/transaction"
 	sharedRepo "Qingyu_backend/repository/interfaces/shared"
@@ -39,5 +40,29 @@ func (r *genericTransactionRunner) Run(ctx context.Context, fn func(context.Cont
 }
 
 func runWalletTransaction(ctx context.Context, runner TransactionRunner, fn func(context.Context) error) error {
-	return runner.Run(ctx, fn)
+	if runner == nil {
+		return fn(ctx)
+	}
+
+	err := runner.Run(ctx, fn)
+	if err == nil {
+		return nil
+	}
+
+	// 本地单机 Mongo 默认不支持事务，允许降级到顺序执行以完成开发联调。
+	if isTransactionUnsupported(err) {
+		return fn(ctx)
+	}
+
+	return err
+}
+
+func isTransactionUnsupported(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	message := err.Error()
+	return strings.Contains(message, "Transaction numbers are only allowed on a replica set member or mongos") ||
+		strings.Contains(message, "transactions are not supported")
 }

@@ -7,7 +7,6 @@ import (
 	"time"
 
 	repoInterfaces "Qingyu_backend/repository/interfaces"
-	userRepo "Qingyu_backend/repository/interfaces/user"
 	"Qingyu_backend/service/base"
 	serviceInterfaces "Qingyu_backend/service/interfaces/base"
 	userInterface "Qingyu_backend/service/interfaces/user"
@@ -55,11 +54,13 @@ import (
 	pkgmetrics "Qingyu_backend/pkg/metrics"
 	pkgtransaction "Qingyu_backend/pkg/transaction"
 	"Qingyu_backend/repository/mongodb"
+	mongoAdminRepo "Qingyu_backend/repository/mongodb/admin"
 	mongoSocialRepo "Qingyu_backend/repository/mongodb/social"
 	eventservice "Qingyu_backend/service/events"
 
 	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
@@ -748,6 +749,7 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	categoryRepo := c.repositoryFactory.CreateCategoryRepository()
 	bannerRepo := c.repositoryFactory.CreateBannerRepository()
 	rankingRepo := c.repositoryFactory.CreateRankingRepository()
+	readerCollectionRepo := c.repositoryFactory.CreateCollectionRepository()
 	chapterRepo := c.repositoryFactory.CreateBookstoreChapterRepository()      // ← 创建章节仓储
 	chapterContentRepo := c.repositoryFactory.CreateChapterContentRepository() // ← 创建章节内容仓储
 
@@ -756,6 +758,7 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 		categoryRepo,
 		bannerRepo,
 		rankingRepo,
+		readerCollectionRepo,
 	)
 	// 注意：BookstoreService 不完全实现 BaseService，不注册到 services map
 
@@ -1123,11 +1126,20 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	adminAuditRepo := &adminAuditRepositoryAdapter{repo: adminAuditRepoImpl}
 	adminLogRepo := &adminLogRepositoryAdapter{repo: adminLogRepoImpl}
 
-	// 创建 AdminService 需要的简化 UserRepository 适配器
-	adminUserRepo := &adminUserRepositoryAdapter{userRepo: c.repositoryFactory.CreateUserRepository()}
+	// 创建 AdminService 需要的 UserAdminRepository 适配器
+	userAdminRepo := mongoAdminRepo.NewMongoUserAdminRepository(c.mongoDB)
+	adminUserRepo := &adminUserRepositoryAdapter{userAdminRepo: userAdminRepo}
+	authorRevenueRepo := c.repositoryFactory.CreateAuthorRevenueRepository()
 
 	// 创建 AdminService
-	adminSvc := admin.NewAdminService(adminAuditRepo, adminLogRepo, adminUserRepo)
+	adminSvc := admin.NewAdminService(
+		adminAuditRepo,
+		adminLogRepo,
+		adminUserRepo,
+		c.walletService,
+		walletRepo,
+		authorRevenueRepo,
+	)
 	c.adminService = adminSvc
 
 	if baseAdminSvc, ok := adminSvc.(serviceInterfaces.BaseService); ok {
@@ -1225,7 +1237,7 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	}
 	c.membershipService = financeService.NewMembershipServiceWithDependencies(membershipRepo, walletRepo, mongoTxRunner)
 
-	authorRevenueRepo := c.repositoryFactory.CreateAuthorRevenueRepository()
+	authorRevenueRepo = c.repositoryFactory.CreateAuthorRevenueRepository()
 	c.authorRevenueService = financeService.NewAuthorRevenueServiceWithDependencies(authorRevenueRepo, walletRepo, mongoTxRunner)
 
 	fmt.Println("  ✓ Finance服务初始化完成")
@@ -1317,9 +1329,9 @@ func (c *ServiceContainer) GetServiceNames() []string {
 
 // ============ AdminService 适配器 ============
 
-// adminUserRepositoryAdapter 将 UserRepository 适配为 AdminService 需要的接口
+// adminUserRepositoryAdapter 将 UserAdminRepository 适配为 AdminService 需要的接口
 type adminUserRepositoryAdapter struct {
-	userRepo userRepo.UserRepository
+	userAdminRepo adminInterface.UserAdminRepository
 }
 
 // 确保实现了 admin.UserRepository 接口
@@ -1327,46 +1339,94 @@ var _ admin.UserRepository = (*adminUserRepositoryAdapter)(nil)
 
 // GetStatistics 获取用户统计信息
 func (a *adminUserRepositoryAdapter) GetStatistics(ctx context.Context, userID string) (*admin.UserStatistics, error) {
-	// 简化实现，返回基本统计信息
-	user, err := a.userRepo.GetByID(ctx, userID)
+	// 将 string ID 转换为 ObjectID
+	objectID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid user ID: %w", err)
+	}
+
+	// 从 UserAdminRepository 获取用户信息以获取注册时间
+	user, err := a.userAdminRepo.GetByID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 
+	// 从 UserAdminRepository 获取统计数据
+	userStats, err := a.userAdminRepo.GetStatistics(ctx, objectID)
+	if err != nil {
+		return nil, err
+	}
+
+	// 转换为 admin.UserStatistics 类型
 	return &admin.UserStatistics{
-		UserID:           user.ID.Hex(),
-		TotalBooks:       0,   // 占位值：待接入 BookRepository 聚合
-		TotalChapters:    0,   // 占位值：待接入 ChapterRepository 聚合
-		TotalWords:       0,   // 占位值：待接入统计服务聚合
-		TotalReads:       0,   // 占位值：待接入 ReadingProgress 聚合
-		TotalIncome:      0.0, // 占位值：待接入 Wallet 聚合
-		RegistrationDate: user.CreatedAt,
-		LastLoginDate:    user.LastLoginAt,
+		UserID:           userStats.UserID,
+		TotalBooks:       userStats.TotalBooks,
+		TotalChapters:    userStats.TotalChapters,
+		TotalWords:       userStats.TotalWords,
+		TotalReads:       int64(userStats.TotalReaders), // 映射 TotalReaders 到 TotalReads
+		TotalIncome:      0.0,                           // 占位值，待接入 Wallet 聚合
+		RegistrationDate: user.CreatedAt,                // 从用户对象获取注册时间
+		LastLoginDate:    userStats.LastActiveAt,
 	}, nil
 }
 
 // BanUser 封禁用户
 func (a *adminUserRepositoryAdapter) BanUser(ctx context.Context, userID, reason string, until time.Time) error {
-	// 使用 UserRepository 的 Update 方法
+	// 使用 UserAdminRepository 的 Update 方法
 	updates := map[string]interface{}{
 		"status":     "banned",
 		"ban_reason": reason,
 		"ban_until":  until,
 		"updated_at": time.Now(),
 	}
-	return a.userRepo.Update(ctx, userID, updates)
+	return a.userAdminRepo.Update(ctx, userID, updates)
 }
 
 // UnbanUser 解封用户
 func (a *adminUserRepositoryAdapter) UnbanUser(ctx context.Context, userID string) error {
-	// 使用 UserRepository 的 Update 方法
+	// 使用 UserAdminRepository 的 Update 方法
 	updates := map[string]interface{}{
 		"status":     "active",
 		"ban_reason": "",
 		"ban_until":  nil,
 		"updated_at": time.Now(),
 	}
-	return a.userRepo.Update(ctx, userID, updates)
+	return a.userAdminRepo.Update(ctx, userID, updates)
+}
+
+// GetBasicProfile 获取用户基础信息
+func (a *adminUserRepositoryAdapter) GetBasicProfile(ctx context.Context, userID string) (*admin.UserBasicProfile, error) {
+	user, err := a.userAdminRepo.GetByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &admin.UserBasicProfile{
+		UserID:      user.ID.Hex(),
+		Username:    user.Username,
+		Email:       user.Email,
+		DisplayName: user.GetDisplayName(),
+	}, nil
+}
+
+// GetTotalCount 获取总用户数
+func (a *adminUserRepositoryAdapter) GetTotalCount(ctx context.Context) (int64, error) {
+	return a.userAdminRepo.GetTotalCount(ctx)
+}
+
+// CountActiveUsers 统计活跃用户数量
+func (a *adminUserRepositoryAdapter) CountActiveUsers(ctx context.Context, days int) (int64, error) {
+	return a.userAdminRepo.CountActiveUsers(ctx, days)
+}
+
+// CountNewUsersToday 统计今日新增用户数
+func (a *adminUserRepositoryAdapter) CountNewUsersToday(ctx context.Context) (int64, error) {
+	return a.userAdminRepo.CountNewUsersToday(ctx)
+}
+
+// CountAuthors 统计作者用户数量
+func (a *adminUserRepositoryAdapter) CountAuthors(ctx context.Context) (int64, error) {
+	return a.userAdminRepo.CountAuthors(ctx)
 }
 
 // ============ Admin Repository Adapters ============

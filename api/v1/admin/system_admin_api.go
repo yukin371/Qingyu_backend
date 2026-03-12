@@ -1,7 +1,9 @@
 package admin
 
 import (
+	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -58,6 +60,66 @@ func (api *SystemAdminAPI) ReviewWithdraw(c *gin.Context) {
 	}
 
 	response.Success(c, nil)
+}
+
+// ListWithdrawals 获取提现列表（管理员）
+func (api *SystemAdminAPI) ListWithdrawals(c *gin.Context) {
+	var req ListWithdrawalsRequest
+	if err := c.ShouldBindQuery(&req); err != nil {
+		response.BadRequest(c, "参数错误", err.Error())
+		return
+	}
+
+	serviceReq, err := buildWithdrawalListRequest(&req)
+	if err != nil {
+		response.BadRequest(c, "参数错误", err.Error())
+		return
+	}
+
+	items, total, err := api.admin.ListWithdrawals(c.Request.Context(), serviceReq)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	page := serviceReq.Page
+	if page <= 0 {
+		page = 1
+	}
+	pageSize := serviceReq.PageSize
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+
+	response.Paginated(c, items, total, page, pageSize, "获取提现列表成功")
+}
+
+// GetWithdrawalStatistics 获取提现统计（管理员）
+func (api *SystemAdminAPI) GetWithdrawalStatistics(c *gin.Context) {
+	var req ListWithdrawalsRequest
+	if err := c.ShouldBindQuery(&req); err != nil {
+		response.BadRequest(c, "参数错误", err.Error())
+		return
+	}
+
+	serviceReq, err := buildWithdrawalListRequest(&req)
+	if err != nil {
+		response.BadRequest(c, "参数错误", err.Error())
+		return
+	}
+
+	stats, err := api.admin.GetWithdrawalStatistics(c.Request.Context(), &admin.WithdrawalStatisticsRequest{
+		Status:    serviceReq.Status,
+		Source:    serviceReq.Source,
+		StartDate: serviceReq.StartDate,
+		EndDate:   serviceReq.EndDate,
+	})
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.Success(c, stats)
 }
 
 // GetUserStatistics 获取用户统计（管理员）
@@ -296,4 +358,31 @@ func (api *SystemAdminAPI) GetAnnouncements(c *gin.Context) {
 	}
 
 	response.Paginated(c, announcements, total, page, pageSize, "获取成功")
+}
+
+func buildWithdrawalListRequest(req *ListWithdrawalsRequest) (*admin.ListWithdrawalsRequest, error) {
+	serviceReq := &admin.ListWithdrawalsRequest{
+		Page:     req.Page,
+		PageSize: req.PageSize,
+		Status:   req.Status,
+		Source:   req.Source,
+	}
+
+	if req.StartDate != "" {
+		startDate, err := time.Parse("2006-01-02", req.StartDate)
+		if err != nil {
+			return nil, fmt.Errorf("开始日期格式无效，应为 YYYY-MM-DD")
+		}
+		serviceReq.StartDate = startDate
+	}
+
+	if req.EndDate != "" {
+		endDate, err := time.Parse("2006-01-02", req.EndDate)
+		if err != nil {
+			return nil, fmt.Errorf("结束日期格式无效，应为 YYYY-MM-DD")
+		}
+		serviceReq.EndDate = endDate.Add(23*time.Hour + 59*time.Minute + 59*time.Second)
+	}
+
+	return serviceReq, nil
 }

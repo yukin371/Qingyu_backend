@@ -84,6 +84,16 @@ type ReviewWithdrawRequest struct {
 	Reason     string `json:"reason"`
 }
 
+// ListWithdrawalsRequest 管理端提现列表请求
+type ListWithdrawalsRequest struct {
+	Page      int    `form:"page"`
+	PageSize  int    `form:"page_size"`
+	Status    string `form:"status"`
+	Source    string `form:"source"`
+	StartDate string `form:"start_date"`
+	EndDate   string `form:"end_date"`
+}
+
 // GetLogsRequest 获取操作日志请求
 type GetLogsRequest struct {
 	Page      int    `form:"page" validate:"omitempty,min=1"`

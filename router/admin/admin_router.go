@@ -166,6 +166,8 @@ func RegisterAdminRoutes(
 
 		// 提现管理
 		if adminSvc != nil {
+			adminGroup.GET("/withdrawals", systemAdminAPI.ListWithdrawals)
+			adminGroup.GET("/withdrawals/stats", systemAdminAPI.GetWithdrawalStatistics)
 			adminGroup.POST("/withdraw/review", systemAdminAPI.ReviewWithdraw)
 		}
 
@@ -249,13 +251,13 @@ func RegisterAdminRoutes(
 			bannerAdminAPI := admin.NewBannerAPI(bannerSvc)
 			bannersGroup := adminGroup.Group("/banners")
 			{
-				bannersGroup.GET("", bannerAdminAPI.GetBanners)            // 获取Banner列表
-				bannersGroup.GET("/:id", bannerAdminAPI.GetBannerByID)     // 获取Banner详情
-				bannersGroup.POST("", bannerAdminAPI.CreateBanner)          // 创建Banner
-				bannersGroup.PUT("/:id", bannerAdminAPI.UpdateBanner)       // 更新Banner
-				bannersGroup.DELETE("/:id", bannerAdminAPI.DeleteBanner)    // 删除Banner
+				bannersGroup.GET("", bannerAdminAPI.GetBanners)                     // 获取Banner列表
+				bannersGroup.GET("/:id", bannerAdminAPI.GetBannerByID)              // 获取Banner详情
+				bannersGroup.POST("", bannerAdminAPI.CreateBanner)                  // 创建Banner
+				bannersGroup.PUT("/:id", bannerAdminAPI.UpdateBanner)               // 更新Banner
+				bannersGroup.DELETE("/:id", bannerAdminAPI.DeleteBanner)            // 删除Banner
 				bannersGroup.PUT("/batch-status", bannerAdminAPI.BatchUpdateStatus) // 批量更新状态
-				bannersGroup.PUT("/batch-sort", bannerAdminAPI.BatchUpdateSort)   // 批量更新排序
+				bannersGroup.PUT("/batch-sort", bannerAdminAPI.BatchUpdateSort)     // 批量更新排序
 			}
 		}
 	}
