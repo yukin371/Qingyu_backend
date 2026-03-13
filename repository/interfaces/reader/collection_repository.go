@@ -67,6 +67,9 @@ type CollectionRepository interface {
 	// CountUserCollections 统计用户收藏数
 	CountUserCollections(ctx context.Context, userID string) (int64, error)
 
+	// CountBookCollections 统计书籍被收藏数
+	CountBookCollections(ctx context.Context, bookID string) (int64, error)
+
 	// Health 健康检查
 	Health(ctx context.Context) error
 }
