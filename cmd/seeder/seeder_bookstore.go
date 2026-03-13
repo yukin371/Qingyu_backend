@@ -79,17 +79,33 @@ func (s *BookstoreSeeder) SeedGeneratedBooks() error {
 		return fmt.Errorf("没有找到分类数据，请先运行分类填充命令")
 	}
 
-	// 3. 存储所有生成的书籍
-	var allBooks []models.Book
+	// 3. 先构建少量精选书，再补随机填充书
+	showcaseBooks, err := buildShowcaseBooks(categories, authorIDs, totalBooks)
+	if err != nil {
+		return fmt.Errorf("构建精选演示书籍失败: %w", err)
+	}
+	if len(showcaseBooks) > 0 {
+		if err := s.removeShowcaseBooks(); err != nil {
+			return fmt.Errorf("清理旧的精选演示书籍失败: %w", err)
+		}
+	}
 
-	remaining := totalBooks
+	allBooks := make([]models.Book, 0, totalBooks)
+	allBooks = append(allBooks, showcaseBooks...)
+
+	randomBooksTarget := totalBooks - len(showcaseBooks)
+	if randomBooksTarget < 0 {
+		randomBooksTarget = 0
+	}
+
+	remaining := randomBooksTarget
 	for i, distribution := range defaultCategoryDistributions {
 		category, ok := categories[distribution.Name]
 		if !ok {
 			return fmt.Errorf("缺少标准分类: %s", distribution.Name)
 		}
 
-		count := int(float64(totalBooks) * distribution.Ratio)
+		count := int(float64(randomBooksTarget) * distribution.Ratio)
 		if i == len(defaultCategoryDistributions)-1 {
 			count = remaining
 		}
@@ -112,11 +128,56 @@ func (s *BookstoreSeeder) SeedGeneratedBooks() error {
 	}
 
 	fmt.Printf("成功插入 %d 本书籍\n", len(allBooks))
+	if len(showcaseBooks) > 0 {
+		fmt.Printf("其中包含 %d 本精选演示书籍\n", len(showcaseBooks))
+	}
 
 	// 6. 输出author分配统计
 	s.printAuthorDistributionStats(allBooks, authorIDs)
 
 	return nil
+}
+
+// SeedShowcaseBooks 只填充精选演示书籍。
+func (s *BookstoreSeeder) SeedShowcaseBooks() error {
+	fmt.Println("正在获取author角色用户...")
+	authorIDs, err := s.getAuthorUsers()
+	if err != nil {
+		return fmt.Errorf("获取author用户失败: %w", err)
+	}
+	if len(authorIDs) == 0 {
+		return fmt.Errorf("没有找到author角色的用户，请先运行用户填充命令")
+	}
+
+	categories, err := s.getStandardCategories()
+	if err != nil {
+		return fmt.Errorf("获取分类失败: %w", err)
+	}
+	if len(categories) == 0 {
+		return fmt.Errorf("没有找到分类数据，请先运行分类填充命令")
+	}
+
+	showcaseBooks, err := buildShowcaseBooks(categories, authorIDs, len(showcaseBookSpecs))
+	if err != nil {
+		return fmt.Errorf("构建精选演示书籍失败: %w", err)
+	}
+	if err := s.removeShowcaseBooks(); err != nil {
+		return fmt.Errorf("清理旧的精选演示书籍失败: %w", err)
+	}
+
+	ctx := context.Background()
+	if err := s.inserter.InsertMany(ctx, showcaseBooks); err != nil {
+		return fmt.Errorf("插入精选书籍失败: %w", err)
+	}
+
+	fmt.Printf("成功插入 %d 本精选演示书籍\n", len(showcaseBooks))
+	return nil
+}
+
+func (s *BookstoreSeeder) removeShowcaseBooks() error {
+	ctx := context.Background()
+	_, err := s.db.Collection("books").DeleteMany(ctx, bson.M{"tags": showcaseTag})
+	return err
 }
 
 func (s *BookstoreSeeder) getStandardCategories() (map[string]*bookstoreModel.Category, error) {
@@ -239,14 +300,53 @@ func (s *BookstoreSeeder) SeedBanners() error {
 		},
 	}
 
+	_, err := collection.DeleteMany(ctx, bson.M{
+		"$or": []bson.M{
+			{"target": "/books/new"},
+			{"target": "/books/free"},
+			{"image": bson.M{"$regex": "^/images/banners/showcase-"}},
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("清理旧 banners 失败: %w", err)
+	}
+
 	// 批量插入 banners
-	_, err := collection.InsertMany(ctx, banners)
+	_, err = collection.InsertMany(ctx, banners)
 	if err != nil {
 		return fmt.Errorf("插入 banners 失败: %w", err)
 	}
 
+	showcaseBooks, err := s.loadShowcaseBooks()
+	if err != nil {
+		return fmt.Errorf("加载精选书籍失败: %w", err)
+	}
+	showcaseBanners := buildShowcaseBanners(showcaseBooks)
+	if len(showcaseBanners) > 0 {
+		_, err = collection.InsertMany(ctx, showcaseBanners)
+		if err != nil {
+			return fmt.Errorf("插入精选 banners 失败: %w", err)
+		}
+		fmt.Printf("成功插入 %d 个精选 banner\n", len(showcaseBanners))
+	}
+
 	fmt.Printf("成功插入 %d 个 banner\n", len(banners))
 	return nil
+}
+
+func (s *BookstoreSeeder) loadShowcaseBooks() ([]models.Book, error) {
+	ctx := context.Background()
+	cursor, err := s.db.Collection("books").Find(ctx, bson.M{"tags": showcaseTag})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var books []models.Book
+	if err := cursor.All(ctx, &books); err != nil {
+		return nil, err
+	}
+	return books, nil
 }
 
 // Clean 清空书城数据（books 和 banners 集合）

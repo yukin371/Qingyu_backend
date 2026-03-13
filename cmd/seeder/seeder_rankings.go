@@ -4,6 +4,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"sort"
 	"time"
 
 	"Qingyu_backend/cmd/seeder/config"
@@ -40,10 +41,12 @@ func (s *RankingSeeder) SeedRankings() error {
 	defer cursor.Close(ctx)
 
 	var books []struct {
-		ID        string  `bson:"_id"`
-		Title     string  `bson:"title"`
-		Rating    float64 `bson:"rating"`
-		ViewCount int64   `bson:"view_count"`
+		ID          string    `bson:"_id"`
+		Title       string    `bson:"title"`
+		Rating      float64   `bson:"rating"`
+		ViewCount   int64     `bson:"view_count"`
+		Tags        []string  `bson:"tags"`
+		PublishedAt time.Time `bson:"published_at"`
 	}
 	if err := cursor.All(ctx, &books); err != nil {
 		return fmt.Errorf("解析书籍列表失败: %w", err)
@@ -142,43 +145,75 @@ func (s *RankingSeeder) SeedRankings() error {
 
 // sortBooksForRanking 根据榜单类型排序书籍
 func (s *RankingSeeder) sortBooksForRanking(books []struct {
-	ID        string  `bson:"_id"`
-	Title     string  `bson:"title"`
-	Rating    float64 `bson:"rating"`
-	ViewCount int64   `bson:"view_count"`
+	ID          string    `bson:"_id"`
+	Title       string    `bson:"title"`
+	Rating      float64   `bson:"rating"`
+	ViewCount   int64     `bson:"view_count"`
+	Tags        []string  `bson:"tags"`
+	PublishedAt time.Time `bson:"published_at"`
 }, rankingType string) []struct {
-	ID        string  `bson:"_id"`
-	Title     string  `bson:"title"`
-	Rating    float64 `bson:"rating"`
-	ViewCount int64   `bson:"view_count"`
+	ID          string    `bson:"_id"`
+	Title       string    `bson:"title"`
+	Rating      float64   `bson:"rating"`
+	ViewCount   int64     `bson:"view_count"`
+	Tags        []string  `bson:"tags"`
+	PublishedAt time.Time `bson:"published_at"`
 } {
-	// 简单排序：按评分和浏览量排序
 	sorted := make([]struct {
-		ID        string  `bson:"_id"`
-		Title     string  `bson:"title"`
-		Rating    float64 `bson:"rating"`
-		ViewCount int64   `bson:"view_count"`
+		ID          string    `bson:"_id"`
+		Title       string    `bson:"title"`
+		Rating      float64   `bson:"rating"`
+		ViewCount   int64     `bson:"view_count"`
+		Tags        []string  `bson:"tags"`
+		PublishedAt time.Time `bson:"published_at"`
 	}, len(books))
 	copy(sorted, books)
 
-	// 简单的冒泡排序（实际应用中应该使用更高效的排序）
-	for i := 0; i < len(sorted)-1; i++ {
-		for j := 0; j < len(sorted)-i-1; j++ {
-			if sorted[j].Rating < sorted[j+1].Rating {
-				sorted[j], sorted[j+1] = sorted[j+1], sorted[j]
-			}
+	sort.SliceStable(sorted, func(i, j int) bool {
+		left := s.rankingSortScore(sorted[i], rankingType)
+		right := s.rankingSortScore(sorted[j], rankingType)
+		if left == right {
+			return sorted[i].Title < sorted[j].Title
 		}
-	}
+		return left > right
+	})
 
 	return sorted
 }
 
+func (s *RankingSeeder) rankingSortScore(book struct {
+	ID          string    `bson:"_id"`
+	Title       string    `bson:"title"`
+	Rating      float64   `bson:"rating"`
+	ViewCount   int64     `bson:"view_count"`
+	Tags        []string  `bson:"tags"`
+	PublishedAt time.Time `bson:"published_at"`
+}, rankingType string) float64 {
+	score := book.Rating*100 + float64(book.ViewCount)/5000
+	if hasShowcaseTag(book.Tags) {
+		score += 100000
+	}
+	if rankingType == "newbie" {
+		ageHours := time.Since(book.PublishedAt).Hours()
+		if ageHours < 0 {
+			ageHours = 0
+		}
+		score += 240 / (1 + ageHours/24)
+	}
+	if rankingType == "realtime" {
+		score += float64(book.ViewCount) / 2000
+	}
+	return score
+}
+
 // calculateScore 计算榜单分数
 func (s *RankingSeeder) calculateScore(book struct {
-	ID        string  `bson:"_id"`
-	Title     string  `bson:"title"`
-	Rating    float64 `bson:"rating"`
-	ViewCount int64   `bson:"view_count"`
+	ID          string    `bson:"_id"`
+	Title       string    `bson:"title"`
+	Rating      float64   `bson:"rating"`
+	ViewCount   int64     `bson:"view_count"`
+	Tags        []string  `bson:"tags"`
+	PublishedAt time.Time `bson:"published_at"`
 }, rank int, rankingType string) float64 {
 	// 基础分数为评分
 	score := book.Rating
@@ -203,6 +238,15 @@ func (s *RankingSeeder) calculateScore(book struct {
 	}
 
 	return score
+}
+
+func hasShowcaseTag(tags []string) bool {
+	for _, tag := range tags {
+		if tag == showcaseTag {
+			return true
+		}
+	}
+	return false
 }
 
 // Clean 清空榜单数据

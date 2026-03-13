@@ -36,8 +36,22 @@ var (
 	// allCmd 执行所有填充操作
 	allCmd = &cobra.Command{
 		Use:   "all",
-		Short: "执行所有数据填充",
+		Short: "执行核心联调基线数据填充",
 		Run:   runAll,
+	}
+
+	// baselineCmd 构建联调基线数据
+	baselineCmd = &cobra.Command{
+		Use:   "baseline",
+		Short: "构建联调基线数据（用户/书城/章节/社交/阅读/统计）",
+		Run:   runBaseline,
+	}
+
+	// fullCmd 构建完整测试数据
+	fullCmd = &cobra.Command{
+		Use:   "full",
+		Short: "构建完整测试数据（基线 + 钱包/通知/消息/财务/AI配额）",
+		Run:   runFull,
 	}
 
 	// usersCmd 只填充用户数据
@@ -59,6 +73,20 @@ var (
 		Use:   "bookstore",
 		Short: "只填充书籍数据",
 		Run:   runBookstore,
+	}
+
+	// showcaseCmd 只填充精选演示书籍数据
+	showcaseCmd = &cobra.Command{
+		Use:   "showcase",
+		Short: "填充精选演示书籍数据",
+		Run:   runShowcase,
+	}
+
+	// subscriptionsCmd 只填充书籍订阅关系
+	subscriptionsCmd = &cobra.Command{
+		Use:   "subscriptions",
+		Short: "填充书籍订阅关系",
+		Run:   runSubscriptions,
 	}
 
 	// cleanCmd 清空所有数据
@@ -199,9 +227,13 @@ func init() {
 
 	// 添加子命令
 	rootCmd.AddCommand(allCmd)
+	rootCmd.AddCommand(baselineCmd)
+	rootCmd.AddCommand(fullCmd)
 	rootCmd.AddCommand(usersCmd)
 	rootCmd.AddCommand(categoriesCmd)
 	rootCmd.AddCommand(bookstoreCmd)
+	rootCmd.AddCommand(showcaseCmd)
+	rootCmd.AddCommand(subscriptionsCmd)
 	rootCmd.AddCommand(chaptersCmd)
 	rootCmd.AddCommand(socialCmd)
 	rootCmd.AddCommand(walletsCmd)
@@ -250,75 +282,31 @@ func getDatabase() (*utils.Database, error) {
 
 // runAll 执行所有填充操作
 func runAll(cmd *cobra.Command, args []string) {
-	fmt.Println("开始填充所有测试数据...")
-	fmt.Printf("数据规模: %s\n", cfg.Scale)
+	runBaseline(cmd, args)
+}
 
-	db, err := getDatabase()
-	if err != nil {
-		fmt.Printf("数据库连接失败: %v\n", err)
-		os.Exit(1)
-	}
-	defer db.Disconnect()
+func runBaseline(cmd *cobra.Command, args []string) {
+	fmt.Println("开始填充联调基线测试数据...")
+	runSeedWorkflow(seedWorkflowOptions{
+		cleanMessage: "清空现有基线数据...",
+		cleanFn:      cleanAllData,
+		extraSteps:   nil,
+	})
+}
 
-	// 如果需要，先清空数据
-	if cfg.Clean {
-		fmt.Println("\n清空现有数据...")
-		if err := cleanAllData(db); err != nil {
-			fmt.Printf("清空数据失败: %v\n", err)
-			os.Exit(1)
-		}
-	}
-
-	// 填充用户
-	fmt.Println("\n填充用户数据...")
-	if err := seedUsers(db); err != nil {
-		fmt.Printf("填充用户数据失败: %v\n", err)
-		os.Exit(1)
-	}
-
-	// 填充用户设置
-	fmt.Println("\n填充用户设置数据...")
-	if err := seedSettings(db); err != nil {
-		fmt.Printf("填充用户设置数据失败: %v\n", err)
-		os.Exit(1)
-	}
-
-	// 填充书籍
-	fmt.Println("\n填充分类数据...")
-	if err := seedCategories(db); err != nil {
-		fmt.Printf("填充分类数据失败: %v\n", err)
-		os.Exit(1)
-	}
-
-	// 填充书籍
-	fmt.Println("\n填充书籍数据...")
-	if err := seedBooks(db); err != nil {
-		fmt.Printf("填充书籍数据失败: %v\n", err)
-		os.Exit(1)
-	}
-
-	// 生成榜单数据
-	fmt.Println("\n生成榜单数据...")
-	if err := seedRankings(db); err != nil {
-		fmt.Printf("生成榜单数据失败: %v\n", err)
-		os.Exit(1)
-	}
-
-	// 填充订阅关系
-	fmt.Println("\n填充订阅关系...")
-	if err := seedSubscriptions(db); err != nil {
-		fmt.Printf("填充订阅关系失败: %v\n", err)
-		os.Exit(1)
-	}
-
-	// 数据验证
-	fmt.Println("\n验证数据完整性...")
-	if err := validateData(db); err != nil {
-		fmt.Printf("数据验证失败: %v\n", err)
-		os.Exit(1)
-	}
-
-	fmt.Println("\n数据填充完成!")
+func runFull(cmd *cobra.Command, args []string) {
+	fmt.Println("开始填充完整测试数据...")
+	runSeedWorkflow(seedWorkflowOptions{
+		cleanMessage: "清空现有完整测试数据...",
+		cleanFn:      cleanAllData,
+		extraSteps: []seedStep{
+			{title: "填充钱包数据...", run: seedWalletsData},
+			{title: "填充通知数据...", run: seedNotificationsData},
+			{title: "填充消息数据...", run: seedMessagingData},
+			{title: "填充财务数据...", run: seedFinanceData},
+			{title: "激活AI配额...", run: seedAIQuotaData},
+		},
+	})
 }
 
 // runUsers 只填充用户数据
@@ -400,6 +388,66 @@ func runBookstore(cmd *cobra.Command, args []string) {
 	fmt.Println("\n书籍和榜单数据填充完成!")
 }
 
+// runShowcase 只填充精选演示书籍和榜单
+func runShowcase(cmd *cobra.Command, args []string) {
+	fmt.Println("开始填充精选演示书籍数据...")
+
+	db, err := getDatabase()
+	if err != nil {
+		fmt.Printf("数据库连接失败: %v\n", err)
+		os.Exit(1)
+	}
+	defer db.Disconnect()
+
+	if err := ensureAuthorUsers(db); err != nil {
+		fmt.Printf("确保author用户存在失败: %v\n", err)
+		os.Exit(1)
+	}
+
+	if cfg.Clean {
+		fmt.Println("\n清空书籍和分类数据...")
+		if err := seedBooksClean(db); err != nil {
+			fmt.Printf("清空书籍数据失败: %v\n", err)
+			os.Exit(1)
+		}
+		if err := seedCategoriesClean(db); err != nil {
+			fmt.Printf("清空分类数据失败: %v\n", err)
+			os.Exit(1)
+		}
+	}
+
+	fmt.Println("\n填充分类数据...")
+	if err := seedCategories(db); err != nil {
+		fmt.Printf("填充分类数据失败: %v\n", err)
+		os.Exit(1)
+	}
+
+	if err := seedShowcaseBooks(db); err != nil {
+		fmt.Printf("填充精选演示书籍失败: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("\n生成精选 banner...")
+	if err := seedShowcaseBanners(db); err != nil {
+		fmt.Printf("生成精选 banner 失败: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("\n生成精选章节和内容...")
+	if err := seedShowcaseChapters(db); err != nil {
+		fmt.Printf("生成精选章节失败: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("\n生成榜单数据...")
+	if err := seedRankings(db); err != nil {
+		fmt.Printf("生成榜单数据失败: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("\n精选演示书籍和榜单数据填充完成!")
+}
+
 // runClean 清空所有数据
 func runClean(cmd *cobra.Command, args []string) {
 	fmt.Println("警告: 此操作将清空所有测试数据!")
@@ -473,10 +521,82 @@ func cleanAllData(db *utils.Database) error {
 	if err := seedRankingsClean(db); err != nil {
 		return err
 	}
+	if err := seedChaptersClean(db); err != nil {
+		return err
+	}
 	if err := seedSubscriptionsClean(db); err != nil {
 		return err
 	}
+	if err := seedSocialClean(db); err != nil {
+		return err
+	}
+	if err := seedReaderClean(db); err != nil {
+		return err
+	}
+	if err := seedStatsClean(db); err != nil {
+		return err
+	}
 	return nil
+}
+
+type seedStep struct {
+	title string
+	run   func(db *utils.Database) error
+}
+
+type seedWorkflowOptions struct {
+	cleanMessage string
+	cleanFn      func(db *utils.Database) error
+	extraSteps   []seedStep
+}
+
+func runSeedWorkflow(opts seedWorkflowOptions) {
+	fmt.Printf("数据规模: %s\n", cfg.Scale)
+
+	db, err := getDatabase()
+	if err != nil {
+		fmt.Printf("数据库连接失败: %v\n", err)
+		os.Exit(1)
+	}
+	defer db.Disconnect()
+
+	if cfg.Clean && opts.cleanFn != nil {
+		fmt.Printf("\n%s\n", opts.cleanMessage)
+		if err := opts.cleanFn(db); err != nil {
+			fmt.Printf("清空数据失败: %v\n", err)
+			os.Exit(1)
+		}
+	}
+
+	coreSteps := []seedStep{
+		{title: "填充用户数据...", run: seedUsers},
+		{title: "填充用户设置数据...", run: seedSettings},
+		{title: "填充分类数据...", run: seedCategories},
+		{title: "填充书籍数据...", run: seedBooks},
+		{title: "生成榜单数据...", run: seedRankings},
+		{title: "填充章节和章节内容数据...", run: seedChaptersData},
+		{title: "填充订阅关系...", run: seedSubscriptions},
+		{title: "填充社交数据...", run: seedSocialData},
+		{title: "填充阅读数据...", run: seedReaderData},
+		{title: "填充统计数据...", run: seedStatsData},
+	}
+
+	steps := append(coreSteps, opts.extraSteps...)
+	for _, step := range steps {
+		fmt.Printf("\n%s\n", step.title)
+		if err := step.run(db); err != nil {
+			fmt.Printf("%s失败: %v\n", strings.TrimSuffix(step.title, "..."), err)
+			os.Exit(1)
+		}
+	}
+
+	fmt.Println("\n验证数据完整性...")
+	if err := validateData(db); err != nil {
+		fmt.Printf("数据验证失败: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("\n数据填充完成!")
 }
 
 // seedUsers 填充用户数据
@@ -545,6 +665,16 @@ func seedBooks(db *utils.Database) error {
 	return nil
 }
 
+func seedShowcaseBooks(db *utils.Database) error {
+	seeder := NewBookstoreSeeder(db, cfg)
+	return seeder.SeedShowcaseBooks()
+}
+
+func seedShowcaseBanners(db *utils.Database) error {
+	seeder := NewBookstoreSeeder(db, cfg)
+	return seeder.SeedBanners()
+}
+
 // seedBooksClean 清空书籍数据
 func seedBooksClean(db *utils.Database) error {
 	seeder := NewBookstoreSeeder(db, cfg)
@@ -561,6 +691,82 @@ func seedSubscriptions(db *utils.Database) error {
 func seedSubscriptionsClean(db *utils.Database) error {
 	seeder := NewSubscriptionSeeder(db, cfg)
 	return seeder.Clean()
+}
+
+func seedChaptersData(db *utils.Database) error {
+	seeder := NewChapterSeeder(db, cfg)
+	if err := seeder.SeedChapters(); err != nil {
+		return err
+	}
+	return seeder.SeedChapterContents()
+}
+
+func seedShowcaseChapters(db *utils.Database) error {
+	seeder := NewChapterSeeder(db, cfg)
+	if err := seeder.SeedShowcaseChapters(); err != nil {
+		return err
+	}
+	return seeder.SeedShowcaseChapterContents()
+}
+
+func seedChaptersClean(db *utils.Database) error {
+	seeder := NewChapterSeeder(db, cfg)
+	return seeder.Clean()
+}
+
+func seedSocialData(db *utils.Database) error {
+	seeder := NewSocialSeeder(db, cfg)
+	return seeder.SeedSocialData()
+}
+
+func seedSocialClean(db *utils.Database) error {
+	seeder := NewSocialSeeder(db, cfg)
+	return seeder.Clean()
+}
+
+func seedReaderData(db *utils.Database) error {
+	seeder := NewReaderSeeder(db, cfg)
+	return seeder.SeedReadingData()
+}
+
+func seedReaderClean(db *utils.Database) error {
+	seeder := NewReaderSeeder(db, cfg)
+	return seeder.Clean()
+}
+
+func seedStatsData(db *utils.Database) error {
+	seeder := NewStatsSeeder(db, cfg)
+	return seeder.SeedStats()
+}
+
+func seedStatsClean(db *utils.Database) error {
+	seeder := NewStatsSeeder(db, cfg)
+	return seeder.Clean()
+}
+
+func seedWalletsData(db *utils.Database) error {
+	seeder := NewWalletSeeder(db, cfg)
+	return seeder.SeedWallets()
+}
+
+func seedNotificationsData(db *utils.Database) error {
+	seeder := NewNotificationSeeder(db, cfg)
+	return seeder.SeedNotifications()
+}
+
+func seedMessagingData(db *utils.Database) error {
+	seeder := NewMessagingSeeder(db, cfg)
+	return seeder.SeedMessagingData()
+}
+
+func seedFinanceData(db *utils.Database) error {
+	seeder := NewFinanceSeeder(db, cfg)
+	return seeder.SeedFinanceData()
+}
+
+func seedAIQuotaData(db *utils.Database) error {
+	seeder := NewAIQuotaSeeder(db, cfg)
+	return seeder.SeedAIQuota()
 }
 
 // runTestData 填充E2E测试数据
@@ -691,6 +897,32 @@ func runCategories(cmd *cobra.Command, args []string) {
 	}
 
 	fmt.Println("\n分类数据填充完成!")
+}
+
+func runSubscriptions(cmd *cobra.Command, args []string) {
+	fmt.Println("开始填充书籍订阅关系...")
+
+	db, err := getDatabase()
+	if err != nil {
+		fmt.Printf("数据库连接失败: %v\n", err)
+		os.Exit(1)
+	}
+	defer db.Disconnect()
+
+	if cfg.Clean {
+		fmt.Println("\n清空订阅关系数据...")
+		if err := seedSubscriptionsClean(db); err != nil {
+			fmt.Printf("清空订阅关系失败: %v\n", err)
+			os.Exit(1)
+		}
+	}
+
+	if err := seedSubscriptions(db); err != nil {
+		fmt.Printf("填充订阅关系失败: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("\n订阅关系填充完成!")
 }
 
 // runSocial 填充社交数据

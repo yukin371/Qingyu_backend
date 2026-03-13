@@ -21,14 +21,27 @@ go build -o seeder .
 
 ## 命令列表
 
+### 分层命令
+
+| 层级 | 适用场景 | 推荐入口 |
+|------|---------|---------|
+| 精选演示层 | 首页、榜单、详情页演示数据 | `showcase` |
+| 基线数据层 | 本地开发、联调基线、CI 初始化 | `baseline` |
+| 扩展数据层 | 钱包/通知/消息/财务等完整业务测试 | `full` |
+| 链路增强层 | 发布后作者统计、评分、评论、阅读行为补数 | `node scripts/bootstrap_test_data.mjs --mode author-stats` |
+
 ### 核心命令
 
 | 命令 | 说明 | 依赖 |
 |------|------|------|
-| `all` | 填充所有基础数据（用户、书籍、订阅关系） | - |
+| `all` | 兼容旧入口，等价于 `baseline` | - |
+| `showcase` | 只填充少量精选演示书籍，并让榜单优先可见 | users, categories |
+| `baseline` | 构建联调基线数据（用户、书城、章节、订阅、社交、阅读、统计） | - |
+| `full` | 构建完整测试数据（基线 + 钱包/通知/消息/财务/AI配额） | - |
 | `users` | 只填充用户数据 | - |
 | `categories` | 填充标准分类数据（8个分类） | - |
 | `bookstore` | 只填充书籍数据和Banner | - |
+| `subscriptions` | 只填充书籍订阅关系 | users, books |
 | `chapters` | 填充章节数据和内容 | books |
 | `social` | 填充社交数据（评论、点赞、收藏、关注） | users, books |
 | `wallets` | 填充钱包和交易数据 | users |
@@ -65,15 +78,14 @@ go build -o seeder .
 ### 一键初始化完整测试环境
 
 ```bash
-# 填充所有基础数据
-./seeder all --scale medium
+# 推荐：构建联调基线
+./seeder baseline --scale medium --clean
 
-# 然后填充扩展数据
-./seeder chapters
-./seeder social
-./seeder wallets
-./seeder rankings
-./seeder ai-quota
+# 推荐：先构建精选演示数据，用于首页和榜单演示
+./seeder showcase --clean
+
+# 推荐：构建完整业务测试数据
+./seeder full --scale medium --clean
 ```
 
 ### 填充特定模块
@@ -87,6 +99,12 @@ go build -o seeder .
 
 # 只填充书籍
 ./seeder bookstore -s large
+
+# 只填充精选演示书籍
+./seeder showcase --clean
+
+# 只刷新订阅关系
+./seeder subscriptions
 
 # 填充章节数据（需要先有书籍）
 ./seeder chapters
@@ -158,6 +176,9 @@ go build -o seeder .
 - 随机用户名、邮箱、头像
 
 ### 书籍数据 (bookstore)
+- **数据策略**：
+  - 少量精选演示书籍：手工编写元数据，适合首页、榜单、详情页演示
+  - 大量随机填充书籍：用于列表、搜索、联调和压力测试
 - **分类比例**：
   - 仙侠: 25%
   - 都市: 20%
@@ -177,6 +198,16 @@ go build -o seeder .
 - 标准 8 个顶级分类
 - 书籍写入真实 `category_ids`
 - 同时保留 `categories` 名称快照便于展示
+
+### 精选演示数据 (showcase)
+- 默认内置 5 本精选作品
+- 带 `seed:showcase` 标签，榜单会轻量优先这些作品
+- 适合作为：
+  - 首页推荐
+  - 榜单头部
+  - 详情页、阅读页联调演示
+- 当前只有 `云海问剑录` 完整补了 banner + 专属章节标题 + 前 3 章手工正文
+- `TODO(showcase-next)` 已写在 [`showcase_content.go`](/E:/Github/Qingyu/Qingyu_backend/cmd/seeder/showcase_content.go)，后续补其他书直接按模板追加
 
 ### 章节数据 (chapters)
 - 为每本书生成 30-500 章（根据书籍状态）
@@ -235,14 +266,39 @@ go build -o seeder .
 
 ### 统计数据 (stats)
 - **书籍统计**: 每本书的浏览、阅读、收藏、分享数据
-  - 根据书籍热度生成合理分布
-  - 高热度书籍：5000-20000 浏览
-  - 中热度书籍：1000-5000 浏览
-  - 低热度书籍：100-1000 浏览
-- **章节统计**: 每章的详细统计
-  - 平均停留时间：30-180 秒
-  - 跳章率：10%-40%
-  - 完读率：40%-90%
+  - 使用运行时真实模型填充 `book_stats` / `book_stats_daily`
+- **章节统计**: 每章的详细统计，填充 `chapter_stats`
+- **读者行为**: 自动补齐 `reader_behaviors`
+- **留存统计**: 自动补齐 `reader_retentions`
+
+## JS 链路增强脚本
+
+适用于“基线数据已有，但需要让某个作者项目的统计页马上有数据”的场景。
+
+```bash
+# 先准备基线，再对指定作者项目补评分/评论/书签/阅读历史/阅读行为，并回刷统计
+node scripts/bootstrap_test_data.mjs --mode bootstrap --scale small --projectId <writer_project_id>
+
+# 只做作者统计链路增强，不重跑基线
+node scripts/bootstrap_test_data.mjs --mode author-stats --projectId <writer_project_id>
+
+# 按作者自动扫描多个项目并批量增强
+node scripts/bootstrap_test_data.mjs --mode author-stats-all --authorUsername testauthor001 --limit 5
+
+# 自动补齐“作者发布 + 管理员审核 + 读者互动”
+# 未发布但已有文档的项目会被自动发布并审核通过
+node scripts/bootstrap_test_data.mjs --mode author-stats-all --authorUsername testauthor001 --adminUsername testadmin001 --limit 5
+
+# 只跑基线
+node scripts/bootstrap_test_data.mjs --mode baseline --scale small --clean
+```
+
+脚本职责：
+- 登录作者和测试读者
+- 解析 `project_id -> published book_id`
+- 必要时自动补齐“作者发布 + 管理员审核”
+- 通过真实 API 写入评分、评论、书签、阅读历史、阅读行为
+- 最后执行 `seeder stats` 回刷作者统计页所需聚合
 
 ### 财务数据 (finance)
 - **作者收益**: 每本书的收益记录

@@ -16,6 +16,11 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+const (
+	showcaseDefaultMinWordCount = 2600
+	showcaseDefaultMaxWordCount = 3800
+)
+
 // ChapterSeeder 章节数据填充器
 type ChapterSeeder struct {
 	db       *utils.Database
@@ -83,9 +88,52 @@ func (s *ChapterSeeder) SeedChapters() error {
 	return nil
 }
 
+// SeedShowcaseChapters 只为精选书籍生成章节。
+func (s *ChapterSeeder) SeedShowcaseChapters() error {
+	ctx := context.Background()
+	books, err := s.loadShowcaseBooks()
+	if err != nil {
+		return fmt.Errorf("加载精选书籍失败: %w", err)
+	}
+	books = filterBooksWithShowcasePlans(books)
+	if len(books) == 0 {
+		fmt.Println("  没有找到精选书籍，跳过章节生成")
+		return nil
+	}
+	if err := s.cleanupExistingShowcaseChapters(); err != nil {
+		return fmt.Errorf("清理旧的精选章节失败: %w", err)
+	}
+
+	var allChapters []models.Chapter
+	totalChapters := 0
+	for _, book := range books {
+		chapterCount := s.determineChapterCount(book)
+		chapters := s.generateChaptersForBook(book, chapterCount)
+		allChapters = append(allChapters, chapters...)
+		totalChapters += len(chapters)
+		fmt.Printf("  为精选书《%s》生成 %d 章\n", book.Title, len(chapters))
+		if err := s.syncBookMetrics(ctx, book.ID, chapters); err != nil {
+			return fmt.Errorf("同步精选书籍《%s》统计失败: %w", book.Title, err)
+		}
+	}
+	if len(allChapters) == 0 {
+		return nil
+	}
+	if err := s.inserter.InsertMany(ctx, allChapters); err != nil {
+		return fmt.Errorf("插入精选章节失败: %w", err)
+	}
+	fmt.Printf("  成功插入 %d 章精选章节\n", totalChapters)
+	return nil
+}
+
 // SeedChapterContents 为章节生成内容
 func (s *ChapterSeeder) SeedChapterContents() error {
 	ctx := context.Background()
+
+	bookMap, err := s.loadBookMap()
+	if err != nil {
+		return fmt.Errorf("加载书籍映射失败: %w", err)
+	}
 
 	// 获取所有章节
 	chapterCollection := s.db.Collection("chapters")
@@ -112,10 +160,30 @@ func (s *ChapterSeeder) SeedChapterContents() error {
 	var allContents []interface{}
 
 	for _, chapter := range chapters {
+		bookID, err := primitive.ObjectIDFromHex(chapter.BookID)
+		if err != nil {
+			return fmt.Errorf("解析章节书籍ID失败: %w", err)
+		}
+		book := bookMap[bookID]
+		if plan := getShowcaseChapterPlan(book.Title, chapter.ChapterNum); plan != nil {
+			wordCount := showcaseWordCount(plan.Paragraphs)
+			if wordCount < chapter.WordCount {
+				wordCount = chapter.WordCount
+			}
+			content := models.ChapterContent{
+				ChapterID: chapter.ID,
+				Content:   formatShowcaseContent(plan.Paragraphs),
+				WordCount: wordCount,
+				CreatedAt: time.Now(),
+				UpdatedAt: time.Now(),
+			}
+			allContents = append(allContents, content)
+			continue
+		}
 		content := models.ChapterContent{
 			ChapterID: chapter.ID,
-			Content:   s.baseGen.ChapterContent(800, 1500),
-			WordCount: 1000 + rand.Intn(500),
+			Content:   s.baseGen.ChapterContent(2600, 3800),
+			WordCount: chapter.WordCount,
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
 		}
@@ -137,6 +205,89 @@ func (s *ChapterSeeder) SeedChapterContents() error {
 	}
 
 	fmt.Printf("  成功生成 %d 章内容\n", len(allContents))
+	return nil
+}
+
+// SeedShowcaseChapterContents 只为精选章节生成内容。
+func (s *ChapterSeeder) SeedShowcaseChapterContents() error {
+	ctx := context.Background()
+	bookMap, err := s.loadBookMap()
+	if err != nil {
+		return fmt.Errorf("加载书籍映射失败: %w", err)
+	}
+	showcaseBookIDs := make([]primitive.ObjectID, 0)
+	for _, book := range bookMap {
+		if hasShowcaseTag(book.Tags) {
+			showcaseBookIDs = append(showcaseBookIDs, book.ID)
+		}
+	}
+	if len(showcaseBookIDs) == 0 {
+		fmt.Println("  没有找到精选章节内容对应的书籍，跳过内容生成")
+		return nil
+	}
+
+	showcaseBookIDStrings := make([]string, 0, len(showcaseBookIDs))
+	for _, id := range showcaseBookIDs {
+		showcaseBookIDStrings = append(showcaseBookIDStrings, id.Hex())
+	}
+	cursor, err := s.db.Collection("chapters").Find(ctx, bson.M{"book_id": bson.M{"$in": showcaseBookIDStrings}})
+	if err != nil {
+		return fmt.Errorf("获取精选章节列表失败: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	var chapters []models.Chapter
+	if err = cursor.All(ctx, &chapters); err != nil {
+		return fmt.Errorf("解析精选章节列表失败: %w", err)
+	}
+	if len(chapters) == 0 {
+		return nil
+	}
+
+	contentCollection := s.db.Collection("chapter_contents")
+	var allContents []interface{}
+	for _, chapter := range chapters {
+		bookID, err := primitive.ObjectIDFromHex(chapter.BookID)
+		if err != nil {
+			return fmt.Errorf("解析精选章节书籍ID失败: %w", err)
+		}
+		book := bookMap[bookID]
+		if plan := getShowcaseChapterPlan(book.Title, chapter.ChapterNum); plan != nil {
+			wordCount := showcaseWordCount(plan.Paragraphs)
+			if wordCount < chapter.WordCount {
+				wordCount = chapter.WordCount
+			}
+			allContents = append(allContents, models.ChapterContent{
+				ChapterID: chapter.ID,
+				Content:   formatShowcaseContent(plan.Paragraphs),
+				WordCount: wordCount,
+				CreatedAt: time.Now(),
+				UpdatedAt: time.Now(),
+			})
+			continue
+		}
+		allContents = append(allContents, models.ChapterContent{
+			ChapterID: chapter.ID,
+			Content:   s.baseGen.ChapterContent(2600, 3800),
+			WordCount: chapter.WordCount,
+			CreatedAt: time.Now(),
+			UpdatedAt: time.Now(),
+		})
+	}
+	if len(allContents) == 0 {
+		return nil
+	}
+	batchSize := 100
+	for i := 0; i < len(allContents); i += batchSize {
+		end := i + batchSize
+		if end > len(allContents) {
+			end = len(allContents)
+		}
+		if _, err := contentCollection.InsertMany(ctx, allContents[i:end]); err != nil {
+			return fmt.Errorf("插入精选章节内容失败（批次 %d）: %w", i/batchSize, err)
+		}
+	}
+	fmt.Printf("  成功生成 %d 条精选章节内容\n", len(allContents))
 	return nil
 }
 
@@ -164,13 +315,14 @@ func (s *ChapterSeeder) generateChaptersForBook(book models.Book, count int) []m
 	for i := 0; i < count; i++ {
 		chapterNum := i + 1
 		isFree := chapterNum <= 10 // 前10章免费
+		wordCount := s.generateChapterWordCount(book, chapterNum)
 
 		chapters[i] = models.Chapter{
 			ID:          primitive.NewObjectID(),
-			BookID:      book.ID,
+			BookID:      book.ID.Hex(),
 			ChapterNum:  chapterNum,
-			Title:       s.generateChapterTitle(chapterNum),
-			WordCount:   1000 + rand.Intn(1000),
+			Title:       s.generateChapterTitle(book, chapterNum),
+			WordCount:   wordCount,
 			Price:       s.calculateChapterPrice(chapterNum, isFree),
 			IsFree:      isFree,
 			Status:      "published",
@@ -183,8 +335,35 @@ func (s *ChapterSeeder) generateChaptersForBook(book models.Book, count int) []m
 	return chapters
 }
 
+func (s *ChapterSeeder) generateChapterWordCount(book models.Book, chapterNum int) int {
+	if plan := getShowcaseChapterPlan(book.Title, chapterNum); plan != nil {
+		base := showcaseWordCount(plan.Paragraphs)
+		if base >= 1600 {
+			return base
+		}
+		return 1600 + rand.Intn(400)
+	}
+
+	if hasShowcaseTag(book.Tags) {
+		span := showcaseDefaultMaxWordCount - showcaseDefaultMinWordCount + 1
+		wordCount := showcaseDefaultMinWordCount + rand.Intn(span)
+		if chapterNum > 120 {
+			wordCount += 120
+		}
+		if chapterNum > 240 {
+			wordCount += 180
+		}
+		return wordCount
+	}
+
+	return 1000 + rand.Intn(1000)
+}
+
 // generateChapterTitle 生成章节标题
-func (s *ChapterSeeder) generateChapterTitle(chapterNum int) string {
+func (s *ChapterSeeder) generateChapterTitle(book models.Book, chapterNum int) string {
+	if plan := getShowcaseChapterPlan(book.Title, chapterNum); plan != nil {
+		return plan.Title
+	}
 	titles := []string{
 		"第一章", "第二章", "第三章", "第四章", "第五章",
 		"第六章", "第七章", "第八章", "第九章", "第十章",
@@ -253,4 +432,121 @@ func (s *ChapterSeeder) Count() (int64, error) {
 		return 0, fmt.Errorf("统计章节数量失败: %w", err)
 	}
 	return count, nil
+}
+
+func (s *ChapterSeeder) cleanupExistingShowcaseChapters() error {
+	ctx := context.Background()
+	bookMap, err := s.loadBookMap()
+	if err != nil {
+		return err
+	}
+
+	showcaseBookIDs := make([]primitive.ObjectID, 0)
+	for _, book := range bookMap {
+		if hasShowcaseTag(book.Tags) {
+			showcaseBookIDs = append(showcaseBookIDs, book.ID)
+		}
+	}
+	if len(showcaseBookIDs) == 0 {
+		return nil
+	}
+
+	showcaseBookIDStrings := make([]string, 0, len(showcaseBookIDs))
+	for _, id := range showcaseBookIDs {
+		showcaseBookIDStrings = append(showcaseBookIDStrings, id.Hex())
+	}
+
+	chapterCursor, err := s.db.Collection("chapters").Find(ctx, bson.M{"book_id": bson.M{"$in": showcaseBookIDStrings}})
+	if err != nil {
+		return err
+	}
+	defer chapterCursor.Close(ctx)
+
+	var chapters []models.Chapter
+	if err := chapterCursor.All(ctx, &chapters); err != nil {
+		return err
+	}
+
+	chapterIDs := make([]primitive.ObjectID, 0, len(chapters))
+	for _, chapter := range chapters {
+		chapterIDs = append(chapterIDs, chapter.ID)
+	}
+	if len(chapterIDs) > 0 {
+		if _, err := s.db.Collection("chapter_contents").DeleteMany(ctx, bson.M{"chapter_id": bson.M{"$in": chapterIDs}}); err != nil {
+			return err
+		}
+	}
+	_, err = s.db.Collection("chapters").DeleteMany(ctx, bson.M{"book_id": bson.M{"$in": showcaseBookIDStrings}})
+	return err
+}
+
+func (s *ChapterSeeder) loadBookMap() (map[primitive.ObjectID]models.Book, error) {
+	ctx := context.Background()
+	cursor, err := s.db.Collection("books").Find(ctx, bson.M{})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var books []models.Book
+	if err := cursor.All(ctx, &books); err != nil {
+		return nil, err
+	}
+
+	bookMap := make(map[primitive.ObjectID]models.Book, len(books))
+	for _, book := range books {
+		bookMap[book.ID] = book
+	}
+	return bookMap, nil
+}
+
+func (s *ChapterSeeder) loadShowcaseBooks() ([]models.Book, error) {
+	ctx := context.Background()
+	cursor, err := s.db.Collection("books").Find(ctx, bson.M{"tags": showcaseTag})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(ctx)
+
+	var books []models.Book
+	if err := cursor.All(ctx, &books); err != nil {
+		return nil, err
+	}
+	return books, nil
+}
+
+func filterBooksWithShowcasePlans(books []models.Book) []models.Book {
+	filtered := make([]models.Book, 0, len(books))
+	for _, book := range books {
+		if len(showcaseChapterPlans[book.Title]) == 0 {
+			continue
+		}
+		filtered = append(filtered, book)
+	}
+	return filtered
+}
+
+func (s *ChapterSeeder) syncBookMetrics(ctx context.Context, bookID primitive.ObjectID, chapters []models.Chapter) error {
+	if len(chapters) == 0 {
+		return nil
+	}
+
+	var totalWords int64
+	var latestPublishedAt time.Time
+	for _, chapter := range chapters {
+		totalWords += int64(chapter.WordCount)
+		if chapter.PublishedAt.After(latestPublishedAt) {
+			latestPublishedAt = chapter.PublishedAt
+		}
+	}
+
+	_, err := s.db.Collection("books").UpdateByID(ctx, bookID, bson.M{
+		"$set": bson.M{
+			"chapter_count":  len(chapters),
+			"word_count":     totalWords,
+			"last_update_at": latestPublishedAt,
+			"updated_at":     time.Now(),
+		},
+	})
+	return err
 }

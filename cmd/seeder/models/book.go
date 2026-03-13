@@ -38,7 +38,7 @@ type Book struct {
 // Chapter 章节模型
 type Chapter struct {
 	ID          primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	BookID      primitive.ObjectID `bson:"book_id" json:"book_id"`
+	BookID      string             `bson:"book_id" json:"book_id"`
 	ChapterNum  int                `bson:"chapter_num" json:"chapter_num"`
 	Title       string             `bson:"title" json:"title"`
 	WordCount   int                `bson:"word_count" json:"word_count"`

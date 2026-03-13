@@ -15,24 +15,59 @@ go build -o seeder.exe .
 
 ### 核心数据命令
 
-### 1. all - 执行所有基础数据填充
+### 1. baseline - 构建联调基线数据
 
-填充用户、书籍、订阅关系等基础测试数据。
+填充用户、设置、书城、章节、订阅、社交、阅读和统计数据。
 
 ```bash
-# 使用默认配置（medium 规模）
-./seeder.exe all
-
-# 指定数据规模
-./seeder.exe all --scale small
-
-# 填充前清空现有数据
-./seeder.exe all --scale large --clean
+./seeder.exe baseline --scale small --clean
 ```
 
-### 2. users - 只填充用户数据
+### 2. full - 构建完整测试数据
 
-只填充用户相关的测试数据。
+在 `baseline` 基础上继续填充钱包、通知、消息、财务和 AI 配额数据。
+
+```bash
+./seeder.exe full --scale medium --clean
+```
+
+### 3. showcase - 构建精选演示数据
+
+适合首页、榜单、详情页演示。会插入少量手工编写的精选书籍，并让榜单优先展示这些作品。
+
+```bash
+./seeder.exe showcase --clean
+```
+
+### 4. all - 兼容旧入口
+
+等价于 `baseline`。
+
+### 5. subscriptions - 单独刷新书籍订阅关系
+
+```bash
+./seeder.exe subscriptions
+./seeder.exe subscriptions --clean
+```
+
+### 6. JS 链路增强脚本
+
+当数据库基线已经存在，但某个作者项目还缺“评分/评论/书签/阅读历史/阅读行为”这种必须走真实 API 的数据时，使用：
+
+```bash
+node scripts/bootstrap_test_data.mjs --mode author-stats --projectId <writer_project_id>
+node scripts/bootstrap_test_data.mjs --mode bootstrap --scale small --projectId <writer_project_id>
+```
+
+脚本会：
+- 调用 seeder 构建基线（`bootstrap` 模式）
+- 登录作者、管理员和测试读者
+- 解析已发布项目对应的书城 `book_id`
+- 必要时自动完成作者发布和管理员审核
+- 通过 API 写入评分、评论、书签、阅读历史、阅读行为
+- 最后回刷统计聚合
+
+### 6. users - 只填充用户数据
 
 ```bash
 # 填充用户数据
@@ -45,7 +80,7 @@ go build -o seeder.exe .
 ./seeder.exe users -s medium -c
 ```
 
-### 3. bookstore - 只填充书籍数据
+### 7. bookstore - 只填充书籍数据
 
 只填充书籍相关的测试数据。
 
@@ -62,7 +97,7 @@ go build -o seeder.exe .
 
 ### 扩展数据命令
 
-### 4. reader - 填充阅读数据
+### 8. reader - 填充阅读数据
 
 填充阅读历史、书架、订阅、阅读进度等数据。
 
@@ -82,7 +117,7 @@ go build -o seeder.exe .
 - 书签：30% 用户有书签，每个用户 1-10 个书签
 - 批注：20% 用户有批注，每个用户 1-20 条批注
 
-### 5. notifications - 填充通知数据
+### 9. notifications - 填充通知数据
 
 填充用户通知消息。
 
@@ -102,7 +137,7 @@ go build -o seeder.exe .
 - 每个用户 20-50 条通知
 - 70% 已读，30% 未读
 
-### 6. messaging - 填充消息数据
+### 10. messaging - 填充消息数据
 
 填充私信和公告数据。
 
@@ -124,7 +159,7 @@ go build -o seeder.exe .
   - 1-2 条更新公告
 - 消息类型：文本(70%)、图片(15%)、系统(10%)、其他(5%)
 
-### 7. stats - 填充统计数据
+### 11. stats - 填充统计数据
 
 填充书籍和章节统计数据。
 
@@ -146,7 +181,7 @@ go build -o seeder.exe .
   - 跳章率：10%-40%
   - 完读率：40%-90%
 
-### 8. finance - 填充财务数据
+### 12. finance - 填充财务数据
 
 填充作者收益和会员数据。
 
@@ -171,7 +206,7 @@ go build -o seeder.exe .
   - 年度会员：30%
   - 终身会员：10%
 
-### 9. chapters - 填充章节数据
+### 13. chapters - 填充章节数据
 
 为现有书籍生成章节数据和内容。
 
@@ -183,7 +218,7 @@ go build -o seeder.exe .
 ./seeder.exe chapters -c
 ```
 
-### 10. social - 填充社交数据
+### 14. social - 填充社交数据
 
 填充评论、点赞、收藏、关注等社交数据。
 
@@ -192,7 +227,7 @@ go build -o seeder.exe .
 ./seeder.exe social
 ```
 
-### 11. wallets - 填充钱包数据
+### 15. wallets - 填充钱包数据
 
 填充用户钱包和交易记录数据。
 
@@ -201,7 +236,7 @@ go build -o seeder.exe .
 ./seeder.exe wallets
 ```
 
-### 12. rankings - 填充榜单数据
+### 16. rankings - 填充榜单数据
 
 填充各种榜单数据（实时榜、日榜、周榜、月榜等）。
 
@@ -210,7 +245,7 @@ go build -o seeder.exe .
 ./seeder.exe rankings
 ```
 
-### 13. ai-quota - 激活AI配额
+### 17. ai-quota - 激活AI配额
 
 为所有用户激活AI写作配额。
 
@@ -219,7 +254,7 @@ go build -o seeder.exe .
 ./seeder.exe ai-quota
 ```
 
-### 14. import - 导入小说数据
+### 18. import - 导入小说数据
 
 从JSON文件导入大量小说数据。
 
@@ -233,7 +268,7 @@ go build -o seeder.exe .
 
 ### 管理命令
 
-### 15. clean - 清空所有测试数据
+### 19. clean - 清空所有测试数据
 
 清空数据库中的所有测试数据。
 
@@ -251,7 +286,7 @@ go build -o seeder.exe .
 # 操作已取消
 ```
 
-### 16. verify - 验证数据完整性
+### 20. verify - 验证数据完整性
 
 验证数据库中的测试数据是否完整和正确。
 
@@ -274,7 +309,7 @@ go build -o seeder.exe .
 # 总计: 3/3 验证通过
 ```
 
-### 17. test - 填充E2E测试数据
+### 21. test - 填充E2E测试数据
 
 填充E2E测试所需的特定数据。
 
