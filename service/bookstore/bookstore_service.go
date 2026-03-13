@@ -5,6 +5,7 @@ import (
 	searchModels "Qingyu_backend/models/search"
 	"Qingyu_backend/models/shared/types"
 	BookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
+	ReaderRepo "Qingyu_backend/repository/interfaces/reader"
 	"context"
 	"errors"
 	"fmt"
@@ -68,11 +69,12 @@ type BookstoreService interface {
 
 // BookstoreServiceImpl 书城服务实现
 type BookstoreServiceImpl struct {
-	bookRepo      BookstoreRepo.BookRepository
-	categoryRepo  BookstoreRepo.CategoryRepository
-	bannerRepo    BookstoreRepo.BannerRepository
-	rankingRepo   BookstoreRepo.RankingRepository
-	searchService interface{} // SearchService接口（避免循环依赖）
+	bookRepo       BookstoreRepo.BookRepository
+	categoryRepo   BookstoreRepo.CategoryRepository
+	bannerRepo     BookstoreRepo.BannerRepository
+	rankingRepo    BookstoreRepo.RankingRepository
+	collectionRepo ReaderRepo.CollectionRepository
+	searchService  interface{} // SearchService接口（避免循环依赖）
 }
 
 // HomepageData 首页数据结构
@@ -94,12 +96,14 @@ func NewBookstoreService(
 	categoryRepo BookstoreRepo.CategoryRepository,
 	bannerRepo BookstoreRepo.BannerRepository,
 	rankingRepo BookstoreRepo.RankingRepository,
+	collectionRepo ReaderRepo.CollectionRepository,
 ) BookstoreService {
 	return &BookstoreServiceImpl{
-		bookRepo:     bookRepo,
-		categoryRepo: categoryRepo,
-		bannerRepo:   bannerRepo,
-		rankingRepo:  rankingRepo,
+		bookRepo:       bookRepo,
+		categoryRepo:   categoryRepo,
+		bannerRepo:     bannerRepo,
+		rankingRepo:    rankingRepo,
+		collectionRepo: collectionRepo,
 	}
 }
 
@@ -147,6 +151,15 @@ func (s *BookstoreServiceImpl) GetBookByID(ctx context.Context, id string) (*boo
 	if book.Status != bookstore2.BookStatusOngoing && book.Status != bookstore2.BookStatusCompleted {
 		fmt.Printf("[DEBUG] GetBookByID(%s) book status check failed: %s not in [ongoing, completed]\n", id, book.Status) // codeql[go/log-injection]
 		return nil, errors.New("book not available")
+	}
+
+	if s.collectionRepo != nil {
+		collectCount, countErr := s.collectionRepo.CountBookCollections(ctx, id)
+		if countErr != nil {
+			fmt.Printf("[WARN] GetBookByID(%s) failed to count collections: %v\n", id, countErr) // codeql[go/log-injection]
+		} else {
+			book.CollectCount = collectCount
+		}
 	}
 
 	fmt.Printf("[DEBUG] GetBookByID(%s) returning book successfully\n", id) // codeql[go/log-injection]
