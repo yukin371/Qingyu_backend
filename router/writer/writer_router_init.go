@@ -127,9 +127,10 @@ func RegisterWriterRoutes(r *gin.RouterGroup, searchSvc *searchservice.SearchSer
 
 	// 获取阅读统计服务（用于writer统计路由）
 	statsSvc, _ := serviceContainer.GetReadingStatsService()
+	bookRepo := repositoryFactory.CreateBookRepository()
 
 	// 调用InitWriterRouter初始化文档编辑相关路由
-	InitWriterRouter(r, projectSvc, documentSvc, versionSvc, searchSvc, exportSvc, publishSvc, lockSvc, commentSvc, templateSvc, statsSvc, characterSvc, locationSvc)
+	InitWriterRouter(r, projectSvc, documentSvc, versionSvc, searchSvc, exportSvc, publishSvc, lockSvc, commentSvc, templateSvc, statsSvc, bookRepo, characterSvc, locationSvc)
 
 	// 调用InitWriterRoutes初始化设定百科路由（角色、地点、时间线、大纲）
 	InitWriterRoutes(r, characterSvc, locationSvc, timelineSvc, outlineSvc)

@@ -2,20 +2,24 @@ package writer
 
 import (
 	"Qingyu_backend/api/v1/writer"
+	bookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
 	readingStats "Qingyu_backend/service/reader/stats"
 
 	"github.com/gin-gonic/gin"
 )
 
 // InitStatsRouter 初始化统计路由（阅读/书店统计）
-func InitStatsRouter(r *gin.RouterGroup, service *readingStats.ReadingStatsService) {
+func InitStatsRouter(r *gin.RouterGroup, service *readingStats.ReadingStatsService, bookRepo bookstoreRepo.BookRepository) {
 	// 创建API实例
-	statsApi := writer.NewStatsApi(service)
+	statsApi := writer.NewStatsApi(service, bookRepo)
 
 	// 作品统计路由组
 	bookStats := r.Group("/books/:book_id")
 	{
-		bookStats.GET("/stats", statsApi.GetBookStats)               // 获取作品统计
+		bookStats.GET("/stats", statsApi.GetBookStats) // 获取作品统计
+		bookStats.GET("/stats/subscribers", statsApi.GetSubscribersTrend)
+		bookStats.GET("/stats/chapters", statsApi.GetTopChapters)
+		bookStats.GET("/stats/reader-activity", statsApi.GetReaderActivity)
 		bookStats.GET("/heatmap", statsApi.GetBookHeatmap)           // 获取阅读热力图
 		bookStats.GET("/revenue", statsApi.GetBookRevenue)           // 获取收入统计
 		bookStats.GET("/top-chapters", statsApi.GetTopChapters)      // 获取热门章节
@@ -23,6 +27,8 @@ func InitStatsRouter(r *gin.RouterGroup, service *readingStats.ReadingStatsServi
 		bookStats.GET("/drop-off-points", statsApi.GetDropOffPoints) // 获取跳出点
 		bookStats.GET("/retention", statsApi.GetRetentionRate)       // 获取留存率
 	}
+
+	r.POST("/stats/compare", statsApi.CompareBooks)
 
 	// 章节统计路由组
 	chapterStats := r.Group("/chapters/:chapter_id")
