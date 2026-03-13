@@ -61,6 +61,7 @@ func (r *WalletRepositoryImpl) CreateWallet(ctx context.Context, wallet *finance
 
 // GetWallet 获取钱包（根据用户ID）
 // 注意：这是接口定义的方法，使用userID作为参数
+// 如果钱包不存在，返回 nil, nil（允许Service层自动创建钱包）
 func (r *WalletRepositoryImpl) GetWallet(ctx context.Context, userID string) (*financeModel.Wallet, error) {
 	safeUserID, err := sanitizeFinanceUserID(userID)
 	if err != nil {
@@ -71,7 +72,8 @@ func (r *WalletRepositoryImpl) GetWallet(ctx context.Context, userID string) (*f
 	err = r.walletCollection.FindOne(ctx, bson.M{"user_id": safeUserID}).Decode(&wallet)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			return nil, fmt.Errorf("钱包不存在")
+			// 钱包不存在时返回 nil, nil，让Service层决定是否自动创建
+			return nil, nil
 		}
 		return nil, fmt.Errorf("查询钱包失败: %w", err)
 	}

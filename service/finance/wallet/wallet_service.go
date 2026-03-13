@@ -48,14 +48,23 @@ func (s *WalletServiceImpl) CreateWallet(ctx context.Context, userID string) (*W
 	return convertToWalletResponse(wallet), nil
 }
 
-// GetWallet 根据用户ID获取钱包
+// GetWallet 根据用户ID获取钱包（如果不存在则自动创建）
 func (s *WalletServiceImpl) GetWallet(ctx context.Context, userID string) (*Wallet, error) {
 	wallet, err := s.walletRepo.GetWallet(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("获取钱包失败: %w", err)
 	}
 	if wallet == nil {
-		return nil, fmt.Errorf("钱包不存在")
+		// 自动创建钱包（懒加载模式）
+		newWallet := &financeModel.Wallet{
+			UserID:  userID,
+			Balance: 0,
+			Frozen:  false,
+		}
+		if err := s.walletRepo.CreateWallet(ctx, newWallet); err != nil {
+			return nil, fmt.Errorf("自动创建钱包失败: %w", err)
+		}
+		return convertToWalletResponse(newWallet), nil
 	}
 
 	return convertToWalletResponse(wallet), nil
@@ -69,14 +78,23 @@ func (s *WalletServiceImpl) GetWalletByID(ctx context.Context, walletID string) 
 	return nil, fmt.Errorf("未实现")
 }
 
-// GetBalance 获取余额（根据用户ID）
+// GetBalance 获取余额（根据用户ID，如果钱包不存在则自动创建）
 func (s *WalletServiceImpl) GetBalance(ctx context.Context, userID string) (int64, error) {
 	wallet, err := s.walletRepo.GetWallet(ctx, userID)
 	if err != nil {
 		return 0, fmt.Errorf("获取余额失败: %w", err)
 	}
 	if wallet == nil {
-		return 0, fmt.Errorf("钱包不存在")
+		// 自动创建钱包（懒加载模式）
+		newWallet := &financeModel.Wallet{
+			UserID:  userID,
+			Balance: 0,
+			Frozen:  false,
+		}
+		if err := s.walletRepo.CreateWallet(ctx, newWallet); err != nil {
+			return 0, fmt.Errorf("自动创建钱包失败: %w", err)
+		}
+		return 0, nil
 	}
 
 	return int64(wallet.Balance), nil
