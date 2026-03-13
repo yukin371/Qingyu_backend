@@ -133,14 +133,16 @@ func InitReaderRouter(
 		// 阅读进度
 		progress := readerGroup.Group("/progress")
 		{
-			progress.GET("/:bookId", progressApiHandler.GetReadingProgress)    // 获取阅读进度
-			progress.POST("", progressApiHandler.SaveReadingProgress)          // 保存阅读进度
-			progress.POST("/time", progressApiHandler.UpdateReadingTime)       // 更新阅读时长
+			// 注意：静态路由必须放在动态路由（/:bookId）之前，否则会被动态路由捕获
 			progress.GET("/recent", progressApiHandler.GetRecentReading)       // 获取最近阅读
 			progress.GET("/history", progressApiHandler.GetReadingHistory)     // 获取阅读历史
 			progress.GET("/stats", progressApiHandler.GetReadingStats)         // 获取阅读统计
 			progress.GET("/unfinished", progressApiHandler.GetUnfinishedBooks) // 获取未读完的书
 			progress.GET("/finished", progressApiHandler.GetFinishedBooks)     // 获取已读完的书
+			progress.GET("/devices", progressApiHandler.GetDevicesProgress)    // 获取跨设备阅读记录
+			progress.POST("", progressApiHandler.SaveReadingProgress)          // 保存阅读进度
+			progress.POST("/time", progressApiHandler.UpdateReadingTime)       // 更新阅读时长
+			progress.GET("/:bookId", progressApiHandler.GetReadingProgress)    // 获取阅读进度（动态路由放最后）
 
 			// 进度同步（如果syncApiHandler可用）
 			if syncApiHandler != nil {

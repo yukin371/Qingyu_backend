@@ -295,3 +295,44 @@ func (api *ProgressAPI) GetFinishedBooks(c *gin.Context) {
 
 	response.Success(c, progresses)
 }
+
+// DevicesProgressResponse 跨设备阅读记录响应
+type DevicesProgressResponse struct {
+	Devices []DeviceProgress `json:"devices"`
+	Count   int              `json:"count"`
+}
+
+// DeviceProgress 设备阅读进度
+type DeviceProgress struct {
+	DeviceID    string    `json:"deviceId"`
+	DeviceName  string    `json:"deviceName"`
+	DeviceType  string    `json:"deviceType"`
+	LastSyncAt  time.Time `json:"lastSyncAt"`
+	CurrentBook string    `json:"currentBook,omitempty"`
+	Progress    float64   `json:"progress,omitempty"`
+}
+
+// GetDevicesProgress 获取跨设备阅读记录
+//
+//	@Summary	获取跨设备阅读记录
+//	@Tags		阅读器
+//	@Success	200	{object}	response.APIResponse
+//	@Router		/api/v1/reader/progress/devices [get]
+func (api *ProgressAPI) GetDevicesProgress(c *gin.Context) {
+	// 获取用户ID
+	userID, ok := shared.GetUserID(c)
+	if !ok {
+		return
+	}
+
+	// TODO: 实现真实的跨设备阅读记录功能
+	// 目前返回空列表作为占位实现
+	// 后续可以从sync_service获取真实的设备同步数据
+
+	_ = userID // 暂时避免未使用警告
+
+	response.Success(c, DevicesProgressResponse{
+		Devices: []DeviceProgress{},
+		Count:   0,
+	})
+}
