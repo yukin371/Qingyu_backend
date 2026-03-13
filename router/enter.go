@@ -34,6 +34,7 @@ import (
 	mongoSocialRepo "Qingyu_backend/repository/mongodb/social"
 	mongoWriterRepo "Qingyu_backend/repository/mongodb/writer"
 	"Qingyu_backend/service"
+	baseService "Qingyu_backend/service/base"
 	adminservice "Qingyu_backend/service/admin"
 	bookstore "Qingyu_backend/service/bookstore"
 	"Qingyu_backend/service/container"
@@ -351,6 +352,26 @@ func RegisterRoutes(r *gin.Engine) {
 	var messageAPIV2 *socialApi.MessageAPIV2
 	var reviewAPI *socialApi.ReviewAPI
 	var booklistAPI *socialApi.BookListAPI
+
+	// 书单服务
+	if repositoryFactory := serviceContainer.GetRepositoryFactory(); repositoryFactory != nil {
+		bookListRepo := repositoryFactory.CreateBookListRepository()
+		if bookListRepo != nil {
+			var eventBus baseService.EventBus
+			if rawEventBus := serviceContainer.GetEventBus(); rawEventBus != nil {
+				if typedEventBus, ok := rawEventBus.(baseService.EventBus); ok {
+					eventBus = typedEventBus
+				}
+			}
+			if eventBus == nil {
+				eventBus = baseService.NewSimpleEventBus()
+			}
+
+			bookListSvc := socialService.NewBookListService(bookListRepo, eventBus)
+			booklistAPI = socialApi.NewBookListAPI(bookListSvc)
+			logger.Info("✓ BookListAPI初始化完成")
+		}
+	}
 
 	// 初始化MessageAPIV2（消息服务V2）
 	messagingWSHub, wsHubErr := serviceContainer.GetMessagingWSHub()

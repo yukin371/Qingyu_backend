@@ -156,6 +156,7 @@ type EmailConfig struct {
 	FromName    string `mapstructure:"from_name"`
 	UseTLS      bool   `mapstructure:"use_tls"`
 	UseSSL      bool   `mapstructure:"use_ssl"`
+	FixedCode   string `mapstructure:"fixed_code"`
 }
 
 // PaymentConfig 支付配置
@@ -464,6 +465,7 @@ func setDefaults() {
 	v.SetDefault("email.from_name", "青羽阅读")
 	v.SetDefault("email.use_tls", true)
 	v.SetDefault("email.use_ssl", false)
+	v.SetDefault("email.fixed_code", "")
 
 	// 支付默认配置
 	v.SetDefault("payment.enabled", false)

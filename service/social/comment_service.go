@@ -543,7 +543,7 @@ func (s *CommentService) createAndPersistComment(ctx context.Context, comment *s
 		return comment, nil
 	}
 
-	if err := s.commentRepo.RunInTransaction(ctx, func(txCtx context.Context) error {
+	replyPersistence := func(txCtx context.Context) error {
 		if err := s.commentRepo.Create(txCtx, comment); err != nil {
 			return fmt.Errorf("保存回复失败: %w", err)
 		}
@@ -554,12 +554,32 @@ func (s *CommentService) createAndPersistComment(ctx context.Context, comment *s
 			}
 		}
 		return nil
-	}); err != nil {
-		return nil, err
+	}
+
+	if err := s.commentRepo.RunInTransaction(ctx, replyPersistence); err != nil {
+		// Local standalone Mongo does not support transactions. Fall back to
+		// sequential persistence so local joint debugging can still cover replies.
+		if isTransactionUnsupported(err) {
+			if fallbackErr := replyPersistence(ctx); fallbackErr != nil {
+				return nil, fallbackErr
+			}
+		} else {
+			return nil, err
+		}
 	}
 
 	s.publishCommentEvent(ctx, "comment.replied", comment)
 	return comment, nil
+}
+
+func isTransactionUnsupported(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	message := err.Error()
+	return strings.Contains(message, "Transaction numbers are only allowed on a replica set member or mongos") ||
+		strings.Contains(message, "transactions are not supported")
 }
 
 // =========================
