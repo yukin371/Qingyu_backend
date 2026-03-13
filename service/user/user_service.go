@@ -201,12 +201,20 @@ func (s *UserServiceImpl) UpdateUser(ctx context.Context, req *user2.UpdateUserR
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "更新数据不能为空", nil)
 	}
 
+	// DEBUG: 记录日志
+	fmt.Printf("[DEBUG] UpdateUser called: ID=%s, Updates=%+v\n", req.ID, req.Updates)
+
 	// 2. 检查用户是否存在
 	exists, err := s.userRepo.Exists(ctx, req.ID)
 	if err != nil {
+		fmt.Printf("[DEBUG] Exists error: %v\n", err)
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "检查用户存在性失败", err)
 	}
+	fmt.Printf("[DEBUG] Exists result: %v\n", exists)
 	if !exists {
+		// DEBUG: 尝试直接GetByID来验证
+		_, getErr := s.userRepo.GetByID(ctx, req.ID)
+		fmt.Printf("[DEBUG] GetByID when Exists=false: error=%v\n", getErr)
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeNotFound, "用户不存在", nil)
 	}
 

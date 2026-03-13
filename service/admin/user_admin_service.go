@@ -459,6 +459,7 @@ func (s *UserAdminServiceImpl) GetActiveUsers(ctx context.Context, days int, lim
 func isValidRole(role string) bool {
 	validRoles := map[string]bool{
 		"user":        true,
+		"reader":      true,
 		"author":      true,
 		"admin":       true,
 		"super_admin": true,

@@ -107,9 +107,11 @@ func (h *ProfileHandler) UpdateProfile(c *gin.Context) {
 		return
 	}
 
-	if !shared.ValidateRequest(c, &req) {
-		return
-	}
+	// 注意：ValidateRequest会在内部再次读取请求体，与ShouldBindJSON冲突
+	// ShouldBindJSON已经包含了验证功能，不需要重复验证
+	// if !shared.ValidateRequest(c, &req) {
+	//     return
+	// }
 
 	// 构建更新数据
 	updates := make(map[string]interface{})
