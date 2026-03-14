@@ -49,7 +49,7 @@ func (th *TestHelpers) RegisterAndLogin(username, email, password string) string
 		"email":    email,
 		"password": password,
 	}
-	w := th.env.DoRequest("POST", "/api/v1/register", registerData, "")
+	w := th.env.DoRequest("POST", "/api/v1/user/auth/register", registerData, "")
 
 	// 如果用户已存在，直接登录
 	if w.Code != 200 && w.Code != 201 {
@@ -67,7 +67,7 @@ func (th *TestHelpers) Login(username, password string) string {
 		"username": username,
 		"password": password,
 	}
-	w := th.env.DoRequest("POST", "/api/v1/login", loginData, "")
+	w := th.env.DoRequest("POST", "/api/v1/user/auth/login", loginData, "")
 
 	if w.Code != 200 {
 		th.env.T.Logf("登录失败: username=%s, status=%d, response=%s",
@@ -443,11 +443,13 @@ func (th *TestHelpers) CompleteUserFlow(username, email, password string) UserFl
 	require.NotEmpty(th.env.T, result.Token, "注册登录失败")
 
 	// 2. 获取用户信息
-	w := th.env.DoRequest("GET", "/api/v1/users/profile", nil, result.Token)
+	w := th.env.DoRequest("GET", "/api/v1/user/profile", nil, result.Token)
 	if w.Code == 200 {
 		response := th.AssertSuccess(w, 200)
 		data, _ := response["data"].(map[string]interface{})
-		if userID, ok := data["user_id"].(string); ok {
+		if userID, ok := data["id"].(string); ok {
+			result.UserID = userID
+		} else if userID, ok := data["user_id"].(string); ok {
 			result.UserID = userID
 		}
 	}

@@ -84,28 +84,25 @@ func TestTemplateManagement(t *testing.T) {
 
 		w := env.DoRequest("POST", "/api/v1/writer/templates", templateReq, token)
 
-		// 验证响应
-		if w.Code == 200 || w.Code == 201 {
-			t.Log("✓ 模板创建成功")
-
-			response := env.ParseJSONResponse(w)
-			if data, ok := response["data"].(map[string]interface{}); ok {
-				if templateId, ok := data["id"].(string); ok {
-					env.SetTestData("template_id", templateId)
-					t.Logf("✓ 模板ID: %s", templateId)
-				} else if templateId, ok := data["templateId"].(string); ok {
-					env.SetTestData("template_id", templateId)
-					t.Logf("✓ 模板ID: %s", templateId)
-				}
-
-				if name, ok := data["name"].(string); ok {
-					t.Logf("✓ 模板名称: %s", name)
-				}
-			}
-		} else if w.Code == 404 {
-			t.Log("⚠ 模板管理API未实现（404）")
-		} else {
+		if w.Code != 200 && w.Code != 201 {
 			t.Errorf("✗ 模板创建失败，状态码: %d, 响应: %s", w.Code, w.Body.String())
+			return
+		}
+
+		t.Log("✓ 模板创建成功")
+		response := env.ParseJSONResponse(w)
+		if data, ok := response["data"].(map[string]interface{}); ok {
+			if templateId, ok := data["id"].(string); ok {
+				env.SetTestData("template_id", templateId)
+				t.Logf("✓ 模板ID: %s", templateId)
+			} else if templateId, ok := data["templateId"].(string); ok {
+				env.SetTestData("template_id", templateId)
+				t.Logf("✓ 模板ID: %s", templateId)
+			}
+
+			if name, ok := data["name"].(string); ok {
+				t.Logf("✓ 模板名称: %s", name)
+			}
 		}
 	})
 
@@ -117,39 +114,36 @@ func TestTemplateManagement(t *testing.T) {
 
 		w := env.DoRequest("GET", "/api/v1/writer/templates?type=chapter", nil, token)
 
-		if w.Code == 200 {
-			t.Log("✓ 模板列表查询成功")
+		if w.Code != 200 {
+			t.Errorf("✗ 模板列表查询失败，状态码: %d", w.Code)
+			return
+		}
 
-			response := env.ParseJSONResponse(w)
-			if data, ok := response["data"].(map[string]interface{}); ok {
-				if templates, ok := data["templates"].([]interface{}); ok {
-					t.Logf("✓ 找到 %d 个模板", len(templates))
+		t.Log("✓ 模板列表查询成功")
+		response := env.ParseJSONResponse(w)
+		if data, ok := response["data"].(map[string]interface{}); ok {
+			if templates, ok := data["templates"].([]interface{}); ok {
+				t.Logf("✓ 找到 %d 个模板", len(templates))
 
-					// 验证我们创建的模板在列表中
-					templateId := env.GetTestData("template_id")
-					if templateId != nil {
-						found := false
-						for _, tmpl := range templates {
-							if tmplMap, ok := tmpl.(map[string]interface{}); ok {
-								if id, ok := tmplMap["id"].(string); ok && id == templateId.(string) {
-									found = true
-									t.Logf("✓ 找到创建的模板")
-									break
-								}
+				templateId := env.GetTestData("template_id")
+				if templateId != nil {
+					found := false
+					for _, tmpl := range templates {
+						if tmplMap, ok := tmpl.(map[string]interface{}); ok {
+							if id, ok := tmplMap["id"].(string); ok && id == templateId.(string) {
+								found = true
+								t.Logf("✓ 找到创建的模板")
+								break
 							}
 						}
-						if !found {
-							t.Log("⚠ 未在列表中找到创建的模板")
-						}
 					}
-				} else if items, ok := data["items"].([]interface{}); ok {
-					t.Logf("✓ 找到 %d 个模板", len(items))
+					if !found {
+						t.Log("⚠ 未在列表中找到创建的模板")
+					}
 				}
+			} else if items, ok := data["items"].([]interface{}); ok {
+				t.Logf("✓ 找到 %d 个模板", len(items))
 			}
-		} else if w.Code == 404 {
-			t.Log("⚠ 模板列表API未实现（404）")
-		} else {
-			t.Errorf("✗ 模板列表查询失败，状态码: %d", w.Code)
 		}
 	})
 
@@ -167,25 +161,23 @@ func TestTemplateManagement(t *testing.T) {
 
 		w := env.DoRequest("GET", "/api/v1/writer/templates/"+templateId, nil, token)
 
-		if w.Code == 200 {
-			t.Log("✓ 模板详情获取成功")
-
-			response := env.ParseJSONResponse(w)
-			if data, ok := response["data"].(map[string]interface{}); ok {
-				if name, ok := data["name"].(string); ok {
-					t.Logf("  模板名称: %s", name)
-				}
-				if content, ok := data["content"].(string); ok {
-					t.Logf("  模板内容: %s", content)
-				}
-				if variables, ok := data["variables"].([]interface{}); ok {
-					t.Logf("  变量数量: %d", len(variables))
-				}
-			}
-		} else if w.Code == 404 {
-			t.Log("⚠ 模板详情API未实现或模板不存在（404）")
-		} else {
+		if w.Code != 200 {
 			t.Errorf("✗ 模板详情获取失败，状态码: %d", w.Code)
+			return
+		}
+
+		t.Log("✓ 模板详情获取成功")
+		response := env.ParseJSONResponse(w)
+		if data, ok := response["data"].(map[string]interface{}); ok {
+			if name, ok := data["name"].(string); ok {
+				t.Logf("  模板名称: %s", name)
+			}
+			if content, ok := data["content"].(string); ok {
+				t.Logf("  模板内容: %s", content)
+			}
+			if variables, ok := data["variables"].([]interface{}); ok {
+				t.Logf("  变量数量: %d", len(variables))
+			}
 		}
 	})
 
@@ -261,29 +253,26 @@ func TestTemplateManagement(t *testing.T) {
 
 		w := env.DoRequest("POST", "/api/v1/writer/templates/"+templateId+"/apply", applyReq, token)
 
-		if w.Code == 200 {
-			t.Log("✓ 模板应用成功")
+		if w.Code != 200 {
+			t.Errorf("✗ 模板应用失败，状态码: %d, 响应: %s", w.Code, w.Body.String())
+			return
+		}
 
-			response := env.ParseJSONResponse(w)
-			if data, ok := response["data"].(map[string]interface{}); ok {
-				if renderedContent, ok := data["renderedContent"].(string); ok {
-					t.Logf("✓ 渲染后的内容:\n%s", renderedContent)
+		t.Log("✓ 模板应用成功")
+		response := env.ParseJSONResponse(w)
+		if data, ok := response["data"].(map[string]interface{}); ok {
+			if renderedContent, ok := data["renderedContent"].(string); ok {
+				t.Logf("✓ 渲染后的内容:\n%s", renderedContent)
 
-					// 验证变量替换
-					expectedContent := "第1章：新的开始\n\n这是第一章的内容，讲述了主人公的故事开始。"
-					if renderedContent == expectedContent {
-						t.Log("✓ 变量替换完全正确")
-					} else {
-						t.Logf("⚠ 变量替换结果与预期不完全匹配")
-						t.Logf("  预期: %s", expectedContent)
-						t.Logf("  实际: %s", renderedContent)
-					}
+				expectedContent := "第1章：新的开始\n\n这是第一章的内容，讲述了主人公的故事开始。"
+				if renderedContent == expectedContent {
+					t.Log("✓ 变量替换完全正确")
+				} else {
+					t.Logf("⚠ 变量替换结果与预期不完全匹配")
+					t.Logf("  预期: %s", expectedContent)
+					t.Logf("  实际: %s", renderedContent)
 				}
 			}
-		} else if w.Code == 404 {
-			t.Log("⚠ 模板应用API未实现（404）")
-		} else {
-			t.Errorf("✗ 模板应用失败，状态码: %d, 响应: %s", w.Code, w.Body.String())
 		}
 	})
 
@@ -307,19 +296,17 @@ func TestTemplateManagement(t *testing.T) {
 
 		w := env.DoRequest("PUT", "/api/v1/writer/templates/"+templateId, updateReq, token)
 
-		if w.Code == 200 {
-			t.Log("✓ 模板更新成功")
-
-			response := env.ParseJSONResponse(w)
-			if data, ok := response["data"].(map[string]interface{}); ok {
-				if name, ok := data["name"].(string); ok {
-					t.Logf("  更新后的名称: %s", name)
-				}
-			}
-		} else if w.Code == 404 {
-			t.Log("⚠ 模板更新API未实现（404）")
-		} else {
+		if w.Code != 200 {
 			t.Logf("ℹ 模板更新尝试，状态码: %d", w.Code)
+			return
+		}
+
+		t.Log("✓ 模板更新成功")
+		response := env.ParseJSONResponse(w)
+		if data, ok := response["data"].(map[string]interface{}); ok {
+			if name, ok := data["name"].(string); ok {
+				t.Logf("  更新后的名称: %s", name)
+			}
 		}
 	})
 
@@ -340,8 +327,6 @@ func TestTemplateManagement(t *testing.T) {
 		if w.Code == 200 {
 			t.Log("✓ 模板删除成功")
 			t.Log("✓ 删除请求执行完成")
-		} else if w.Code == 404 {
-			t.Log("⚠ 模板删除API未实现（404）")
 		} else if w.Code == 403 {
 			t.Log("⚠ 可能没有权限删除模板（403）")
 		} else {

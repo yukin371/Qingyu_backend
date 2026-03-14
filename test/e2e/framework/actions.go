@@ -221,12 +221,13 @@ func (ba *BusinessActions) LikeChapter(token, bookID string) map[string]interfac
 // AddBookmark 添加书签
 func (ba *BusinessActions) AddBookmark(token, bookID, chapterID string, position int) map[string]interface{} {
 	reqBody := map[string]interface{}{
-		"chapter_id": chapterID,
+		"bookId":    bookID,
+		"chapterId": chapterID,
 		"position":   position,
 	}
 	path := fmt.Sprintf("/api/v1/reader/books/%s/bookmarks", bookID)
 	w := ba.env.DoRequest("POST", path, reqBody, token)
-	require.Equal(ba.env.T, 200, w.Code, "添加书签失败")
+	require.Equalf(ba.env.T, 201, w.Code, "添加书签失败: %s", w.Body.String())
 
 	ba.env.LogSuccess("添加书签: 书籍=%s, 位置=%d", bookID, position)
 
