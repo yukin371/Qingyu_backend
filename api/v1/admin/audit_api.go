@@ -201,7 +201,6 @@ func (api *AuditAPI) ExportAuditTrail(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Success 200 {object} response.APIResponse "code,message,data"
-// @Router /api/v1/admin/audit/statistics [get]
 func (api *AuditAPI) GetAuditStatistics(c *gin.Context) {
 	// 获取总日志数
 	req := &adminService.QueryAuditLogsRequest{

@@ -117,6 +117,8 @@ func RegisterAdminRoutes(
 				auditGroup.POST("/:id/review", auditAdminAPI.ReviewAudit)         // 审核内容
 				auditGroup.POST("/:id/appeal/review", auditAdminAPI.ReviewAppeal) // 审核申诉
 			}
+
+			adminGroup.GET("/stats/reviews", auditAdminAPI.GetAuditStatistics)
 		}
 
 		if publicationSvc != nil {
@@ -134,6 +136,10 @@ func RegisterAdminRoutes(
 		// 系统统计
 		if adminSvc != nil {
 			adminGroup.GET("/stats", systemAdminAPI.GetSystemStats)
+			adminGroup.GET("/stats/overview", systemAdminAPI.GetSystemStats)
+			adminGroup.GET("/stats/users", systemAdminAPI.GetSystemStats)
+			adminGroup.GET("/stats/content", systemAdminAPI.GetSystemStats)
+			adminGroup.GET("/stats/revenue", systemAdminAPI.GetWithdrawalStatistics)
 			adminGroup.GET("/operation-logs", systemAdminAPI.GetOperationLogs)
 		}
 

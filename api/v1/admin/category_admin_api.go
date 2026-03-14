@@ -28,7 +28,7 @@ func NewCategoryAdminAPI(categoryService adminsvc.CategoryAdminService) *Categor
 // @Tags Admin-Category
 // @Accept json
 // @Produce json
-// @Param request body adminsvc.CreateCategoryRequest true "分类信息"
+// @Param request body CreateCategoryRequest true "分类信息"
 // @Success 200 {object} response.APIResponse
 // @Failure 400 {object} response.APIResponse
 // @Router /api/v1/admin/categories [post]
@@ -133,7 +133,7 @@ func (api *CategoryAdminAPI) GetCategoryByID(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "分类ID"
-// @Param request body admin.UpdateCategoryRequest true "更新内容"
+// @Param request body UpdateCategoryRequest true "更新内容"
 // @Success 200 {object} response.APIResponse
 // @Failure 400 {object} response.APIResponse
 // @Failure 404 {object} response.APIResponse
@@ -193,7 +193,7 @@ func (api *CategoryAdminAPI) DeleteCategory(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "分类ID"
-// @Param request body admin.MoveCategoryRequest true "移动信息"
+// @Param request body MoveCategoryRequest true "移动信息"
 // @Success 200 {object} response.APIResponse
 // @Failure 400 {object} response.APIResponse
 // @Router /api/v1/admin/categories/{id}/move [put]

@@ -4,7 +4,7 @@
 .PHONY: build test test-unit test-integration test-api test-all test-coverage lint fmt vet clean run guard-arch
 .PHONY: docker-up docker-down docker-logs benchmark check security deps deps-update
 .PHONY: test-e2e test-e2e-quick test-e2e-standard test-e2e-layer1 test-e2e-layer2 test-e2e-layer3
-.PHONY: swagger swagger-yaml swagger-clean
+.PHONY: swagger swagger-yaml swagger-clean swagger-convert swagger-check swagger-verify-committed
 
 # 默认目标
 help:
@@ -59,8 +59,10 @@ help:
 	@echo ""
 	@echo "API文档:"
 	@echo "  make swagger         - 生成Swagger文档(JSON+YAML)"
-	@echo "  make swagger-convert - 将现有YAML转换为JSON（推荐，避免栈溢出问题）"
-	@echo "  make swagger-yaml    - 仅生成YAML格式Swagger文档"
+	@echo "  make swagger-yaml    - 生成Swagger YAML文档"
+	@echo "  make swagger-convert - 将现有YAML转换为JSON"
+	@echo "  make swagger-check   - 校验Swagger产物可生成"
+	@echo "  make swagger-verify-committed - 校验Swagger产物已同步提交"
 
 # 生成所有 Protobuf 代码
 proto: proto-go proto-python
@@ -291,8 +293,7 @@ swagger-convert:
 	@echo "Swagger文档转换 (YAML -> JSON)"
 	@echo "=========================================="
 	@echo ""
-	@echo "注意：由于swaggo工具在处理复杂类型时存在栈溢出bug，"
-	@echo "我们使用预先生成的swagger.yaml文件转换为JSON格式。"
+	@echo "将现有 swagger.yaml 转换为 swagger.json。"
 	@echo ""
 	@echo "运行转换..."
 	@go run scripts/swagger_convert.go
@@ -302,41 +303,47 @@ swagger-convert:
 # 生成Swagger文档（JSON和YAML）
 swagger:
 	@echo "生成Swagger API文档..."
-	@swag init \
-		--g cmd/server/main.go \
-		--g cmd/demo_server/main.go \
-		--g cmd/serverdemo/main.go \
-		--output docs/api \
-		--outputTypes json,yaml \
-		--parseDependency \
-		--parseInternal \
-		--markdownFiles docs/api \
-		--exclude ./test,e2e ./...
+ifeq ($(OS),Windows_NT)
+	@powershell -ExecutionPolicy Bypass -File .\scripts\docs\generate_swagger.ps1
+else
+	@bash ./scripts/docs/generate_swagger.sh
+endif
 	@echo "✅ Swagger文档已生成:"
-	@echo "   - docs/api/swagger.json (JSON格式，适用于Postman导入)"
-	@echo "   - docs/api/swagger.yaml (YAML格式，适用于Apifox导入)"
+	@echo "   - docs/swagger.json (JSON格式，适用于Postman导入)"
+	@echo "   - docs/swagger.yaml (YAML格式，适用于Apifox导入)"
 	@echo ""
 	@echo "导入方式:"
-	@echo "  Postman: Import -> Upload Files -> 选择 docs/api/swagger.json"
-	@echo "  Apifox:  项目设置 -> 导入数据 -> OpenAPI/Swagger -> 选择 docs/api/swagger.yaml"
+	@echo "  Postman: Import -> Upload Files -> 选择 docs/swagger.json"
+	@echo "  Apifox:  项目设置 -> 导入数据 -> OpenAPI/Swagger -> 选择 docs/swagger.yaml"
 
 # 仅生成YAML格式Swagger文档
 swagger-yaml:
 	@echo "生成Swagger YAML文档..."
-	@swag init \
-		--g cmd/server/main.go \
-		--g cmd/demo_server/main.go \
-		--g cmd/serverdemo/main.go \
-		--output docs/api \
-		--outputTypes yaml \
-		--parseDependency \
-		--parseInternal \
-		--markdownFiles docs/api \
-		--exclude ./test,e2e ./...
-	@echo "✅ docs/api/swagger.yaml 已生成"
+ifeq ($(OS),Windows_NT)
+	@powershell -ExecutionPolicy Bypass -File .\scripts\docs\generate_swagger.ps1
+else
+	@bash ./scripts/docs/generate_swagger.sh
+endif
+	@echo "✅ docs/swagger.yaml 已生成"
+
+# 校验Swagger文档是否可生成
+swagger-check:
+	@echo "校验Swagger文档..."
+ifeq ($(OS),Windows_NT)
+	@powershell -ExecutionPolicy Bypass -File .\scripts\docs\generate_swagger.ps1
+else
+	@bash ./scripts/docs/generate_swagger.sh
+endif
+	@echo "✅ Swagger产物生成校验通过"
+
+# 校验Swagger文档产物是否已同步提交
+swagger-verify-committed: swagger-check
+	@echo "校验Swagger产物是否已同步提交..."
+	@git diff --exit-code -- docs/docs.go docs/swagger.json docs/swagger.yaml
+	@echo "✅ Swagger产物已同步提交"
 
 # 清理Swagger文档
 swagger-clean:
 	@echo "清理Swagger文档..."
-	@rm -f docs/api/swagger.json docs/api/swagger.yaml docs/api/docs.go
+	@rm -f docs/swagger.json docs/swagger.yaml docs/docs.go
 	@echo "Swagger文档已清理"

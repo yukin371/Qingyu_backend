@@ -1,0 +1,418 @@
+swagger: "2.0"
+info:
+  title: Qingyu Statistics Aggregates
+  version: "1.0"
+  description: Supplemental Swagger document for newly added statistics aggregate endpoints.
+basePath: /api/v1
+schemes:
+  - http
+paths:
+  /writer/stats/overview:
+    get:
+      tags:
+        - Writer-Stats
+      summary: 获取作者统计概览
+      description: 获取作者工作台概览统计，支持通过 bookId 或 projectId 指定作品。
+      parameters:
+        - name: bookId
+          in: query
+          type: string
+          required: false
+          description: 作品ID
+        - name: projectId
+          in: query
+          type: string
+          required: false
+          description: 项目ID
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/WriterStatsOverviewResponse"
+  /writer/stats/views:
+    get:
+      tags:
+        - Writer-Stats
+      summary: 获取作者阅读量趋势
+      description: 获取作者作品最近 N 天的阅读量趋势。
+      parameters:
+        - name: bookId
+          in: query
+          type: string
+          required: false
+        - name: projectId
+          in: query
+          type: string
+          required: false
+        - name: days
+          in: query
+          type: integer
+          required: false
+          default: 30
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/WriterStatsTrendResponse"
+  /writer/stats/subscribers:
+    get:
+      tags:
+        - Writer-Stats
+      summary: 获取作者订阅趋势
+      description: 获取作者作品最近 N 天的订阅增长趋势。
+      parameters:
+        - name: bookId
+          in: query
+          type: string
+          required: false
+        - name: projectId
+          in: query
+          type: string
+          required: false
+        - name: days
+          in: query
+          type: integer
+          required: false
+          default: 30
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/WriterStatsTrendResponse"
+  /writer/stats/chapters:
+    get:
+      tags:
+        - Writer-Stats
+      summary: 获取作者章节统计
+      description: 获取作者作品的章节表现排行。
+      parameters:
+        - name: bookId
+          in: query
+          type: string
+          required: false
+        - name: projectId
+          in: query
+          type: string
+          required: false
+        - name: page
+          in: query
+          type: integer
+          required: false
+          default: 1
+        - name: size
+          in: query
+          type: integer
+          required: false
+          default: 20
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/WriterStatsTrendResponse"
+  /writer/stats/today:
+    get:
+      tags:
+        - Writer-Stats
+      summary: 获取作者今日统计
+      description: 获取作者作品当日阅读与订阅统计。
+      parameters:
+        - name: bookId
+          in: query
+          type: string
+          required: false
+        - name: projectId
+          in: query
+          type: string
+          required: false
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/WriterStatsTodayResponse"
+  /reader/statistics:
+    get:
+      tags:
+        - Reader-Statistics
+      summary: 获取读者统计概览
+      description: 获取当前登录读者的聚合统计概览。
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/ReaderStatisticsOverviewResponse"
+  /reader/statistics/overview:
+    get:
+      tags:
+        - Reader-Statistics
+      summary: 获取读者统计概览
+      description: 获取当前登录读者的聚合统计概览。
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/ReaderStatisticsOverviewResponse"
+  /reader/statistics/reading-time:
+    get:
+      tags:
+        - Reader-Statistics
+      summary: 获取阅读时长统计
+      description: 按 today/week/month/all 返回当前读者的阅读时长。
+      parameters:
+        - name: period
+          in: query
+          type: string
+          required: false
+          enum:
+            - today
+            - week
+            - month
+            - all
+          default: all
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/ReaderStatisticsReadingTimeResponse"
+  /reader/statistics/heatmap:
+    get:
+      tags:
+        - Reader-Statistics
+      summary: 获取阅读热力图
+      description: 获取当前读者最近 N 天的阅读热力图数据。
+      parameters:
+        - name: days
+          in: query
+          type: integer
+          required: false
+          default: 30
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/ReaderStatisticsTrendResponse"
+  /reader/statistics/trends:
+    get:
+      tags:
+        - Reader-Statistics
+      summary: 获取阅读趋势
+      description: 获取当前读者最近 N 天的阅读趋势数据。
+      parameters:
+        - name: days
+          in: query
+          type: integer
+          required: false
+          default: 30
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: "#/definitions/ReaderStatisticsTrendResponse"
+definitions:
+  WriterStatsOverviewSummary:
+    type: object
+    properties:
+      views:
+        type: integer
+      subscribers:
+        type: integer
+      bookmarks:
+        type: integer
+      comments:
+        type: integer
+  WriterStatsTodaySummary:
+    type: object
+    properties:
+      views:
+        type: integer
+      subscribers:
+        type: integer
+      words:
+        type: integer
+  WriterStatsOverviewResponse:
+    type: object
+    properties:
+      bookId:
+        type: string
+      title:
+        type: string
+      totalViews:
+        type: integer
+      subscribers:
+        type: integer
+      favorites:
+        type: integer
+      comments:
+        type: integer
+      todayViews:
+        type: integer
+      monthViews:
+        type: integer
+      todayWords:
+        type: integer
+      wordCount:
+        type: integer
+      totalRevenue:
+        type: number
+      retentionRate:
+        type: number
+      overview:
+        $ref: "#/definitions/WriterStatsOverviewSummary"
+      today:
+        $ref: "#/definitions/WriterStatsTodaySummary"
+  WriterStatsTrendItem:
+    type: object
+    properties:
+      date:
+        type: string
+      views:
+        type: integer
+      dailyViews:
+        type: integer
+      newSubscribers:
+        type: integer
+      subscribers:
+        type: integer
+      count:
+        type: integer
+      chapterId:
+        type: string
+      chapterTitle:
+        type: string
+      title:
+        type: string
+      reads:
+        type: integer
+      completionRate:
+        type: number
+      dropOffRate:
+        type: number
+      revenue:
+        type: number
+  WriterStatsTrendResponse:
+    type: object
+    properties:
+      bookId:
+        type: string
+      days:
+        type: integer
+      page:
+        type: integer
+      size:
+        type: integer
+      total:
+        type: integer
+      items:
+        type: array
+        items:
+          $ref: "#/definitions/WriterStatsTrendItem"
+      list:
+        type: array
+        items:
+          $ref: "#/definitions/WriterStatsTrendItem"
+  WriterStatsTodayResponse:
+    type: object
+    properties:
+      bookId:
+        type: string
+      todayViews:
+        type: integer
+      todaySubscribers:
+        type: integer
+      todayWords:
+        type: integer
+      views:
+        type: integer
+      subscribers:
+        type: integer
+      words:
+        type: integer
+  ReaderStatisticsOverviewCore:
+    type: object
+    properties:
+      totalReadingTime:
+        type: integer
+      unfinishedCount:
+        type: integer
+      finishedCount:
+        type: integer
+  ReaderStatisticsBookmarkSummary:
+    type: object
+    properties:
+      total:
+        type: integer
+      publicCount:
+        type: integer
+      privateCount:
+        type: integer
+      thisWeek:
+        type: integer
+      thisMonth:
+        type: integer
+  ReaderStatisticsHistorySummary:
+    type: object
+    properties:
+      totalBooks:
+        type: integer
+      totalChapters:
+        type: integer
+      totalDuration:
+        type: integer
+      avgDailyDuration:
+        type: integer
+      lastReadTime:
+        type: string
+        format: date-time
+  ReaderStatisticsOverviewResponse:
+    type: object
+    properties:
+      totalReadingTime:
+        type: integer
+      unfinishedCount:
+        type: integer
+      finishedCount:
+        type: integer
+      bookmarks:
+        $ref: "#/definitions/ReaderStatisticsBookmarkSummary"
+      likes:
+        type: object
+      collections:
+        type: object
+      history:
+        $ref: "#/definitions/ReaderStatisticsHistorySummary"
+      overview:
+        $ref: "#/definitions/ReaderStatisticsOverviewCore"
+  ReaderStatisticsReadingTimeResponse:
+    type: object
+    properties:
+      period:
+        type: string
+      totalReadingTime:
+        type: integer
+      minutes:
+        type: integer
+  ReaderStatisticsTrendItem:
+    type: object
+    properties:
+      date:
+        type: string
+      readingTime:
+        type: integer
+      minutes:
+        type: integer
+      books:
+        type: integer
+  ReaderStatisticsTrendResponse:
+    type: object
+    properties:
+      days:
+        type: integer
+      totalReadingTime:
+        type: integer
+      items:
+        type: array
+        items:
+          $ref: "#/definitions/ReaderStatisticsTrendItem"
+      list:
+        type: array
+        items:
+          $ref: "#/definitions/ReaderStatisticsTrendItem"

@@ -16,6 +16,23 @@ type ChapterAPI struct {
 	service bookstoreService.ChapterService
 }
 
+// ChapterRequestDoc 章节请求文档模型
+type ChapterRequestDoc struct {
+	ID               string  `json:"id,omitempty"`
+	BookID           string  `json:"book_id"`
+	ProjectID        *string `json:"projectId,omitempty"`
+	ProjectChapterID *string `json:"projectChapterId,omitempty"`
+	Title            string  `json:"title"`
+	ChapterNum       int     `json:"chapter_num"`
+	WordCount        int     `json:"word_count"`
+	IsFree           bool    `json:"is_free"`
+	Price            float64 `json:"price"`
+	ContentURL       string  `json:"contentUrl,omitempty"`
+	ContentSize      int64   `json:"contentSize,omitempty"`
+	ContentHash      string  `json:"contentHash,omitempty"`
+	ContentVersion   int     `json:"contentVersion,omitempty"`
+}
+
 // NewChapterAPI 创建章节API实例
 func NewChapterAPI(service bookstoreService.ChapterService) *ChapterAPI {
 	return &ChapterAPI{
@@ -71,7 +88,6 @@ func (api *ChapterAPI) GetChapter(c *gin.Context) {
 //	@Success 200 {object} response.APIResponse
 //	@Failure		400		{object}	response.APIResponse
 //	@Failure		500		{object}	response.APIResponse
-//	@Router			/api/v1/bookstore/books/{id}/chapters [get]
 func (api *ChapterAPI) GetChaptersByBookID(c *gin.Context) {
 	bookIDStr := c.Param("id")
 	if bookIDStr == "" {
@@ -619,7 +635,7 @@ func (api *ChapterAPI) GetChapterStatistics(c *gin.Context) {
 //	@Tags			章节
 //	@Accept			json
 //	@Produce		json
-//	@Param			chapter	body		bookstore.Chapter	true	"章节信息"
+//	@Param			chapter	body		ChapterRequestDoc	true	"章节信息"
 //	@Success 201 {object} response.APIResponse
 //	@Failure		400		{object}	response.APIResponse
 //	@Failure		500		{object}	response.APIResponse
@@ -647,7 +663,7 @@ func (api *ChapterAPI) CreateChapter(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id		path		string				true	"章节ID"
-//	@Param			chapter	body		bookstore.Chapter	true	"章节信息"
+//	@Param			chapter	body		ChapterRequestDoc	true	"章节信息"
 //	@Success 200 {object} response.APIResponse
 //	@Failure		400		{object}	response.APIResponse
 //	@Failure		404		{object}	response.APIResponse

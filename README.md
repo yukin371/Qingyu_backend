@@ -1335,9 +1335,13 @@ go tool pprof -list CreateBook /path/to/profile
 
 ### API 文档导出
 - 📘 [Swagger API 文档导出说明](./docs/api/SWAGGER_API_导出说明.md) - 如何将 API 文档导出到 Postman、Apifox 等工具
-  - `make swagger-convert` - 生成 JSON 格式（适用于 Postman）
-  - `docs/api/swagger.yaml` - YAML 格式（适用于 Apifox）
-  - `docs/api/swagger.json` - JSON 格式（适用于 Postman）
+  - `make swagger` - 生成 `docs/swagger.json` 和 `docs/swagger.yaml`
+  - `make swagger-check` - 校验 Swagger 可生成
+  - `make swagger-verify-committed` - 校验 Swagger 产物已同步提交
+  - `.\scripts\docs\generate_swagger.ps1` - Windows 下直接生成
+  - `./scripts/docs/generate_swagger.sh` - Linux / macOS 下直接生成
+  - `Swagger Artifact Sync` 工作流 - 仅在 `api/v1/**` 变更时校验产物是否已同步提交
+  - [Swagger 生成说明](./docs/swagger/README.md)
 
 ## 致谢
 

@@ -70,6 +70,14 @@ func InitReaderRouter(
 		collectionApiHandler = socialApi.NewCollectionAPI(collectionService)
 	}
 
+	readerStatisticsAPI := readerApi.NewReaderStatisticsAPI(
+		readerService,
+		bookmarkService,
+		likeService,
+		collectionService,
+		readingHistoryService,
+	)
+
 	// 阅读历史API（如果readingHistoryService可用）
 	var historyApiHandler *readerApi.ReadingHistoryAPI
 	if readingHistoryService != nil {
@@ -325,6 +333,15 @@ func InitReaderRouter(
 				history.DELETE("/:id", historyApiHandler.DeleteHistory)  // 删除单条历史记录
 				history.DELETE("", historyApiHandler.ClearHistories)     // 清空历史记录
 			}
+		}
+
+		statistics := readerGroup.Group("/statistics")
+		{
+			statistics.GET("", readerStatisticsAPI.GetOverview)
+			statistics.GET("/overview", readerStatisticsAPI.GetOverview)
+			statistics.GET("/reading-time", readerStatisticsAPI.GetReadingTime)
+			statistics.GET("/heatmap", readerStatisticsAPI.GetHeatmap)
+			statistics.GET("/trends", readerStatisticsAPI.GetTrends)
 		}
 	}
 }

@@ -158,7 +158,6 @@ func (api *AuditApi) SubmitAppeal(c *gin.Context) {
 // @Produce json
 // @Param limit query int false "数量限制" default(50)
 // @Success 200 {object} response.APIResponse
-// @Router /api/v1/admin/audit/pending [get]
 func (api *AuditApi) GetPendingReviews(c *gin.Context) {
 	limit := 50
 	if limitStr := c.Query("limit"); limitStr != "" {
@@ -190,7 +189,6 @@ func (api *AuditApi) GetPendingReviews(c *gin.Context) {
 // @Param id path string true "审核记录ID"
 // @Param request body object true "复核请求"
 // @Success 200 {object} response.APIResponse
-// @Router /api/v1/admin/audit/{id}/review [post]
 func (api *AuditApi) ReviewAudit(c *gin.Context) {
 	auditID := c.Param("id")
 
@@ -225,7 +223,6 @@ func (api *AuditApi) ReviewAudit(c *gin.Context) {
 // @Param id path string true "审核记录ID"
 // @Param request body object true "复核申诉请求"
 // @Success 200 {object} response.APIResponse
-// @Router /api/v1/admin/audit/{id}/appeal/review [post]
 func (api *AuditApi) ReviewAppeal(c *gin.Context) {
 	auditID := c.Param("id")
 
@@ -341,7 +338,6 @@ func (api *AuditApi) GetUserViolationSummary(c *gin.Context) {
 // @Param minRiskLevel query int false "最低风险等级" default(3)
 // @Param limit query int false "数量限制" default(50)
 // @Success 200 {object} response.APIResponse
-// @Router /api/v1/admin/audit/high-risk [get]
 func (api *AuditApi) GetHighRiskAudits(c *gin.Context) {
 	minRiskLevel := 3
 	limit := 50

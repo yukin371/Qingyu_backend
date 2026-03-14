@@ -12,6 +12,16 @@ import (
 func InitStatsRouter(r *gin.RouterGroup, service *readingStats.ReadingStatsService, bookRepo bookstoreRepo.BookRepository) {
 	// 创建API实例
 	statsApi := writer.NewStatsApi(service, bookRepo)
+	aggregateApi := writer.NewWriterStatsAggregateAPI(service, bookRepo)
+
+	statsGroup := r.Group("/stats")
+	{
+		statsGroup.GET("/overview", aggregateApi.GetOverview)
+		statsGroup.GET("/views", aggregateApi.GetViews)
+		statsGroup.GET("/subscribers", aggregateApi.GetSubscribers)
+		statsGroup.GET("/chapters", aggregateApi.GetChapters)
+		statsGroup.GET("/today", aggregateApi.GetToday)
+	}
 
 	// 作品统计路由组
 	bookStats := r.Group("/books/:book_id")

@@ -588,19 +588,6 @@ func (api *BookstoreAPI) SearchByTitle(c *gin.Context) {
 
 // SearchByAuthor 按作者搜索书籍
 //
-//	@Summary     按作者搜索书籍
-//	@Description 根据作者姓名进行模糊搜索，支持分页。优先使用SearchService (Milvus向量搜索)，失败或空结果时fallback到MongoDB
-//	@Tags        书籍搜索
-//	@Accept      json
-//	@Produce     json
-//	@Param       author query string true "作者姓名"
-//	@Param       page query int false "页码" default(1)
-//	@Param       size query int false "每页数量" default(20)
-//	@Success 200 {object} response.PaginatedResponse
-//	@Failure     400 {object} APIResponse
-//	@Failure     500 {object} APIResponse
-//	@Router      /api/v1/bookstore/books/search/author [get]
-//
 // SearchByAuthor 按作者搜索书籍
 //
 //	@Summary     按作者搜索书籍
@@ -743,7 +730,6 @@ func (api *BookstoreAPI) GetActiveBanners(c *gin.Context) {
 //	@Failure		400	{object}	APIResponse
 //	@Failure		404	{object}	APIResponse
 //	@Failure		500	{object}	APIResponse
-//	@Router			/api/v1/bookstore/books/{id}/view [post]
 func (api *BookstoreAPI) IncrementBookView(c *gin.Context) {
 	idStr := c.Param("id")
 	if idStr == "" {
@@ -999,19 +985,6 @@ func (api *BookstoreAPI) convertSearchResponseToBooks(items []searchModels.Searc
 
 // GetBooksByTags 按标签筛选书籍
 //
-//	@Summary     按标签筛选书籍
-//	@Description 根据一个或多个标签筛选书籍，ANY语义（命中任一即可）
-//	@Tags        书籍筛选
-//	@Accept      json
-//	@Produce     json
-//	@Param       tags query string true "标签列表（逗号分隔）"
-//	@Param       page query int false "页码" default(1)
-//	@Param       size query int false "每页数量" default(20)
-//	@Success 200 {object} response.PaginatedResponse
-//	@Failure     400 {object} APIResponse
-//	@Failure     500 {object} APIResponse
-//	@Router      /api/v1/bookstore/books/tags [get]
-//
 // GetBooksByTags 按标签筛选书籍
 //
 //	@Summary     按标签筛选书籍
@@ -1132,19 +1105,6 @@ func (api *BookstoreAPI) GetBooksByStatus(c *gin.Context) {
 }
 
 // GetSimilarBooks 获取相似书籍推荐
-//
-//	@Summary     获取相似书籍推荐
-//	@Description 基于书籍分类、标签等推荐相似书籍，有四层降级策略
-//	@Tags        书籍交互
-//	@Accept      json
-//	@Produce     json
-//	@Param       id path string true "书籍ID"
-//	@Param       limit query int false "返回数量" default(10)
-//	@Success 200 {object} response.APIResponse
-//	@Failure     400 {object} APIResponse
-//	@Failure     404 {object} APIResponse
-//	@Failure     500 {object} APIResponse
-//	@Router      /api/v1/bookstore/books/{id}/similar [get]
 //
 // GetSimilarBooks 获取相似书籍推荐
 //

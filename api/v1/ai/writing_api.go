@@ -36,13 +36,22 @@ type ContinueWritingRequest struct {
 	Options        *ai.GenerateOptions `json:"options"`
 }
 
+// ContinueWritingRequestDoc 续写请求文档模型
+type ContinueWritingRequestDoc struct {
+	ProjectID      string              `json:"projectId"`
+	ChapterID      string              `json:"chapterId,omitempty"`
+	CurrentText    string              `json:"currentText"`
+	ContinueLength int                 `json:"continueLength"`
+	Options        *GenerateOptionsDoc `json:"options,omitempty"`
+}
+
 // ContinueWriting 智能续写
 // @Summary 智能续写
 // @Description 基于当前文本进行智能续写
 // @Tags AI写作
 // @Accept json
 // @Produce json
-// @Param request body ContinueWritingRequest true "续写请求"
+// @Param request body ContinueWritingRequestDoc true "续写请求"
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/ai/writing/continue [post]
 func (api *WritingApi) ContinueWriting(c *gin.Context) {
@@ -86,7 +95,7 @@ func (api *WritingApi) ContinueWriting(c *gin.Context) {
 // @Tags AI写作
 // @Accept json
 // @Produce text/event-stream
-// @Param request body ContinueWritingRequest true "续写请求"
+// @Param request body ContinueWritingRequestDoc true "续写请求"
 // @Success 200 {string} string "SSE流"
 // @Router /api/v1/ai/writing/continue/stream [post]
 func (api *WritingApi) ContinueWritingStream(c *gin.Context) {
@@ -192,13 +201,23 @@ type RewriteTextRequest struct {
 	Options      *ai.GenerateOptions `json:"options"`
 }
 
+// RewriteTextRequestDoc 改写请求文档模型
+type RewriteTextRequestDoc struct {
+	ProjectID    string              `json:"projectId,omitempty"`
+	ChapterID    string              `json:"chapterId,omitempty"`
+	OriginalText string              `json:"originalText"`
+	RewriteMode  string              `json:"rewriteMode"`
+	Instructions string              `json:"instructions,omitempty"`
+	Options      *GenerateOptionsDoc `json:"options,omitempty"`
+}
+
 // RewriteText 改写文本
 // @Summary 改写文本
 // @Description 对文本进行扩写、缩写或润色
 // @Tags AI写作
 // @Accept json
 // @Produce json
-// @Param request body RewriteTextRequest true "改写请求"
+// @Param request body RewriteTextRequestDoc true "改写请求"
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/ai/writing/rewrite [post]
 func (api *WritingApi) RewriteText(c *gin.Context) {
@@ -256,7 +275,7 @@ func (api *WritingApi) RewriteText(c *gin.Context) {
 // @Tags AI写作
 // @Accept json
 // @Produce text/event-stream
-// @Param request body RewriteTextRequest true "改写请求"
+// @Param request body RewriteTextRequestDoc true "改写请求"
 // @Success 200 {string} string "SSE流"
 // @Router /api/v1/ai/writing/rewrite/stream [post]
 func (api *WritingApi) RewriteTextStream(c *gin.Context) {

@@ -37,13 +37,31 @@ type ChatRequest struct {
 	Options    *ai.GenerateOptions `json:"options"`
 }
 
+// GenerateOptionsDoc AI生成选项文档模型
+type GenerateOptionsDoc struct {
+	Model       string  `json:"model,omitempty"`
+	Temperature float64 `json:"temperature,omitempty"`
+	MaxTokens   int     `json:"maxTokens,omitempty"`
+	TopP        float64 `json:"topP,omitempty"`
+	Stream      bool    `json:"stream,omitempty"`
+}
+
+// ChatRequestDoc 聊天请求文档模型
+type ChatRequestDoc struct {
+	SessionID  string              `json:"sessionId"`
+	ProjectID  string              `json:"projectId"`
+	Message    string              `json:"message"`
+	UseContext bool                `json:"useContext"`
+	Options    *GenerateOptionsDoc `json:"options,omitempty"`
+}
+
 // Chat 聊天
 // @Summary AI聊天
 // @Description 与AI助手进行对话
 // @Tags AI聊天
 // @Accept json
 // @Produce json
-// @Param request body ChatRequest true "聊天请求"
+// @Param request body ChatRequestDoc true "聊天请求"
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/ai/chat [post]
 func (api *ChatApi) Chat(c *gin.Context) {
@@ -84,7 +102,7 @@ func (api *ChatApi) Chat(c *gin.Context) {
 // @Tags AI聊天
 // @Accept json
 // @Produce text/event-stream
-// @Param request body ChatRequest true "聊天请求"
+// @Param request body ChatRequestDoc true "聊天请求"
 // @Success 200 {string} string "SSE流"
 // @Router /api/v1/ai/chat/stream [post]
 func (api *ChatApi) ChatStream(c *gin.Context) {

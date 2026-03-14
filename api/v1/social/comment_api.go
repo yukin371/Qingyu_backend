@@ -255,7 +255,6 @@ func (api *CommentAPI) ReplyComment(c *gin.Context) {
 //	@Tags		评论
 //	@Param		id	path		string	true	"评论ID"
 //	@Success	200	{object}	response.APIResponse
-//	@Router		/api/v1/reader/comments/{id}/like [post]
 func (api *CommentAPI) LikeComment(c *gin.Context) {
 	commentID, ok := shared.GetRequiredParam(c, "id", "评论ID")
 	if !ok {
@@ -289,7 +288,6 @@ func (api *CommentAPI) LikeComment(c *gin.Context) {
 //	@Tags		评论
 //	@Param		id	path		string	true	"评论ID"
 //	@Success	200	{object}	response.APIResponse
-//	@Router		/api/v1/reader/comments/{id}/like [delete]
 func (api *CommentAPI) UnlikeComment(c *gin.Context) {
 	commentID, ok := shared.GetRequiredParam(c, "id", "评论ID")
 	if !ok {

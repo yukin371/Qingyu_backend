@@ -38,7 +38,6 @@ func NewOAuthAPI(oauthService auth.OAuthServiceInterface, authService auth.AuthS
 //	@Success		200			{object} response.APIResponse
 //	@Failure		400			{object} response.APIResponse
 //	@Failure		500			{object} response.APIResponse
-//	@Router			/api/v1/shared/oauth/{provider}/authorize [post]
 func (api *OAuthAPI) GetAuthorizeURL(c *gin.Context) {
 	provider := authModel.OAuthProvider(c.Param("provider"))
 
@@ -85,7 +84,6 @@ func (api *OAuthAPI) GetAuthorizeURL(c *gin.Context) {
 //	@Failure		400			{object} response.APIResponse
 //	@Failure		401			{object} response.APIResponse
 //	@Failure		500			{object} response.APIResponse
-//	@Router			/api/v1/shared/oauth/{provider}/callback [post]
 func (api *OAuthAPI) HandleCallback(c *gin.Context) {
 	provider := authModel.OAuthProvider(c.Param("provider"))
 
@@ -159,7 +157,6 @@ func (api *OAuthAPI) HandleCallback(c *gin.Context) {
 //	@Success		200	{object} response.APIResponse
 //	@Failure		401	{object} response.APIResponse
 //	@Failure		500	{object} response.APIResponse
-//	@Router			/api/v1/shared/oauth/accounts [get]
 func (api *OAuthAPI) GetLinkedAccounts(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
@@ -189,7 +186,6 @@ func (api *OAuthAPI) GetLinkedAccounts(c *gin.Context) {
 //	@Failure		400			{object} response.APIResponse
 //	@Failure		401			{object} response.APIResponse
 //	@Failure		500			{object} response.APIResponse
-//	@Router			/api/v1/shared/oauth/accounts/{accountID} [delete]
 func (api *OAuthAPI) UnlinkAccount(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
@@ -225,7 +221,6 @@ func (api *OAuthAPI) UnlinkAccount(c *gin.Context) {
 //	@Failure		400			{object} response.APIResponse
 //	@Failure		401			{object} response.APIResponse
 //	@Failure		500			{object} response.APIResponse
-//	@Router			/api/v1/shared/oauth/accounts/{accountID}/primary [put]
 func (api *OAuthAPI) SetPrimaryAccount(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {

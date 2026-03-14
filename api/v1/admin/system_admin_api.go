@@ -136,7 +136,6 @@ func (api *SystemAdminAPI) GetWithdrawalStatistics(c *gin.Context) {
 //	@Failure		401		{object}	response.APIResponse
 //	@Failure		403		{object}	response.APIResponse
 //	@Failure		500		{object}	response.APIResponse
-//	@Router			/api/v1/admin/users/{id}/statistics [get]
 func (api *SystemAdminAPI) GetUserStatistics(c *gin.Context) {
 	userID := c.Param("id")
 	if userID == "" {
@@ -234,7 +233,6 @@ func (api *SystemAdminAPI) GetSystemStats(c *gin.Context) {
 //	@Failure		401	{object}	response.APIResponse
 //	@Failure		403	{object}	response.APIResponse
 //	@Failure		500	{object}	response.APIResponse
-//	@Router			/api/v1/admin/config [get]
 func (api *SystemAdminAPI) GetSystemConfig(c *gin.Context) {
 	ctx := c.Request.Context()
 
@@ -262,7 +260,6 @@ func (api *SystemAdminAPI) GetSystemConfig(c *gin.Context) {
 //	@Failure		401		{object}	response.APIResponse
 //	@Failure		403		{object}	response.APIResponse
 //	@Failure		500		{object}	response.APIResponse
-//	@Router			/api/v1/admin/config [put]
 func (api *SystemAdminAPI) UpdateSystemConfig(c *gin.Context) {
 	var req SystemConfigRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -296,7 +293,6 @@ func (api *SystemAdminAPI) UpdateSystemConfig(c *gin.Context) {
 //	@Failure		401		{object}	response.APIResponse
 //	@Failure		403		{object}	response.APIResponse
 //	@Failure		500		{object}	response.APIResponse
-//	@Router			/api/v1/admin/announcements [post]
 func (api *SystemAdminAPI) CreateAnnouncement(c *gin.Context) {
 	var req struct {
 		Title    string `json:"title" binding:"required"`
@@ -343,7 +339,6 @@ func (api *SystemAdminAPI) CreateAnnouncement(c *gin.Context) {
 //	@Failure		401			{object}	response.APIResponse
 //	@Failure		403			{object}	response.APIResponse
 //	@Failure		500			{object}	response.APIResponse
-//	@Router			/api/v1/admin/announcements [get]
 func (api *SystemAdminAPI) GetAnnouncements(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
