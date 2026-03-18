@@ -83,13 +83,14 @@ func (s *BookstoreCachedService) GetBooksWithCache(ctx context.Context, page, si
 	return result, nil
 }
 
+// todo：该函数未被调用
 // GetHomepageDataWithCache 获取首页数据（使用缓存）
 func (s *BookstoreCachedService) GetHomepageDataWithCache(ctx context.Context) (interface{}, error) {
 	cacheKey := "bookstore:homepage:data"
 
 	var data interface{}
 
-	// 使用GetOrLoad模式：缓存不存在则自动加载
+	// 缓存不存在则自动加载
 	err := s.cacheStrategy.GetOrLoad(ctx, cacheKey, &data, func() (interface{}, error) {
 		logger.Info("首页数据缓存未命中，加载数据")
 		return s.service.GetHomepageData(ctx)
@@ -142,5 +143,5 @@ func (s *BookstoreCachedService) InvalidateCategoryCache(ctx context.Context, ca
 	// 这里简化处理，实际应该使用SCAN遍历
 	logger.Info("删除分类缓存", zap.String("pattern", pattern))
 
-	// 实际实现中，可以维护一个缓存key的集合来支持批量删除
+	// todo：实际实现中，可以维护一个缓存key的集合来支持批量删除
 }

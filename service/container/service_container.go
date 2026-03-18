@@ -753,27 +753,40 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	chapterRepo := c.repositoryFactory.CreateBookstoreChapterRepository()      // ← 创建章节仓储
 	chapterContentRepo := c.repositoryFactory.CreateChapterContentRepository() // ← 创建章节内容仓储
 
-	c.bookstoreService = bookstoreService.NewBookstoreService(
+	// 创建书城缓存服务
+	var bookstoreCacheService bookstoreService.CacheService
+	if c.redisClient != nil {
+		rawClient := c.redisClient.GetClient()
+		if redisClient, ok := rawClient.(*redis.Client); ok {
+			bookstoreCacheService = bookstoreService.NewRedisCacheService(redisClient, "qingyu:bookstore")
+		}
+	}
+
+	// 创建基础书城服务
+	baseBookstoreService := bookstoreService.NewBookstoreService(
 		bookRepo,
 		categoryRepo,
 		bannerRepo,
+		// 注：BookstoreService 不完全实现 BaseService，不注册到 services map
 		rankingRepo,
 		readerCollectionRepo,
 	)
-	// 注意：BookstoreService 不完全实现 BaseService，不注册到 services map
 
-	// 创建章节服务（注入 ChapterContentRepository）
-	c.chapterService = bookstoreService.NewChapterService(chapterRepo, chapterContentRepo, nil) // ← 创建 ChapterService (CacheService暂时为nil)
+	// 用缓存装饰器包装书城服务，启用首页/榜单/书籍等缓存功能
+	c.bookstoreService = bookstoreService.NewCachedBookstoreService(baseBookstoreService, bookstoreCacheService)
+
+	// 创建章节服务（注入 ChapterContentRepository 和 CacheService）
+	c.chapterService = bookstoreService.NewChapterService(chapterRepo, chapterContentRepo, bookstoreCacheService)
 
 	// 创建书店详细服务
 	bookDetailRepo := c.repositoryFactory.CreateBookDetailRepository()
 	bookRatingRepo := c.repositoryFactory.CreateBookRatingRepository()
 	bookStatisticsRepo := c.repositoryFactory.CreateBookStatisticsRepository()
 
-	// 这些服务也需要 CacheService，暂时传 nil
-	c.bookDetailService = bookstoreService.NewBookDetailService(bookDetailRepo, nil)
-	c.bookRatingService = bookstoreService.NewBookRatingService(bookRatingRepo, nil)
-	c.bookStatisticsService = bookstoreService.NewBookStatisticsService(bookStatisticsRepo, nil)
+	// 这些服务使用缓存服务
+	c.bookDetailService = bookstoreService.NewBookDetailService(bookDetailRepo, bookstoreCacheService)
+	c.bookRatingService = bookstoreService.NewBookRatingService(bookRatingRepo, bookstoreCacheService)
+	c.bookStatisticsService = bookstoreService.NewBookStatisticsService(bookStatisticsRepo, bookstoreCacheService)
 
 	// ============ 3. 创建阅读器服务 ============
 	progressRepo := c.repositoryFactory.CreateReadingProgressRepository()
