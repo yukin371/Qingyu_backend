@@ -26,7 +26,7 @@ type UserBehaviorRecord struct {
 }
 
 // UserBehavior 是 UserBehaviorRecord 的别名，用于向后兼容
-// Deprecated: 使用 UserBehaviorRecord 或 Behavior 代替
+// Deprecated: 使用 UserBehaviorRecord 替代
 type UserBehavior = UserBehaviorRecord
 
 // RecommendedItem 推荐项（主要存储在缓存中）
