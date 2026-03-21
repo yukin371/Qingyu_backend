@@ -1,3 +1,38 @@
+# Middleware 层快速参考
+
+> **详细设计文档**: [docs/standards/layer-middleware.md](../../docs/standards/layer-middleware.md)
+
+## 职责
+
+横切关注点层，负责请求预处理、响应后处理、认证授权、限流保护、日志记录、错误恢复、安全防护。
+
+## 核心接口
+
+```go
+type Middleware interface {
+    Name() string           // 唯一标识
+    Priority() int          // 执行优先级（越小越先执行）
+    Handler() gin.HandlerFunc
+}
+```
+
+## 优先级规范
+
+| 优先级 | 类型 | 中间件 |
+|--------|------|--------|
+| 1-5 | 基础设施 | RequestID, Recovery, Security, CORS |
+| 6-8 | 监控日志 | Timeout, Logger, Metrics |
+| 9-10 | 认证授权 | RateLimit, Auth, Permission |
+| 11-12 | 业务层 | Validation, Compression |
+
+## 禁止事项
+
+- ❌ 在中间件中调用 Service
+- ❌ 中间件中包含业务逻辑
+- ❌ 直接操作数据库
+
+---
+
 # 中间件系统使用文档
 
 > **版本**: v1.0

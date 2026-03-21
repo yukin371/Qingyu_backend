@@ -232,3 +232,9 @@ if items, err := c.cache.GetXxx(...); err == nil {
 // 降级: 忽略错误, 继续查 DB
 return c.service.GetXxx(...)
 ```
+
+---
+
+## 详见
+
+完整设计文档: [docs/standards/layer-service.md](../docs/standards/layer-service.md)
