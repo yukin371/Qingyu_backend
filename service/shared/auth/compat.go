@@ -1,3 +1,4 @@
+// Deprecated: 此包应该被废弃，使用auth模块代替
 package auth
 
 import (

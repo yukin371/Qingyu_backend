@@ -1,3 +1,4 @@
+// 该文件应该被废弃，各个模块使用自己的统计服务
 package stats
 
 import (
