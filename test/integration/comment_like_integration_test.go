@@ -17,7 +17,7 @@ import (
 	"Qingyu_backend/repository/interfaces/infrastructure"
 	mongoReading "Qingyu_backend/repository/mongodb/reader"
 	"Qingyu_backend/service/base"
-	"Qingyu_backend/service/reader"
+	socialService "Qingyu_backend/service/social" // 使用 social 包代替 reader
 )
 
 // ===========================
@@ -201,8 +201,8 @@ func TestIntegration_CommentAndLikeFlow(t *testing.T) {
 	eventBus := base.NewSimpleEventBus()
 
 	// 创建Service
-	commentService := reader.NewCommentService(commentRepo, sensitiveRepo, eventBus)
-	likeService := reader.NewLikeService(likeRepo, commentRepo, eventBus)
+	commentService := socialService.NewCommentService(commentRepo, sensitiveRepo, eventBus)
+	likeService := socialService.NewLikeService(likeRepo, commentRepo, eventBus)
 
 	// Test Data
 	userA := "user_alice"
@@ -306,7 +306,7 @@ func TestIntegration_LikeIdempotency(t *testing.T) {
 	likeRepo := mongoReading.NewMongoLikeRepository(testDB)
 	commentRepo := mongoReading.NewMongoCommentRepository(testDB)
 	eventBus := base.NewSimpleEventBus()
-	likeService := reader.NewLikeService(likeRepo, commentRepo, eventBus)
+	likeService := socialService.NewLikeService(likeRepo, commentRepo, eventBus)
 
 	userID := "user_test"
 	bookID := "book_test_456"
@@ -377,7 +377,7 @@ func TestIntegration_SensitiveWordFilter(t *testing.T) {
 	commentRepo := mongoReading.NewMongoCommentRepository(testDB)
 	sensitiveRepo := &MockSensitiveWordRepo{}
 	eventBus := base.NewSimpleEventBus()
-	commentService := reader.NewCommentService(commentRepo, sensitiveRepo, eventBus)
+	commentService := socialService.NewCommentService(commentRepo, sensitiveRepo, eventBus)
 
 	// Step 1: 添加敏感词（如果需要）
 	t.Log("Step 1: 准备敏感词库")
@@ -434,8 +434,8 @@ func TestIntegration_ConcurrentLikes(t *testing.T) {
 	sensitiveRepo := &MockSensitiveWordRepo{}
 	eventBus := base.NewSimpleEventBus()
 
-	commentService := reader.NewCommentService(commentRepo, sensitiveRepo, eventBus)
-	likeService := reader.NewLikeService(likeRepo, commentRepo, eventBus)
+	commentService := socialService.NewCommentService(commentRepo, sensitiveRepo, eventBus)
+	likeService := socialService.NewLikeService(likeRepo, commentRepo, eventBus)
 
 	// Step 1: 创建一条评论
 	t.Log("Step 1: 创建测试评论")
@@ -521,7 +521,7 @@ func TestIntegration_CommentListAndSorting(t *testing.T) {
 	commentRepo := mongoReading.NewMongoCommentRepository(testDB)
 	sensitiveRepo := &MockSensitiveWordRepo{}
 	eventBus := base.NewSimpleEventBus()
-	commentService := reader.NewCommentService(commentRepo, sensitiveRepo, eventBus)
+	commentService := socialService.NewCommentService(commentRepo, sensitiveRepo, eventBus)
 
 	bookID := "507f1f77bcf86cd799439011"
 
