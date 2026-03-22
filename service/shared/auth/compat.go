@@ -9,6 +9,7 @@ import (
 	mwauth "Qingyu_backend/internal/middleware/auth"
 	repoauth "Qingyu_backend/repository/mongodb/auth"
 	newauth "Qingyu_backend/service/auth"
+	userPassword "Qingyu_backend/service/user"
 )
 
 // Service-layer aliases (migrated to service/auth).
@@ -41,7 +42,7 @@ type (
 	SessionServiceImpl     = newauth.SessionServiceImpl
 	RedisAdapter           = newauth.RedisAdapter
 	InMemoryTokenBlacklist = newauth.InMemoryTokenBlacklist
-	PasswordValidator      = newauth.PasswordValidator
+	PasswordValidator      = userPassword.PasswordValidator // 使用 user 包的统一实现
 )
 
 var (
@@ -51,7 +52,7 @@ var (
 	NewSessionService         = newauth.NewSessionService
 	NewPermissionService      = newauth.NewPermissionService
 	NewRoleService            = newauth.NewRoleService
-	NewPasswordValidator      = newauth.NewPasswordValidator
+	NewPasswordValidator      = userPassword.NewPasswordValidator // 使用 user 包的统一实现
 	NewRedisAdapter           = newauth.NewRedisAdapter
 	NewInMemoryTokenBlacklist = newauth.NewInMemoryTokenBlacklist
 )
