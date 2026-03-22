@@ -1,3 +1,14 @@
+// Package social 提供社交相关的服务
+//
+// TECHDEBT(#2026-03-22): 与 reader 包存在代码重复
+// 以下服务与 service/reader 中的实现高度相似：
+// - CollectionService (与 reader/collection_service.go 重复)
+// - LikeService (与 reader/like_service.go 重复)
+// - CommentService (与 reader/comment_service.go 重复)
+//
+// 建议：保留 social 包作为社交功能的主实现，reader 包应通过依赖调用。
+//
+// 详见：docs/reports/2026-03-22-user-auth-boundary-analysis.md
 package social
 
 import (

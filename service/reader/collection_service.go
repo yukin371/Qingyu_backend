@@ -1,3 +1,17 @@
+// Package reader 提供读者相关的服务
+//
+// TECHDEBT(#2026-03-22): 与 social 包存在代码重复
+// 以下服务与 service/social 中的实现高度相似，应合并：
+// - CollectionService (与 social/collection_service.go 重复)
+// - LikeService (与 social/like_service.go 重复)
+// - CommentService (与 social/comment_service.go 重复)
+//
+// 建议方案：
+// 1. 保留 social 包作为社交功能的主包
+// 2. reader 包通过依赖注入调用 social 包的服务
+// 3. 预计可减少约 1500 行重复代码
+//
+// 详见：docs/reports/2026-03-22-user-auth-boundary-analysis.md
 package reader
 
 import (
