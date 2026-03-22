@@ -216,7 +216,8 @@ curl http://localhost:8080/health
 ```
 
 **服务地址**：
-- Go Backend: http://localhost:8080
+- Go Backend (开发环境): http://localhost:8080
+- Go Backend (测试环境): http://localhost:9090
 - Python AI Service: http://localhost:8000
 - MongoDB: mongodb://localhost:27017
 - Redis: redis://localhost:6379
@@ -250,12 +251,26 @@ make run
 如果你的环境已经有运行中的 MongoDB 和 Redis：
 
 ```bash
-# 快速启动（使用默认配置）
+# 快速启动（使用默认配置，端口 8080）
 make run
 
 # 构建并运行
 make build
 ./bin/server
+```
+
+### E2E 测试环境
+
+E2E 测试使用独立的配置文件 `configs/config.test.yaml`，默认端口为 **9090**：
+
+```bash
+# 启动测试依赖（MongoDB + Redis）
+docker-compose -f docker/docker-compose.e2e.yml up -d
+
+# 使用测试配置启动后端
+go run cmd/server/main.go
+
+# 后端将在 http://localhost:9090 启动
 ```
 
 ### 验证安装

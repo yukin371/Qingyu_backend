@@ -194,6 +194,27 @@ var (
 		Run:   runFinance,
 	}
 
+	// booklistsCmd 填充书单数据
+	booklistsCmd = &cobra.Command{
+		Use:   "booklists",
+		Short: "填充书单数据（书单、点赞）",
+		Run:   runBooklists,
+	}
+
+	// collectionFoldersCmd 填充收藏夹数据
+	collectionFoldersCmd = &cobra.Command{
+		Use:   "collection-folders",
+		Short: "填充收藏夹数据",
+		Run:   runCollectionFolders,
+	}
+
+	// withdrawalsCmd 填充提现申请数据
+	withdrawalsCmd = &cobra.Command{
+		Use:   "withdrawals",
+		Short: "填充提现申请数据",
+		Run:   runWithdrawals,
+	}
+
 	// auditReaderCmd 审查读者视角数据关联
 	auditReaderCmd = &cobra.Command{
 		Use:   "audit-reader",
@@ -255,6 +276,9 @@ func init() {
 	rootCmd.AddCommand(messagingCmd)
 	rootCmd.AddCommand(statsCmd)
 	rootCmd.AddCommand(financeCmd)
+	rootCmd.AddCommand(booklistsCmd)
+	rootCmd.AddCommand(collectionFoldersCmd)
+	rootCmd.AddCommand(withdrawalsCmd)
 	rootCmd.AddCommand(auditReaderCmd)
 	rootCmd.AddCommand(auditAuthorCmd)
 	rootCmd.AddCommand(settingsCmd)
@@ -316,6 +340,9 @@ func runFull(cmd *cobra.Command, args []string) {
 			{title: "填充消息数据...", run: seedMessagingData},
 			{title: "填充财务数据...", run: seedFinanceData},
 			{title: "激活AI配额...", run: seedAIQuotaData},
+			{title: "填充书单数据...", run: seedBooklistsData},
+			{title: "填充收藏夹数据...", run: seedCollectionFoldersData},
+			{title: "填充提现申请数据...", run: seedWithdrawalsData},
 		},
 	})
 }
@@ -778,6 +805,69 @@ func seedFinanceData(db *utils.Database) error {
 func seedAIQuotaData(db *utils.Database) error {
 	seeder := NewAIQuotaSeeder(db, cfg)
 	return seeder.SeedAIQuota()
+}
+
+func seedBooklistsData(db *utils.Database) error {
+	seeder := NewBooklistSeeder(db, cfg)
+	return seeder.SeedBooklists()
+}
+
+func seedCollectionFoldersData(db *utils.Database) error {
+	seeder := NewCollectionFolderSeeder(db, cfg)
+	return seeder.SeedCollectionFolders()
+}
+
+func seedWithdrawalsData(db *utils.Database) error {
+	seeder := NewWithdrawalSeeder(db, cfg)
+	return seeder.SeedWithdrawals()
+}
+
+func runBooklists(cmd *cobra.Command, args []string) {
+	fmt.Println("开始填充书单数据...")
+	db, err := getDatabase()
+	if err != nil {
+		fmt.Printf("数据库连接失败: %v\n", err)
+		os.Exit(1)
+	}
+	defer db.Disconnect()
+	seeder := NewBooklistSeeder(db, cfg)
+	if err := seeder.SeedBooklists(); err != nil {
+		fmt.Printf("填充书单数据失败: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Println("\n书单数据填充完成!")
+}
+
+func runCollectionFolders(cmd *cobra.Command, args []string) {
+	fmt.Println("开始填充收藏夹数据...")
+	db, err := getDatabase()
+	if err != nil {
+		fmt.Printf("数据库连接失败: %v\n", err)
+		os.Exit(1)
+	}
+	defer db.Disconnect()
+	seeder := NewCollectionFolderSeeder(db, cfg)
+	if err := seeder.SeedCollectionFolders(); err != nil {
+		fmt.Printf("填充收藏夹数据失败: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Println("\n收藏夹数据填充完成!")
+}
+
+func runWithdrawals(cmd *cobra.Command, args []string) {
+	fmt.Println("开始填充提现申请数据...")
+	db, err := getDatabase()
+	if err != nil {
+		fmt.Printf("数据库连接失败: %v\n", err)
+		os.Exit(1)
+	}
+	defer db.Disconnect()
+	seeder := NewWithdrawalSeeder(db, cfg)
+	if err := seeder.SeedWithdrawals(); err != nil {
+		fmt.Printf("填充提现申请数据失败: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Println("\n提现申请数据填充完成!")
 }
 
 // runTestData 填充E2E测试数据

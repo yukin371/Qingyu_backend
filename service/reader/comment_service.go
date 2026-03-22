@@ -82,8 +82,8 @@ func (s *CommentService) PublishComment(ctx context.Context, userID, bookID, cha
 	if bookID == "" {
 		return nil, fmt.Errorf("书籍ID不能为空")
 	}
-	if len(content) < 10 || len(content) > 500 {
-		return nil, fmt.Errorf("评论内容长度必须在10-500字之间")
+	if len(content) < 1 || len(content) > 500 {
+		return nil, fmt.Errorf("评论内容长度必须在1-500字之间")
 	}
 	if rating < 0 || rating > 5 {
 		return nil, fmt.Errorf("评分必须在0-5之间")
@@ -135,8 +135,8 @@ func (s *CommentService) ReplyComment(ctx context.Context, userID, parentComment
 	if parentCommentID == "" {
 		return nil, fmt.Errorf("父评论ID不能为空")
 	}
-	if len(content) < 10 || len(content) > 500 {
-		return nil, fmt.Errorf("回复内容长度必须在10-500字之间")
+	if len(content) < 1 || len(content) > 500 {
+		return nil, fmt.Errorf("回复内容长度必须在1-500字之间")
 	}
 
 	// 获取父评论
@@ -251,8 +251,8 @@ func (s *CommentService) UpdateComment(ctx context.Context, userID, commentID, c
 	if commentID == "" {
 		return fmt.Errorf("评论ID不能为空")
 	}
-	if len(content) < 10 || len(content) > 500 {
-		return fmt.Errorf("评论内容长度必须在10-500字之间")
+	if len(content) < 1 || len(content) > 500 {
+		return fmt.Errorf("评论内容长度必须在1-500字之间")
 	}
 
 	// 获取原评论

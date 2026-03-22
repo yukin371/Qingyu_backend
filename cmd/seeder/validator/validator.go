@@ -238,7 +238,7 @@ func (v *DataValidator) ValidateReadingProgressOrphans(ctx context.Context) (int
 func (v *DataValidator) ValidateReadingHistoryOrphans(ctx context.Context) (int64, error) {
 	return v.validateOrphansByCollection(
 		ctx,
-		"reading_histories",
+		"reading_history", // 使用单数形式，与 seeder_reader.go 保持一致
 		"user_id", "users",
 		"book_id", "books",
 		"chapter_id", "chapters",
@@ -369,7 +369,7 @@ func (v *DataValidator) GetCollectionStats(ctx context.Context) (map[string]int6
 
 	collections := []string{
 		"users", "books", "chapters",
-		"reading_progress", "reading_histories", "bookmarks",
+		"reading_progress", "reading_history", "bookmarks", // 使用单数 reading_history
 		"likes", "notifications",
 	}
 
