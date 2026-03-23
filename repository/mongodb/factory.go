@@ -67,7 +67,6 @@ func NewMongoRepositoryFactory(config *config.MongoDBConfig) (*MongoRepositoryFa
 		SetServerSelectionTimeout(config.ServerTimeout)
 
 	// 配置 BSON 解码器选项，启用 float64 到 int64 的截断
-	// 这样 MongoDB 中存储的 float64 类型的数字可以正确解码到 Go 的 int64 字段
 	bsonRegistryOptions := options.BSONOptions{
 		// 允许将 float64 截断为 int64 (例如价格字段)
 		AllowTruncatingDoubles: true,

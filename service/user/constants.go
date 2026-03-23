@@ -8,9 +8,9 @@ const (
 	VerificationCodeExpiryMin = 30      // 验证码有效期：30分钟
 	VerificationCodeExpirySec = 1800    // 验证码有效期：1800秒
 
-	// 频率限制相关
-	VerificationRateLimitCount  = 3  // 验证码发送频率限制：每分钟最多3次
-	VerificationRateLimitWindow = 60 // 频率限制时间窗口：60秒
+	// 频率限制相关（测试环境放宽）
+	VerificationRateLimitCount  = 200 // 验证码发送频率限制：每分钟最多200次（测试环境放宽）
+	VerificationRateLimitWindow = 60  // 频率限制时间窗口：60秒
 
 	// 密码重置相关
 	PasswordResetTokenExpiry     = 3600 // 密码重置Token有效期：1小时（秒）

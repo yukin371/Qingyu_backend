@@ -156,7 +156,7 @@ func (r *MongoHotRecommendationRepository) GetHotBooksByCategory(ctx context.Con
 // 基于最近7天和前7天的数据对比，计算增长率
 func (r *MongoHotRecommendationRepository) GetTrendingBooks(ctx context.Context, limit int) ([]string, error) {
 	// 简化实现：使用最近3天的数据作为"飙升"标准
-	// 后续可以优化为真正的增长率计算
+	// todo:后续可以优化为真正的增长率计算
 
 	recentThreshold := time.Now().AddDate(0, 0, -3)
 

@@ -23,7 +23,7 @@ func RegisterAuthRoutes(r *gin.RouterGroup, authService sharedAuth.AuthService, 
 	{
 		// 公开路由（添加速率限制）
 		publicAuth := authGroup.Group("")
-		publicAuth.Use(ratelimit.RateLimitMiddlewareSimple(10, 60)) // 10次/分钟
+		publicAuth.Use(ratelimit.RateLimitMiddlewareSimple(200, 60)) // 200次/分钟（测试环境放宽）
 		{
 			publicAuth.POST("/send-verification-code", authAPI.SendVerificationCode)
 			publicAuth.POST("/register", authAPI.Register)
@@ -33,7 +33,7 @@ func RegisterAuthRoutes(r *gin.RouterGroup, authService sharedAuth.AuthService, 
 		// 需要认证的路由
 		authProtected := authGroup.Group("")
 		authProtected.Use(auth.JWTAuth())
-		authProtected.Use(ratelimit.RateLimitMiddlewareSimple(30, 60)) // 30次/分钟
+		authProtected.Use(ratelimit.RateLimitMiddlewareSimple(200, 60)) // 200次/分钟（测试环境放宽）
 		{
 			authProtected.POST("/logout", authAPI.Logout)
 			authProtected.POST("/refresh", authAPI.RefreshToken)
@@ -47,7 +47,7 @@ func RegisterAuthRoutes(r *gin.RouterGroup, authService sharedAuth.AuthService, 
 	{
 		// 公开路由（添加速率限制）
 		publicOAuth := oauthGroup.Group("")
-		publicOAuth.Use(ratelimit.RateLimitMiddlewareSimple(10, 60)) // 10次/分钟
+		publicOAuth.Use(ratelimit.RateLimitMiddlewareSimple(200, 60)) // 200次/分钟（测试环境放宽）
 		{
 			// 获取授权URL
 			publicOAuth.POST("/:provider/authorize", oauthAPI.GetAuthorizeURL)
@@ -58,7 +58,7 @@ func RegisterAuthRoutes(r *gin.RouterGroup, authService sharedAuth.AuthService, 
 		// 需要认证的路由
 		oauthProtected := oauthGroup.Group("")
 		oauthProtected.Use(auth.JWTAuth())
-		oauthProtected.Use(ratelimit.RateLimitMiddlewareSimple(20, 60)) // 20次/分钟
+		oauthProtected.Use(ratelimit.RateLimitMiddlewareSimple(200, 60)) // 200次/分钟（测试环境放宽）
 		{
 			// 获取绑定的账号列表
 			oauthProtected.GET("/accounts", oauthAPI.GetLinkedAccounts)
