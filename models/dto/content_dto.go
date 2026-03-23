@@ -312,7 +312,7 @@ type CreateRelationRequest struct {
 	FromID   string `json:"fromId" validate:"required"`
 	ToID     string `json:"toId" validate:"required"`
 	Type     string `json:"type" validate:"required,max=50"`
-	Strength int    `json:"strength" validate:"min=0,max=10"`
+	Strength int    `json:"strength" validate:"min=0,max=100"` // 关系强度 0-100，与模型层和前端保持一致
 	Notes    string `json:"notes,omitempty" validate:"max=500"`
 }
 
