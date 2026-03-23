@@ -33,7 +33,7 @@ func NewCharacterApi(characterService interfaces.CharacterService) *CharacterApi
 // @Failure 401 {object} response.APIResponse
 // @Router /api/v1/projects/{projectId}/characters [post]
 func (api *CharacterApi) CreateCharacter(c *gin.Context) {
-	projectID := c.Param("projectId")
+	projectID := c.Param("id")
 	if projectID == "" {
 		response.BadRequest(c, "项目ID不能为空", "")
 		return
@@ -101,7 +101,7 @@ func (api *CharacterApi) GetCharacter(c *gin.Context) {
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/projects/{projectId}/characters [get]
 func (api *CharacterApi) ListCharacters(c *gin.Context) {
-	projectID := c.Param("projectId")
+	projectID := c.Param("id")
 	if projectID == "" {
 		response.BadRequest(c, "项目ID不能为空", "")
 		return
@@ -226,7 +226,7 @@ func (api *CharacterApi) CreateCharacterRelation(c *gin.Context) {
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/projects/{projectId}/characters/relations [get]
 func (api *CharacterApi) ListCharacterRelations(c *gin.Context) {
-	projectID := c.Param("projectId")
+	projectID := c.Param("id")
 	if projectID == "" {
 		response.BadRequest(c, "项目ID不能为空", "")
 		return
@@ -286,7 +286,7 @@ func (api *CharacterApi) DeleteCharacterRelation(c *gin.Context) {
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/projects/{projectId}/characters/graph [get]
 func (api *CharacterApi) GetCharacterGraph(c *gin.Context) {
-	projectID := c.Param("projectId")
+	projectID := c.Param("id")
 	if projectID == "" {
 		response.BadRequest(c, "项目ID不能为空", "")
 		return

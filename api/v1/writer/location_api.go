@@ -21,7 +21,7 @@ func NewLocationApi(locationService interfaces.LocationService) *LocationApi {
 
 // CreateLocation 创建地点
 func (api *LocationApi) CreateLocation(c *gin.Context) {
-	projectID := c.Param("projectId")
+		projectID := c.Param("id")
 	if projectID == "" {
 		response.BadRequest(c, "项目ID不能为空", "")
 		return
@@ -70,7 +70,7 @@ func (api *LocationApi) GetLocation(c *gin.Context) {
 
 // ListLocations 获取项目地点列表
 func (api *LocationApi) ListLocations(c *gin.Context) {
-	projectID := c.Param("projectId")
+		projectID := c.Param("id")
 	if projectID == "" {
 		response.BadRequest(c, "项目ID不能为空", "")
 		return
@@ -87,7 +87,7 @@ func (api *LocationApi) ListLocations(c *gin.Context) {
 
 // GetLocationTree 获取地点层级树
 func (api *LocationApi) GetLocationTree(c *gin.Context) {
-	projectID := c.Param("projectId")
+		projectID := c.Param("id")
 	if projectID == "" {
 		response.BadRequest(c, "项目ID不能为空", "")
 		return
@@ -171,7 +171,7 @@ func (api *LocationApi) CreateLocationRelation(c *gin.Context) {
 
 // ListLocationRelations 获取地点关系列表
 func (api *LocationApi) ListLocationRelations(c *gin.Context) {
-	projectID := c.Param("projectId")
+		projectID := c.Param("id")
 	if projectID == "" {
 		response.BadRequest(c, "项目ID不能为空", "")
 		return

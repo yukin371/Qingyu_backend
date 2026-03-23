@@ -176,7 +176,7 @@ func (api *ExportApi) DownloadExportFile(c *gin.Context) {
 // @Failure 400 {object} response.APIResponse
 // @Router /api/v1/writer/projects/{projectId}/exports [get]
 func (api *ExportApi) ListExportTasks(c *gin.Context) {
-	projectID := c.Param("projectId")
+		projectID := c.Param("id")
 	if projectID == "" {
 		response.BadRequest(c, "参数错误", "项目ID不能为空")
 		return

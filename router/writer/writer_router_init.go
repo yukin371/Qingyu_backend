@@ -25,14 +25,18 @@ func RegisterWriterRoutes(r *gin.RouterGroup, searchSvc *searchservice.SearchSer
 	serviceContainer := service.GetServiceContainer()
 	if serviceContainer == nil {
 		// 如果服务容器未初始化，跳过路由注册
+		zap.L().Error("RegisterWriterRoutes: 服务容器未初始化，跳过路由注册")
 		return
 	}
 
 	// 获取Repository工厂和EventBus
 	repositoryFactory := serviceContainer.GetRepositoryFactory()
 	if repositoryFactory == nil {
+		zap.L().Error("RegisterWriterRoutes: Repository工厂未初始化，跳过路由注册")
 		return
 	}
+
+	zap.L().Info("RegisterWriterRoutes: 开始注册写作模块路由...")
 
 	eventBus := serviceContainer.GetEventBus()
 
@@ -101,6 +105,9 @@ func RegisterWriterRoutes(r *gin.RouterGroup, searchSvc *searchservice.SearchSer
 	var characterSvc interfaces.CharacterService
 	if characterRepo != nil {
 		characterSvc = writerservice.NewCharacterService(characterRepo, eventBus)
+		zap.L().Info("RegisterWriterRoutes: CharacterService创建成功")
+	} else {
+		zap.L().Warn("RegisterWriterRoutes: CharacterRepository为nil，跳过CharacterService创建")
 	}
 
 	// 创建LocationService（地点服务）
@@ -133,7 +140,14 @@ func RegisterWriterRoutes(r *gin.RouterGroup, searchSvc *searchservice.SearchSer
 	InitWriterRouter(r, projectSvc, documentSvc, versionSvc, searchSvc, exportSvc, publishSvc, lockSvc, commentSvc, templateSvc, statsSvc, bookRepo, characterSvc, locationSvc)
 
 	// 调用InitWriterRoutes初始化设定百科路由（角色、地点、时间线、大纲）
+	zap.L().Info("RegisterWriterRoutes: 调用InitWriterRoutes注册设定百科路由",
+		zap.Bool("characterSvc", characterSvc != nil),
+		zap.Bool("locationSvc", locationSvc != nil),
+		zap.Bool("timelineSvc", timelineSvc != nil),
+		zap.Bool("outlineSvc", outlineSvc != nil),
+	)
 	InitWriterRoutes(r, characterSvc, locationSvc, timelineSvc, outlineSvc)
+	zap.L().Info("RegisterWriterRoutes: 设定百科路由注册完成")
 }
 
 // MockPublishService 用于E2E测试的Mock发布服务

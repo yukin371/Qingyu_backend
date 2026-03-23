@@ -12,7 +12,7 @@ func InitLocationRoutes(router *gin.RouterGroup, locationService interfaces.Loca
 	api := writer.NewLocationApi(locationService)
 
 	// 项目级别的地点路由
-	projectGroup := router.Group("/projects/:projectId")
+	projectGroup := router.Group("/projects/:id")
 	{
 		projectGroup.POST("/locations", api.CreateLocation)
 		projectGroup.GET("/locations", api.ListLocations)

@@ -21,7 +21,7 @@ func NewTimelineApi(timelineService interfaces.TimelineService) *TimelineApi {
 
 // CreateTimeline 创建时间线
 func (api *TimelineApi) CreateTimeline(c *gin.Context) {
-	projectID := c.Param("projectId")
+		projectID := c.Param("id")
 	if projectID == "" {
 		response.BadRequest(c, "项目ID不能为空", "")
 		return
@@ -63,7 +63,7 @@ func (api *TimelineApi) GetTimeline(c *gin.Context) {
 
 // ListTimelines 获取项目时间线列表
 func (api *TimelineApi) ListTimelines(c *gin.Context) {
-	projectID := c.Param("projectId")
+		projectID := c.Param("id")
 	if projectID == "" {
 		response.BadRequest(c, "项目ID不能为空", "")
 		return
