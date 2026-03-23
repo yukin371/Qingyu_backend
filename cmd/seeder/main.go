@@ -194,6 +194,27 @@ var (
 		Run:   runFinance,
 	}
 
+	// booklistsCmd 填充书单数据
+	booklistsCmd = &cobra.Command{
+		Use:   "booklists",
+		Short: "填充书单数据（书单、点赞）",
+		Run:   runBooklists,
+	}
+
+	// collectionFoldersCmd 填充收藏夹数据
+	collectionFoldersCmd = &cobra.Command{
+		Use:   "collection-folders",
+		Short: "填充收藏夹数据",
+		Run:   runCollectionFolders,
+	}
+
+	// withdrawalsCmd 填充提现申请数据
+	withdrawalsCmd = &cobra.Command{
+		Use:   "withdrawals",
+		Short: "填充提现申请数据",
+		Run:   runWithdrawals,
+	}
+
 	// auditReaderCmd 审查读者视角数据关联
 	auditReaderCmd = &cobra.Command{
 		Use:   "audit-reader",
@@ -213,6 +234,16 @@ var (
 		Use:   "settings",
 		Short: "填充用户设置数据",
 		Run:   runSettings,
+	}
+
+	// e2eCmd E2E测试专用一键填充命令
+	e2eCmd = &cobra.Command{
+		Use:   "e2e",
+		Short: "E2E测试专用：一键填充所有测试数据（清空+重建）",
+		Long: `E2E测试专用命令，一键填充所有测试数据。
+包含：用户、分类、书籍、章节、社交、阅读、钱包等完整数据。
+适用于Playwright E2E多链路联调测试。`,
+		Run: runE2E,
 	}
 )
 
@@ -245,6 +276,9 @@ func init() {
 	rootCmd.AddCommand(messagingCmd)
 	rootCmd.AddCommand(statsCmd)
 	rootCmd.AddCommand(financeCmd)
+	rootCmd.AddCommand(booklistsCmd)
+	rootCmd.AddCommand(collectionFoldersCmd)
+	rootCmd.AddCommand(withdrawalsCmd)
 	rootCmd.AddCommand(auditReaderCmd)
 	rootCmd.AddCommand(auditAuthorCmd)
 	rootCmd.AddCommand(settingsCmd)
@@ -252,6 +286,7 @@ func init() {
 	rootCmd.AddCommand(verifyCmd)
 	rootCmd.AddCommand(testCmd)
 	rootCmd.AddCommand(publicationFlowCmd)
+	rootCmd.AddCommand(e2eCmd)
 }
 
 // initConfig 初始化配置
@@ -305,6 +340,9 @@ func runFull(cmd *cobra.Command, args []string) {
 			{title: "填充消息数据...", run: seedMessagingData},
 			{title: "填充财务数据...", run: seedFinanceData},
 			{title: "激活AI配额...", run: seedAIQuotaData},
+			{title: "填充书单数据...", run: seedBooklistsData},
+			{title: "填充收藏夹数据...", run: seedCollectionFoldersData},
+			{title: "填充提现申请数据...", run: seedWithdrawalsData},
 		},
 	})
 }
@@ -767,6 +805,69 @@ func seedFinanceData(db *utils.Database) error {
 func seedAIQuotaData(db *utils.Database) error {
 	seeder := NewAIQuotaSeeder(db, cfg)
 	return seeder.SeedAIQuota()
+}
+
+func seedBooklistsData(db *utils.Database) error {
+	seeder := NewBooklistSeeder(db, cfg)
+	return seeder.SeedBooklists()
+}
+
+func seedCollectionFoldersData(db *utils.Database) error {
+	seeder := NewCollectionFolderSeeder(db, cfg)
+	return seeder.SeedCollectionFolders()
+}
+
+func seedWithdrawalsData(db *utils.Database) error {
+	seeder := NewWithdrawalSeeder(db, cfg)
+	return seeder.SeedWithdrawals()
+}
+
+func runBooklists(cmd *cobra.Command, args []string) {
+	fmt.Println("开始填充书单数据...")
+	db, err := getDatabase()
+	if err != nil {
+		fmt.Printf("数据库连接失败: %v\n", err)
+		os.Exit(1)
+	}
+	defer db.Disconnect()
+	seeder := NewBooklistSeeder(db, cfg)
+	if err := seeder.SeedBooklists(); err != nil {
+		fmt.Printf("填充书单数据失败: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Println("\n书单数据填充完成!")
+}
+
+func runCollectionFolders(cmd *cobra.Command, args []string) {
+	fmt.Println("开始填充收藏夹数据...")
+	db, err := getDatabase()
+	if err != nil {
+		fmt.Printf("数据库连接失败: %v\n", err)
+		os.Exit(1)
+	}
+	defer db.Disconnect()
+	seeder := NewCollectionFolderSeeder(db, cfg)
+	if err := seeder.SeedCollectionFolders(); err != nil {
+		fmt.Printf("填充收藏夹数据失败: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Println("\n收藏夹数据填充完成!")
+}
+
+func runWithdrawals(cmd *cobra.Command, args []string) {
+	fmt.Println("开始填充提现申请数据...")
+	db, err := getDatabase()
+	if err != nil {
+		fmt.Printf("数据库连接失败: %v\n", err)
+		os.Exit(1)
+	}
+	defer db.Disconnect()
+	seeder := NewWithdrawalSeeder(db, cfg)
+	if err := seeder.SeedWithdrawals(); err != nil {
+		fmt.Printf("填充提现申请数据失败: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Println("\n提现申请数据填充完成!")
 }
 
 // runTestData 填充E2E测试数据
@@ -1388,4 +1489,74 @@ func seedSettings(db *utils.Database) error {
 func seedSettingsClean(db *utils.Database) error {
 	seeder := NewSettingsSeeder(db, cfg)
 	return seeder.Clean()
+}
+
+// runE2E E2E测试专用一键填充命令
+func runE2E(cmd *cobra.Command, args []string) {
+	fmt.Println("🚀 开始E2E测试数据一键填充...")
+	fmt.Println("=" + strings.Repeat("=", 50))
+	fmt.Println()
+
+	db, err := getDatabase()
+	if err != nil {
+		fmt.Printf("❌ 数据库连接失败: %v\n", err)
+		os.Exit(1)
+	}
+	defer db.Disconnect()
+
+	// 步骤1: 清空所有数据
+	fmt.Println("📋 步骤1: 清空现有数据...")
+	if err := cleanAllData(db); err != nil {
+		fmt.Printf("❌ 清空数据失败: %v\n", err)
+		os.Exit(1)
+	}
+	fmt.Println("   ✓ 数据清空完成")
+
+	// 步骤2: 填充核心数据
+	steps := []struct {
+		name string
+		fn   func(*utils.Database) error
+	}{
+		{"用户数据", seedUsers},
+		{"用户设置", seedSettings},
+		{"分类数据", seedCategories},
+		{"书籍数据", seedBooks},
+		{"榜单数据", seedRankings},
+		{"章节数据", seedChaptersData},
+		{"订阅关系", seedSubscriptions},
+		{"社交数据", seedSocialData},
+		{"阅读数据", seedReaderData},
+		{"统计数据", seedStatsData},
+		{"钱包数据", seedWalletsData},
+		{"消息数据", seedMessagingData},
+	}
+
+	for i, step := range steps {
+		fmt.Printf("📋 步骤%d/%d: 填充%s...\n", i+2, len(steps)+1, step.name)
+		if err := step.fn(db); err != nil {
+			fmt.Printf("❌ 填充%s失败: %v\n", step.name, err)
+			os.Exit(1)
+		}
+		fmt.Printf("   ✓ %s完成\n", step.name)
+	}
+
+	// 步骤3: 验证数据
+	fmt.Println("\n📋 步骤" + fmt.Sprintf("%d", len(steps)+2) + ": 验证数据完整性...")
+	if err := validateData(db); err != nil {
+		fmt.Printf("⚠️  数据验证警告: %v\n", err)
+	}
+
+	// 输出测试账号信息
+	fmt.Println("\n" + strings.Repeat("=", 52))
+	fmt.Println("✅ E2E测试数据填充完成!")
+	fmt.Println(strings.Repeat("=", 52))
+	fmt.Println("\n📝 测试账号信息:")
+	fmt.Println("   读者账号: testuser001 / password")
+	fmt.Println("   读者账号: testuser002 / password")
+	fmt.Println("   读者账号: testuser003 / password")
+	fmt.Println("   读者账号: testuser004 / password")
+	fmt.Println("   作者账号: testauthor001 / password")
+	fmt.Println("   管理账号: testadmin001 / password")
+	fmt.Println("\n💡 使用方式:")
+	fmt.Println("   cd Qingyu_backend && go run cmd/seeder/main.go e2e")
 }

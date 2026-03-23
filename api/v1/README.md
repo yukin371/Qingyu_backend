@@ -955,5 +955,11 @@ func (h *UserHandler) Login(c *gin.Context) {
 
 ---
 
+## 详见
+
+完整设计文档: [docs/standards/layer-api.md](../../docs/standards/layer-api.md)
+
+---
+
 **维护者**: Backend Team
 **最后更新**: 2026-02-26

@@ -90,71 +90,6 @@ type RemoveCollaboratorRequest struct {
 //
 // 请使用 dto 包中的统一定义（支持树形结构）
 
-// Deprecated: 使用 dto.CreateDocumentRequest 替代
-// type CreateDocumentRequest struct {
-// 	ProjectID    string   `json:"projectId" validate:"required"`
-// 	ParentID     string   `json:"parentId,omitempty"`
-// 	Title        string   `json:"title" validate:"required,min=1,max=200"`
-// 	Type         string   `json:"type" validate:"required,oneof=chapter scene note"`
-// 	Level        int      `json:"level,omitempty" validate:"min=0,max=10"`
-// 	Order        int      `json:"order,omitempty" validate:"min=0"`
-// 	CharacterIDs []string `json:"characterIds,omitempty" validate:"max=50"`
-// 	LocationIDs  []string `json:"locationIds,omitempty" validate:"max=50"`
-// 	TimelineIDs  []string `json:"timelineIds,omitempty" validate:"max=50"`
-// 	Tags         []string `json:"tags,omitempty" validate:"max=20"`
-// 	Notes        string   `json:"notes,omitempty" validate:"max=1000"`
-// }
-
-// Deprecated: 使用 dto.CreateDocumentResponse 替代
-// type CreateDocumentResponse struct {
-// 	DocumentID string    `json:"documentId"`
-// 	Title      string    `json:"title"`
-// 	Type       string    `json:"type"`
-// 	CreatedAt  time.Time `json:"createdAt"`
-// }
-
-// Deprecated: 使用 dto.UpdateDocumentRequest 替代
-// type UpdateDocumentRequest struct {
-// 	Title        *string  `json:"title,omitempty" validate:"omitempty,min=1,max=200"`
-// 	Notes        *string  `json:"notes,omitempty" validate:"omitempty,max=1000"`
-// 	Status       *string  `json:"status,omitempty" validate:"omitempty,oneof=draft published archived"`
-// 	CharacterIDs []string `json:"characterIds,omitempty" validate:"max=50"`
-// 	LocationIDs  []string `json:"locationIds,omitempty" validate:"max=50"`
-// 	TimelineIDs  []string `json:"timelineIds,omitempty" validate:"max=50"`
-// 	Tags         []string `json:"tags,omitempty" validate:"max=20"`
-// }
-
-// Deprecated: 使用 dto.ListDocumentsRequest 替代
-// type ListDocumentsRequest struct {
-// 	ProjectID string `json:"projectId" validate:"required"`
-// 	ParentID  string `json:"parentId,omitempty"`
-// 	Page      int    `json:"page" validate:"min=1"`
-// 	PageSize  int    `json:"pageSize" validate:"min=1,max=100"`
-// 	Status    string `json:"status,omitempty" validate:"omitempty,oneof=draft published archived"`
-// }
-
-// Deprecated: 使用 dto.DocumentListResponse 替代
-// type ListDocumentsResponse struct {
-// 	Documents interface{} `json:"documents"`
-// 	Total     int         `json:"total"`
-// 	Page      int         `json:"page"`
-// 	PageSize  int         `json:"pageSize"`
-// }
-
-// Deprecated: 使用 dto.MoveDocumentRequest 替代
-// type MoveDocumentRequest struct {
-// 	DocumentID  string `json:"documentId" validate:"required"`
-// 	NewParentID string `json:"newParentId,omitempty"`
-// 	Order       int    `json:"order" validate:"min=0"`
-// }
-
-// Deprecated: 使用 dto.ReorderDocumentsRequest 替代
-// type ReorderDocumentsRequest struct {
-// 	ProjectID string         `json:"projectId" validate:"required"`
-// 	ParentID  string         `json:"parentId,omitempty"`
-// 	Orders    map[string]int `json:"orders" validate:"required,min=1"` // documentID -> order
-// }
-
 // ============================================================================
 // 文档内容 DTO
 // ============================================================================
@@ -703,28 +638,6 @@ type ExportFile struct {
 }
 
 // ============================================================================
-// 文档树 DTO（已迁移至 writer_dto.go）
-// ============================================================================
-//
-// 以下 DTO 已迁移至 writer_dto.go：
-// - DocumentTreeResponse
-// - DocumentTreeItem
-//
-// 请使用 dto 包中的统一定义（支持树形结构）
-
-// Deprecated: 使用 dto.DocumentTreeItem 替代
-// type DocumentTreeNode struct {
-// 	Document interface{}         `json:"document"`
-// 	Children []*DocumentTreeNode `json:"children"`
-// }
-
-// Deprecated: 使用 dto.DocumentTreeResponse 替代
-// type DocumentTreeResponse struct {
-// 	ProjectID string              `json:"projectId"`
-// 	Documents []*DocumentTreeNode `json:"documents"`
-// }
-
-// ============================================================================
 // 章节内容 DTO
 // ============================================================================
 
@@ -904,25 +817,3 @@ type CollaboratorInfo struct {
 	Role      string    `json:"role"`
 	JoinedAt  time.Time `json:"joinedAt"`
 }
-
-// Deprecated: 使用 dto.DocumentResponse 替代（已迁移至 writer_dto.go）
-// type DocumentResponse struct {
-// 	DocumentID   string    `json:"documentId"`
-// 	ProjectID    string    `json:"projectId"`
-// 	ParentID     string    `json:"parentId,omitempty"`
-// 	Title        string    `json:"title"`
-// 	Type         string    `json:"type"`
-// 	Level        int       `json:"level"`
-// 	Order        int       `json:"order"`
-// 	Status       string    `json:"status"`
-// 	CharacterIDs []string  `json:"characterIds,omitempty"`
-// 	LocationIDs  []string  `json:"locationIds,omitempty"`
-// 	TimelineIDs  []string  `json:"timelineIds,omitempty"`
-// 	Tags         []string  `json:"tags,omitempty"`
-// 	Notes        string    `json:"notes,omitempty"`
-// 	CreatedBy    string    `json:"createdBy"`
-// 	CreatedAt    time.Time `json:"createdAt"`
-// 	UpdatedAt    time.Time `json:"updatedAt"`
-// 	WordCount    int       `json:"wordCount"`
-// 	Version      int       `json:"version"`
-// }

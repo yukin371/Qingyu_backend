@@ -2,6 +2,7 @@ package auth
 
 import (
 	userServiceInterface "Qingyu_backend/service/interfaces/user"
+	userPassword "Qingyu_backend/service/user"
 	"context"
 	"crypto/rand"
 	"encoding/base64"
@@ -25,7 +26,7 @@ type AuthServiceImpl struct {
 	oauthRepo         authRepo.OAuthRepository         // OAuth仓储
 	userService       userServiceInterface.UserService // 依赖User服务
 	sessionService    SessionService                   // MVP: 会话管理（多端登录限制）
-	passwordValidator *PasswordValidator               // MVP: 密码强度验证
+	passwordValidator *userPassword.PasswordValidator  // MVP: 密码强度验证（使用 user 包统一实现）
 	initialized       bool                             // 初始化标志
 }
 
@@ -47,7 +48,7 @@ func NewAuthService(
 		oauthRepo:         oauthRepo,
 		userService:       userService,
 		sessionService:    sessionService,
-		passwordValidator: NewPasswordValidator(), // MVP: 使用默认密码验证规则
+		passwordValidator: userPassword.NewPasswordValidator(), // 使用 user 包的统一密码验证器
 	}
 }
 

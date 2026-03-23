@@ -81,8 +81,8 @@ func (s *CommentService) PublishComment(ctx context.Context, userID, bookID, cha
 	if bookID == "" {
 		return nil, fmt.Errorf("书籍ID不能为空")
 	}
-	if len(content) < 10 || len(content) > 500 {
-		return nil, fmt.Errorf("评论内容长度必须在10-500字之间")
+	if len(content) < 1 || len(content) > 500 {
+		return nil, fmt.Errorf("评论内容长度必须在1-500字之间")
 	}
 	if rating < 0 || rating > 5 {
 		return nil, fmt.Errorf("评分必须在0-5之间")
@@ -115,8 +115,8 @@ func (s *CommentService) ReplyComment(ctx context.Context, userID, parentComment
 	if parentCommentID == "" {
 		return nil, fmt.Errorf("父评论ID不能为空")
 	}
-	if len(content) < 10 || len(content) > 500 {
-		return nil, fmt.Errorf("回复内容长度必须在10-500字之间")
+	if len(content) < 1 || len(content) > 500 {
+		return nil, fmt.Errorf("回复内容长度必须在1-500字之间")
 	}
 
 	// 获取父评论
@@ -275,8 +275,8 @@ func (s *CommentService) UpdateComment(ctx context.Context, userID, commentID, c
 	if commentID == "" {
 		return fmt.Errorf("评论ID不能为空")
 	}
-	if len(content) < 10 || len(content) > 500 {
-		return fmt.Errorf("评论内容长度必须在10-500字之间")
+	if len(content) < 1 || len(content) > 500 {
+		return fmt.Errorf("评论内容长度必须在1-500字之间")
 	}
 
 	// 获取原评论
@@ -338,19 +338,15 @@ func (s *CommentService) DeleteComment(ctx context.Context, userID, commentID st
 		return fmt.Errorf("没有权限删除此评论")
 	}
 
-	if err := s.commentRepo.RunInTransaction(ctx, func(txCtx context.Context) error {
-		if err := s.commentRepo.Delete(txCtx, commentID); err != nil {
-			return fmt.Errorf("删除评论失败: %w", err)
-		}
+	// 删除评论（非事务模式，兼容单机MongoDB）
+	if err := s.commentRepo.Delete(ctx, commentID); err != nil {
+		return fmt.Errorf("删除评论失败: %w", err)
+	}
 
-		if comment.ParentID != nil && *comment.ParentID != "" {
-			if err := s.commentRepo.DecrementReplyCount(txCtx, *comment.ParentID); err != nil {
-				return fmt.Errorf("减少父评论回复数失败: %w", err)
-			}
-		}
-		return nil
-	}); err != nil {
-		return err
+	// 减少父评论回复数
+	if comment.ParentID != nil && *comment.ParentID != "" {
+		// 忽略错误，不影响主流程
+		_ = s.commentRepo.DecrementReplyCount(ctx, *comment.ParentID)
 	}
 
 	// 发布事件

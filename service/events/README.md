@@ -1,13 +1,51 @@
-# 事件系统说明
+# Events 模块 - 事件系统
 
-## 概述
+## 模块职责
 
-事件系统是青羽后端的核心基础设施之一，用于实现服务间的松耦合通信。
+**Events 模块**是青羽后端的核心基础设施，负责实现服务间的松耦合通信，提供事件发布订阅、持久化存储、重试机制和可观测性支持。
 
-## 架构
+## 架构图
 
-```
-事件发布者 (Service) -> EventBus -> 事件处理器 (EventHandler)
+```mermaid
+graph TB
+    subgraph "Events 模块架构"
+        subgraph "事件发布层"
+            Publisher[事件发布者]
+            EventBus[EventBus 事件总线]
+        end
+
+        subgraph "持久化层"
+            EventStore[EventStore<br/>事件存储]
+            RetryQueue[RetryQueue<br/>重试队列]
+            DLQ[DeadLetterQueue<br/>死信队列]
+        end
+
+        subgraph "可观测性层"
+            Metrics[Metrics<br/>指标收集]
+            Tracing[Tracing<br/>链路追踪]
+            Logging[Logging<br/>日志记录]
+        end
+
+        subgraph "处理器层"
+            Handler1[EventHandler 1]
+            Handler2[EventHandler 2]
+            HandlerN[EventHandler N]
+        end
+
+        Publisher --> EventBus
+        EventBus --> EventStore
+        EventBus --> Handler1
+        EventBus --> Handler2
+        EventBus --> HandlerN
+
+        Handler1 -.->|失败| RetryQueue
+        RetryQueue -.->|重试| Handler1
+        RetryQueue -.->|最终失败| DLQ
+
+        EventBus --> Metrics
+        EventBus --> Tracing
+        EventBus --> Logging
+    end
 ```
 
 ## 使用方式

@@ -45,9 +45,17 @@ func indexOf(s, substr string) int {
 }
 
 // UserServiceImpl 用户服务实现
+//
+// TECHDEBT(#2026-03-22): 分层违规问题
+// 当前 UserServiceImpl 直接依赖 AuthRepository，违反了分层原则。
+// 理想设计：UserService → AuthService → AuthRepository
+// 当前设计：UserService → AuthRepository (❌ 跨层访问)
+//
+// 解决方案：引入事件驱动或接口隔离，在后续迭代中重构。
+// 详见：docs/reports/2026-03-22-user-auth-boundary-analysis.md
 type UserServiceImpl struct {
 	userRepo repoInterfaces.UserRepository
-	authRepo sharedRepo.AuthRepository
+	authRepo sharedRepo.AuthRepository // TECHDEBT: 应通过 AuthService 访问
 	name     string
 	version  string
 }
@@ -652,6 +660,11 @@ func (s *UserServiceImpl) ResetPassword(ctx context.Context, req *user2.ResetPas
 }
 
 // AssignRole 分配角色
+//
+// TECHDEBT(#2026-03-22): 职责边界问题
+// 角色管理应由 AuthService 统一处理，此方法应委托给 AuthService。
+// 当前保留在 UserService 是为了向后兼容，后续迭代应迁移到 AuthService。
+// 建议使用：authService.AssignRole() 代替
 func (s *UserServiceImpl) AssignRole(ctx context.Context, req *user2.AssignRoleRequest) (*user2.AssignRoleResponse, error) {
 	// 1. 验证请求数据
 	if req.UserID == "" {
@@ -684,6 +697,8 @@ func (s *UserServiceImpl) AssignRole(ctx context.Context, req *user2.AssignRoleR
 }
 
 // RemoveRole 移除角色
+//
+// TECHDEBT(#2026-03-22): 职责边界问题 - 建议使用 authService.RemoveRole()
 func (s *UserServiceImpl) RemoveRole(ctx context.Context, req *user2.RemoveRoleRequest) (*user2.RemoveRoleResponse, error) {
 	// 1. 验证请求数据
 	if req.UserID == "" {
@@ -710,6 +725,8 @@ func (s *UserServiceImpl) RemoveRole(ctx context.Context, req *user2.RemoveRoleR
 }
 
 // GetUserRoles 获取用户角色
+//
+// TECHDEBT(#2026-03-22): 职责边界问题 - 建议使用 authService.GetUserRoles()
 func (s *UserServiceImpl) GetUserRoles(ctx context.Context, req *user2.GetUserRolesRequest) (*user2.GetUserRolesResponse, error) {
 	// 1. 验证请求数据
 	if req.UserID == "" {
@@ -740,6 +757,8 @@ func (s *UserServiceImpl) GetUserRoles(ctx context.Context, req *user2.GetUserRo
 }
 
 // GetUserPermissions 获取用户权限
+//
+// TECHDEBT(#2026-03-22): 职责边界问题 - 建议使用 authService.GetUserPermissions()
 func (s *UserServiceImpl) GetUserPermissions(ctx context.Context, req *user2.GetUserPermissionsRequest) (*user2.GetUserPermissionsResponse, error) {
 	// 1. 验证请求数据
 	if req.UserID == "" {
@@ -1150,6 +1169,11 @@ func (s *UserServiceImpl) VerifyPassword(ctx context.Context, userID string, pas
 
 // DowngradeRole 角色降级
 // 将用户角色降级到指定角色（只能降级到reader或author）
+//
+// TECHDEBT(#2026-03-22): 职责边界问题
+// 角色管理应由 AuthService 统一处理，后续迭代应迁移。
+// 此方法涉及用户数据的修改（更新 roles 字段），可保留在 UserService，
+// 但应通过 AuthService 进行权限验证后再执行。
 func (s *UserServiceImpl) DowngradeRole(ctx context.Context, req *user2.DowngradeRoleRequest) (*user2.DowngradeRoleResponse, error) {
 	// 1. 验证请求数据
 	if req.UserID == "" {

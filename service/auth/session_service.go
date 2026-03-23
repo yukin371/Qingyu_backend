@@ -67,7 +67,6 @@ func (s *SessionServiceImpl) CreateSession(ctx context.Context, userID string) (
 	}
 
 	// 4. 将会话ID添加到用户会话列表（用于多端登录限制）
-	// MVP: 使用JSON存储会话ID列表（简化实现，避免扩展CacheClient接口）
 	if err := s.addSessionToUserList(ctx, userID, sessionID); err != nil {
 		// 非关键错误，记录但不中断
 		zap.L().Warn("添加会话到用户列表失败",
