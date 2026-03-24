@@ -2,7 +2,6 @@ package writer
 
 import (
 	"context"
-	"fmt"
 	"regexp"
 	"strings"
 
@@ -18,24 +17,6 @@ import (
 )
 
 var conceptCategoryPattern = regexp.MustCompile(`^[\p{L}\p{N}_\-\s]{1,64}$`)
-
-// normalizeAndValidateConceptQueryID 规范化并验证设定查询ID
-//
-// 确保ID格式正确，避免不同大小写/格式带来的查询歧义喵~
-func normalizeAndValidateConceptQueryID(field, value string, allowEmpty bool) (string, error) {
-	normalized := strings.TrimSpace(value)
-	if normalized == "" {
-		if allowEmpty {
-			return "", nil
-		}
-		return "", errors.NewRepositoryError(errors.RepositoryErrorValidation, fmt.Sprintf("%s is required", field), nil)
-	}
-	// 验证hex格式（这里不做转换，因为concept.ID可能已经是字符串格式）
-	if len(normalized) != 24 {
-		return "", errors.NewRepositoryError(errors.RepositoryErrorValidation, fmt.Sprintf("invalid %s format", field), nil)
-	}
-	return normalized, nil
-}
 
 func normalizeAndValidateConceptCategory(value string) (string, error) {
 	normalized := strings.TrimSpace(value)
@@ -100,9 +81,9 @@ func (r *ConceptRepositoryMongo) GetByID(ctx context.Context, id string) (*write
 //
 // 按分类和名称排序返回喵~
 func (r *ConceptRepositoryMongo) ListByProject(ctx context.Context, projectID string) ([]*writer.Concept, error) {
-	safeProjectID, err := normalizeAndValidateConceptQueryID("project id", projectID, false)
+	safeProjectID, err := r.ParseID(projectID)
 	if err != nil {
-		return nil, err
+		return nil, errors.NewRepositoryError(errors.RepositoryErrorValidation, "invalid project ID", err)
 	}
 
 	filter := bson.M{
@@ -131,9 +112,9 @@ func (r *ConceptRepositoryMongo) ListByProject(ctx context.Context, projectID st
 //
 // 支持按分类和关键词搜索喵~
 func (r *ConceptRepositoryMongo) Search(ctx context.Context, projectID, category, keyword string) ([]*writer.Concept, error) {
-	safeProjectID, err := normalizeAndValidateConceptQueryID("project id", projectID, false)
+	safeProjectID, err := r.ParseID(projectID)
 	if err != nil {
-		return nil, err
+		return nil, errors.NewRepositoryError(errors.RepositoryErrorValidation, "invalid project ID", err)
 	}
 	safeCategory, err := normalizeAndValidateConceptCategory(category)
 	if err != nil {

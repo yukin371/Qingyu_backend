@@ -2,8 +2,6 @@ package writer
 
 import (
 	"context"
-	"fmt"
-	"strings"
 
 	"Qingyu_backend/models/writer"
 	writerInterface "Qingyu_backend/repository/interfaces/writer"
@@ -12,29 +10,9 @@ import (
 	"Qingyu_backend/pkg/errors"
 
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
-
-// normalizeAndValidateDraftQueryID 规范化并验证草稿查询ID
-//
-// 确保ID格式正确，避免不同大小写/格式带来的查询歧义喵~
-func normalizeAndValidateDraftQueryID(field, value string, allowEmpty bool) (string, error) {
-	normalized := strings.TrimSpace(value)
-	if normalized == "" {
-		if allowEmpty {
-			return "", nil
-		}
-		return "", errors.NewRepositoryError(errors.RepositoryErrorValidation, fmt.Sprintf("%s is required", field), nil)
-	}
-	objectID, err := primitive.ObjectIDFromHex(normalized)
-	if err != nil {
-		return "", errors.NewRepositoryError(errors.RepositoryErrorValidation, fmt.Sprintf("invalid %s format", field), nil)
-	}
-	// 返回标准化的hex字符串
-	return objectID.Hex(), nil
-}
 
 // WriterDraftRepositoryMongo WriterDraft Repository的MongoDB实现
 type WriterDraftRepositoryMongo struct {
@@ -88,9 +66,9 @@ func (r *WriterDraftRepositoryMongo) GetByID(ctx context.Context, id string) (*w
 //
 // 用于获取特定项目的特定章节草稿，确保每个章节只有一个草稿喵~
 func (r *WriterDraftRepositoryMongo) GetByProjectAndChapter(ctx context.Context, projectID string, chapterNum int) (*writer.WriterDraft, error) {
-	safeProjectID, err := normalizeAndValidateDraftQueryID("project id", projectID, false)
+	safeProjectID, err := r.ParseID(projectID)
 	if err != nil {
-		return nil, err
+		return nil, errors.NewRepositoryError(errors.RepositoryErrorValidation, "invalid project ID", err)
 	}
 
 	var doc writer.WriterDraft
@@ -114,9 +92,9 @@ func (r *WriterDraftRepositoryMongo) GetByProjectAndChapter(ctx context.Context,
 //
 // 按章节号排序返回，限制返回数量喵~
 func (r *WriterDraftRepositoryMongo) ListByProject(ctx context.Context, projectID string, limit int) ([]*writer.WriterDraft, error) {
-	safeProjectID, err := normalizeAndValidateDraftQueryID("project id", projectID, false)
+	safeProjectID, err := r.ParseID(projectID)
 	if err != nil {
-		return nil, err
+		return nil, errors.NewRepositoryError(errors.RepositoryErrorValidation, "invalid project ID", err)
 	}
 
 	filter := bson.M{
