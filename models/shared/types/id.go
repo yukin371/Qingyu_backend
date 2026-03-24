@@ -10,11 +10,10 @@ import (
 	"errors"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"Qingyu_backend/repository"
 )
 
-// Errors - 与 repository/errors.go 保持一致
-// Deprecated: 使用 repository.ErrEmptyID 和 repository.ErrInvalidIDFormat
+// Errors - 统一的 ID 错误定义
+// 供 repository 层使用，避免循环依赖
 var (
 	ErrInvalidIDFormat = errors.New("invalid ID format")
 	ErrEmptyID         = errors.New("ID cannot be empty")
@@ -23,11 +22,14 @@ var (
 // ParseObjectID 将 hex 字符串解析为 ObjectID
 // Deprecated: 使用 repository.ParseID 替代
 func ParseObjectID(s string) (primitive.ObjectID, error) {
-    if s == "" {
-        return primitive.NilObjectID, ErrEmptyID
-    }
-    // 统一使用 repository.ParseID
-    return repository.ParseID(s)
+	if s == "" {
+		return primitive.NilObjectID, ErrEmptyID
+	}
+	oid, err := primitive.ObjectIDFromHex(s)
+	if err != nil {
+		return primitive.NilObjectID, ErrInvalidIDFormat
+	}
+	return oid, nil
 }
 
 // MustParseObjectID 解析 ObjectID， panic on error

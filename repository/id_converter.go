@@ -1,7 +1,6 @@
 package repository
 
 import (
-	"errors"
 	"fmt"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -151,10 +150,4 @@ func ParseOptionalIDs(ids []string) ([]primitive.ObjectID, error) {
 		result = append(result, oid)
 	}
 	return result, nil
-}
-
-// IsIDError 判断是否为ID相关错误
-// 用于API层快速失败和错误分类
-func IsIDError(err error) bool {
-	return errors.Is(err, ErrEmptyID) || errors.Is(err, ErrInvalidIDFormat)
 }
