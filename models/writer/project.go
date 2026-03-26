@@ -67,9 +67,10 @@ type ProjectStats struct {
 
 // ProjectSettings 项目设置
 type ProjectSettings struct {
-	AutoBackup     bool `bson:"auto_backup" json:"autoBackup"`                            // 自动备份
-	BackupInterval int  `bson:"backup_interval" json:"backupInterval"`                    // 备份间隔（小时）
-	WordCountGoal  int  `bson:"word_count_goal,omitempty" json:"wordCountGoal,omitempty"` // 字数目标
+	AutoBackup     bool             `bson:"auto_backup" json:"autoBackup"`                            // 自动备份
+	BackupInterval int              `bson:"backup_interval" json:"backupInterval"`                    // 备份间隔（小时）
+	WordCountGoal  int              `bson:"word_count_goal,omitempty" json:"wordCountGoal,omitempty"` // 字数目标
+	CharacterRoles []CharacterRole  `bson:"character_roles,omitempty" json:"characterRoles,omitempty"` // 角色类型配置
 }
 
 // Collaborator 协作者
