@@ -23,6 +23,10 @@ type Character struct {
 	SpeechPattern     string `bson:"speech_pattern,omitempty" json:"speechPattern,omitempty" validate:"max=500"`          // 角色语音模式
 	CurrentState      string `bson:"current_state,omitempty" json:"currentState,omitempty" validate:"max=200"`            // 角色当前状态
 	ShortDescription  string `bson:"short_description,omitempty" json:"shortDescription,omitempty" validate:"max=200"`    // 角色摘要
+
+	// 可选：汇总的登场信息（用于快速查询，非核心字段）
+	AppearanceCount    int     `bson:"appearance_count,omitempty" json:"appearanceCount,omitempty"`         // 登场次数
+	FirstAppearanceID  *string `bson:"first_appearance_id,omitempty" json:"firstAppearanceId,omitempty"`   // 首次登场的大纲节点ID
 }
 
 // TouchForCreate 创建时设置默认值
