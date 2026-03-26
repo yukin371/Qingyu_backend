@@ -5,6 +5,7 @@ import (
 )
 
 // NewProjectSettings 创建新项目设置（含默认角色类型）
+// 注意：此函数返回的 ProjectSettings 结构体应嵌入到 Project 中使用
 func NewProjectSettings(projectID primitive.ObjectID) ProjectSettings {
 	return ProjectSettings{
 		AutoBackup:     false,
