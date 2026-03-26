@@ -96,3 +96,14 @@ func (st *StoryTime) GetTimeString() string {
 
 	return timeStr
 }
+
+// RelationTimelineEvent 角色关系时序变化事件
+type RelationTimelineEvent struct {
+	ChapterID     string       `bson:"chapter_id" json:"chapterId"`             // 变化发生的章节ID
+	ChapterTitle  string       `bson:"chapter_title" json:"chapterTitle"`       // 章节标题
+	OldType       RelationType `bson:"old_type,omitempty" json:"oldType,omitempty"` // 变化前的关系类型
+	NewType       RelationType `bson:"new_type" json:"newType"`                 // 变化后的关系类型
+	Strength      int          `bson:"strength" json:"strength"`               // 变化后的强度
+	Notes         string       `bson:"notes" json:"notes"`                     // 变化原因/剧情描述
+	Timestamp     time.Time    `bson:"timestamp" json:"timestamp"`             // 记录时间
+}
