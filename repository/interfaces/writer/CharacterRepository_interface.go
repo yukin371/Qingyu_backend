@@ -20,6 +20,12 @@ type CharacterRepository interface {
 	FindRelationByID(ctx context.Context, relationID string) (*writer.CharacterRelation, error)
 	DeleteRelation(ctx context.Context, relationID string) error
 
+	// 关系时序事件管理
+	CreateRelationTimelineEvent(ctx context.Context, relationID string, event *writer.RelationTimelineEvent) error
+	GetRelationTimeline(ctx context.Context, relationID string) ([]writer.RelationTimelineEvent, error)
+	UpdateRelationTimelineEvent(ctx context.Context, relationID string, eventIndex int, event *writer.RelationTimelineEvent) error
+	DeleteRelationTimelineEvent(ctx context.Context, relationID string, eventIndex int) error
+
 	// 辅助方法
 	ExistsByID(ctx context.Context, characterID string) (bool, error)
 	CountByProjectID(ctx context.Context, projectID string) (int64, error)
