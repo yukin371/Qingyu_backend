@@ -328,7 +328,7 @@ func (api *DocumentApi) DuplicateDocument(c *gin.Context) {
 	// 将用户ID添加到context
 	ctx := context.WithValue(c.Request.Context(), "userID", userIDStr)
 
-	var req document.DuplicateRequest
+	var req dto.DuplicateRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		response.BadRequest(c, "参数错误", err.Error())
 		return

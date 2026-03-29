@@ -5,9 +5,12 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
 	"Qingyu_backend/models/dto"
+	writerModel "Qingyu_backend/models/writer"
+	"Qingyu_backend/pkg/distlock"
 	"Qingyu_backend/pkg/lock"
 	mongoWriterRepo "Qingyu_backend/repository/mongodb/writer"
 	writerrepo "Qingyu_backend/repository/mongodb/writer"
@@ -130,6 +133,39 @@ func RegisterWriterRoutes(r *gin.RouterGroup, searchSvc *searchservice.SearchSer
 	var outlineSvc interfaces.OutlineService
 	if outlineRepo != nil {
 		outlineSvc = writerservice.NewOutlineService(outlineRepo, eventBus)
+
+		// 创建分布式锁服务（用于保护全局总纲的并发创建）
+		var distLockSvc *distlock.RedisLockService
+		if redisClient != nil {
+			// 从接口中提取底层 redis.Client
+			rawClient := redisClient.GetClient()
+			if rawClient != nil {
+				if client, ok := rawClient.(*redis.Client); ok {
+					distLockSvc = distlock.NewRedisLockService(client, "distlock")
+					zap.L().Info("RegisterWriterRoutes: 分布式锁服务创建成功")
+				} else {
+					zap.L().Warn("RegisterWriterRoutes: 无法从 RedisClient 获取底层客户端，分布式锁服务未创建")
+				}
+			} else {
+				zap.L().Warn("RegisterWriterRoutes: RedisClient.GetClient() 返回 nil，分布式锁服务未创建")
+			}
+		} else {
+			zap.L().Warn("RegisterWriterRoutes: redisClient 为 nil，分布式锁服务未创建")
+		}
+
+		// 创建大纲-文档双向同步服务并注入
+		syncSvc := writerservice.NewOutlineDocumentSyncService(outlineRepo, documentRepo, projectRepo, outlineSvc.(*writerservice.OutlineService), distLockSvc)
+		outlineSvc.(*writerservice.OutlineService).SetSyncService(syncSvc)
+		zap.L().Info("RegisterWriterRoutes: OutlineDocumentSyncService创建并注入成功")
+
+		// 设置DocumentService的双向同步回调
+		documentSvc.SetOnDocumentCreated(func(ctx context.Context, projectID string, doc *writerModel.Document) {
+			syncSvc.SyncFromDocumentCreation(ctx, projectID, doc)
+		})
+		documentSvc.SetOnDocumentTitleUpdated(func(ctx context.Context, documentID string, newTitle string) {
+			syncSvc.SyncTitleToOutline(ctx, documentID, newTitle)
+		})
+		zap.L().Info("RegisterWriterRoutes: DocumentService双向同步回调设置成功")
 	}
 
 	// 获取阅读统计服务（用于writer统计路由）

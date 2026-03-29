@@ -132,7 +132,7 @@ func findSeedUserByUsername(ctx context.Context, collection *mongo.Collection, u
 func ensurePublicationFlowProject(ctx context.Context, collection *mongo.Collection, author *users.User) (*writerModel.Project, bool, error) {
 	var existing writerModel.Project
 	err := collection.FindOne(ctx, bson.M{
-		"author_id": author.ID.Hex(),
+		"author_id": author.ID,
 		"title":     publicationFlowProjectTitle,
 		"deleted_at": bson.M{
 			"$exists": false,
@@ -148,7 +148,7 @@ func ensurePublicationFlowProject(ctx context.Context, collection *mongo.Collect
 	now := time.Now()
 	project := &writerModel.Project{
 		IdentifiedEntity: writerBase.IdentifiedEntity{ID: primitive.NewObjectID()},
-		OwnedEntity:      writerBase.OwnedEntity{AuthorID: author.ID.Hex()},
+		OwnedEntity:      writerBase.OwnedEntity{AuthorID: author.ID},
 		TitledEntity:     shared.TitledEntity{Title: publicationFlowProjectTitle},
 		Timestamps:       shared.BaseEntity{CreatedAt: now, UpdatedAt: now},
 		WritingType:      "novel",

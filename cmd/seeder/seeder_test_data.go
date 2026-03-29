@@ -82,6 +82,10 @@ func (s *TestDataSeeder) SeedTestData() error {
 		return fmt.Errorf("填充测试章节失败: %w", err)
 	}
 
+	if err := s.seedTestOutlines(); err != nil {
+		return fmt.Errorf("填充测试大纲失败: %w", err)
+	}
+
 	fmt.Println("✅ 测试数据填充完成!")
 	return nil
 }
@@ -456,4 +460,91 @@ func (s *TestDataSeeder) generateTestChapterContent(chapterNum int) string {
 
 （本章测试内容，共约1000字）
 `, chapterNum, title)
+}
+
+// seedTestOutlines 填充大纲测试数据
+func (s *TestDataSeeder) seedTestOutlines() error {
+	ctx := context.Background()
+	collection := s.db.Collection("outlines")
+
+	// 检查是否已经有大纲数据
+	count, _ := collection.CountDocuments(ctx, bson.M{})
+	if count > 0 {
+		fmt.Println("✓ 大纲测试数据已存在")
+		return nil
+	}
+
+	now := time.Now()
+
+	// 创建测试大纲节点
+	outlines := []interface{}{
+		bson.M{
+			"_id":       primitive.NewObjectID(),
+			"project_id": "project-yljs-1", // 使用测试项目ID
+			"title":     "第一卷：开篇",
+			"parent_id": "",
+			"summary":   "故事的开篇，介绍主角背景和世界观",
+			"type":      "arc",
+			"tension":   3,
+			"document_id": "", // 1级细纲暂时不绑定卷
+			"characters": []string{},
+			"items":      []string{},
+			"order":      0,
+			"created_at": now,
+			"updated_at": now,
+		},
+		bson.M{
+			"_id":       primitive.NewObjectID(),
+			"project_id": "project-yljs-1",
+			"title":     "第一章：初入江湖",
+			"parent_id": "",
+			"summary":   "主角踏入修仙界，第一次遭遇危险",
+			"type":      "scene",
+			"tension":   5,
+			"document_id": "",
+			"characters": []string{"char-001", "char-002"},
+			"items":      []string{"item-001"},
+			"order":      0,
+			"created_at": now,
+			"updated_at": now,
+		},
+		bson.M{
+			"_id":       primitive.NewObjectID(),
+			"project_id": "project-yljs-1",
+			"title":     "第二章：机缘巧合",
+			"parent_id": "",
+			"summary":   "意外获得神秘传承",
+			"type":      "scene",
+			"tension":   7,
+			"document_id": "",
+			"characters": []string{"char-001"},
+			"items":      []string{},
+			"order":      1,
+			"created_at": now,
+			"updated_at": now,
+		},
+		bson.M{
+			"_id":       primitive.NewObjectID(),
+			"project_id": "project-yljs-1",
+			"title":     "场景：主角觉醒",
+			"parent_id": "", // TODO: 设置父节点ID
+			"summary":   "战斗中的关键时刻，主角力量觉醒",
+			"type":      "scene",
+			"tension":   9,
+			"document_id": "",
+			"characters": []string{},
+			"items":      []string{},
+			"order":      0,
+			"created_at": now,
+			"updated_at": now,
+		},
+	}
+
+	_, err := collection.InsertMany(ctx, outlines)
+	if err != nil {
+		return fmt.Errorf("插入大纲测试数据失败: %w", err)
+	}
+
+	fmt.Printf("✓ 创建了 %d 个大纲测试节点\n", len(outlines))
+	return nil
 }

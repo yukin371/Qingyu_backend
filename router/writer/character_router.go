@@ -40,7 +40,18 @@ func InitCharacterRoutes(router *gin.RouterGroup, characterService interfaces.Ch
 		characterGroup.POST("/relations", api.CreateCharacterRelation)
 		characterGroup.DELETE("/relations/:relationId", api.DeleteCharacterRelation)
 
+		// 关系时序事件
+		characterGroup.POST("/relations/:relationId/timeline", api.CreateRelationTimelineEvent)
+		characterGroup.GET("/relations/:relationId/timeline", api.GetRelationTimeline)
+
 		zap.L().Info("InitCharacterRoutes: 角色级路由已注册到 /characters")
+	}
+
+	// 时序事件级别的路由
+	timelineEventGroup := router.Group("/characters/relations/timeline-events")
+	{
+		timelineEventGroup.PUT("/:eventId", api.UpdateRelationTimelineEvent)
+		timelineEventGroup.DELETE("/:eventId", api.DeleteRelationTimelineEvent)
 	}
 
 	zap.L().Info("InitCharacterRoutes: 角色路由注册完成")

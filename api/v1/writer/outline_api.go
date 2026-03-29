@@ -1,6 +1,9 @@
 package writer
 
 import (
+	"encoding/json"
+	"fmt"
+
 	"github.com/gin-gonic/gin"
 
 	writerModels "Qingyu_backend/models/writer"
@@ -136,6 +139,23 @@ func (api *OutlineApi) GetOutlineTree(c *gin.Context) {
 	if err != nil {
 		c.Error(err)
 		return
+	}
+
+	// 调试：输出tree的结构
+	fmt.Printf("[GetOutlineTree] tree长度: %d\n", len(tree))
+	if len(tree) > 0 {
+		fmt.Printf("[GetOutlineTree] 第一个节点标题: %s\n", tree[0].Title)
+		fmt.Printf("[GetOutlineTree] 第一个节点children长度: %d\n", len(tree[0].Children))
+		if len(tree[0].Children) > 0 {
+			fmt.Printf("[GetOutlineTree] 第一个子节点标题: %s\n", tree[0].Children[0].Title)
+		}
+	}
+
+	// 序列化为JSON查看
+	if jsonData, err := json.MarshalIndent(tree, "", "  "); err == nil {
+		fmt.Printf("[GetOutlineTree] tree JSON:\n%s\n", string(jsonData))
+	} else {
+		fmt.Printf("[GetOutlineTree] JSON序列化失败: %v\n", err)
 	}
 
 	response.Success(c, tree)
