@@ -231,3 +231,70 @@ Writer 模块采用乐观锁版本控制机制：
 - 字段级错误定位
 - 可重试判断
 - 元数据附加
+
+## 大纲-文档双向同步说明
+
+### 概述
+
+大纲（OutlineNode）和文档（Document）通过双向同步服务（`OutlineDocumentSyncService`）保持同步。大纲节点和文档之间通过 `DocumentID` 和 `OutlineNodeID` 双向引用。
+
+### 大纲层级结构
+
+```
+全局总纲 (global)
+└── 卷 (arc)        ← Volume 文档映射
+    └── 章节 (scene) ← Chapter 文档映射
+```
+
+### 分布式锁：全局总纲的并发保护
+
+全局总纲（global outline）与项目是 **1:1** 关系。当多个客户端同时创建第一个卷时，可能会并发调用 `findOrCreateGlobalOutline`，导致重复创建全局总纲。
+
+**解决方案**：使用 Redis 分布式锁保护全局总纲的创建过程。
+
+```mermaid
+sequenceDiagram
+    participant ClientA as 客户端 A
+    participant ClientB as 客户端 B
+    participant Lock as Redis 分布式锁
+    participant DB as MongoDB
+
+    ClientA->>Lock: Acquire(global_outline:projectID)
+    Lock-->>ClientA: lockID_A
+    Note over ClientA: 获取锁成功
+
+    ClientB->>Lock: Acquire(global_outline:projectID)
+    Note over Lock: 锁已被持有，等待...
+
+    ClientA->>DB: findOneAndUpdate (upsert)
+    ClientA->>DB: 返回已创建的 global outline
+    ClientA->>Lock: Release(lockID_A)
+    Lock-->>ClientA: 锁已释放
+
+    Lock-->>ClientB: lockID_B
+    Note over ClientB: 获取锁成功
+
+    ClientB->>DB: findOneAndUpdate (upsert)
+    Note over DB: 已存在，直接返回
+    ClientB->>DB: 返回已存在的 global outline
+    ClientB->>Lock: Release(lockID_B)
+```
+
+### 锁的配置参数
+
+| 参数 | 值 | 说明 |
+|------|-----|------|
+| TTL | 5 秒 | 锁的过期时间 |
+| 最大重试次数 | 3 次 | 获取锁失败时的重试次数 |
+| 重试间隔 | 500ms | 每次重试之间的等待时间 |
+
+### 降级处理
+
+如果 Redis 分布式锁服务不可用（如 Redis 连接失败），系统会自动降级为纯数据库 upsert 操作，利用 MongoDB 的 `findOneAndUpdate` + `upsert` 保证原子性（但在极高并发下可能产生少量重复）。
+
+### 关键文件
+
+| 文件 | 说明 |
+|------|------|
+| `outline_document_sync.go` | 大纲-文档双向同步服务 |
+| `pkg/distlock/redis_lock.go` | Redis 分布式锁实现 |

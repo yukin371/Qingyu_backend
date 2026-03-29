@@ -2,8 +2,6 @@ package writer
 
 import (
 	"testing"
-
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // TODO: 添加完整的集成测试

@@ -50,12 +50,13 @@ func indexOf(s, substr string) int {
 // 当前 UserServiceImpl 直接依赖 AuthRepository，违反了分层原则。
 // 理想设计：UserService → AuthService → AuthRepository
 // 当前设计：UserService → AuthRepository (❌ 跨层访问)
-//
+// todo: 重构为 UserService → AuthService → AuthRepository
 // 解决方案：引入事件驱动或接口隔离，在后续迭代中重构。
 // 详见：docs/reports/2026-03-22-user-auth-boundary-analysis.md
 type UserServiceImpl struct {
 	userRepo repoInterfaces.UserRepository
 	authRepo sharedRepo.AuthRepository // TECHDEBT: 应通过 AuthService 访问
+	logger   *zap.Logger
 	name     string
 	version  string
 }
@@ -65,6 +66,7 @@ func NewUserService(userRepo repoInterfaces.UserRepository, authRepo sharedRepo.
 	return &UserServiceImpl{
 		userRepo: userRepo,
 		authRepo: authRepo,
+		logger:   zap.L(),
 		name:     "UserService",
 		version:  "1.0.0",
 	}

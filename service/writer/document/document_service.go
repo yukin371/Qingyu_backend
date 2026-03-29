@@ -6,6 +6,7 @@ import (
 	"Qingyu_backend/models/writer/types"
 	"Qingyu_backend/repository"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -19,6 +20,83 @@ import (
 	serviceBase "Qingyu_backend/service/base"
 )
 
+// countWords 统计内容的字数
+// 支持TipTap JSON和Markdown格式
+func countWords(content string, contentType string) int {
+	if contentType == "tiptap_json" {
+		return countTipTapWords(content)
+	}
+	// markdown或纯文本，直接统计字符数
+	return len([]rune(content))
+}
+
+// countTipTapWords 统计TipTap JSON内容的字数
+func countTipTapWords(tipTapJson string) int {
+	// 解析TipTap JSON
+	var doc map[string]interface{}
+	if err := json.Unmarshal([]byte(tipTapJson), &doc); err != nil {
+		// JSON解析失败，返回0
+		fmt.Printf("[countTipTapWords] JSON解析失败: %v\n", err)
+		return 0
+	}
+
+	// 递归提取所有文本节点
+	return extractTextFromTipTapDoc(doc)
+}
+
+// extractTextFromTipTapDoc 从TipTap文档中提取所有文本并统计字数
+func extractTextFromTipTapDoc(node interface{}) int {
+	switch v := node.(type) {
+	case map[string]interface{}:
+		// 处理节点对象
+		nodeType, _ := v["type"].(string)
+		content, hasContent := v["content"]
+
+		textCount := 0
+
+		// 如果是文本节点
+		if nodeType == "text" {
+			if text, ok := v["text"].(string); ok {
+				textCount += len([]rune(text))
+			}
+		}
+
+		// 递归处理content字段（子节点数组）
+		if hasContent {
+			if contentArray, ok := content.([]interface{}); ok {
+				for _, child := range contentArray {
+					textCount += extractTextFromTipTapDoc(child)
+				}
+			}
+		}
+
+		// 递归处理其他可能的嵌套字段（如marks、attrs等）
+		for _, key := range []string{"marks"} {
+			if fieldValue, exists := v[key]; exists {
+				if arrayValue, ok := fieldValue.([]interface{}); ok {
+					for _, item := range arrayValue {
+						textCount += extractTextFromTipTapDoc(item)
+					}
+				}
+			}
+		}
+
+		return textCount
+
+	case []interface{}:
+		// 处理数组
+		count := 0
+		for _, item := range v {
+			count += extractTextFromTipTapDoc(item)
+		}
+		return count
+
+	default:
+		// 其他类型（字符串、数字等）不计数
+		return 0
+	}
+}
+
 // DocumentService 文档服务
 type DocumentService struct {
 	documentRepo        writerRepo.DocumentRepository
@@ -29,6 +107,21 @@ type DocumentService struct {
 	authHelper          *AuthHelper
 	serviceName         string
 	version             string
+
+	// OnDocumentCreated 创建文档后的回调（用于双向同步）
+	OnDocumentCreated func(ctx context.Context, projectID string, doc *writer.Document)
+	// OnDocumentTitleUpdated 文档标题更新后的回调（用于双向同步）
+	OnDocumentTitleUpdated func(ctx context.Context, documentID string, newTitle string)
+}
+
+// SetOnDocumentCreated 设置创建文档后的回调
+func (s *DocumentService) SetOnDocumentCreated(fn func(ctx context.Context, projectID string, doc *writer.Document)) {
+	s.OnDocumentCreated = fn
+}
+
+// SetOnDocumentTitleUpdated 设置文档标题更新后的回调
+func (s *DocumentService) SetOnDocumentTitleUpdated(fn func(ctx context.Context, documentID string, newTitle string)) {
+	s.OnDocumentTitleUpdated = fn
 }
 
 // NewDocumentService 创建文档服务
@@ -54,7 +147,7 @@ func NewDocumentService(
 }
 
 // CreateDocument 创建文档
-func (s *DocumentService) CreateDocument(ctx context.Context, req *CreateDocumentRequest) (*CreateDocumentResponse, error) {
+func (s *DocumentService) CreateDocument(ctx context.Context, req *dto.CreateDocumentRequest) (*dto.CreateDocumentResponse, error) {
 	// 1. 参数验证
 	if err := s.validateCreateDocumentRequest(req); err != nil {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "参数验证失败", err.Error(), err)
@@ -176,7 +269,12 @@ func (s *DocumentService) CreateDocument(ctx context.Context, req *CreateDocumen
 		})
 	}
 
-	return &CreateDocumentResponse{
+	// 10. 双向同步回调：通知同步服务（同步执行，确保大纲创建完成后再返回）
+	if s.OnDocumentCreated != nil {
+		s.OnDocumentCreated(context.Background(), req.ProjectID, doc)
+	}
+
+	return &dto.CreateDocumentResponse{
 		DocumentID: doc.ID.Hex(),
 		Title:      doc.Title,
 		Type:       string(doc.Type),
@@ -199,20 +297,30 @@ func (s *DocumentService) GetDocument(ctx context.Context, documentID string) (*
 
 // GetDocumentTree 获取文档树
 func (s *DocumentService) GetDocumentTree(ctx context.Context, projectID string) (*DocumentTreeResponse, error) {
+	fmt.Printf("[DEBUG] GetDocumentTree called with projectID: %s\n", projectID)
+
 	// 1. 验证项目查看权限
 	_, _, err := s.authHelper.VerifyProjectView(ctx, projectID)
 	if err != nil {
+		fmt.Printf("[DEBUG] VerifyProjectView failed: %v\n", err)
 		return nil, err
 	}
 
 	// 2. 获取所有文档
 	documents, err := s.documentRepo.GetByProjectID(ctx, projectID, 1000, 0)
 	if err != nil {
+		fmt.Printf("[DEBUG] GetByProjectID failed: %v\n", err)
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询文档树失败", "", err)
+	}
+
+	fmt.Printf("[DEBUG] GetByProjectID returned %d documents\n", len(documents))
+	for i, doc := range documents {
+		fmt.Printf("[DEBUG]   Doc[%d]: ID=%s, Title=%s, Type=%s, ParentID=%s\n", i, doc.ID.Hex(), doc.Title, doc.Type, doc.ParentID.Hex())
 	}
 
 	// 3. 构建树形结构
 	tree := s.buildDocumentTree(documents)
+	fmt.Printf("[DEBUG] buildDocumentTree returned %d root nodes\n", len(tree))
 
 	return &DocumentTreeResponse{
 		ProjectID: projectID,
@@ -221,7 +329,7 @@ func (s *DocumentService) GetDocumentTree(ctx context.Context, projectID string)
 }
 
 // UpdateDocument 更新文档
-func (s *DocumentService) UpdateDocument(ctx context.Context, documentID string, req *UpdateDocumentRequest) error {
+func (s *DocumentService) UpdateDocument(ctx context.Context, documentID string, req *dto.UpdateDocumentRequest) error {
 	// 1. 验证文档编辑权限
 	_, doc, _, err := s.authHelper.VerifyDocumentEdit(ctx, documentID)
 	if err != nil {
@@ -256,6 +364,11 @@ func (s *DocumentService) UpdateDocument(ctx context.Context, documentID string,
 	// 3. 更新文档
 	if err := s.documentRepo.UpdateByProject(ctx, documentID, doc.ProjectID.Hex(), updates); err != nil {
 		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "更新文档失败", "", err)
+	}
+
+	// 3.5 双向同步：标题变更同步到大纲
+	if req.Title != nil && s.OnDocumentTitleUpdated != nil {
+		go s.OnDocumentTitleUpdated(context.Background(), documentID, *req.Title)
 	}
 
 	// 4. 发布事件
@@ -404,7 +517,7 @@ func (s *DocumentService) buildDocumentTree(documents []*writer.Document) []*Doc
 	return rootNodes
 }
 
-func (s *DocumentService) validateCreateDocumentRequest(req *CreateDocumentRequest) error {
+func (s *DocumentService) validateCreateDocumentRequest(req *dto.CreateDocumentRequest) error {
 	if req.ProjectID == "" {
 		return fmt.Errorf("项目ID不能为空")
 	}
@@ -524,7 +637,7 @@ func (s *DocumentService) ListDocuments(ctx context.Context, req *ListDocumentsR
 }
 
 // MoveDocument 移动文档
-func (s *DocumentService) MoveDocument(ctx context.Context, req *MoveDocumentRequest) error {
+func (s *DocumentService) MoveDocument(ctx context.Context, req *dto.MoveDocumentRequest) error {
 	// 1. 参数验证
 	if req.DocumentID == "" {
 		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "文档ID不能为空", "", nil)
@@ -593,7 +706,7 @@ func (s *DocumentService) MoveDocument(ctx context.Context, req *MoveDocumentReq
 }
 
 // ReorderDocuments 重新排序文档
-func (s *DocumentService) ReorderDocuments(ctx context.Context, req *ReorderDocumentsRequest) error {
+func (s *DocumentService) ReorderDocuments(ctx context.Context, req *dto.ReorderDocumentsRequest) error {
 	// 1. 参数验证
 	if req.ProjectID == "" {
 		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "项目ID不能为空", "", nil)
@@ -645,7 +758,7 @@ func (s *DocumentService) ReorderDocuments(ctx context.Context, req *ReorderDocu
 }
 
 // AutoSaveDocument 自动保存文档
-func (s *DocumentService) AutoSaveDocument(ctx context.Context, req *AutoSaveRequest) (*AutoSaveResponse, error) {
+func (s *DocumentService) AutoSaveDocument(ctx context.Context, req *dto.AutoSaveRequest) (*dto.AutoSaveResponse, error) {
 	// 1. 参数验证
 	if req.DocumentID == "" {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "文档ID不能为空", "", nil)
@@ -654,13 +767,35 @@ func (s *DocumentService) AutoSaveDocument(ctx context.Context, req *AutoSaveReq
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "内容不能为空", "", nil)
 	}
 
-	// 2. 验证文档编辑权限
+	// 2. 验证和设置contentType
+	contentType := req.ContentType
+	if contentType == "" {
+		// 向后兼容：默认为markdown
+		contentType = "markdown"
+	}
+
+	// 验证contentType值
+	if contentType != "tiptap_json" && contentType != "markdown" {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation,
+			"无效的contentType，只能是tiptap_json或markdown", "", nil)
+	}
+
+	// 3. 如果是tiptap_json格式，验证content是否为有效JSON
+	if contentType == "tiptap_json" {
+		var js interface{}
+		if err := json.Unmarshal([]byte(req.Content), &js); err != nil {
+			return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation,
+				"TipTap JSON格式无效: "+err.Error(), err.Error(), err)
+		}
+	}
+
+	// 4. 验证文档编辑权限
 	_, _, _, err := s.authHelper.VerifyDocumentEdit(ctx, req.DocumentID)
 	if err != nil {
 		return nil, err
 	}
 
-	// 3. 获取或创建DocumentContent
+	// 5. 获取或创建DocumentContent
 	content, err := s.documentContentRepo.GetByDocumentID(ctx, req.DocumentID)
 	if err != nil {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询文档内容失败", "", err)
@@ -678,7 +813,7 @@ func (s *DocumentService) AutoSaveDocument(ctx context.Context, req *AutoSaveReq
 		newContent := &writer.DocumentContent{
 			DocumentID:  documentID,
 			Content:     req.Content,
-			ContentType: "markdown", // 默认使用markdown格式
+			ContentType: contentType,
 			Version:     1,
 			WordCount:   len([]rune(req.Content)),
 			CharCount:   len(req.Content),
@@ -700,7 +835,7 @@ func (s *DocumentService) AutoSaveDocument(ctx context.Context, req *AutoSaveReq
 
 		err := s.documentContentRepo.UpdateWithVersion(ctx, req.DocumentID, map[string]interface{}{
 			"content":      req.Content,
-			"content_type": "markdown",
+			"content_type": contentType,
 			"word_count":   len([]rune(req.Content)),
 			"char_count":   len(req.Content),
 		}, expectedVersion)
@@ -723,8 +858,8 @@ func (s *DocumentService) AutoSaveDocument(ctx context.Context, req *AutoSaveReq
 		newVersion = expectedVersion + 1
 	}
 
-	// 4. 计算字数并更新Document元数据
-	wordCount := len([]rune(req.Content))
+	// 6. 计算字数并更新Document元数据
+	wordCount := countWords(req.Content, contentType)
 	updates := map[string]interface{}{
 		"word_count": wordCount,
 		"updated_at": time.Now(),
@@ -736,7 +871,7 @@ func (s *DocumentService) AutoSaveDocument(ctx context.Context, req *AutoSaveReq
 		fmt.Printf("警告：更新文档元数据失败: %v\n", err)
 	}
 
-	// 5. 发布事件
+	// 7. 发布事件
 	if s.eventBus != nil {
 		s.eventBus.PublishAsync(ctx, &serviceBase.BaseEvent{
 			EventType: "document.autosaved",
@@ -751,7 +886,7 @@ func (s *DocumentService) AutoSaveDocument(ctx context.Context, req *AutoSaveReq
 		})
 	}
 
-	// 6. 返回响应
+	// 8. 返回响应
 	return &AutoSaveResponse{
 		Saved:       true,
 		NewVersion:  newVersion,
@@ -762,7 +897,7 @@ func (s *DocumentService) AutoSaveDocument(ctx context.Context, req *AutoSaveReq
 }
 
 // GetSaveStatus 获取保存状态
-func (s *DocumentService) GetSaveStatus(ctx context.Context, documentID string) (*SaveStatusResponse, error) {
+func (s *DocumentService) GetSaveStatus(ctx context.Context, documentID string) (*dto.SaveStatusResponse, error) {
 	// 1. 验证参数
 	if documentID == "" {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "文档ID不能为空", "", nil)
@@ -821,7 +956,7 @@ func (s *DocumentService) calculateDocumentVersion(doc *writer.Document) int {
 }
 
 // GetDocumentContent 获取文档内容
-func (s *DocumentService) GetDocumentContent(ctx context.Context, documentID string) (*DocumentContentResponse, error) {
+func (s *DocumentService) GetDocumentContent(ctx context.Context, documentID string) (*dto.DocumentContentResponse, error) {
 	// 1. 验证参数
 	if documentID == "" {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "文档ID不能为空", "", nil)
@@ -841,42 +976,67 @@ func (s *DocumentService) GetDocumentContent(ctx context.Context, documentID str
 
 	// 4. 构建响应
 	actualContent := ""
+	contentType := "markdown" // 默认为markdown（向后兼容）
 	version := 1
 	if content != nil {
 		actualContent = content.Content
+		contentType = content.ContentType
 		version = content.Version
 	}
 
 	// 5. 返回内容响应
 	return &DocumentContentResponse{
-		DocumentID: documentID,
-		Content:    actualContent,
-		Version:    version,
-		WordCount:  doc.WordCount,
-		UpdatedAt:  doc.UpdatedAt,
+		DocumentID:  documentID,
+		Content:     actualContent,
+		ContentType: contentType,
+		Version:     version,
+		WordCount:   doc.WordCount,
+		UpdatedAt:   doc.UpdatedAt,
 	}, nil
 }
 
 // UpdateDocumentContent 更新文档内容
-func (s *DocumentService) UpdateDocumentContent(ctx context.Context, req *UpdateContentRequest) error {
+func (s *DocumentService) UpdateDocumentContent(ctx context.Context, req *dto.UpdateContentRequest) error {
 	// 1. 参数验证
 	if req.DocumentID == "" {
 		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "文档ID不能为空", "", nil)
 	}
 
-	// 2. 验证文档编辑权限
+	// 2. 验证和设置contentType
+	contentType := req.ContentType
+	if contentType == "" {
+		// 向后兼容：默认为markdown
+		contentType = "markdown"
+	}
+
+	// 验证contentType值
+	if contentType != "tiptap_json" && contentType != "markdown" {
+		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation,
+			"无效的contentType，只能是tiptap_json或markdown", "", nil)
+	}
+
+	// 3. 如果是tiptap_json格式，验证content是否为有效JSON
+	if contentType == "tiptap_json" {
+		var js interface{}
+		if err := json.Unmarshal([]byte(req.Content), &js); err != nil {
+			return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation,
+				"TipTap JSON格式无效: "+err.Error(), err.Error(), err)
+		}
+	}
+
+	// 4. 验证文档编辑权限
 	_, _, _, err := s.authHelper.VerifyDocumentEdit(ctx, req.DocumentID)
 	if err != nil {
 		return err
 	}
 
-	// 3. 获取现有DocumentContent检查版本
+	// 5. 获取现有DocumentContent检查版本
 	existingContent, err := s.documentContentRepo.GetByDocumentID(ctx, req.DocumentID)
 	if err != nil {
 		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询文档内容失败", "", err)
 	}
 
-	// 4. 保存内容
+	// 6. 保存内容
 	if existingContent == nil {
 		// 首次保存，创建新内容
 		documentID, err := repository.ParseID(req.DocumentID)
@@ -886,7 +1046,7 @@ func (s *DocumentService) UpdateDocumentContent(ctx context.Context, req *Update
 		newContent := &writer.DocumentContent{
 			DocumentID:  documentID,
 			Content:     req.Content,
-			ContentType: "markdown", // 默认使用markdown格式
+			ContentType: contentType,
 			Version:     1,
 			WordCount:   len([]rune(req.Content)),
 			CharCount:   len(req.Content),
@@ -907,7 +1067,7 @@ func (s *DocumentService) UpdateDocumentContent(ctx context.Context, req *Update
 
 		err := s.documentContentRepo.UpdateWithVersion(ctx, req.DocumentID, map[string]interface{}{
 			"content":      req.Content,
-			"content_type": "markdown",
+			"content_type": contentType,
 			"word_count":   len([]rune(req.Content)),
 			"char_count":   len(req.Content),
 		}, expectedVersion)
@@ -920,8 +1080,8 @@ func (s *DocumentService) UpdateDocumentContent(ctx context.Context, req *Update
 		}
 	}
 
-	// 5. 计算字数并更新Document元数据
-	wordCount := len([]rune(req.Content))
+	// 7. 计算字数并更新Document元数据
+	wordCount := countWords(req.Content, contentType)
 	updates := map[string]interface{}{
 		"word_count": wordCount,
 		"updated_at": time.Now(),
@@ -932,7 +1092,7 @@ func (s *DocumentService) UpdateDocumentContent(ctx context.Context, req *Update
 		fmt.Printf("警告：更新文档元数据失败: %v\n", err)
 	}
 
-	// 6. 发布事件
+	// 8. 发布事件
 	if s.eventBus != nil {
 		s.eventBus.PublishAsync(ctx, &serviceBase.BaseEvent{
 			EventType: "document.content_updated",
@@ -949,7 +1109,7 @@ func (s *DocumentService) UpdateDocumentContent(ctx context.Context, req *Update
 }
 
 // GetDocumentContents 获取文档分段内容（tiptap）
-func (s *DocumentService) GetDocumentContents(ctx context.Context, documentID string) (*DocumentContentsResponse, error) {
+func (s *DocumentService) GetDocumentContents(ctx context.Context, documentID string) (*dto.DocumentContentsResponse, error) {
 	if documentID == "" {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "文档ID不能为空", "", nil)
 	}
@@ -966,8 +1126,8 @@ func (s *DocumentService) GetDocumentContents(ctx context.Context, documentID st
 
 	filter := &repoInfra.BaseFilter{
 		Conditions: map[string]interface{}{
-			"document_id":  docObjectID,
-			"content_type": "tiptap",
+			"document_id": docObjectID,
+			// 移除content_type过滤，支持tiptap和markdown两种格式
 		},
 		Sort: map[string]int{
 			"paragraph_order": 1,
@@ -980,7 +1140,7 @@ func (s *DocumentService) GetDocumentContents(ctx context.Context, documentID st
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询文档段落失败", "", err)
 	}
 
-	contents := make([]ParagraphContent, 0, len(rows))
+	contents := make([]dto.ParagraphContent, 0, len(rows))
 	wordCount := 0
 	for _, row := range rows {
 		paragraph := rowToParagraph(row)
@@ -1013,7 +1173,7 @@ func (s *DocumentService) GetDocumentContents(ctx context.Context, documentID st
 }
 
 // ReplaceDocumentContents 批量替换文档分段内容（tiptap）
-func (s *DocumentService) ReplaceDocumentContents(ctx context.Context, req *ReplaceDocumentContentsRequest) (*ReplaceDocumentContentsResponse, error) {
+func (s *DocumentService) ReplaceDocumentContents(ctx context.Context, req *dto.ReplaceDocumentContentsRequest) (*dto.ReplaceDocumentContentsResponse, error) {
 	if req == nil || req.DocumentID == "" {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "文档ID不能为空", "", nil)
 	}
@@ -1141,7 +1301,7 @@ func (s *DocumentService) ReplaceDocumentContents(ctx context.Context, req *Repl
 }
 
 // ReindexDocumentContents 重建段落序号
-func (s *DocumentService) ReindexDocumentContents(ctx context.Context, documentID string) (*ReindexDocumentContentsResponse, error) {
+func (s *DocumentService) ReindexDocumentContents(ctx context.Context, documentID string) (*dto.ReindexDocumentContentsResponse, error) {
 	if documentID == "" {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "文档ID不能为空", "", nil)
 	}
@@ -1158,8 +1318,8 @@ func (s *DocumentService) ReindexDocumentContents(ctx context.Context, documentI
 
 	filter := &repoInfra.BaseFilter{
 		Conditions: map[string]interface{}{
-			"document_id":  docObjectID,
-			"content_type": "tiptap",
+			"document_id": docObjectID,
+			// 移除content_type过滤，支持tiptap和markdown两种格式
 		},
 		Sort: map[string]int{
 			"paragraph_order": 1,
@@ -1190,7 +1350,7 @@ func (s *DocumentService) ReindexDocumentContents(ctx context.Context, documentI
 	}, nil
 }
 
-func (s *DocumentService) validateParagraphInputs(inputs []ParagraphContent) error {
+func (s *DocumentService) validateParagraphInputs(inputs []dto.ParagraphContent) error {
 	seenID := make(map[string]struct{}, len(inputs))
 	seenOrder := make(map[int]struct{}, len(inputs))
 
@@ -1248,7 +1408,7 @@ func (s *DocumentService) prepareDocumentContentForCreate(content *writer.Docume
 }
 
 // DuplicateDocument 复制文档
-func (s *DocumentService) DuplicateDocument(ctx context.Context, documentID string, req *DuplicateRequest) (*DuplicateResponse, error) {
+func (s *DocumentService) DuplicateDocument(ctx context.Context, documentID string, req *dto.DuplicateRequest) (*dto.DuplicateResponse, error) {
 	// 1. 参数验证
 	if documentID == "" {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "文档ID不能为空", "", nil)
@@ -1264,16 +1424,23 @@ func (s *DocumentService) DuplicateDocument(ctx context.Context, documentID stri
 		return nil, err
 	}
 
-	// 3. 调用DuplicateService执行复制
-	newDoc, err := s.duplicateService.Duplicate(ctx, documentID, req)
+	// 3. 将 dto.DuplicateRequest 转换为 DuplicateRequest
+	duplicateReq := &DuplicateRequest{
+		TargetParentID: nil, // 暂不支持复制到其他父文档
+		Position:       "inner", // 默认添加为子文档
+		CopyContent:    req.CopyContent,
+	}
+
+	// 4. 调用DuplicateService执行复制
+	newDoc, err := s.duplicateService.Duplicate(ctx, documentID, duplicateReq)
 	if err != nil {
 		return nil, err
 	}
 
-	// 4. 更新项目统计（异步）
+	// 5. 更新项目统计（异步）
 	go s.updateProjectStatistics(context.Background(), sourceDoc.ProjectID.Hex())
 
-	// 5. 发布事件
+	// 6. 发布事件
 	if s.eventBus != nil {
 		s.eventBus.PublishAsync(ctx, &serviceBase.BaseEvent{
 			EventType: "document.duplicated",
@@ -1287,6 +1454,10 @@ func (s *DocumentService) DuplicateDocument(ctx context.Context, documentID stri
 		})
 	}
 
-	// 6. 转换为响应
-	return s.duplicateService.ToResponse(newDoc), nil
+	// 7. 转换为 dto.DuplicateResponse
+	serviceResp := s.duplicateService.ToResponse(newDoc)
+	return &dto.DuplicateResponse{
+		NewDocumentID: serviceResp.DocumentID,
+		Title:         serviceResp.Title,
+	}, nil
 }

@@ -9,6 +9,8 @@ import (
 	writerRepo "Qingyu_backend/repository/interfaces/writer"
 	"Qingyu_backend/service/base"
 	serviceInterfaces "Qingyu_backend/service/interfaces"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // CharacterService 角色服务实现
@@ -39,7 +41,8 @@ func (s *CharacterService) Create(
 
 	// 构建角色对象（使用base mixins）
 	character := &writer.Character{}
-	character.ProjectID = projectID
+	projectOID, _ := primitive.ObjectIDFromHex(projectID)
+	character.ProjectID = projectOID
 	character.Name = req.Name
 	character.Alias = req.Alias
 	character.Summary = req.Summary
@@ -85,7 +88,8 @@ func (s *CharacterService) GetByID(
 	}
 
 	// 验证项目权限
-	if character.ProjectID != projectID {
+	projectOID, _ := primitive.ObjectIDFromHex(projectID)
+	if character.ProjectID != projectOID {
 		return nil, errors.NewServiceError("CharacterService", errors.ServiceErrorForbidden, "no permission to access this character", "", nil)
 	}
 
@@ -224,7 +228,8 @@ func (s *CharacterService) CreateRelation(
 
 	// 创建关系（使用base mixins）
 	relation := &writer.CharacterRelation{}
-	relation.ProjectID = projectID
+	projectOID, _ := primitive.ObjectIDFromHex(projectID)
+	relation.ProjectID = projectOID
 	relation.FromID = req.FromID
 	relation.ToID = req.ToID
 	relation.Type = writer.RelationType(req.Type)
@@ -261,7 +266,8 @@ func (s *CharacterService) DeleteRelation(
 		return err
 	}
 
-	if relation.ProjectID != projectID {
+	projectOID, _ := primitive.ObjectIDFromHex(projectID)
+	if relation.ProjectID != projectOID {
 		return errors.NewServiceError("CharacterService", errors.ServiceErrorForbidden, "no permission to delete this relation", "", nil)
 	}
 
@@ -306,17 +312,17 @@ func (s *CharacterService) CreateRelationTimelineEvent(
 		return nil, errors.NewServiceError("CharacterService", errors.ServiceErrorNotFound, "relation not found", "", err)
 	}
 
-	if relation.ProjectID != projectID {
+	projectOID, _ := primitive.ObjectIDFromHex(projectID)
+	if relation.ProjectID != projectOID {
 		return nil, errors.NewServiceError("CharacterService", errors.ServiceErrorForbidden, "no permission to access this relation", "", nil)
 	}
 
-	// 构建时序事件
 	event := &writer.RelationTimelineEvent{
 		ChapterID:    req.ChapterID,
 		ChapterTitle: req.ChapterTitle,
-		NewType:     writer.RelationType(req.NewType),
-		Strength:    req.NewStrength,
-		Notes:       req.Notes,
+		NewType:      writer.RelationType(req.NewType),
+		Strength:     req.NewStrength,
+		Notes:        req.Notes,
 	}
 
 	// 如果有关联的前一个类型，记录下来
@@ -350,7 +356,8 @@ func (s *CharacterService) GetRelationTimeline(
 		return nil, errors.NewServiceError("CharacterService", errors.ServiceErrorNotFound, "relation not found", "", err)
 	}
 
-	if relation.ProjectID != projectID {
+	projectOID, _ := primitive.ObjectIDFromHex(projectID)
+	if relation.ProjectID != projectOID {
 		return nil, errors.NewServiceError("CharacterService", errors.ServiceErrorForbidden, "no permission to access this relation", "", nil)
 	}
 

@@ -9,6 +9,8 @@ import (
 	pkgErrors "Qingyu_backend/pkg/errors"
 	writerRepo "Qingyu_backend/repository/interfaces/writer"
 	serviceBase "Qingyu_backend/service/base"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // ProjectService 项目服务
@@ -47,7 +49,8 @@ func (s *ProjectService) CreateProject(ctx context.Context, req *CreateProjectRe
 
 	// 3. 创建项目对象（使用base mixins）
 	project := &writer.Project{}
-	project.AuthorID = userID
+	objectID, _ := primitive.ObjectIDFromHex(userID)
+	project.AuthorID = objectID
 	project.Title = req.Title
 	project.Summary = req.Summary
 	project.CoverURL = req.CoverURL

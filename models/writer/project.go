@@ -5,6 +5,7 @@ import (
 
 	"Qingyu_backend/models/writer/base"
 	"Qingyu_backend/models/writer/types"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Project 项目模型
@@ -92,7 +93,11 @@ const (
 
 // IsOwner 判断用户是否为项目所有者
 func (p *Project) IsOwner(userID string) bool {
-	return p.OwnedEntity.AuthorID == userID
+	objectID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return false
+	}
+	return p.OwnedEntity.AuthorID == objectID
 }
 
 // CanEdit 判断用户是否可以编辑项目
@@ -181,7 +186,7 @@ func (p *Project) Validate() error {
 	}
 
 	// 验证作者ID
-	if p.AuthorID == "" {
+	if p.AuthorID.IsZero() {
 		return base.ErrAuthorIDRequired
 	}
 

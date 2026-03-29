@@ -40,7 +40,7 @@ func (c *Character) Validate() error {
 	if err := base.ValidateName(c.Name, 100); err != nil {
 		return err
 	}
-	if c.ProjectID == "" {
+	if c.ProjectID.IsZero() {
 		return base.ErrProjectIDRequired
 	}
 	if err := base.ValidateURL(c.AvatarURL); err != nil {
@@ -88,7 +88,7 @@ func (cr *CharacterRelation) TouchForCreate() {
 
 // Validate 验证角色关系
 func (cr *CharacterRelation) Validate() error {
-	if cr.ProjectID == "" {
+	if cr.ProjectID.IsZero() {
 		return base.ErrProjectIDRequired
 	}
 	if !cr.Type.IsValid() {

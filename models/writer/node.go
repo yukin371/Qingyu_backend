@@ -62,7 +62,7 @@ func (n *Node) Validate() error {
 	}
 
 	// 验证项目ID
-	if n.ProjectID == "" {
+	if n.ProjectID.IsZero() {
 		return base.ErrProjectIDRequired
 	}
 

@@ -263,7 +263,7 @@ func (c *LocalBookstoreClient) ensureProjectBook(ctx context.Context, projectID 
 	if err != nil {
 		return nil, err
 	}
-	return c.upsertBook(ctx, project, &BookstorePublishProjectRequest{ProjectID: projectID, ProjectTitle: project.Title, AuthorID: project.AuthorID, Description: project.Summary, CoverImage: project.CoverURL, PublishType: "serial"})
+	return c.upsertBook(ctx, project, &BookstorePublishProjectRequest{ProjectID: projectID, ProjectTitle: project.Title, AuthorID: project.AuthorID.Hex(), Description: project.Summary, CoverImage: project.CoverURL, PublishType: "serial"})
 }
 
 func (c *LocalBookstoreClient) upsertBook(ctx context.Context, project *writerModel.Project, req *BookstorePublishProjectRequest) (*bookstoreModel.Book, error) {
@@ -274,10 +274,11 @@ func (c *LocalBookstoreClient) upsertBook(ctx context.Context, project *writerMo
 	}
 	projectID := project.ID.Hex()
 
+	authorIDStr := project.AuthorID.Hex()
 	updates := bson.M{
 		"title":          project.Title,
-		"author":         project.AuthorID,
-		"author_id":      project.AuthorID,
+		"author":         authorIDStr,
+		"author_id":      authorIDStr,
 		"introduction":   pickString(req.Description, project.Summary),
 		"cover":          pickString(req.CoverImage, project.CoverURL),
 		"tags":           req.Tags,
@@ -332,8 +333,8 @@ func (c *LocalBookstoreClient) upsertBook(ctx context.Context, project *writerMo
 
 	book := &bookstoreModel.Book{
 		Title:        project.Title,
-		Author:       project.AuthorID,
-		AuthorID:     project.AuthorID,
+		Author:       authorIDStr,
+		AuthorID:     authorIDStr,
 		Introduction: pickString(req.Description, project.Summary),
 		Cover:        pickString(req.CoverImage, project.CoverURL),
 		Tags:         req.Tags,

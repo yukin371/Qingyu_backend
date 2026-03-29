@@ -9,6 +9,8 @@ import (
 	writerRepo "Qingyu_backend/repository/interfaces/writer"
 	"Qingyu_backend/service/base"
 	serviceInterfaces "Qingyu_backend/service/interfaces"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // LocationService 地点服务实现
@@ -36,7 +38,8 @@ func (s *LocationService) Create(
 ) (*writer.Location, error) {
 	// 构建地点对象（使用base mixins）
 	location := &writer.Location{}
-	location.ProjectID = projectID
+	projectOID, _ := primitive.ObjectIDFromHex(projectID)
+	location.ProjectID = projectOID
 	location.Name = req.Name
 	location.Description = req.Description
 	location.Climate = req.Climate
@@ -78,7 +81,7 @@ func (s *LocationService) GetByID(
 		return nil, err
 	}
 
-	if location.ProjectID != projectID {
+	if location.ProjectID.Hex() != projectID {
 		return nil, errors.NewServiceError("LocationService", errors.ServiceErrorForbidden, "no permission to access this location", "", nil)
 	}
 
@@ -233,8 +236,9 @@ func (s *LocationService) CreateRelation(
 	}
 
 	// 创建关系（使用base mixins）
+	projectOID, _ := primitive.ObjectIDFromHex(projectID)
 	relation := &writer.LocationRelation{}
-	relation.ProjectID = projectID
+	relation.ProjectID = projectOID
 	relation.FromID = req.FromID
 	relation.ToID = req.ToID
 	relation.Type = writer.LocationRelationType(req.Type)

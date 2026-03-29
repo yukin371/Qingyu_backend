@@ -536,7 +536,8 @@ func TestDocumentService_Integration_AutoSave(t *testing.T) {
 	}
 
 	// 准备测试数据
-	userID := primitive.NewObjectID().Hex()
+	userObjID := primitive.NewObjectID()
+	userID := userObjID.Hex()
 	projectID := primitive.NewObjectID().Hex()
 	documentID := primitive.NewObjectID().Hex()
 
@@ -558,7 +559,7 @@ func TestDocumentService_Integration_AutoSave(t *testing.T) {
 		projectObjID, _ := primitive.ObjectIDFromHex(projectID)
 		testProject := &writer.Project{
 			IdentifiedEntity: writerBase.IdentifiedEntity{ID: projectObjID},
-			OwnedEntity:      writerBase.OwnedEntity{AuthorID: userID},
+			OwnedEntity:      writerBase.OwnedEntity{AuthorID: userObjID},
 			TitledEntity:     shared.TitledEntity{Title: "测试项目"},
 			Timestamps:       shared.BaseEntity{CreatedAt: time.Now(), UpdatedAt: time.Now()},
 			WritingType:      "novel",
@@ -720,7 +721,7 @@ func TestDocumentService_Integration_AutoSave(t *testing.T) {
 		testProjectObjID, _ := primitive.ObjectIDFromHex(testProjectID)
 		testProject := &writer.Project{
 			IdentifiedEntity: writerBase.IdentifiedEntity{ID: testProjectObjID},
-			OwnedEntity:      writerBase.OwnedEntity{AuthorID: userID},
+			OwnedEntity:      writerBase.OwnedEntity{AuthorID: userObjID},
 			TitledEntity:     shared.TitledEntity{Title: "版本冲突测试项目"},
 			Timestamps:       shared.BaseEntity{CreatedAt: time.Now(), UpdatedAt: time.Now()},
 			WritingType:      "novel",
@@ -862,7 +863,7 @@ func TestDocumentService_Integration_AutoSave(t *testing.T) {
 		testProjectObjID, _ := primitive.ObjectIDFromHex(testProjectID)
 		testProject := &writer.Project{
 			IdentifiedEntity: writerBase.IdentifiedEntity{ID: testProjectObjID},
-			OwnedEntity:      writerBase.OwnedEntity{AuthorID: userID},
+			OwnedEntity:      writerBase.OwnedEntity{AuthorID: userObjID},
 			TitledEntity:     shared.TitledEntity{Title: "并发测试项目"},
 			Timestamps:       shared.BaseEntity{CreatedAt: time.Now(), UpdatedAt: time.Now()},
 			WritingType:      "novel",
@@ -1086,7 +1087,7 @@ func TestStatsService_Integration_RealData(t *testing.T) {
 			projectID := primitive.NewObjectID()
 			testProject := &writer.Project{
 				IdentifiedEntity: writerBase.IdentifiedEntity{ID: projectID},
-				OwnedEntity:      writerBase.OwnedEntity{AuthorID: userID},
+				OwnedEntity:      writerBase.OwnedEntity{AuthorID: userObjID},
 				TitledEntity:     shared.TitledEntity{Title: fmt.Sprintf("测试项目%d", i+1)},
 				Timestamps:       shared.BaseEntity{CreatedAt: time.Now(), UpdatedAt: time.Now()},
 				WritingType:      "novel",
@@ -1193,7 +1194,7 @@ func TestStatsService_Integration_RealData(t *testing.T) {
 			projectID := primitive.NewObjectID()
 			testProject := &writer.Project{
 				IdentifiedEntity: writerBase.IdentifiedEntity{ID: projectID},
-				OwnedEntity:      writerBase.OwnedEntity{AuthorID: userID},
+				OwnedEntity:      writerBase.OwnedEntity{AuthorID: userObjID},
 				TitledEntity:     shared.TitledEntity{Title: fmt.Sprintf("内容统计测试项目%d", i+1)},
 				Timestamps:       shared.BaseEntity{CreatedAt: time.Now(), UpdatedAt: time.Now()},
 				WritingType:      "novel",
@@ -1536,7 +1537,7 @@ func TestE2E_UserJourney(t *testing.T) {
 		testProjectObjID := primitive.NewObjectID()
 		testProject := &writer.Project{
 			IdentifiedEntity: writerBase.IdentifiedEntity{ID: testProjectObjID},
-			OwnedEntity:      writerBase.OwnedEntity{AuthorID: userID},
+			OwnedEntity:      writerBase.OwnedEntity{AuthorID: testUserObjID},
 			TitledEntity:     shared.TitledEntity{Title: "我的第一本小说"},
 			Timestamps:       shared.BaseEntity{CreatedAt: time.Now(), UpdatedAt: time.Now()},
 			WritingType:      "novel",
@@ -1890,13 +1891,14 @@ func TestStress_HighConcurrency(t *testing.T) {
 		t.Log("========================================")
 
 		// 准备测试数据
-		userID := primitive.NewObjectID().Hex()
+		userObjID := primitive.NewObjectID()
+		userID := userObjID.Hex()
 		projectID := primitive.NewObjectID()
 
 		// 创建测试项目
 		testProject := &writer.Project{
 			IdentifiedEntity: writerBase.IdentifiedEntity{ID: projectID},
-			OwnedEntity:      writerBase.OwnedEntity{AuthorID: userID},
+			OwnedEntity:      writerBase.OwnedEntity{AuthorID: userObjID},
 			TitledEntity:     shared.TitledEntity{Title: "压力测试项目"},
 			Timestamps:       shared.BaseEntity{CreatedAt: time.Now(), UpdatedAt: time.Now()},
 			WritingType:      "novel",

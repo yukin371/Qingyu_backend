@@ -42,6 +42,7 @@ type CacheClient interface {
 }
 
 // NewPermissionService 创建权限服务
+// todo: 重构此服务
 func NewPermissionService(authRepo sharedRepo.AuthRepository, cacheClient CacheClient, logger *zap.Logger) PermissionService {
 	return &PermissionServiceImpl{
 		authRepo:    authRepo,

@@ -31,9 +31,10 @@ func createTestDocument(projectID, title string) *writer.Document {
 
 // createTestProject 创建测试项目
 func createTestProject(authorID, title string) *writer.Project {
+	authorObjID, _ := primitive.ObjectIDFromHex(authorID)
 	return &writer.Project{
 		IdentifiedEntity: base.IdentifiedEntity{ID: primitive.NewObjectID()},
-		OwnedEntity:      base.OwnedEntity{AuthorID: authorID},
+		OwnedEntity:      base.OwnedEntity{AuthorID: authorObjID},
 		TitledEntity:     base.TitledEntity{Title: title},
 		Timestamps:       base.Timestamps{CreatedAt: time.Now(), UpdatedAt: time.Now()},
 		Summary:          "Test project summary",

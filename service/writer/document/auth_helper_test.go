@@ -15,7 +15,7 @@ import (
 
 // ==================== Test Helper ====================
 
-func createTestProject(ownerID string) *writer.Project {
+func createTestProject(ownerID primitive.ObjectID) *writer.Project {
 	return &writer.Project{
 		OwnedEntity: base.OwnedEntity{
 			AuthorID: ownerID,
@@ -24,7 +24,7 @@ func createTestProject(ownerID string) *writer.Project {
 	}
 }
 
-func createTestProjectWithCollab(ownerID string, collabUserIDs []string) *writer.Project {
+func createTestProjectWithCollab(ownerID primitive.ObjectID, collabUserIDs []string) *writer.Project {
 	project := &writer.Project{
 		OwnedEntity: base.OwnedEntity{
 			AuthorID: ownerID,
@@ -55,9 +55,11 @@ func TestVerifyProjectEdit_Success(t *testing.T) {
 	mockProjectRepo := new(MockProjectRepository)
 	mockDocRepo := new(MockDocumentRepository)
 	helper := NewAuthHelper(mockProjectRepo, mockDocRepo, "TestService")
-	ctx := context.WithValue(context.Background(), "userID", "user123")
+	userIDStr := "507f1f77bcf86cd799439011"
+	ctx := context.WithValue(context.Background(), "userID", userIDStr)
 
-	testProject := createTestProject("user123")
+	userObjID, _ := primitive.ObjectIDFromHex(userIDStr)
+	testProject := createTestProject(userObjID)
 	mockProjectRepo.On("GetByID", ctx, "project123").Return(testProject, nil)
 
 	// Act
@@ -67,8 +69,8 @@ func TestVerifyProjectEdit_Success(t *testing.T) {
 	if err != nil {
 		t.Errorf("期望无错误，实际得到: %v", err)
 	}
-	if userID != "user123" {
-		t.Errorf("期望 userID=user123，实际得到: %s", userID)
+	if userID != userIDStr {
+		t.Errorf("期望 userID=%s，实际得到: %s", userIDStr, userID)
 	}
 	if project == nil {
 		t.Error("期望返回项目，实际为 nil")
@@ -107,7 +109,8 @@ func TestVerifyProjectEdit_Forbidden(t *testing.T) {
 	helper := NewAuthHelper(mockProjectRepo, mockDocRepo, "TestService")
 	ctx := context.WithValue(context.Background(), "userID", "otherUser") // 当前用户是 otherUser
 
-	testProject := createTestProject("owner123") // 项目所有者是 owner123
+	ownerObjID := primitive.NewObjectID()
+	testProject := createTestProject(ownerObjID) // 项目所有者是 ownerObjID
 	mockProjectRepo.On("GetByID", ctx, "project123").Return(testProject, nil)
 
 	// Act
@@ -158,7 +161,8 @@ func TestVerifyProjectEdit_CollaboratorCanEdit(t *testing.T) {
 	helper := NewAuthHelper(mockProjectRepo, mockDocRepo, "TestService")
 	ctx := context.WithValue(context.Background(), "userID", "collabUser")
 
-	testProject := createTestProjectWithCollab("owner123", []string{"collabUser"})
+	ownerObjID := primitive.NewObjectID()
+	testProject := createTestProjectWithCollab(ownerObjID, []string{"collabUser"})
 	mockProjectRepo.On("GetByID", ctx, "project123").Return(testProject, nil)
 
 	// Act
@@ -183,9 +187,11 @@ func TestVerifyDocumentEdit_Success(t *testing.T) {
 	mockProjectRepo := new(MockProjectRepository)
 	mockDocRepo := new(MockDocumentRepository)
 	helper := NewAuthHelper(mockProjectRepo, mockDocRepo, "TestService")
-	ctx := context.WithValue(context.Background(), "userID", "user123")
+	userIDStr := "507f1f77bcf86cd799439011"
+	ctx := context.WithValue(context.Background(), "userID", userIDStr)
 
-	testProject := createTestProject("user123")
+	userObjID, _ := primitive.ObjectIDFromHex(userIDStr)
+	testProject := createTestProject(userObjID)
 	testDoc := &writer.Document{
 		ProjectID: projectID,
 	}

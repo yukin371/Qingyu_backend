@@ -9,12 +9,20 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 
 	"Qingyu_backend/models/writer"
 	"Qingyu_backend/models/writer/base"
 	writing "Qingyu_backend/repository/mongodb/writer"
 	"Qingyu_backend/test/testutil"
+)
+
+// 测试用固定ID
+var (
+	testUserObjID, _  = primitive.ObjectIDFromHex("507f1f77bcf86cd799439011")
+	testOtherObjID, _ = primitive.ObjectIDFromHex("507f1f77bcf86cd799439012")
+	testHackerObjID, _ = primitive.ObjectIDFromHex("507f1f77bcf86cd799439013")
 )
 
 // isReplicaSet 检测MongoDB是否为副本集
@@ -33,7 +41,7 @@ func isReplicaSet(db *mongo.Database) bool {
 }
 
 // newTestProject 创建测试项目的辅助函数
-func newTestProject(authorID, title string) *writer.Project {
+func newTestProject(authorID primitive.ObjectID, title string) *writer.Project {
 	return &writer.Project{
 		OwnedEntity:  base.OwnedEntity{AuthorID: authorID},
 		TitledEntity: base.TitledEntity{Title: title},
@@ -53,7 +61,7 @@ func TestProjectRepository_Create(t *testing.T) {
 
 	// 2. 测试正常创建
 	t.Run("正常创建项目", func(t *testing.T) {
-		project := newTestProject("user123", "测试项目")
+		project := newTestProject(testUserObjID, "测试项目")
 		project.Summary = "这是一个测试项目"
 		project.Category = "玄幻"
 		project.Tags = []string{"热血", "升级流"}
@@ -69,7 +77,7 @@ func TestProjectRepository_Create(t *testing.T) {
 
 	// 3. 测试统计初始化（Repository层不再设置默认值，由Service层负责）
 	t.Run("统计信息初始化", func(t *testing.T) {
-		project := newTestProject("user123", "测试项目2")
+		project := newTestProject(testUserObjID, "测试项目2")
 
 		err := repo.Create(ctx, project)
 		require.NoError(t, err)
@@ -82,7 +90,7 @@ func TestProjectRepository_Create(t *testing.T) {
 
 	// 4. 测试设置初始化（Repository层不再设置默认值，由Service层负责）
 	t.Run("设置信息初始化", func(t *testing.T) {
-		project := newTestProject("user123", "测试项目3")
+		project := newTestProject(testUserObjID, "测试项目3")
 
 		err := repo.Create(ctx, project)
 		require.NoError(t, err)
@@ -100,7 +108,7 @@ func TestProjectRepository_Create(t *testing.T) {
 
 	// 6. 测试必填字段验证
 	t.Run("缺少标题应该失败", func(t *testing.T) {
-		project := newTestProject("user123", "")
+		project := newTestProject(testUserObjID, "")
 
 		err := repo.Create(ctx, project)
 		assert.Error(t, err)
@@ -117,7 +125,7 @@ func TestProjectRepository_GetByID(t *testing.T) {
 	ctx := context.Background()
 
 	// 1. 创建测试数据
-	project := newTestProject("user123", "测试项目")
+	project := newTestProject(testUserObjID, "测试项目")
 	project.Summary = "测试简介"
 	err := repo.Create(ctx, project)
 	require.NoError(t, err)
@@ -147,7 +155,7 @@ func TestProjectRepository_GetByID(t *testing.T) {
 
 	// 5. 测试软删除后查询
 	t.Run("软删除后不可查询", func(t *testing.T) {
-		err := repo.SoftDelete(ctx, project.ID.Hex(), project.AuthorID)
+		err := repo.SoftDelete(ctx, project.ID.Hex(), project.AuthorID.Hex())
 		require.NoError(t, err)
 
 		found, err := repo.GetByID(ctx, project.ID.Hex())
@@ -165,7 +173,7 @@ func TestProjectRepository_Update(t *testing.T) {
 	ctx := context.Background()
 
 	// 创建测试数据
-	project := newTestProject("user123", "原标题")
+	project := newTestProject(testUserObjID, "原标题")
 	project.Summary = "原简介"
 	err := repo.Create(ctx, project)
 	require.NoError(t, err)
@@ -207,7 +215,7 @@ func TestProjectRepository_GetListByOwnerID(t *testing.T) {
 	repo := writing.NewMongoProjectRepository(db)
 	ctx := context.Background()
 
-	authorID := "user123"
+	authorID := testUserObjID
 
 	// 创建多个项目
 	for i := 0; i < 5; i++ {
@@ -220,13 +228,13 @@ func TestProjectRepository_GetListByOwnerID(t *testing.T) {
 	}
 
 	// 创建其他作者的项目
-	otherProject := newTestProject("other_user", "其他项目")
+	otherProject := newTestProject(testOtherObjID, "其他项目")
 	err := repo.Create(ctx, otherProject)
 	require.NoError(t, err)
 
 	// 测试查询作者的所有项目
 	t.Run("查询作者的所有项目", func(t *testing.T) {
-		projects, err := repo.GetListByOwnerID(ctx, authorID, 10, 0)
+		projects, err := repo.GetListByOwnerID(ctx, authorID.Hex(), 10, 0)
 		require.NoError(t, err)
 		assert.Equal(t, 5, len(projects))
 
@@ -239,12 +247,12 @@ func TestProjectRepository_GetListByOwnerID(t *testing.T) {
 	// 测试分页查询
 	t.Run("分页查询", func(t *testing.T) {
 		// 第一页
-		page1, err := repo.GetListByOwnerID(ctx, authorID, 2, 0)
+		page1, err := repo.GetListByOwnerID(ctx, authorID.Hex(), 2, 0)
 		require.NoError(t, err)
 		assert.Equal(t, 2, len(page1))
 
 		// 第二页
-		page2, err := repo.GetListByOwnerID(ctx, authorID, 2, 2)
+		page2, err := repo.GetListByOwnerID(ctx, authorID.Hex(), 2, 2)
 		require.NoError(t, err)
 		assert.Equal(t, 2, len(page2))
 
@@ -261,7 +269,7 @@ func TestProjectRepository_GetByOwnerAndStatus(t *testing.T) {
 	repo := writing.NewMongoProjectRepository(db)
 	ctx := context.Background()
 
-	authorID := "user123"
+	authorID := testUserObjID
 
 	// 创建不同状态的项目
 	statuses := []writer.ProjectStatus{
@@ -280,7 +288,7 @@ func TestProjectRepository_GetByOwnerAndStatus(t *testing.T) {
 
 	// 测试查询草稿状态的项目
 	t.Run("查询草稿状态项目", func(t *testing.T) {
-		projects, err := repo.GetByOwnerAndStatus(ctx, authorID, string(writer.StatusDraft), 10, 0)
+		projects, err := repo.GetByOwnerAndStatus(ctx, authorID.Hex(), string(writer.StatusDraft), 10, 0)
 		require.NoError(t, err)
 		assert.Equal(t, 2, len(projects))
 
@@ -291,7 +299,7 @@ func TestProjectRepository_GetByOwnerAndStatus(t *testing.T) {
 
 	// 测试查询连载中的项目
 	t.Run("查询连载中项目", func(t *testing.T) {
-		projects, err := repo.GetByOwnerAndStatus(ctx, authorID, string(writer.StatusSerializing), 10, 0)
+		projects, err := repo.GetByOwnerAndStatus(ctx, authorID.Hex(), string(writer.StatusSerializing), 10, 0)
 		require.NoError(t, err)
 		assert.Equal(t, 1, len(projects))
 	})
@@ -306,7 +314,7 @@ func TestProjectRepository_UpdateByOwner(t *testing.T) {
 	ctx := context.Background()
 
 	// 创建测试项目
-	project := newTestProject("user123", "原标题")
+	project := newTestProject(testUserObjID, "原标题")
 	err := repo.Create(ctx, project)
 	require.NoError(t, err)
 
@@ -316,7 +324,7 @@ func TestProjectRepository_UpdateByOwner(t *testing.T) {
 			"title": "新标题",
 		}
 
-		err := repo.UpdateByOwner(ctx, project.ID.Hex(), "user123", updates)
+		err := repo.UpdateByOwner(ctx, project.ID.Hex(), testUserObjID.Hex(), updates)
 		require.NoError(t, err)
 
 		// 验证更新
@@ -331,7 +339,7 @@ func TestProjectRepository_UpdateByOwner(t *testing.T) {
 			"title": "黑客标题",
 		}
 
-		err := repo.UpdateByOwner(ctx, project.ID.Hex(), "hacker", updates)
+		err := repo.UpdateByOwner(ctx, project.ID.Hex(), testHackerObjID.Hex(), updates)
 		assert.Error(t, err)
 		assert.Contains(t, err.Error(), "不存在或无权限")
 	})
@@ -346,13 +354,13 @@ func TestProjectRepository_SoftDelete(t *testing.T) {
 	ctx := context.Background()
 
 	// 创建测试项目
-	project := newTestProject("user123", "测试项目")
+	project := newTestProject(testUserObjID, "测试项目")
 	err := repo.Create(ctx, project)
 	require.NoError(t, err)
 
 	// 测试软删除
 	t.Run("软删除成功", func(t *testing.T) {
-		err := repo.SoftDelete(ctx, project.ID.Hex(), "user123")
+		err := repo.SoftDelete(ctx, project.ID.Hex(), testUserObjID.Hex())
 		require.NoError(t, err)
 
 		// 验证已删除
@@ -363,7 +371,7 @@ func TestProjectRepository_SoftDelete(t *testing.T) {
 
 	// 测试恢复
 	t.Run("恢复已删除的项目", func(t *testing.T) {
-		err := repo.Restore(ctx, project.ID.Hex(), "user123")
+		err := repo.Restore(ctx, project.ID.Hex(), testUserObjID.Hex())
 		require.NoError(t, err)
 
 		// 验证已恢复
@@ -383,20 +391,20 @@ func TestProjectRepository_IsOwner(t *testing.T) {
 	ctx := context.Background()
 
 	// 创建测试项目
-	project := newTestProject("user123", "测试项目")
+	project := newTestProject(testUserObjID, "测试项目")
 	err := repo.Create(ctx, project)
 	require.NoError(t, err)
 
 	// 测试真实所有者
 	t.Run("真实所有者", func(t *testing.T) {
-		isOwner, err := repo.IsOwner(ctx, project.ID.Hex(), "user123")
+		isOwner, err := repo.IsOwner(ctx, project.ID.Hex(), testUserObjID.Hex())
 		require.NoError(t, err)
 		assert.True(t, isOwner)
 	})
 
 	// 测试非所有者
 	t.Run("非所有者", func(t *testing.T) {
-		isOwner, err := repo.IsOwner(ctx, project.ID.Hex(), "other_user")
+		isOwner, err := repo.IsOwner(ctx, project.ID.Hex(), testOtherObjID.Hex())
 		require.NoError(t, err)
 		assert.False(t, isOwner)
 	})
@@ -410,7 +418,7 @@ func TestProjectRepository_Count(t *testing.T) {
 	repo := writing.NewMongoProjectRepository(db)
 	ctx := context.Background()
 
-	authorID := "user123"
+	authorID := testUserObjID
 
 	// 创建多个项目
 	for i := 0; i < 3; i++ {
@@ -423,12 +431,12 @@ func TestProjectRepository_Count(t *testing.T) {
 	deletedProject := newTestProject(authorID, "已删除项目")
 	err := repo.Create(ctx, deletedProject)
 	require.NoError(t, err)
-	err = repo.SoftDelete(ctx, deletedProject.ID.Hex(), authorID)
+	err = repo.SoftDelete(ctx, deletedProject.ID.Hex(), authorID.Hex())
 	require.NoError(t, err)
 
 	// 测试统计
 	t.Run("统计作者的项目数（不包含已删除）", func(t *testing.T) {
-		count, err := repo.CountByOwner(ctx, authorID)
+		count, err := repo.CountByOwner(ctx, authorID.Hex())
 		require.NoError(t, err)
 		assert.Equal(t, int64(3), count) // 不包含已删除的
 	})
@@ -456,7 +464,7 @@ func TestProjectRepository_Transaction(t *testing.T) {
 
 	// 测试成功的事务
 	t.Run("事务成功创建", func(t *testing.T) {
-		project := newTestProject("user123", "事务测试项目")
+		project := newTestProject(testUserObjID, "事务测试项目")
 
 		err := repo.CreateWithTransaction(ctx, project, func(ctx context.Context) error {
 			// 模拟其他操作
@@ -474,7 +482,7 @@ func TestProjectRepository_Transaction(t *testing.T) {
 
 	// 测试失败的事务（应该回滚）
 	t.Run("事务失败回滚", func(t *testing.T) {
-		project := newTestProject("user123", "事务回滚项目")
+		project := newTestProject(testUserObjID, "事务回滚项目")
 
 		err := repo.CreateWithTransaction(ctx, project, func(ctx context.Context) error {
 			// 模拟操作失败
@@ -502,18 +510,21 @@ func TestProjectRepository_Health(t *testing.T) {
 
 // TestProject_BusinessMethods 测试Project模型的业务方法
 func TestProject_BusinessMethods(t *testing.T) {
+	userIDHex := testUserObjID.Hex()
+	otherUserHex := testOtherObjID.Hex()
+
 	// 测试IsOwner
 	t.Run("IsOwner方法", func(t *testing.T) {
-		project := newTestProject("user123", "")
+		project := newTestProject(testUserObjID, "")
 
-		assert.True(t, project.IsOwner("user123"))
-		assert.False(t, project.IsOwner("other_user"))
+		assert.True(t, project.IsOwner(userIDHex))
+		assert.False(t, project.IsOwner(otherUserHex))
 	})
 
 	// 测试CanEdit
 	t.Run("CanEdit方法", func(t *testing.T) {
 		now := time.Now()
-		project := newTestProject("user123", "")
+		project := newTestProject(testUserObjID, "")
 		project.Collaborators = []writer.Collaborator{
 			{
 				UserID:     "editor1",
@@ -530,7 +541,7 @@ func TestProject_BusinessMethods(t *testing.T) {
 		}
 
 		// 所有者可以编辑
-		assert.True(t, project.CanEdit("user123"))
+		assert.True(t, project.CanEdit(userIDHex))
 
 		// 编辑者可以编辑
 		assert.True(t, project.CanEdit("editor1"))
@@ -545,7 +556,7 @@ func TestProject_BusinessMethods(t *testing.T) {
 	// 测试CanView
 	t.Run("CanView方法", func(t *testing.T) {
 		now := time.Now()
-		privateProject := newTestProject("user123", "私密项目")
+		privateProject := newTestProject(testUserObjID, "私密项目")
 		privateProject.Visibility = writer.VisibilityPrivate
 		privateProject.Collaborators = []writer.Collaborator{
 			{
@@ -557,7 +568,7 @@ func TestProject_BusinessMethods(t *testing.T) {
 		}
 
 		// 所有者可以查看
-		assert.True(t, privateProject.CanView("user123"))
+		assert.True(t, privateProject.CanView(userIDHex))
 
 		// 协作者可以查看
 		assert.True(t, privateProject.CanView("viewer1"))
@@ -566,14 +577,14 @@ func TestProject_BusinessMethods(t *testing.T) {
 		assert.False(t, privateProject.CanView("stranger"))
 
 		// 公开项目任何人都可以查看
-		publicProject := newTestProject("user123", "公开项目")
+		publicProject := newTestProject(testUserObjID, "公开项目")
 		publicProject.Visibility = writer.VisibilityPublic
 		assert.True(t, publicProject.CanView("stranger"))
 	})
 
 	// 测试UpdateStatistics
 	t.Run("UpdateStatistics方法", func(t *testing.T) {
-		project := newTestProject("user123", "")
+		project := newTestProject(testUserObjID, "")
 
 		oldTime := project.UpdatedAt
 
@@ -592,27 +603,27 @@ func TestProject_BusinessMethods(t *testing.T) {
 	// 测试Validate
 	t.Run("Validate方法", func(t *testing.T) {
 		// 正常的项目
-		validProject := newTestProject("user123", "测试项目")
+		validProject := newTestProject(testUserObjID, "测试项目")
 		validProject.Status = writer.StatusDraft
 		validProject.Visibility = writer.VisibilityPrivate
 		assert.NoError(t, validProject.Validate())
 
 		// 缺少作者ID
-		noAuthor := newTestProject("", "测试项目")
+		noAuthor := newTestProject(primitive.ObjectID{}, "测试项目")
 		assert.Error(t, noAuthor.Validate())
 
 		// 缺少标题
-		noTitle := newTestProject("user123", "")
+		noTitle := newTestProject(testUserObjID, "")
 		assert.Error(t, noTitle.Validate())
 
 		// 标题过长
-		longTitle := newTestProject("user123", string(make([]byte, 101)))
+		longTitle := newTestProject(testUserObjID, string(make([]byte, 101)))
 		longTitle.Status = writer.StatusDraft
 		longTitle.Visibility = writer.VisibilityPrivate
 		assert.Error(t, longTitle.Validate())
 
 		// 无效状态
-		invalidStatus := newTestProject("user123", "测试项目")
+		invalidStatus := newTestProject(testUserObjID, "测试项目")
 		invalidStatus.Status = "invalid_status"
 		invalidStatus.Visibility = writer.VisibilityPrivate
 		assert.Error(t, invalidStatus.Validate())

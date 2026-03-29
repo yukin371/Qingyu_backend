@@ -14,7 +14,7 @@ import (
 
 // BaseMongoRepository MongoDB仓储基类
 //
-// 提供统一的ID转换逻辑和通用CRUD方法，减少重复代码喵~
+// 提供统一的ID转换逻辑和通用CRUD方法，减少重复代码
 //
 // 用法示例：
 //

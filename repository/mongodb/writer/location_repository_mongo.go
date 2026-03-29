@@ -69,9 +69,13 @@ func (r *LocationRepositoryMongo) FindByID(ctx context.Context, locationID strin
 
 // FindByProjectID 查询项目下的所有地点
 func (r *LocationRepositoryMongo) FindByProjectID(ctx context.Context, projectID string) ([]*writer.Location, error) {
-	filter := bson.M{"project_id": projectID}
+	projectObjectID, err := r.ParseID(projectID)
+	if err != nil {
+		return nil, errors.NewRepositoryError(errors.RepositoryErrorValidation, "invalid project ID", err)
+	}
+	filter := bson.M{"project_id": projectObjectID}
 
-	cursor, err := r.GetCollection().Find(ctx, filter) // codeql[go/sql-injection]: MongoDB query, not SQL - ID is validated ObjectID
+	cursor, err := r.GetCollection().Find(ctx, filter)
 	if err != nil {
 		return nil, errors.NewRepositoryError(errors.RepositoryErrorInternal, "find locations failed", err)
 	}
@@ -163,7 +167,11 @@ func (r *LocationRepositoryMongo) CreateRelation(ctx context.Context, relation *
 
 // FindRelations 查询地点关系
 func (r *LocationRepositoryMongo) FindRelations(ctx context.Context, projectID string, locationID *string) ([]*writer.LocationRelation, error) {
-	filter := bson.M{"project_id": projectID}
+	projectObjectID, err := r.ParseID(projectID)
+	if err != nil {
+		return nil, errors.NewRepositoryError(errors.RepositoryErrorValidation, "invalid project ID", err)
+	}
+	filter := bson.M{"project_id": projectObjectID}
 
 	if locationID != nil {
 		filter["$or"] = []bson.M{
@@ -224,7 +232,11 @@ func (r *LocationRepositoryMongo) ExistsByID(ctx context.Context, locationID str
 
 // CountByProjectID 统计项目下的地点数量
 func (r *LocationRepositoryMongo) CountByProjectID(ctx context.Context, projectID string) (int64, error) {
-	filter := bson.M{"project_id": projectID}
+	projectObjectID, err := r.ParseID(projectID)
+	if err != nil {
+		return 0, errors.NewRepositoryError(errors.RepositoryErrorValidation, "invalid project ID", err)
+	}
+	filter := bson.M{"project_id": projectObjectID}
 	count, err := r.GetCollection().CountDocuments(ctx, filter)
 	if err != nil {
 		return 0, errors.NewRepositoryError(errors.RepositoryErrorInternal, "count locations failed", err)

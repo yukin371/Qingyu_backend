@@ -266,8 +266,14 @@ func (r *MongoDocumentRepository) Count(ctx context.Context, filter infrastructu
 
 // GetByProjectID 获取项目的所有文档
 func (r *MongoDocumentRepository) GetByProjectID(ctx context.Context, projectID string, limit, offset int64) ([]*writer.Document, error) {
+	// 将字符串 projectID 转换为 ObjectID 格式
+	projectObjectID, err := r.ParseID(projectID)
+	if err != nil {
+		return nil, fmt.Errorf("无效的项目ID: %w", err)
+	}
+
 	filter := bson.M{
-		"project_id": projectID,
+		"project_id": projectObjectID,
 		"deleted_at": nil,
 	}
 
@@ -295,8 +301,14 @@ func (r *MongoDocumentRepository) GetByProjectID(ctx context.Context, projectID 
 
 // GetByProjectAndType 按项目和类型查询文档
 func (r *MongoDocumentRepository) GetByProjectAndType(ctx context.Context, projectID, documentType string, limit, offset int64) ([]*writer.Document, error) {
+	// 将字符串 projectID 转换为 ObjectID 格式
+	projectObjectID, err := r.ParseID(projectID)
+	if err != nil {
+		return nil, fmt.Errorf("无效的项目ID: %w", err)
+	}
+
 	filter := bson.M{
-		"project_id": projectID,
+		"project_id": projectObjectID,
 		"type":       documentType,
 		"deleted_at": nil,
 	}

@@ -98,6 +98,7 @@ type RemoveCollaboratorRequest struct {
 type AutoSaveRequest struct {
 	DocumentID     string `json:"documentId" validate:"required"`
 	Content        string `json:"content" validate:"required"`
+	ContentType    string `json:"contentType,omitempty"` // tiptap_json | markdown，默认为markdown
 	CurrentVersion int    `json:"currentVersion" validate:"min=0"`                 // 客户端当前版本号
 	SaveType       string `json:"saveType" validate:"omitempty,oneof=auto manual"` // auto|manual
 }
@@ -124,6 +125,7 @@ type SaveStatusResponse struct {
 type DocumentContentResponse struct {
 	DocumentID string    `json:"documentId"`
 	Content    string    `json:"content"`
+	ContentType string    `json:"contentType"` // tiptap_json | markdown
 	Version    int       `json:"version"`
 	WordCount  int       `json:"wordCount"`
 	UpdatedAt  time.Time `json:"updatedAt"`
@@ -133,6 +135,7 @@ type DocumentContentResponse struct {
 type UpdateContentRequest struct {
 	DocumentID string `json:"documentId" validate:"required"`
 	Content    string `json:"content" validate:"required"`
+	ContentType string `json:"contentType,omitempty"` // tiptap_json | markdown，默认为markdown
 	Version    int    `json:"version" validate:"min=0"` // 用于版本冲突检测
 }
 
@@ -249,7 +252,7 @@ type CreateOutlineRequest struct {
 	Summary    string   `json:"summary,omitempty" validate:"max=1000"`
 	Type       string   `json:"type,omitempty" validate:"omitempty,oneof=arc chapter scene"`
 	Tension    int      `json:"tension,omitempty" validate:"min=0,max=10"`
-	ChapterID  string   `json:"chapterId,omitempty"`
+	DocumentID string   `json:"documentId,omitempty"`
 	Characters []string `json:"characters,omitempty" validate:"max=50"`
 	Items      []string `json:"items,omitempty" validate:"max=100"`
 	Order      int      `json:"order,omitempty" validate:"min=0"`
@@ -262,7 +265,7 @@ type UpdateOutlineRequest struct {
 	Summary    *string   `json:"summary,omitempty" validate:"omitempty,max=1000"`
 	Type       *string   `json:"type,omitempty" validate:"omitempty,oneof=arc chapter scene"`
 	Tension    *int      `json:"tension,omitempty" validate:"omitempty,min=0,max=10"`
-	ChapterID  *string   `json:"chapterId,omitempty"`
+	DocumentID *string   `json:"documentId,omitempty"`
 	Characters *[]string `json:"characters,omitempty" validate:"omitempty,max=50"`
 	Items      *[]string `json:"items,omitempty" validate:"omitempty,max=100"`
 	Order      *int      `json:"order,omitempty" validate:"omitempty,min=0"`

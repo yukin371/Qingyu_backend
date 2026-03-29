@@ -143,10 +143,9 @@ func (a *DocumentAdapter) ListDocuments(ctx context.Context, req *dto.ListDocume
 // DuplicateDocument 复制文档
 func (a *DocumentAdapter) DuplicateDocument(ctx context.Context, id string) (*dto.DocumentResponse, error) {
 	// 创建默认的复制请求（复制内容）
-	dupReq := &writerService.DuplicateRequest{
-		TargetParentID: nil, // 使用默认父节点
-		Position:       "inner",
-		CopyContent:    true,
+	dupReq := &dto.DuplicateRequest{
+		NewTitle:    "",           // 使用默认标题
+		CopyContent: true,
 	}
 
 	// 调用现有服务的复制功能
@@ -156,7 +155,7 @@ func (a *DocumentAdapter) DuplicateDocument(ctx context.Context, id string) (*dt
 	}
 
 	// 获取新创建的文档
-	newDoc, err := a.documentService.GetDocument(ctx, resp.DocumentID)
+	newDoc, err := a.documentService.GetDocument(ctx, resp.NewDocumentID)
 	if err != nil {
 		return nil, fmt.Errorf("获取复制的文档失败: %w", err)
 	}

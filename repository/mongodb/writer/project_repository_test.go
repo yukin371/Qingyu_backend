@@ -22,7 +22,12 @@ func setupProjectRepo(t *testing.T) (writingInterface.ProjectRepository, context
 	return repo, ctx, cleanup
 }
 
-func createTestProject(authorID, title string) *writer.Project {
+// testAuthorID 测试用的固定作者ID
+var testAuthorID, _ = primitive.ObjectIDFromHex("507f1f77bcf86cd799439011")
+var testOtherAuthorID, _ = primitive.ObjectIDFromHex("507f1f77bcf86cd799439012")
+var testHackerID, _ = primitive.ObjectIDFromHex("507f1f77bcf86cd799439013")
+
+func createTestProject(authorID primitive.ObjectID, title string) *writer.Project {
 	project := &writer.Project{
 		Summary:    "Test project summary",
 		Status:     writer.StatusDraft,
@@ -45,7 +50,7 @@ func TestProjectRepository_Create(t *testing.T) {
 	repo, ctx, cleanup := setupProjectRepo(t)
 	defer cleanup()
 
-	project := createTestProject("author123", "My First Novel")
+	project := createTestProject(testAuthorID, "My First Novel")
 
 	err := repo.Create(ctx, project)
 	require.NoError(t, err)
@@ -91,7 +96,7 @@ func TestProjectRepository_Create_MissingFields(t *testing.T) {
 			name: "Missing Title",
 			project: func() *writer.Project {
 				p := &writer.Project{}
-				p.AuthorID = "author123"
+				p.AuthorID = testAuthorID
 				return p
 			}(),
 			errMsg: "标题不能为空",
@@ -113,7 +118,7 @@ func TestProjectRepository_GetByID(t *testing.T) {
 	defer cleanup()
 
 	// 创建项目
-	project := createTestProject("author123", "My Novel")
+	project := createTestProject(testAuthorID, "My Novel")
 	err := repo.Create(ctx, project)
 	require.NoError(t, err)
 
@@ -154,7 +159,7 @@ func TestProjectRepository_Update(t *testing.T) {
 	defer cleanup()
 
 	// 创建项目
-	project := createTestProject("author123", "Original Title")
+	project := createTestProject(testAuthorID, "Original Title")
 	err := repo.Create(ctx, project)
 	require.NoError(t, err)
 
@@ -193,7 +198,7 @@ func TestProjectRepository_Delete(t *testing.T) {
 	defer cleanup()
 
 	// 创建项目
-	project := createTestProject("author123", "To Be Deleted")
+	project := createTestProject(testAuthorID, "To Be Deleted")
 	err := repo.Create(ctx, project)
 	require.NoError(t, err)
 
@@ -212,7 +217,7 @@ func TestProjectRepository_GetListByOwnerID(t *testing.T) {
 	repo, ctx, cleanup := setupProjectRepo(t)
 	defer cleanup()
 
-	authorID := "author123"
+	authorID := testAuthorID
 
 	// 创建多个项目
 	for i := 1; i <= 3; i++ {
@@ -223,12 +228,12 @@ func TestProjectRepository_GetListByOwnerID(t *testing.T) {
 	}
 
 	// 创建其他作者的项目
-	otherProject := createTestProject("other_author", "Other Project")
+	otherProject := createTestProject(testOtherAuthorID, "Other Project")
 	err := repo.Create(ctx, otherProject)
 	require.NoError(t, err)
 
 	// 查询
-	projects, err := repo.GetListByOwnerID(ctx, authorID, 10, 0)
+	projects, err := repo.GetListByOwnerID(ctx, authorID.Hex(), 10, 0)
 	require.NoError(t, err)
 	assert.Len(t, projects, 3)
 	assert.Equal(t, authorID, projects[0].AuthorID)
@@ -239,7 +244,7 @@ func TestProjectRepository_GetByOwnerAndStatus(t *testing.T) {
 	repo, ctx, cleanup := setupProjectRepo(t)
 	defer cleanup()
 
-	authorID := "author123"
+	authorID := testAuthorID
 
 	// 创建不同状态的项目
 	draftProject := createTestProject(authorID, "Draft Project")
@@ -253,7 +258,7 @@ func TestProjectRepository_GetByOwnerAndStatus(t *testing.T) {
 	require.NoError(t, err)
 
 	// 查询草稿状态项目
-	projects, err := repo.GetByOwnerAndStatus(ctx, authorID, string(writer.StatusDraft), 10, 0)
+	projects, err := repo.GetByOwnerAndStatus(ctx, authorID.Hex(), string(writer.StatusDraft), 10, 0)
 	require.NoError(t, err)
 	assert.Len(t, projects, 1)
 	assert.Equal(t, writer.StatusDraft, projects[0].Status)
@@ -264,14 +269,14 @@ func TestProjectRepository_UpdateByOwner(t *testing.T) {
 	repo, ctx, cleanup := setupProjectRepo(t)
 	defer cleanup()
 
-	authorID := "author123"
+	authorID := testAuthorID
 	project := createTestProject(authorID, "Owner Project")
 	err := repo.Create(ctx, project)
 	require.NoError(t, err)
 
 	// 所有者更新
 	updates := map[string]interface{}{"title": "Owner Updated"}
-	err = repo.UpdateByOwner(ctx, project.ID.Hex(), authorID, updates)
+	err = repo.UpdateByOwner(ctx, project.ID.Hex(), authorID.Hex(), updates)
 	require.NoError(t, err)
 
 	// 验证更新
@@ -285,13 +290,13 @@ func TestProjectRepository_UpdateByOwner_NotOwner(t *testing.T) {
 	repo, ctx, cleanup := setupProjectRepo(t)
 	defer cleanup()
 
-	project := createTestProject("author123", "Owner Project")
+	project := createTestProject(testAuthorID, "Owner Project")
 	err := repo.Create(ctx, project)
 	require.NoError(t, err)
 
 	// 非所有者尝试更新
 	updates := map[string]interface{}{"title": "Hacked"}
-	err = repo.UpdateByOwner(ctx, project.ID.Hex(), "hacker", updates)
+	err = repo.UpdateByOwner(ctx, project.ID.Hex(), testHackerID.Hex(), updates)
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "项目不存在或无权限")
 }
@@ -301,18 +306,18 @@ func TestProjectRepository_IsOwner(t *testing.T) {
 	repo, ctx, cleanup := setupProjectRepo(t)
 	defer cleanup()
 
-	authorID := "author123"
+	authorID := testAuthorID
 	project := createTestProject(authorID, "Owner Check Project")
 	err := repo.Create(ctx, project)
 	require.NoError(t, err)
 
 	// 验证所有者
-	isOwner, err := repo.IsOwner(ctx, project.ID.Hex(), authorID)
+	isOwner, err := repo.IsOwner(ctx, project.ID.Hex(), authorID.Hex())
 	require.NoError(t, err)
 	assert.True(t, isOwner)
 
 	// 验证非所有者
-	isOwner, err = repo.IsOwner(ctx, project.ID.Hex(), "other_user")
+	isOwner, err = repo.IsOwner(ctx, project.ID.Hex(), testOtherAuthorID.Hex())
 	require.NoError(t, err)
 	assert.False(t, isOwner)
 }
@@ -322,13 +327,13 @@ func TestProjectRepository_SoftDelete(t *testing.T) {
 	repo, ctx, cleanup := setupProjectRepo(t)
 	defer cleanup()
 
-	authorID := "author123"
+	authorID := testAuthorID
 	project := createTestProject(authorID, "Soft Delete Project")
 	err := repo.Create(ctx, project)
 	require.NoError(t, err)
 
 	// 软删除
-	err = repo.SoftDelete(ctx, project.ID.Hex(), authorID)
+	err = repo.SoftDelete(ctx, project.ID.Hex(), authorID.Hex())
 	require.NoError(t, err)
 
 	// 普通查询应找不到
@@ -342,7 +347,7 @@ func TestProjectRepository_HardDelete(t *testing.T) {
 	repo, ctx, cleanup := setupProjectRepo(t)
 	defer cleanup()
 
-	project := createTestProject("author123", "Hard Delete Project")
+	project := createTestProject(testAuthorID, "Hard Delete Project")
 	err := repo.Create(ctx, project)
 	require.NoError(t, err)
 
@@ -361,17 +366,17 @@ func TestProjectRepository_Restore(t *testing.T) {
 	repo, ctx, cleanup := setupProjectRepo(t)
 	defer cleanup()
 
-	authorID := "author123"
+	authorID := testAuthorID
 	project := createTestProject(authorID, "Restore Project")
 	err := repo.Create(ctx, project)
 	require.NoError(t, err)
 
 	// 软删除
-	err = repo.SoftDelete(ctx, project.ID.Hex(), authorID)
+	err = repo.SoftDelete(ctx, project.ID.Hex(), authorID.Hex())
 	require.NoError(t, err)
 
 	// 恢复
-	err = repo.Restore(ctx, project.ID.Hex(), authorID)
+	err = repo.Restore(ctx, project.ID.Hex(), authorID.Hex())
 	require.NoError(t, err)
 
 	// 验证可以查询到
@@ -386,7 +391,7 @@ func TestProjectRepository_CountByOwner(t *testing.T) {
 	repo, ctx, cleanup := setupProjectRepo(t)
 	defer cleanup()
 
-	authorID := "author123"
+	authorID := testAuthorID
 
 	// 创建3个项目
 	for i := 1; i <= 3; i++ {
@@ -396,7 +401,7 @@ func TestProjectRepository_CountByOwner(t *testing.T) {
 	}
 
 	// 统计
-	count, err := repo.CountByOwner(ctx, authorID)
+	count, err := repo.CountByOwner(ctx, authorID.Hex())
 	require.NoError(t, err)
 	assert.Equal(t, int64(3), count)
 }
@@ -408,13 +413,13 @@ func TestProjectRepository_CountByStatus(t *testing.T) {
 
 	// 创建不同状态的项目
 	for i := 0; i < 2; i++ {
-		draftProject := createTestProject("author"+string(rune('1'+i)), "Draft "+string(rune('A'+i)))
+		draftProject := createTestProject(primitive.NewObjectID(), "Draft "+string(rune('A'+i)))
 		draftProject.Status = writer.StatusDraft
 		err := repo.Create(ctx, draftProject)
 		require.NoError(t, err)
 	}
 
-	completedProject := createTestProject("author3", "Completed")
+	completedProject := createTestProject(primitive.NewObjectID(), "Completed")
 	completedProject.Status = writer.StatusCompleted
 	err := repo.Create(ctx, completedProject)
 	require.NoError(t, err)
@@ -437,7 +442,7 @@ func TestProjectRepository_List(t *testing.T) {
 
 	// 创建多个项目
 	for i := 1; i <= 5; i++ {
-		project := createTestProject("author"+string(rune('0'+i)), "List Project "+string(rune('A'+i-1)))
+		project := createTestProject(primitive.NewObjectID(), "List Project "+string(rune('A'+i-1)))
 		err := repo.Create(ctx, project)
 		require.NoError(t, err)
 	}
@@ -453,7 +458,7 @@ func TestProjectRepository_List_WithFilter(t *testing.T) {
 	repo, ctx, cleanup := setupProjectRepo(t)
 	defer cleanup()
 
-	authorID := "author123"
+	authorID := testAuthorID
 
 	// 创建多个项目
 	for i := 1; i <= 3; i++ {
@@ -463,7 +468,7 @@ func TestProjectRepository_List_WithFilter(t *testing.T) {
 	}
 
 	// 创建其他作者的项目
-	otherProject := createTestProject("other_author", "Other Project")
+	otherProject := createTestProject(testOtherAuthorID, "Other Project")
 	err := repo.Create(ctx, otherProject)
 	require.NoError(t, err)
 
@@ -484,7 +489,7 @@ func TestProjectRepository_Exists(t *testing.T) {
 	repo, ctx, cleanup := setupProjectRepo(t)
 	defer cleanup()
 
-	project := createTestProject("author123", "Exists Check Project")
+	project := createTestProject(testAuthorID, "Exists Check Project")
 	err := repo.Create(ctx, project)
 	require.NoError(t, err)
 
@@ -506,7 +511,7 @@ func TestProjectRepository_Count(t *testing.T) {
 
 	// 创建5个项目
 	for i := 1; i <= 5; i++ {
-		project := createTestProject("author"+string(rune('0'+i)), "Count All "+string(rune('A'+i-1)))
+		project := createTestProject(primitive.NewObjectID(), "Count All "+string(rune('A'+i-1)))
 		err := repo.Create(ctx, project)
 		require.NoError(t, err)
 	}
@@ -522,7 +527,7 @@ func TestProjectRepository_Count_WithFilter(t *testing.T) {
 	repo, ctx, cleanup := setupProjectRepo(t)
 	defer cleanup()
 
-	authorID := "author123"
+	authorID := testAuthorID
 
 	// 创建3个项目
 	for i := 1; i <= 3; i++ {
@@ -533,7 +538,7 @@ func TestProjectRepository_Count_WithFilter(t *testing.T) {
 
 	// 创建其他作者的2个项目
 	for i := 1; i <= 2; i++ {
-		project := createTestProject("other_author", "Other "+string(rune('A'+i-1)))
+		project := createTestProject(testOtherAuthorID, "Other "+string(rune('A'+i-1)))
 		err := repo.Create(ctx, project)
 		require.NoError(t, err)
 	}
@@ -557,7 +562,7 @@ func TestProjectRepository_CreateWithTransaction(t *testing.T) {
 	repo, ctx, cleanup := setupProjectRepo(t)
 	defer cleanup()
 
-	project := createTestProject("author123", "Transaction Project")
+	project := createTestProject(testAuthorID, "Transaction Project")
 
 	// 使用事务创建
 	err := repo.CreateWithTransaction(ctx, project, func(txCtx context.Context) error {
@@ -581,7 +586,7 @@ func TestProjectRepository_CreateWithTransaction_Rollback(t *testing.T) {
 	repo, ctx, cleanup := setupProjectRepo(t)
 	defer cleanup()
 
-	project := createTestProject("author123", "Transaction Rollback Project")
+	project := createTestProject(testAuthorID, "Transaction Rollback Project")
 
 	// 使用事务创建，但回调失败
 	err := repo.CreateWithTransaction(ctx, project, func(txCtx context.Context) error {
@@ -612,7 +617,7 @@ func TestProjectRepository_GetListByOwnerID_WithPagination(t *testing.T) {
 	repo, ctx, cleanup := setupProjectRepo(t)
 	defer cleanup()
 
-	authorID := "author123"
+	authorID := testAuthorID
 
 	// 创建10个项目
 	for i := 1; i <= 10; i++ {
@@ -623,12 +628,12 @@ func TestProjectRepository_GetListByOwnerID_WithPagination(t *testing.T) {
 	}
 
 	// 获取第一页（5个）
-	page1, err := repo.GetListByOwnerID(ctx, authorID, 5, 0)
+	page1, err := repo.GetListByOwnerID(ctx, authorID.Hex(), 5, 0)
 	require.NoError(t, err)
 	assert.Len(t, page1, 5)
 
 	// 获取第二页（5个）
-	page2, err := repo.GetListByOwnerID(ctx, authorID, 5, 5)
+	page2, err := repo.GetListByOwnerID(ctx, authorID.Hex(), 5, 5)
 	require.NoError(t, err)
 	assert.Len(t, page2, 5)
 
@@ -641,7 +646,7 @@ func TestProjectRepository_CountByOwner_AfterSoftDelete(t *testing.T) {
 	repo, ctx, cleanup := setupProjectRepo(t)
 	defer cleanup()
 
-	authorID := "author123"
+	authorID := testAuthorID
 
 	// 创建3个项目
 	var projectID string
@@ -655,11 +660,11 @@ func TestProjectRepository_CountByOwner_AfterSoftDelete(t *testing.T) {
 	}
 
 	// 软删除一个项目
-	err := repo.SoftDelete(ctx, projectID, authorID)
+	err := repo.SoftDelete(ctx, projectID, authorID.Hex())
 	require.NoError(t, err)
 
 	// 统计应该只剩2个
-	count, err := repo.CountByOwner(ctx, authorID)
+	count, err := repo.CountByOwner(ctx, authorID.Hex())
 	require.NoError(t, err)
 	assert.Equal(t, int64(2), count)
 }
@@ -669,7 +674,7 @@ func TestProjectRepository_List_ExcludesDeleted(t *testing.T) {
 	repo, ctx, cleanup := setupProjectRepo(t)
 	defer cleanup()
 
-	authorID := "author123"
+	authorID := testAuthorID
 
 	// 创建3个项目
 	var projectID string
@@ -683,7 +688,7 @@ func TestProjectRepository_List_ExcludesDeleted(t *testing.T) {
 	}
 
 	// 软删除一个项目
-	err := repo.SoftDelete(ctx, projectID, authorID)
+	err := repo.SoftDelete(ctx, projectID, authorID.Hex())
 	require.NoError(t, err)
 
 	// List应该只返回2个

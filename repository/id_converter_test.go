@@ -291,13 +291,16 @@ func TestIsIDError(t *testing.T) {
 func TestBackwardCompatibility(t *testing.T) {
 	validID := primitive.NewObjectID().Hex()
 
-	t.Run("StringToObjectId - empty returns NilObjectID", func(t *testing.T) {
+	t.Run("StringToObjectId - empty returns ErrEmptyID", func(t *testing.T) {
 		got, err := StringToObjectId("")
-		if err != nil {
-			t.Errorf("unexpected error: %v", err)
+		if err == nil {
+			t.Errorf("expected error, got nil")
 		}
 		if got != primitive.NilObjectID {
 			t.Errorf("expected NilObjectID, got %v", got)
+		}
+		if !IsIDError(err) {
+			t.Errorf("expected ID error, got %v", err)
 		}
 	})
 
