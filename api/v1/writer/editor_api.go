@@ -231,21 +231,31 @@ func (api *EditorApi) ReindexDocumentContents(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "文档ID"
-// @Param request body WordCountRequest true "字数统计请求"
+// @Param request body WordCountRequest false "字数统计请求（可选，不传则自动获取文档内容）"
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/writer/documents/{id}/word-count [post]
 func (api *EditorApi) CalculateWordCount(c *gin.Context) {
 	var req WordCountRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
-		return
+	// 允许空请求体，不传则自动从文档获取内容
+	_ = c.ShouldBindJSON(&req)
+
+	content := req.Content
+	if content == "" {
+		// 从文档内容自动获取
+		docID := c.Param("id")
+		docContent, err := api.documentService.GetDocumentContent(c.Request.Context(), docID)
+		if err != nil {
+			response.BadRequest(c, "获取文档内容失败", err.Error())
+			return
+		}
+		content = docContent.Content
 	}
 
 	var result *document.WordCountResult
 	if req.FilterMarkdown {
-		result = api.wordCountService.CalculateWordCountWithMarkdown(req.Content)
+		result = api.wordCountService.CalculateWordCountWithMarkdown(content)
 	} else {
-		result = api.wordCountService.CalculateWordCount(req.Content)
+		result = api.wordCountService.CalculateWordCount(content)
 	}
 
 	response.Success(c, result)

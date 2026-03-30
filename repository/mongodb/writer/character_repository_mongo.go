@@ -54,9 +54,13 @@ func (r *CharacterRepositoryMongo) Create(ctx context.Context, character *writer
 // FindByID 根据ID查询角色
 func (r *CharacterRepositoryMongo) FindByID(ctx context.Context, characterID string) (*writer.Character, error) {
 	var character writer.Character
-	filter := bson.M{"_id": characterID}
+	oid, err := r.ParseID(characterID)
+	if err != nil {
+		return nil, errors.NewRepositoryError(errors.RepositoryErrorValidation, "invalid character ID", err)
+	}
+	filter := bson.M{"_id": oid}
 
-	err := r.GetCollection().FindOne(ctx, filter).Decode(&character) // codeql[go/sql-injection]: MongoDB query, not SQL - ID is validated ObjectID
+	err = r.GetCollection().FindOne(ctx, filter).Decode(&character)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, errors.NewRepositoryError(errors.RepositoryErrorNotFound, "character not found", err)
@@ -119,9 +123,13 @@ func (r *CharacterRepositoryMongo) Update(ctx context.Context, character *writer
 
 // Delete 删除角色
 func (r *CharacterRepositoryMongo) Delete(ctx context.Context, characterID string) error {
-	filter := bson.M{"_id": characterID}
+	oid, err := r.ParseID(characterID)
+	if err != nil {
+		return errors.NewRepositoryError(errors.RepositoryErrorValidation, "invalid character ID", err)
+	}
+	filter := bson.M{"_id": oid}
 
-	result, err := r.GetCollection().DeleteOne(ctx, filter) // codeql[go/sql-injection]: MongoDB query, not SQL - ID is validated ObjectID
+	result, err := r.GetCollection().DeleteOne(ctx, filter)
 	if err != nil {
 		return errors.NewRepositoryError(errors.RepositoryErrorInternal, "delete character failed", err)
 	}
@@ -194,9 +202,13 @@ func (r *CharacterRepositoryMongo) FindRelations(ctx context.Context, projectID 
 // FindRelationByID 根据ID查询关系
 func (r *CharacterRepositoryMongo) FindRelationByID(ctx context.Context, relationID string) (*writer.CharacterRelation, error) {
 	var relation writer.CharacterRelation
-	filter := bson.M{"_id": relationID}
+	oid, err := r.ParseID(relationID)
+	if err != nil {
+		return nil, errors.NewRepositoryError(errors.RepositoryErrorValidation, "invalid relation ID", err)
+	}
+	filter := bson.M{"_id": oid}
 
-	err := r.relationCollection.FindOne(ctx, filter).Decode(&relation)
+	err = r.relationCollection.FindOne(ctx, filter).Decode(&relation)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, errors.NewRepositoryError(errors.RepositoryErrorNotFound, "character relation not found", err)
@@ -209,7 +221,11 @@ func (r *CharacterRepositoryMongo) FindRelationByID(ctx context.Context, relatio
 
 // DeleteRelation 删除角色关系
 func (r *CharacterRepositoryMongo) DeleteRelation(ctx context.Context, relationID string) error {
-	filter := bson.M{"_id": relationID}
+	oid, err := r.ParseID(relationID)
+	if err != nil {
+		return errors.NewRepositoryError(errors.RepositoryErrorValidation, "invalid relation ID", err)
+	}
+	filter := bson.M{"_id": oid}
 
 	result, err := r.relationCollection.DeleteOne(ctx, filter)
 	if err != nil {
@@ -225,7 +241,11 @@ func (r *CharacterRepositoryMongo) DeleteRelation(ctx context.Context, relationI
 
 // ExistsByID 检查角色是否存在
 func (r *CharacterRepositoryMongo) ExistsByID(ctx context.Context, characterID string) (bool, error) {
-	filter := bson.M{"_id": characterID}
+	oid, err := r.ParseID(characterID)
+	if err != nil {
+		return false, errors.NewRepositoryError(errors.RepositoryErrorValidation, "invalid character ID", err)
+	}
+	filter := bson.M{"_id": oid}
 	count, err := r.GetCollection().CountDocuments(ctx, filter)
 	if err != nil {
 		return false, errors.NewRepositoryError(errors.RepositoryErrorInternal, fmt.Sprintf("check character exists failed: %s", characterID), err)

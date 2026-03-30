@@ -106,6 +106,9 @@ func InitWriterRouter(
 		if characterService != nil || locationService != nil {
 			InitKeywordRouter(writerGroup, characterService, locationService)
 		}
+
+		// 设定百科路由（概念）
+		InitEncyclopediaRouter(writerGroup)
 	}
 }
 
