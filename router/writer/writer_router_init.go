@@ -65,10 +65,31 @@ func RegisterWriterRoutes(r *gin.RouterGroup, searchSvc *searchservice.SearchSer
 
 	// 创建ExportService（导出服务）
 	// 注意：需要先实现ExportTaskRepository和FileStorage接口
-	// exportTaskRepo := repositoryFactory.CreateExportTaskRepository()
-	// fileStorage := serviceContainer.GetFileStorage()
-	// exportSvc := writerService.NewExportService(documentRepo, documentContentRepo, projectRepo, exportTaskRepo, fileStorage)
 	var exportSvc interfaces.ExportService
+
+	// 获取MongoDB数据库连接用于创建repository
+	if mongoDB != nil {
+		// 创建适配器以适配ExportService的内部接口
+		exportTaskRepo := mongoWriterRepo.NewMongoExportTaskRepository(mongoDB)
+		fileStorage := writerservice.NewLocalFileStorage("./exports", "/api/v1/writer/exports")
+
+		// 创建适配器来适配repository接口到ExportService的内部接口
+		docRepoAdapter := writerservice.NewDocumentRepoAdapter(documentRepo)
+		docContentRepo := repositoryFactory.CreateDocumentContentRepository()
+		docContentRepoAdapter := writerservice.NewDocumentContentRepoAdapter(docContentRepo)
+		projRepoAdapter := writerservice.NewProjectRepoAdapter(projectRepo)
+
+		exportSvc = writerservice.NewExportService(
+			docRepoAdapter,
+			docContentRepoAdapter,
+			projRepoAdapter,
+			exportTaskRepo,
+			fileStorage,
+		)
+		zap.L().Info("RegisterWriterRoutes: ExportService创建成功")
+	} else {
+		zap.L().Warn("RegisterWriterRoutes: mongoDB为nil，跳过ExportService创建")
+	}
 
 	// 创建PublishService（发布服务）
 	publicationRepo := mongoWriterRepo.NewMongoPublicationRepository(mongoDB)
