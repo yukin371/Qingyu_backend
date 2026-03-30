@@ -82,7 +82,7 @@
 
 ## Git Hooks
 
-为避免把密钥、令牌或私钥提交进仓库，项目提供了版本化的 `pre-commit` 钩子。
+项目提供版本化的 `pre-commit` 钩子。
 
 Linux / macOS:
 
@@ -838,7 +838,7 @@ func (r *BookRepository) FindByID(ctx context.Context, id string) (*models.Book,
 
 // 错误响应
 {
-  "code": 10001,
+  "code": 1001,
   "message": "用户不存在",
   "detail": "user_id not found: 123456"
 }
