@@ -90,10 +90,8 @@ func (api *ReviewAPI) CreateReview(c *gin.Context) {
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/social/reviews [get]
 func (api *ReviewAPI) GetReviews(c *gin.Context) {
-	bookID, ok := shared.GetRequiredQuery(c, "book_id", "书籍ID")
-	if !ok {
-		return
-	}
+	// book_id 是可选的，不传则获取所有公开书评
+	bookID := c.Query("book_id")
 
 	pagination := shared.GetPaginationParamsStandard(c)
 

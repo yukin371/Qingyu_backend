@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -209,4 +210,89 @@ func (h *PublicUserHandler) GetUserBooks(c *gin.Context) {
 	}
 
 	response.Success(c, resp)
+}
+
+// GetBatchUsers 批量获取用户信息（公开访问）
+//
+//	@Summary		批量获取用户信息
+//	@Description	根据用户ID列表批量获取用户的公开信息
+//	@Tags			用户管理-公开信息
+//	@Accept			json
+//	@Produce		json
+//	@Param			ids		query		string	true	"用户ID列表，用逗号分隔"
+//	@Success		200		{object}	response.APIResponse{data=dto.BatchUsersResponse}
+//	@Failure		400		{object}	response.APIResponse
+//	@Failure		500		{object}	response.APIResponse
+//	@Router			/api/v1/user/users/batch [get]
+func (h *PublicUserHandler) GetBatchUsers(c *gin.Context) {
+	idsParam := c.Query("ids")
+	if idsParam == "" {
+		response.BadRequest(c, "参数错误", "ids参数不能为空")
+		return
+	}
+
+	// 解析ID列表
+	idList := parseIDs(idsParam)
+	if len(idList) == 0 {
+		response.BadRequest(c, "参数错误", "未提供有效的用户ID")
+		return
+	}
+
+	// 限制批量大小，防止滥用
+	maxBatchSize := 50
+	if len(idList) > maxBatchSize {
+		response.BadRequest(c, "参数错误", "批量大小不能超过50")
+		return
+	}
+
+	// 批量获取用户信息
+	users := make([]*dto.PublicUserProfileResponse, 0, len(idList))
+	for _, userID := range idList {
+		serviceReq := &userServiceInterface.GetUserRequest{
+			ID: userID,
+		}
+
+		resp, err := h.userService.GetUser(c.Request.Context(), serviceReq)
+		if err != nil {
+			// 单个用户获取失败不影响其他用户
+			continue
+		}
+
+		role := ""
+		if len(resp.User.Roles) > 0 {
+			role = resp.User.Roles[0]
+		}
+		createdAt, _ := time.Parse(time.RFC3339, resp.User.CreatedAt)
+		publicProfile := dto.PublicUserProfileResponse{
+			UserID:    resp.User.ID,
+			Username:  resp.User.Username,
+			Avatar:    resp.User.Avatar,
+			Nickname:  resp.User.Nickname,
+			Bio:       resp.User.Bio,
+			Role:      role,
+			CreatedAt: createdAt,
+		}
+		users = append(users, &publicProfile)
+	}
+
+	response.Success(c, gin.H{
+		"users": users,
+		"count": len(users),
+	})
+}
+
+// parseIDs 解析逗号分隔的ID列表
+func parseIDs(idsParam string) []string {
+	if idsParam == "" {
+		return nil
+	}
+	parts := strings.Split(idsParam, ",")
+	result := make([]string, 0, len(parts))
+	for _, p := range parts {
+		trimmed := strings.TrimSpace(p)
+		if trimmed != "" {
+			result = append(result, trimmed)
+		}
+	}
+	return result
 }

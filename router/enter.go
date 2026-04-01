@@ -371,6 +371,24 @@ func RegisterRoutes(r *gin.Engine) {
 			booklistAPI = socialApi.NewBookListAPI(bookListSvc)
 			logger.Info("✓ BookListAPI初始化完成")
 		}
+
+		// 书评服务
+		reviewRepo := repositoryFactory.CreateReviewRepository()
+		if reviewRepo != nil {
+			var eventBus baseService.EventBus
+			if rawEventBus := serviceContainer.GetEventBus(); rawEventBus != nil {
+				if typedEventBus, ok := rawEventBus.(baseService.EventBus); ok {
+					eventBus = typedEventBus
+				}
+			}
+			if eventBus == nil {
+				eventBus = baseService.NewSimpleEventBus()
+			}
+
+			reviewSvc := socialService.NewReviewService(reviewRepo, eventBus)
+			reviewAPI = socialApi.NewReviewAPI(reviewSvc)
+			logger.Info("✓ ReviewAPI初始化完成")
+		}
 	}
 
 	// 初始化MessageAPIV2（消息服务V2）
@@ -403,7 +421,7 @@ func RegisterRoutes(r *gin.Engine) {
 	}
 
 	// 注册统一社交路由
-	if commentAPI != nil || likeAPI != nil || collectionAPI != nil {
+	if commentAPI != nil || likeAPI != nil || collectionAPI != nil || reviewAPI != nil || booklistAPI != nil {
 		socialRouter.RegisterSocialRoutes(v1, relationAPI, commentAPI, likeAPI, collectionAPI, followAPI, messageAPI, messageAPIV2, reviewAPI, booklistAPI)
 
 		logger.Info("✓ 社交路由已注册到: /api/v1/social/")
@@ -416,7 +434,33 @@ func RegisterRoutes(r *gin.Engine) {
 		if collectionAPI != nil {
 			logger.Info("  - /api/v1/social/collections/* (收藏系统)")
 		}
+		if reviewAPI != nil {
+			logger.Info("  - /api/v1/social/reviews/* (书评系统)")
+		}
+		if booklistAPI != nil {
+			logger.Info("  - /api/v1/social/booklists/* (书单系统)")
+		}
 		logger.Info("  - /api/v1/social/follow/* (关注系统)")
+	}
+
+	// ============ 注册书单公开路由 (/api/v1/booklists) ============
+	// 前端 booklist 模块调用的路径，复用 social/booklist 处理器
+	if booklistAPI != nil {
+		booklistGroup := v1.Group("/booklists")
+		{
+			booklistGroup.GET("", booklistAPI.GetBookLists)
+			booklistGroup.POST("", booklistAPI.CreateBookList)
+			booklistGroup.GET("/:id", booklistAPI.GetBookListDetail)
+			booklistGroup.PUT("/:id", booklistAPI.UpdateBookList)
+			booklistGroup.PATCH("/:id", booklistAPI.UpdateBookList)
+			booklistGroup.DELETE("/:id", booklistAPI.DeleteBookList)
+			// favorite 和 like 都映射到 LikeBookList（前端使用 favorite）
+			booklistGroup.POST("/:id/favorite", booklistAPI.LikeBookList)
+			booklistGroup.POST("/:id/like", booklistAPI.LikeBookList)
+			booklistGroup.POST("/:id/fork", booklistAPI.ForkBookList)
+			booklistGroup.GET("/:id/books", booklistAPI.GetBooksInList)
+		}
+		logger.Info("✓ 书单公开路由已注册到: /api/v1/booklists/")
 	}
 
 	// ============ 注册评分路由 ============
@@ -479,6 +523,12 @@ func RegisterRoutes(r *gin.Engine) {
 			tableRepo := recommendationRepo.NewMongoTableRepository(mongoDB)
 			tableSvc := recommendationService.NewRecommendationTableService(tableRepo)
 			recommendationApi.WithTableService(tableSvc)
+
+			// 注入书籍仓储用于获取书籍详情
+		if mongoClient := serviceContainer.GetMongoClient(); mongoClient != nil {
+			bookRepo := bookstoreRepo.NewMongoBookRepository(mongoClient, mongoDB.Name())
+			recommendationApi.WithBookRepository(bookRepo)
+		}
 		}
 		recommendationRouter.RegisterRecommendationRoutes(v1, recommendationApi)
 
@@ -704,10 +754,10 @@ func RegisterRoutes(r *gin.Engine) {
 		}
 
 		// 注册管理员路由（包含用户管理和权限管理）
-		adminRouter.RegisterAdminRoutes(v1, userSvc, quotaService, auditSvc, adminSvc, configSvc, announcementSvc, userAdminSvc, permissionSvc, serviceContainer.GetPersistedEventBus(), categorySvc, publicationSvc, bannerSvc)
+		adminRouter.RegisterAdminRoutes(v1, userSvc, quotaService, auditSvc, adminSvc, configSvc, announcementSvc, userAdminSvc, permissionSvc, serviceContainer.GetPersistedEventBus(), categorySvc, publicationSvc, bannerSvc, mongoDB)
 	} else {
 		// 如果 MongoDB 不可用，不注册用户管理和权限管理路由
-		adminRouter.RegisterAdminRoutes(v1, userSvc, quotaService, auditSvc, adminSvc, configSvc, announcementSvc, nil, nil, serviceContainer.GetPersistedEventBus(), nil, publicationSvc, nil)
+		adminRouter.RegisterAdminRoutes(v1, userSvc, quotaService, auditSvc, adminSvc, configSvc, announcementSvc, nil, nil, serviceContainer.GetPersistedEventBus(), nil, publicationSvc, nil, nil)
 	}
 
 	logger.Info("✓ 管理员路由已注册到: /api/v1/admin/")

@@ -90,15 +90,20 @@ func (s *ReviewService) CreateReview(ctx context.Context, bookID, userID, userNa
 
 // GetReviews 获取书评列表
 func (s *ReviewService) GetReviews(ctx context.Context, bookID string, page, size int) ([]*social.Review, int64, error) {
-	if bookID == "" {
-		return nil, 0, fmt.Errorf("书籍ID不能为空")
-	}
-
 	if page < 1 {
 		page = 1
 	}
 	if size < 1 || size > 100 {
 		size = 20
+	}
+
+	// 如果没有指定book_id，获取所有公开书评
+	if bookID == "" {
+		reviews, total, err := s.reviewRepo.GetPublicReviews(ctx, page, size)
+		if err != nil {
+			return nil, 0, fmt.Errorf("获取书评列表失败: %w", err)
+		}
+		return reviews, total, nil
 	}
 
 	reviews, total, err := s.reviewRepo.GetReviewsByBook(ctx, bookID, page, size)

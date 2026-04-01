@@ -110,6 +110,7 @@ type RepositoryFactory interface {
 
 	// Social相关Repository
 	CreateBookListRepository() SocialInterfaces.BookListRepository
+	CreateReviewRepository() SocialInterfaces.ReviewRepository
 	CreateFollowRepository() SocialInterfaces.FollowRepository
 
 	// Stats相关Repository
