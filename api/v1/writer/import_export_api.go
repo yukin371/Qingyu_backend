@@ -8,6 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/interfaces"
 )
@@ -37,23 +38,14 @@ func NewImportExportApi(exportService interfaces.ExportService) *ImportExportApi
 // @Failure 500 {object} response.APIResponse
 // @Router /api/v1/writer/projects/{id}/export [get]
 func (api *ImportExportApi) ExportProject(c *gin.Context) {
-	projectID := c.Param("id")
-
-	if projectID == "" {
-		response.BadRequest(c, "参数错误", "项目ID不能为空")
+	projectID, ok := shared.GetRequiredParam(c, "id", "项目ID")
+	if !ok {
 		return
 	}
 
 	// 从上下文获取用户ID
-	userID := ""
-	if uid, exists := c.Get("userId"); exists {
-		if uidStr, ok := uid.(string); ok {
-			userID = uidStr
-		}
-	}
-
-	if userID == "" {
-		response.Unauthorized(c, "未授权")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
@@ -90,15 +82,8 @@ func (api *ImportExportApi) ExportProject(c *gin.Context) {
 // @Router /api/v1/writer/projects/import [post]
 func (api *ImportExportApi) ImportProject(c *gin.Context) {
 	// 从上下文获取用户ID
-	userID := ""
-	if uid, exists := c.Get("userId"); exists {
-		if uidStr, ok := uid.(string); ok {
-			userID = uidStr
-		}
-	}
-
-	if userID == "" {
-		response.Unauthorized(c, "未授权")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 

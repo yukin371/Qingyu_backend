@@ -1,16 +1,15 @@
 package writer
 
 import (
-	"context"
-	"strconv"
+	"errors"
 
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/models/dto"
 	writerModels "Qingyu_backend/models/writer" // Import for Swagger annotations
 	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/writer/document"
-	"errors"
 )
 
 // DocumentApi 文档API
@@ -23,15 +22,6 @@ func NewDocumentApi(documentService *document.DocumentService) *DocumentApi {
 	return &DocumentApi{
 		documentService: documentService,
 	}
-}
-
-// getContextWithUserID 从gin.Context获取userID并添加到context.Context
-func getContextWithUserID(c *gin.Context) context.Context {
-	ctx := c.Request.Context()
-	if userID, exists := c.Get("user_id"); exists {
-		ctx = context.WithValue(ctx, "userID", userID)
-	}
-	return ctx
 }
 
 // CreateDocument 创建文档
@@ -60,25 +50,16 @@ func (api *DocumentApi) CreateDocument(c *gin.Context) {
 		return
 	}
 
-	// 获取并验证用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "请先登录")
+	// 验证登录状态并将用户ID添加到context
+	_, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
-	userIDStr, ok := userID.(string)
-	if !ok || userIDStr == "" {
-		response.BadRequest(c, "参数错误", "无效的用户ID")
-		return
-	}
-
-	// 将用户ID添加到context
-	ctx := context.WithValue(c.Request.Context(), "userID", userIDStr)
+	ctx := shared.AddUserIDToContext(c)
 
 	var req document.CreateDocumentRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
@@ -105,7 +86,7 @@ func (api *DocumentApi) CreateDocument(c *gin.Context) {
 func (api *DocumentApi) GetDocument(c *gin.Context) {
 	documentID := c.Param("id")
 
-	ctx := getContextWithUserID(c)
+	ctx := shared.AddUserIDToContext(c)
 
 	doc, err := api.documentService.GetDocument(ctx, documentID)
 	if err != nil {
@@ -128,7 +109,7 @@ func (api *DocumentApi) GetDocument(c *gin.Context) {
 func (api *DocumentApi) GetDocumentTree(c *gin.Context) {
 	projectID := c.Param("projectId")
 
-	ctx := getContextWithUserID(c)
+	ctx := shared.AddUserIDToContext(c)
 
 	resp, err := api.documentService.GetDocumentTree(ctx, projectID)
 	if err != nil {
@@ -153,12 +134,11 @@ func (api *DocumentApi) UpdateDocument(c *gin.Context) {
 	documentID := c.Param("id")
 
 	var req document.UpdateDocumentRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
-	ctx := getContextWithUserID(c)
+	ctx := shared.AddUserIDToContext(c)
 
 	if err := api.documentService.UpdateDocument(ctx, documentID, &req); err != nil {
 		c.Error(err)
@@ -180,7 +160,7 @@ func (api *DocumentApi) UpdateDocument(c *gin.Context) {
 func (api *DocumentApi) DeleteDocument(c *gin.Context) {
 	documentID := c.Param("id")
 
-	ctx := getContextWithUserID(c)
+	ctx := shared.AddUserIDToContext(c)
 
 	if err := api.documentService.DeleteDocument(ctx, documentID); err != nil {
 		c.Error(err)
@@ -204,25 +184,15 @@ func (api *DocumentApi) DeleteDocument(c *gin.Context) {
 func (api *DocumentApi) ListDocuments(c *gin.Context) {
 	projectID := c.Param("projectId")
 
-	pageStr := c.DefaultQuery("page", "1")
-	pageSizeStr := c.DefaultQuery("pageSize", "20")
-
-	page := 1
-	pageSize := 20
-	if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
-		page = p
-	}
-	if ps, err := strconv.Atoi(pageSizeStr); err == nil && ps > 0 {
-		pageSize = ps
-	}
+	pagination := shared.GetPaginationParamsStandard(c)
 
 	req := &document.ListDocumentsRequest{
 		ProjectID: projectID,
-		Page:      page,
-		PageSize:  pageSize,
+		Page:      pagination.Page,
+		PageSize:  pagination.PageSize,
 	}
 
-	ctx := getContextWithUserID(c)
+	ctx := shared.AddUserIDToContext(c)
 
 	resp, err := api.documentService.ListDocuments(ctx, req)
 	if err != nil {
@@ -247,14 +217,13 @@ func (api *DocumentApi) MoveDocument(c *gin.Context) {
 	documentID := c.Param("id")
 
 	var req document.MoveDocumentRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
 	req.DocumentID = documentID
 
-	ctx := getContextWithUserID(c)
+	ctx := shared.AddUserIDToContext(c)
 
 	if err := api.documentService.MoveDocument(ctx, &req); err != nil {
 		c.Error(err)
@@ -278,14 +247,13 @@ func (api *DocumentApi) ReorderDocuments(c *gin.Context) {
 	projectID := c.Param("projectId")
 
 	var req document.ReorderDocumentsRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
 	req.ProjectID = projectID
 
-	ctx := getContextWithUserID(c)
+	ctx := shared.AddUserIDToContext(c)
 
 	if err := api.documentService.ReorderDocuments(ctx, &req); err != nil {
 		c.Error(err)
@@ -313,24 +281,16 @@ func (api *DocumentApi) DuplicateDocument(c *gin.Context) {
 	documentID := c.Param("id")
 
 	// 获取并验证用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "请先登录")
-		return
-	}
-
-	userIDStr, ok := userID.(string)
-	if !ok || userIDStr == "" {
-		response.BadRequest(c, "参数错误", "无效的用户ID")
+	_, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
 	// 将用户ID添加到context
-	ctx := context.WithValue(c.Request.Context(), "userID", userIDStr)
+	ctx := shared.AddUserIDToContext(c)
 
 	var req dto.DuplicateRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
@@ -361,20 +321,13 @@ func (api *DocumentApi) CreateDocumentByBody(c *gin.Context) {
 	}
 
 	// 获取并验证用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "请先登录")
-		return
-	}
-
-	userIDStr, ok := userID.(string)
-	if !ok || userIDStr == "" {
-		response.BadRequest(c, "参数错误", "无效的用户ID")
+	_, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
 	// 将用户ID添加到context
-	ctx := context.WithValue(c.Request.Context(), "userID", userIDStr)
+	ctx := shared.AddUserIDToContext(c)
 
 	// 定义请求结构体，支持从请求体获取 project_id
 	var req struct {
@@ -392,8 +345,7 @@ func (api *DocumentApi) CreateDocumentByBody(c *gin.Context) {
 		WordCount    int      `json:"word_count,omitempty"`
 	}
 
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 

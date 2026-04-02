@@ -3,6 +3,7 @@ package writer
 import (
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/interfaces"
 )
@@ -21,15 +22,13 @@ func NewTimelineApi(timelineService interfaces.TimelineService) *TimelineApi {
 
 // CreateTimeline 创建时间线
 func (api *TimelineApi) CreateTimeline(c *gin.Context) {
-		projectID := c.Param("id")
-	if projectID == "" {
-		response.BadRequest(c, "项目ID不能为空", "")
+	projectID, ok := shared.GetRequiredParam(c, "id", "项目ID")
+	if !ok {
 		return
 	}
 
 	var req interfaces.CreateTimelineRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
@@ -63,9 +62,8 @@ func (api *TimelineApi) GetTimeline(c *gin.Context) {
 
 // ListTimelines 获取项目时间线列表
 func (api *TimelineApi) ListTimelines(c *gin.Context) {
-		projectID := c.Param("id")
-	if projectID == "" {
-		response.BadRequest(c, "项目ID不能为空", "")
+	projectID, ok := shared.GetRequiredParam(c, "id", "项目ID")
+	if !ok {
 		return
 	}
 
@@ -108,8 +106,7 @@ func (api *TimelineApi) CreateTimelineEvent(c *gin.Context) {
 	}
 
 	var req interfaces.CreateTimelineEventRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
@@ -146,9 +143,8 @@ func (api *TimelineApi) GetTimelineEvent(c *gin.Context) {
 
 // ListTimelineEvents 获取时间线事件列表
 func (api *TimelineApi) ListTimelineEvents(c *gin.Context) {
-	timelineID := c.Param("timelineId")
-	if timelineID == "" {
-		response.BadRequest(c, "时间线ID不能为空", "")
+	timelineID, ok := shared.GetRequiredParam(c, "timelineId", "时间线ID")
+	if !ok {
 		return
 	}
 
@@ -172,8 +168,7 @@ func (api *TimelineApi) UpdateTimelineEvent(c *gin.Context) {
 	}
 
 	var req interfaces.UpdateTimelineEventRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
@@ -207,9 +202,8 @@ func (api *TimelineApi) DeleteTimelineEvent(c *gin.Context) {
 
 // GetTimelineVisualization 获取时间线可视化数据
 func (api *TimelineApi) GetTimelineVisualization(c *gin.Context) {
-	timelineID := c.Param("timelineId")
-	if timelineID == "" {
-		response.BadRequest(c, "时间线ID不能为空", "")
+	timelineID, ok := shared.GetRequiredParam(c, "timelineId", "时间线ID")
+	if !ok {
 		return
 	}
 

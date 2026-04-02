@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/models/search"
 	"Qingyu_backend/pkg/response"
 	searchservice "Qingyu_backend/service/search"
@@ -42,9 +43,8 @@ func NewSearchAPI(searchService *searchservice.SearchService) *SearchAPI {
 //	@Router			/api/v1/writer/search/documents [get]
 func (api *SearchAPI) SearchDocuments(c *gin.Context) {
 	// 1. 验证用户登录
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 

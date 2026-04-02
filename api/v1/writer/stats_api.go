@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/models/stats"
 	"Qingyu_backend/pkg/response"
 	bookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
@@ -383,15 +384,13 @@ func (api *StatsApi) GetDropOffPoints(c *gin.Context) {
 // @Router /api/v1/reader/behavior [post]
 func (api *StatsApi) RecordBehavior(c *gin.Context) {
 	var behavior stats.ReaderBehavior
-	if err := c.ShouldBindJSON(&behavior); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &behavior) {
 		return
 	}
 
 	// 从context获取用户ID
-	userID, exists := c.Get("user_id")
-	if exists {
-		behavior.UserID = userID.(string)
+	if uid := shared.GetUserIDOptional(c); uid != "" {
+		behavior.UserID = uid
 	}
 
 	// 记录行为
@@ -497,8 +496,7 @@ func (api *StatsApi) GetReaderActivity(c *gin.Context) {
 // CompareBooks 对比多个作品统计
 func (api *StatsApi) CompareBooks(c *gin.Context) {
 	var req compareBooksRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 	if len(req.BookIDs) == 0 {

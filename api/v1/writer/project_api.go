@@ -1,11 +1,11 @@
 package writer
 
 import (
-	"context"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/models/dto"
 	documentModel "Qingyu_backend/models/writer" // Import for Swagger annotations
 	"Qingyu_backend/pkg/response"
@@ -37,16 +37,11 @@ func NewProjectApi(projectService *project.ProjectService) *ProjectApi {
 // @Router /api/v1/projects [post]
 func (api *ProjectApi) CreateProject(c *gin.Context) {
 	var req dto.CreateProjectRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
-	// 从gin.Context获取userId并添加到context.Context
-	ctx := c.Request.Context()
-	if userID, exists := c.Get("user_id"); exists {
-		ctx = context.WithValue(ctx, "userId", userID)
-	}
+	ctx := shared.AddUserIDToContext(c)
 
 	// 将DTO转换为服务层请求类型（使用类型别名，兼容性处理）
 	serviceReq := project.CreateProjectRequest(req)
@@ -74,11 +69,7 @@ func (api *ProjectApi) CreateProject(c *gin.Context) {
 func (api *ProjectApi) GetProject(c *gin.Context) {
 	projectID := c.Param("id")
 
-	// 从gin.Context获取userId并添加到context.Context
-	ctx := c.Request.Context()
-	if userID, exists := c.Get("user_id"); exists {
-		ctx = context.WithValue(ctx, "userId", userID)
-	}
+	ctx := shared.AddUserIDToContext(c)
 
 	projectModel, err := api.projectService.GetProject(ctx, projectID)
 	if err != nil {
@@ -119,11 +110,7 @@ func (api *ProjectApi) ListProjects(c *gin.Context) {
 		Order:    order,
 	}
 
-	// 从gin.Context获取userId并添加到context.Context
-	ctx := c.Request.Context()
-	if userID, exists := c.Get("user_id"); exists {
-		ctx = context.WithValue(ctx, "userId", userID)
-	}
+	ctx := shared.AddUserIDToContext(c)
 
 	// 将DTO转换为服务层请求类型
 	serviceReq := project.ListProjectsRequest(*req)
@@ -159,16 +146,11 @@ func (api *ProjectApi) UpdateProject(c *gin.Context) {
 	projectID := c.Param("id")
 
 	var req project.UpdateProjectRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
-	// 从gin.Context获取userId并添加到context.Context
-	ctx := c.Request.Context()
-	if userID, exists := c.Get("user_id"); exists {
-		ctx = context.WithValue(ctx, "userId", userID)
-	}
+	ctx := shared.AddUserIDToContext(c)
 
 	if err := api.projectService.UpdateProject(ctx, projectID, &req); err != nil {
 		c.Error(err)
@@ -191,11 +173,7 @@ func (api *ProjectApi) UpdateProject(c *gin.Context) {
 func (api *ProjectApi) DeleteProject(c *gin.Context) {
 	projectID := c.Param("id")
 
-	// 从gin.Context获取userId并添加到context.Context
-	ctx := c.Request.Context()
-	if userID, exists := c.Get("user_id"); exists {
-		ctx = context.WithValue(ctx, "userId", userID)
-	}
+	ctx := shared.AddUserIDToContext(c)
 
 	if err := api.projectService.DeleteProject(ctx, projectID); err != nil {
 		c.Error(err)
@@ -221,11 +199,7 @@ func (api *ProjectApi) DeleteProject(c *gin.Context) {
 func (api *ProjectApi) UpdateProjectStatistics(c *gin.Context) {
 	projectID := c.Param("id")
 
-	// 从gin.Context获取userId并添加到context.Context
-	ctx := c.Request.Context()
-	if userID, exists := c.Get("user_id"); exists {
-		ctx = context.WithValue(ctx, "userId", userID)
-	}
+	ctx := shared.AddUserIDToContext(c)
 
 	// 调用Service计算并更新统计信息
 	if err := api.projectService.RecalculateProjectStatistics(ctx, projectID); err != nil {

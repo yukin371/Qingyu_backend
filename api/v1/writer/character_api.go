@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/api/v1/shared"
 	writerModels "Qingyu_backend/models/writer" // Import for Swagger annotations
 	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/interfaces"
@@ -42,18 +43,12 @@ func (api *CharacterApi) CreateCharacter(c *gin.Context) {
 	}
 
 	var req interfaces.CreateCharacterRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
 	// 从上下文获取用户ID
-	userID := ""
-	if uid, exists := c.Get("user_id"); exists {
-		if uidStr, ok := uid.(string); ok {
-			userID = uidStr
-		}
-	}
+	userID := shared.GetUserIDOptional(c)
 
 	character, err := api.characterService.Create(c.Request.Context(), projectID, userID, &req)
 	if err != nil {
@@ -149,8 +144,7 @@ func (api *CharacterApi) UpdateCharacter(c *gin.Context) {
 	}
 
 	var req interfaces.UpdateCharacterRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
@@ -211,8 +205,7 @@ func (api *CharacterApi) CreateCharacterRelation(c *gin.Context) {
 	}
 
 	var req interfaces.CreateRelationRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
@@ -341,8 +334,7 @@ func (api *CharacterApi) CreateRelationTimelineEvent(c *gin.Context) {
 	}
 
 	var req interfaces.CreateRelationTimelineEventRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
@@ -407,8 +399,7 @@ func (api *CharacterApi) UpdateRelationTimelineEvent(c *gin.Context) {
 	}
 
 	var req interfaces.UpdateRelationTimelineEventRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 

@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/api/v1/shared"
 	writerModels "Qingyu_backend/models/writer"
 	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/interfaces"
@@ -43,18 +44,12 @@ func (api *OutlineApi) CreateOutline(c *gin.Context) {
 	}
 
 	var req interfaces.CreateOutlineRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
 	// 从上下文获取用户ID
-	userID := ""
-	if uid, exists := c.Get("user_id"); exists {
-		if uidStr, ok := uid.(string); ok {
-			userID = uidStr
-		}
-	}
+	userID := shared.GetUserIDOptional(c)
 
 	outline, err := api.outlineService.Create(c.Request.Context(), projectID, userID, &req)
 	if err != nil {
@@ -184,8 +179,7 @@ func (api *OutlineApi) UpdateOutline(c *gin.Context) {
 	}
 
 	var req interfaces.UpdateOutlineRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 

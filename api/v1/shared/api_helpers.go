@@ -248,6 +248,28 @@ func ContextWithUserID(c *gin.Context) bool {
 	return true
 }
 
+// ============ 用户信息辅助函数 ============
+
+// GetUserName 获取用户名（可选，不存在返回空字符串）
+func GetUserName(c *gin.Context) string {
+	if name, exists := c.Get("username"); exists {
+		if s, ok := name.(string); ok {
+			return s
+		}
+	}
+	return ""
+}
+
+// GetUserRoles 获取用户角色列表（可选，不存在返回 nil）
+func GetUserRoles(c *gin.Context) []string {
+	if roles, exists := c.Get("roles"); exists {
+		if slice, ok := roles.([]string); ok {
+			return slice
+		}
+	}
+	return nil
+}
+
 // ============ 批量操作辅助函数 ============
 
 // ValidateBatchIDs 验证批量操作的ID列表

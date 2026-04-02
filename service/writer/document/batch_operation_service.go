@@ -72,7 +72,7 @@ func (s *BatchOperationService) Submit(ctx context.Context, req *SubmitBatchOper
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorNotFound, "项目不存在", "", nil)
 	}
 
-	userID, ok := ctx.Value("userID").(string)
+	userID, ok := ctx.Value("userId").(string)
 	if !ok || userID == "" {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorUnauthorized, "用户未登录", "", nil)
 	}
@@ -297,7 +297,7 @@ func (s *BatchOperationService) GetOperation(ctx context.Context, operationID st
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorNotFound, "项目不存在", "", nil)
 	}
 
-	userID, ok := ctx.Value("userID").(string)
+	userID, ok := ctx.Value("userId").(string)
 	if !ok || userID == "" {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorUnauthorized, "用户未登录", "", nil)
 	}
@@ -321,7 +321,7 @@ func (s *BatchOperationService) ListOperations(ctx context.Context, req *ListBat
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorNotFound, "项目不存在", "", nil)
 	}
 
-	userID, ok := ctx.Value("userID").(string)
+	userID, ok := ctx.Value("userId").(string)
 	if !ok || userID == "" {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorUnauthorized, "用户未登录", "", nil)
 	}

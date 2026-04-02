@@ -600,7 +600,7 @@ func TestDocumentService_Integration_AutoSave(t *testing.T) {
 		t.Logf("✓ 测试文档已创建，ID: %s", documentID)
 
 		// 设置用户上下文
-		ctx = context.WithValue(ctx, "userID", userID)
+		ctx = context.WithValue(ctx, "userId", userID)
 
 		// 步骤3：首次自动保存（Create操作）
 		t.Log("步骤3：首次自动保存（Create）")
@@ -762,7 +762,7 @@ func TestDocumentService_Integration_AutoSave(t *testing.T) {
 		t.Logf("✓ 测试文档已创建，ID: %s", testDocumentID)
 
 		// 设置用户上下文
-		ctx = context.WithValue(ctx, "userID", userID)
+		ctx = context.WithValue(ctx, "userId", userID)
 
 		// 步骤2：首次保存，创建版本1
 		t.Log("步骤2：首次保存")
@@ -904,7 +904,7 @@ func TestDocumentService_Integration_AutoSave(t *testing.T) {
 		t.Logf("✓ 测试文档已创建，ID: %s", testDocumentID)
 
 		// 设置用户上下文
-		ctx = context.WithValue(ctx, "userID", userID)
+		ctx = context.WithValue(ctx, "userId", userID)
 
 		// 步骤2：首次保存创建版本1
 		t.Log("步骤2：首次保存创建版本1")
@@ -941,7 +941,7 @@ func TestDocumentService_Integration_AutoSave(t *testing.T) {
 				defer wg.Done()
 
 				// 每个goroutine都有自己的上下文（包含userID）
-				goCtx := context.WithValue(context.Background(), "userID", userID)
+				goCtx := context.WithValue(context.Background(), "userId", userID)
 
 				req := &documentService.AutoSaveRequest{
 					DocumentID:     testDocumentID,
@@ -1589,7 +1589,7 @@ func TestE2E_UserJourney(t *testing.T) {
 
 		// ========== 步骤5: 自动保存 ==========
 		t.Log("\n【步骤5】自动保存")
-		ctx = context.WithValue(ctx, "userID", userID)
+		ctx = context.WithValue(ctx, "userId", userID)
 
 		// 第一次保存
 		firstContent := "这是我的小说开头，主人公在一个雨夜遇到了神秘人物..."
@@ -1979,7 +1979,7 @@ func TestStress_HighConcurrency(t *testing.T) {
 		)
 
 		// 设置用户上下文
-		ctx = context.WithValue(ctx, "userID", userID)
+		ctx = context.WithValue(ctx, "userId", userID)
 
 		// 记录开始时间
 		startTime := time.Now()

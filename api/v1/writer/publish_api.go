@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/interfaces"
 )
@@ -42,26 +43,18 @@ func isValidProjectID(id string) bool {
 // @Failure 404 {object} response.APIResponse
 // @Router /api/v1/writer/projects/{id}/publish [post]
 func (api *PublishApi) PublishProject(c *gin.Context) {
-	projectID := c.Param("id")
-
-	if projectID == "" {
-		response.BadRequest(c, "参数错误", "项目ID不能为空")
+	projectID, ok := shared.GetRequiredParam(c, "id", "项目ID")
+	if !ok {
 		return
 	}
 
 	var req interfaces.PublishProjectRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
 	// 从上下文获取用户ID
-	userID := ""
-	if uid, exists := c.Get("user_id"); exists {
-		if uidStr, ok := uid.(string); ok {
-			userID = uidStr
-		}
-	}
+	userID := shared.GetUserIDOptional(c)
 
 	record, err := api.publishService.PublishProject(c.Request.Context(), projectID, userID, &req)
 	if err != nil {
@@ -84,20 +77,13 @@ func (api *PublishApi) PublishProject(c *gin.Context) {
 // @Failure 404 {object} response.APIResponse
 // @Router /api/v1/writer/projects/{id}/unpublish [post]
 func (api *PublishApi) UnpublishProject(c *gin.Context) {
-	projectID := c.Param("id")
-
-	if projectID == "" {
-		response.BadRequest(c, "参数错误", "项目ID不能为空")
+	projectID, ok := shared.GetRequiredParam(c, "id", "项目ID")
+	if !ok {
 		return
 	}
 
 	// 从上下文获取用户ID
-	userID := ""
-	if uid, exists := c.Get("user_id"); exists {
-		if uidStr, ok := uid.(string); ok {
-			userID = uidStr
-		}
-	}
+	userID := shared.GetUserIDOptional(c)
 
 	err := api.publishService.UnpublishProject(c.Request.Context(), projectID, userID)
 	if err != nil {
@@ -119,10 +105,8 @@ func (api *PublishApi) UnpublishProject(c *gin.Context) {
 // @Failure 404 {object} response.APIResponse
 // @Router /api/v1/writer/projects/{id}/publication-status [get]
 func (api *PublishApi) GetProjectPublicationStatus(c *gin.Context) {
-	projectID := c.Param("id")
-
-	if projectID == "" {
-		response.BadRequest(c, "参数错误", "项目ID不能为空")
+	projectID, ok := shared.GetRequiredParam(c, "id", "项目ID")
+	if !ok {
 		return
 	}
 	if !isValidProjectID(projectID) {
@@ -153,26 +137,18 @@ func (api *PublishApi) GetProjectPublicationStatus(c *gin.Context) {
 // @Failure 404 {object} response.APIResponse
 // @Router /api/v1/writer/documents/{id}/publish [post]
 func (api *PublishApi) PublishDocument(c *gin.Context) {
-	documentID := c.Param("id")
-
-	if documentID == "" {
-		response.BadRequest(c, "参数错误", "documentId不能为空")
+	documentID, ok := shared.GetRequiredParam(c, "id", "documentId")
+	if !ok {
 		return
 	}
 
 	var req interfaces.PublishDocumentRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
 	// 从上下文获取用户ID
-	userID := ""
-	if uid, exists := c.Get("user_id"); exists {
-		if uidStr, ok := uid.(string); ok {
-			userID = uidStr
-		}
-	}
+	userID := shared.GetUserIDOptional(c)
 
 	// 尝试从查询参数获取 projectId
 	projectID := c.Query("projectId")
@@ -213,18 +189,12 @@ func (api *PublishApi) UpdateDocumentPublishStatus(c *gin.Context) {
 	}
 
 	var req interfaces.UpdateDocumentPublishStatusRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
 	// 从上下文获取用户ID
-	userID := ""
-	if uid, exists := c.Get("user_id"); exists {
-		if uidStr, ok := uid.(string); ok {
-			userID = uidStr
-		}
-	}
+	userID := shared.GetUserIDOptional(c)
 
 	err := api.publishService.UpdateDocumentPublishStatus(c.Request.Context(), documentID, projectID, userID, &req)
 	if err != nil {
@@ -248,26 +218,18 @@ func (api *PublishApi) UpdateDocumentPublishStatus(c *gin.Context) {
 // @Failure 404 {object} response.APIResponse
 // @Router /api/v1/writer/projects/{id}/documents/batch-publish [post]
 func (api *PublishApi) BatchPublishDocuments(c *gin.Context) {
-	projectID := c.Param("id")
-
-	if projectID == "" {
-		response.BadRequest(c, "参数错误", "项目ID不能为空")
+	projectID, ok := shared.GetRequiredParam(c, "id", "项目ID")
+	if !ok {
 		return
 	}
 
 	var req interfaces.BatchPublishDocumentsRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
 	// 从上下文获取用户ID
-	userID := ""
-	if uid, exists := c.Get("user_id"); exists {
-		if uidStr, ok := uid.(string); ok {
-			userID = uidStr
-		}
-	}
+	userID := shared.GetUserIDOptional(c)
 
 	result, err := api.publishService.BatchPublishDocuments(c.Request.Context(), projectID, userID, &req)
 	if err != nil {
@@ -291,9 +253,8 @@ func (api *PublishApi) BatchPublishDocuments(c *gin.Context) {
 // @Failure 400 {object} response.APIResponse
 // @Router /api/v1/writer/projects/{id}/publications [get]
 func (api *PublishApi) GetPublicationRecords(c *gin.Context) {
-	projectID := c.Param("id")
-	if projectID == "" {
-		response.BadRequest(c, "参数错误", "项目ID不能为空")
+	projectID, ok := shared.GetRequiredParam(c, "id", "项目ID")
+	if !ok {
 		return
 	}
 	if !isValidProjectID(projectID) {
@@ -301,7 +262,7 @@ func (api *PublishApi) GetPublicationRecords(c *gin.Context) {
 		return
 	}
 
-	// 获取分页参数
+	// 获取分页参数（前端使用 "pageSize" 参数名，保留原始写法）
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "20"))
 
@@ -325,10 +286,8 @@ func (api *PublishApi) GetPublicationRecords(c *gin.Context) {
 // @Failure 404 {object} response.APIResponse
 // @Router /api/v1/writer/publications/{id} [get]
 func (api *PublishApi) GetPublicationRecord(c *gin.Context) {
-	recordID := c.Param("id")
-
-	if recordID == "" {
-		response.BadRequest(c, "参数错误", "记录ID不能为空")
+	recordID, ok := shared.GetRequiredParam(c, "id", "记录ID")
+	if !ok {
 		return
 	}
 

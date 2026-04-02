@@ -22,3 +22,24 @@ Gin Router → Middleware（Auth/CORS/RateLimit） → Handler → Service → R
 - **字段名转换**：后端返回 `snake_case`，前端拦截器自动转 `camelCase`，后端无需处理
 - **shared/ 公共层**：`api/v1/shared/` 包含通用的请求验证、响应构建、认证处理，新 API 模块应复用而非重写
 - **Swagger 注解**：每个 API 端点必须有 Swagger 注解，用于自动生成文档和 Orval 前端类型
+
+## 辅助函数使用规范（强制）
+
+所有 handler **必须**使用 `api/v1/shared` 包的辅助函数，禁止内联重复逻辑：
+
+| 场景 | 禁止写法 | 必须使用 |
+|------|----------|----------|
+| 获取用户ID（必需） | `c.Get("user_id")` + 类型断言 + 错误响应 | `shared.GetUserID(c)` |
+| 获取用户ID（可选） | `c.Get("user_id")` + 静默返回 | `shared.GetUserIDOptional(c)` |
+| 获取用户名 | `c.Get("username")` + 类型断言 | `shared.GetUserName(c)` |
+| 获取用户角色 | `c.Get("roles")` + 类型断言 | `shared.GetUserRoles(c)` |
+| JSON 绑定 | `c.ShouldBindJSON` + err 响应 | `shared.BindJSON(c, &req)` |
+| 路径参数 | `c.Param` + 空值校验 | `shared.GetRequiredParam(c, key, name)` |
+| 分页参数 | 手动 `strconv.Atoi` | `shared.GetPaginationParamsStandard(c)` |
+| 传递 userID 到 service | `context.WithValue(ctx, "userId", ...)` | `shared.AddUserIDToContext(c)` |
+
+### Context Key 统一
+
+- **gin.Context 层**：`"user_id"`（由 JWT 中间件设置）、`"username"`、`"roles"`
+- **context.Context 层**（传给 service）：`"userId"`
+- 禁止使用 `"userID"`、`"userId"` 在 gin.Context 中，或 `"user_id"` 在 context.Context 中

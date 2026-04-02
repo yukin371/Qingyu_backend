@@ -1,7 +1,6 @@
 package writer
 
 import (
-	"context"
 	"errors"
 	"strconv"
 
@@ -9,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.uber.org/zap"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/models/writer"
 	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/writer/document"
@@ -48,24 +48,16 @@ func (api *TemplateAPI) CreateTemplate(c *gin.Context) {
 	}
 
 	// 获取并验证用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
-		return
-	}
-
-	userIDStr, ok := userID.(string)
-	if !ok || userIDStr == "" {
-		response.BadRequest(c, "参数错误", "无效的用户ID")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
 	// 将用户ID添加到context
-	ctx := context.WithValue(c.Request.Context(), "userID", userIDStr)
+	ctx := shared.AddUserIDToContext(c)
 
 	var req CreateTemplateRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
@@ -77,7 +69,7 @@ func (api *TemplateAPI) CreateTemplate(c *gin.Context) {
 		Category:    req.Category,
 		Content:     req.Content,
 		Variables:   convertVariables(req.Variables),
-		CreatedBy:   userIDStr,
+		CreatedBy:   userID,
 	}
 
 	// 处理ProjectID
@@ -234,8 +226,7 @@ func (api *TemplateAPI) UpdateTemplate(c *gin.Context) {
 	}
 
 	var req UpdateTemplateRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
@@ -298,15 +289,8 @@ func (api *TemplateAPI) DeleteTemplate(c *gin.Context) {
 	}
 
 	// 获取并验证用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
-		return
-	}
-
-	userIDStr, ok := userID.(string)
-	if !ok || userIDStr == "" {
-		response.BadRequest(c, "参数错误", "无效的用户ID")
+	userIDStr, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
@@ -352,8 +336,7 @@ func (api *TemplateAPI) ApplyTemplate(c *gin.Context) {
 	}
 
 	var req ApplyTemplateRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 

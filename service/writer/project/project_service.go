@@ -337,7 +337,7 @@ func (s *ProjectService) GetProjectList(ctx context.Context, userID, status stri
 	}
 
 	// 使用上下文注入用户ID
-	ctxWithUser := context.WithValue(ctx, "userID", userID)
+	ctxWithUser := context.WithValue(ctx, "userId", userID)
 
 	// 调用ListMyProjects
 	resp, err := s.ListMyProjects(ctxWithUser, req)
@@ -368,7 +368,7 @@ func (s *ProjectService) UpdateProjectByID(ctx context.Context, projectID, userI
 	}
 
 	// 使用上下文注入用户ID
-	ctxWithUser := context.WithValue(ctx, "userID", userID)
+	ctxWithUser := context.WithValue(ctx, "userId", userID)
 
 	return s.UpdateProject(ctxWithUser, projectID, updateReq)
 }
@@ -376,7 +376,7 @@ func (s *ProjectService) UpdateProjectByID(ctx context.Context, projectID, userI
 // DeleteProjectByID 删除项目（兼容API层调用）
 func (s *ProjectService) DeleteProjectByID(ctx context.Context, projectID, userID string) error {
 	// 使用上下文注入用户ID
-	ctxWithUser := context.WithValue(ctx, "userID", userID)
+	ctxWithUser := context.WithValue(ctx, "userId", userID)
 
 	return s.DeleteProject(ctxWithUser, projectID)
 }

@@ -56,7 +56,7 @@ func TestVerifyProjectEdit_Success(t *testing.T) {
 	mockDocRepo := new(MockDocumentRepository)
 	helper := NewAuthHelper(mockProjectRepo, mockDocRepo, "TestService")
 	userIDStr := "507f1f77bcf86cd799439011"
-	ctx := context.WithValue(context.Background(), "userID", userIDStr)
+	ctx := context.WithValue(context.Background(), "userId", userIDStr)
 
 	userObjID, _ := primitive.ObjectIDFromHex(userIDStr)
 	testProject := createTestProject(userObjID)
@@ -107,7 +107,7 @@ func TestVerifyProjectEdit_Forbidden(t *testing.T) {
 	mockProjectRepo := new(MockProjectRepository)
 	mockDocRepo := new(MockDocumentRepository)
 	helper := NewAuthHelper(mockProjectRepo, mockDocRepo, "TestService")
-	ctx := context.WithValue(context.Background(), "userID", "otherUser") // 当前用户是 otherUser
+	ctx := context.WithValue(context.Background(), "userId", "otherUser") // 当前用户是 otherUser
 
 	ownerObjID := primitive.NewObjectID()
 	testProject := createTestProject(ownerObjID) // 项目所有者是 ownerObjID
@@ -134,7 +134,7 @@ func TestVerifyProjectEdit_ProjectNotFound(t *testing.T) {
 	mockProjectRepo := new(MockProjectRepository)
 	mockDocRepo := new(MockDocumentRepository)
 	helper := NewAuthHelper(mockProjectRepo, mockDocRepo, "TestService")
-	ctx := context.WithValue(context.Background(), "userID", "user123")
+	ctx := context.WithValue(context.Background(), "userId", "user123")
 
 	mockProjectRepo.On("GetByID", ctx, "project123").Return(nil, nil) // 项目不存在
 
@@ -159,7 +159,7 @@ func TestVerifyProjectEdit_CollaboratorCanEdit(t *testing.T) {
 	mockProjectRepo := new(MockProjectRepository)
 	mockDocRepo := new(MockDocumentRepository)
 	helper := NewAuthHelper(mockProjectRepo, mockDocRepo, "TestService")
-	ctx := context.WithValue(context.Background(), "userID", "collabUser")
+	ctx := context.WithValue(context.Background(), "userId", "collabUser")
 
 	ownerObjID := primitive.NewObjectID()
 	testProject := createTestProjectWithCollab(ownerObjID, []string{"collabUser"})
@@ -188,7 +188,7 @@ func TestVerifyDocumentEdit_Success(t *testing.T) {
 	mockDocRepo := new(MockDocumentRepository)
 	helper := NewAuthHelper(mockProjectRepo, mockDocRepo, "TestService")
 	userIDStr := "507f1f77bcf86cd799439011"
-	ctx := context.WithValue(context.Background(), "userID", userIDStr)
+	ctx := context.WithValue(context.Background(), "userId", userIDStr)
 
 	userObjID, _ := primitive.ObjectIDFromHex(userIDStr)
 	testProject := createTestProject(userObjID)
@@ -224,7 +224,7 @@ func TestVerifyDocumentEdit_DocumentNotFound(t *testing.T) {
 	mockProjectRepo := new(MockProjectRepository)
 	mockDocRepo := new(MockDocumentRepository)
 	helper := NewAuthHelper(mockProjectRepo, mockDocRepo, "TestService")
-	ctx := context.WithValue(context.Background(), "userID", "user123")
+	ctx := context.WithValue(context.Background(), "userId", "user123")
 
 	mockDocRepo.On("GetByID", ctx, "doc123").Return(nil, nil) // 文档不存在
 
@@ -246,7 +246,7 @@ func TestVerifyDocumentEdit_DocumentNotFound(t *testing.T) {
 
 func TestGetUserID_Success(t *testing.T) {
 	// Arrange
-	ctx := context.WithValue(context.Background(), "userID", "user123")
+	ctx := context.WithValue(context.Background(), "userId", "user123")
 
 	// Act
 	userID, ok := GetUserID(ctx)
@@ -262,7 +262,7 @@ func TestGetUserID_Success(t *testing.T) {
 
 func TestGetUserID_Empty(t *testing.T) {
 	// Arrange
-	ctx := context.WithValue(context.Background(), "userID", "")
+	ctx := context.WithValue(context.Background(), "userId", "")
 
 	// Act
 	_, ok := GetUserID(ctx)
@@ -288,7 +288,7 @@ func TestGetUserID_NotPresent(t *testing.T) {
 
 func TestMustGetUserID_Success(t *testing.T) {
 	// Arrange
-	ctx := context.WithValue(context.Background(), "userID", "user123")
+	ctx := context.WithValue(context.Background(), "userId", "user123")
 
 	// Act
 	userID, err := MustGetUserID(ctx, "TestService")

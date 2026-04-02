@@ -3,6 +3,7 @@ package writer
 import (
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/interfaces"
 )
@@ -28,17 +29,11 @@ func (api *LocationApi) CreateLocation(c *gin.Context) {
 	}
 
 	var req interfaces.CreateLocationRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
-	userID := ""
-	if uid, exists := c.Get("user_id"); exists {
-		if uidStr, ok := uid.(string); ok {
-			userID = uidStr
-		}
-	}
+	userID := shared.GetUserIDOptional(c)
 
 	location, err := api.locationService.Create(c.Request.Context(), projectID, userID, &req)
 	if err != nil {
@@ -113,8 +108,7 @@ func (api *LocationApi) UpdateLocation(c *gin.Context) {
 	}
 
 	var req interfaces.UpdateLocationRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
@@ -155,8 +149,7 @@ func (api *LocationApi) CreateLocationRelation(c *gin.Context) {
 	}
 
 	var req interfaces.CreateLocationRelationRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 

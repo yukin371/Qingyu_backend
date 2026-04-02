@@ -2,10 +2,10 @@ package writer
 
 import (
 	documentModel "Qingyu_backend/models/writer"
-	"context"
 
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/writer/document"
 )
@@ -41,18 +41,13 @@ func (api *EditorApi) AutoSaveDocument(c *gin.Context) {
 	documentID := c.Param("id")
 
 	var req document.AutoSaveRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
 	req.DocumentID = documentID
 
-	// 从gin.Context获取userId并添加到context.Context
-	ctx := c.Request.Context()
-	if userID, exists := c.Get("user_id"); exists {
-		ctx = context.WithValue(ctx, "userID", userID)
-	}
+	ctx := shared.AddUserIDToContext(c)
 
 	resp, err := api.documentService.AutoSaveDocument(ctx, &req)
 	if err != nil {
@@ -80,11 +75,7 @@ func (api *EditorApi) AutoSaveDocument(c *gin.Context) {
 func (api *EditorApi) GetSaveStatus(c *gin.Context) {
 	documentID := c.Param("id")
 
-	// 从gin.Context获取userId并添加到context.Context
-	ctx := c.Request.Context()
-	if userID, exists := c.Get("user_id"); exists {
-		ctx = context.WithValue(ctx, "userID", userID)
-	}
+	ctx := shared.AddUserIDToContext(c)
 
 	status, err := api.documentService.GetSaveStatus(ctx, documentID)
 	if err != nil {
@@ -110,11 +101,7 @@ func (api *EditorApi) GetDocumentContent(c *gin.Context) {
 	c.Header("X-API-Deprecated", "true")
 	c.Header("X-API-Replacement", "/api/v1/writer/documents/{id}/contents")
 
-	// 从gin.Context获取userId并添加到context.Context
-	ctx := c.Request.Context()
-	if userID, exists := c.Get("user_id"); exists {
-		ctx = context.WithValue(ctx, "userID", userID)
-	}
+	ctx := shared.AddUserIDToContext(c)
 
 	content, err := api.documentService.GetDocumentContent(ctx, documentID)
 	if err != nil {
@@ -142,18 +129,13 @@ func (api *EditorApi) UpdateDocumentContent(c *gin.Context) {
 	c.Header("X-API-Replacement", "/api/v1/writer/documents/{id}/contents")
 
 	var req document.UpdateContentRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
 	req.DocumentID = documentID
 
-	// 从gin.Context获取userId并添加到context.Context
-	ctx := c.Request.Context()
-	if userID, exists := c.Get("user_id"); exists {
-		ctx = context.WithValue(ctx, "userID", userID)
-	}
+	ctx := shared.AddUserIDToContext(c)
 
 	if err := api.documentService.UpdateDocumentContent(ctx, &req); err != nil {
 		c.Error(err)
@@ -167,10 +149,7 @@ func (api *EditorApi) UpdateDocumentContent(c *gin.Context) {
 func (api *EditorApi) GetDocumentContents(c *gin.Context) {
 	documentID := c.Param("id")
 
-	ctx := c.Request.Context()
-	if userID, exists := c.Get("user_id"); exists {
-		ctx = context.WithValue(ctx, "userID", userID)
-	}
+	ctx := shared.AddUserIDToContext(c)
 
 	contents, err := api.documentService.GetDocumentContents(ctx, documentID)
 	if err != nil {
@@ -186,16 +165,12 @@ func (api *EditorApi) ReplaceDocumentContents(c *gin.Context) {
 	documentID := c.Param("id")
 
 	var req document.ReplaceDocumentContentsRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 	req.DocumentID = documentID
 
-	ctx := c.Request.Context()
-	if userID, exists := c.Get("user_id"); exists {
-		ctx = context.WithValue(ctx, "userID", userID)
-	}
+	ctx := shared.AddUserIDToContext(c)
 
 	resp, err := api.documentService.ReplaceDocumentContents(ctx, &req)
 	if err != nil {
@@ -210,10 +185,7 @@ func (api *EditorApi) ReplaceDocumentContents(c *gin.Context) {
 func (api *EditorApi) ReindexDocumentContents(c *gin.Context) {
 	documentID := c.Param("id")
 
-	ctx := c.Request.Context()
-	if userID, exists := c.Get("user_id"); exists {
-		ctx = context.WithValue(ctx, "userID", userID)
-	}
+	ctx := shared.AddUserIDToContext(c)
 
 	resp, err := api.documentService.ReindexDocumentContents(ctx, documentID)
 	if err != nil {
@@ -270,7 +242,7 @@ func (api *EditorApi) CalculateWordCount(c *gin.Context) {
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/writer/user/shortcuts [get]
 func (api *EditorApi) GetUserShortcuts(c *gin.Context) {
-	userID, ok := getAuthUserID(c)
+	userID, ok := shared.GetUserID(c)
 	if !ok {
 		response.Unauthorized(c, "未授权")
 		return
@@ -295,15 +267,14 @@ func (api *EditorApi) GetUserShortcuts(c *gin.Context) {
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/writer/user/shortcuts [put]
 func (api *EditorApi) UpdateUserShortcuts(c *gin.Context) {
-	userID, ok := getAuthUserID(c)
+	userID, ok := shared.GetUserID(c)
 	if !ok {
 		response.Unauthorized(c, "未授权")
 		return
 	}
 
 	var req UpdateShortcutsRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
@@ -324,7 +295,7 @@ func (api *EditorApi) UpdateUserShortcuts(c *gin.Context) {
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/writer/user/shortcuts/reset [post]
 func (api *EditorApi) ResetUserShortcuts(c *gin.Context) {
-	userID, ok := getAuthUserID(c)
+	userID, ok := shared.GetUserID(c)
 	if !ok {
 		response.Unauthorized(c, "未授权")
 		return
@@ -347,7 +318,7 @@ func (api *EditorApi) ResetUserShortcuts(c *gin.Context) {
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/writer/user/shortcuts/help [get]
 func (api *EditorApi) GetShortcutHelp(c *gin.Context) {
-	userID, ok := getAuthUserID(c)
+	userID, ok := shared.GetUserID(c)
 	if !ok {
 		response.Unauthorized(c, "未授权")
 		return
@@ -373,16 +344,3 @@ type UpdateShortcutsRequest struct {
 	Shortcuts map[string]documentModel.Shortcut `json:"shortcuts" validate:"required"`
 }
 
-func getAuthUserID(c *gin.Context) (string, bool) {
-	if v, ok := c.Get("user_id"); ok {
-		if s, ok := v.(string); ok && s != "" {
-			return s, true
-		}
-	}
-	if v, ok := c.Get("userID"); ok {
-		if s, ok := v.(string); ok && s != "" {
-			return s, true
-		}
-	}
-	return "", false
-}

@@ -3,6 +3,7 @@ package writer
 import (
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/response"
 	writerModels "Qingyu_backend/models/writer"
 	writerInterface "Qingyu_backend/repository/interfaces/writer"
@@ -27,9 +28,8 @@ func NewEncyclopediaApi(conceptRepo writerInterface.ConceptRepository) *Encyclop
 // @Success 200 {object} response.APIResponse{data=[]*writerModels.Concept}
 // @Router /api/v1/writer/projects/{id}/concepts [get]
 func (api *EncyclopediaApi) ListConcepts(c *gin.Context) {
-	projectID := c.Param("id")
-	if projectID == "" {
-		response.BadRequest(c, "项目ID不能为空", nil)
+	projectID, ok := shared.GetRequiredParam(c, "id", "项目ID")
+	if !ok {
 		return
 	}
 

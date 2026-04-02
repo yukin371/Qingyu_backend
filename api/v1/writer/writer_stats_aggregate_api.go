@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/api/v1/shared"
 	statsModels "Qingyu_backend/models/stats"
 	"Qingyu_backend/pkg/response"
 	bookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
@@ -113,15 +114,8 @@ func (api *WriterStatsAggregateAPI) resolveAggregateBookID(c *gin.Context) (stri
 		return projectID, true
 	}
 
-	userIDValue, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未登录")
-		return "", false
-	}
-
-	userID, ok := userIDValue.(string)
-	if !ok || userID == "" {
-		response.Unauthorized(c, "未登录")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return "", false
 	}
 
@@ -372,14 +366,9 @@ func (api *WriterStatsAggregateAPI) GetChapters(c *gin.Context) {
 		return
 	}
 
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
-	if page < 1 {
-		page = 1
-	}
-	if size < 1 {
-		size = 20
-	}
+	pagination := shared.GetPaginationParamsStandard(c)
+	page := pagination.Page
+	size := pagination.PageSize
 
 	items, total, err := api.statsService.GetChapterRankings(c.Request.Context(), bookID, page, size)
 	if err != nil {

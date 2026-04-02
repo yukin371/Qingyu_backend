@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/lock"
 	"Qingyu_backend/pkg/response"
 )
@@ -44,22 +45,17 @@ func (api *LockAPI) LockDocument(c *gin.Context) {
 	}
 
 	var req LockDocumentRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
 	// 获取用户信息
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
-	userName := ""
-	if name, exists := c.Get("userName"); exists {
-		userName = name.(string)
-	}
+	userName := shared.GetUserName(c)
 
 	// 获取设备ID
 	deviceID := c.GetHeader("X-Device-ID")
@@ -73,7 +69,7 @@ func (api *LockAPI) LockDocument(c *gin.Context) {
 		ttl = time.Duration(req.TTL) * time.Second
 	}
 
-	lock, err := api.lockService.LockDocument(c.Request.Context(), documentID, userID.(string), userName, deviceID, req.AutoExtend, ttl)
+	lock, err := api.lockService.LockDocument(c.Request.Context(), documentID, userID, userName, deviceID, req.AutoExtend, ttl)
 	if err != nil {
 		if isLockedError(err) {
 			response.Conflict(c, "文档已被锁定", err.Error())
@@ -107,14 +103,13 @@ func (api *LockAPI) UnlockDocument(c *gin.Context) {
 	}
 
 	// 获取用户信息
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
 	// 解锁文档
-	if err := api.lockService.UnlockDocument(c.Request.Context(), documentID, userID.(string)); err != nil {
+	if err := api.lockService.UnlockDocument(c.Request.Context(), documentID, userID); err != nil {
 		if isPermissionError(err) {
 			response.Forbidden(c, "无权操作")
 			return
@@ -146,16 +141,15 @@ func (api *LockAPI) RefreshLock(c *gin.Context) {
 	}
 
 	// 获取用户信息
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
 	// 刷新锁（延长30分钟）
 	ttl := 30 * time.Minute
 
-	if err := api.lockService.RefreshLock(c.Request.Context(), documentID, userID.(string), ttl); err != nil {
+	if err := api.lockService.RefreshLock(c.Request.Context(), documentID, userID, ttl); err != nil {
 		c.Error(err)
 		return
 	}
@@ -181,11 +175,8 @@ func (api *LockAPI) GetLockStatus(c *gin.Context) {
 		return
 	}
 
-	// 获取用户信息
-	userID := ""
-	if uid, exists := c.Get("user_id"); exists {
-		userID = uid.(string)
-	}
+	// 获取用户信息（可选，不强制登录）
+	userID := shared.GetUserIDOptional(c)
 
 	status, err := api.lockService.GetLockStatus(c.Request.Context(), documentID, userID)
 	if err != nil {
@@ -218,8 +209,12 @@ func (api *LockAPI) ForceUnlock(c *gin.Context) {
 
 	// 检查管理员权限
 	isAdmin := false
-	if role, exists := c.Get("userRole"); exists {
-		isAdmin = (role == "admin" || role == "super_admin")
+	roles := shared.GetUserRoles(c)
+	for _, r := range roles {
+		if r == "admin" || r == "super_admin" {
+			isAdmin = true
+			break
+		}
 	}
 
 	if !isAdmin {
@@ -257,15 +252,13 @@ func (api *LockAPI) ExtendLock(c *gin.Context) {
 	}
 
 	var req ExtendLockRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
 	// 获取用户信息
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
@@ -275,7 +268,7 @@ func (api *LockAPI) ExtendLock(c *gin.Context) {
 		ttl = 30 * time.Minute // 默认30分钟
 	}
 
-	if err := api.lockService.ExtendLock(c.Request.Context(), documentID, userID.(string), ttl); err != nil {
+	if err := api.lockService.ExtendLock(c.Request.Context(), documentID, userID, ttl); err != nil {
 		c.Error(err)
 		return
 	}

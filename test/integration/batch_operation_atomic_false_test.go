@@ -153,7 +153,7 @@ func TestAtomicFalse_PartialFailure(t *testing.T) {
 	}
 
 	// 设置用户ID
-	ctx = context.WithValue(ctx, "userID", "test_user")
+	ctx = context.WithValue(ctx, "userId", "test_user")
 
 	// 提交批量操作
 	batchOp, err := batchOpService.Submit(ctx, req)
@@ -248,7 +248,7 @@ func TestAtomicTrue_ImmediateStop(t *testing.T) {
 	}
 
 	// 设置用户ID
-	ctx = context.WithValue(ctx, "userID", "test_user")
+	ctx = context.WithValue(ctx, "userId", "test_user")
 
 	// 提交批量操作
 	batchOp, err := batchOpService.Submit(ctx, req)
@@ -326,7 +326,7 @@ func TestAtomicFalse_RetryMechanism(t *testing.T) {
 	}
 
 	// 设置用户ID
-	ctx = context.WithValue(ctx, "userID", "test_user")
+	ctx = context.WithValue(ctx, "userId", "test_user")
 
 	// 提交批量操作
 	batchOp, err := batchOpService.Submit(ctx, req)
@@ -391,7 +391,7 @@ func TestSummaryStatistics(t *testing.T) {
 	}
 
 	// 设置用户ID
-	ctx = context.WithValue(ctx, "userID", "test_user")
+	ctx = context.WithValue(ctx, "userId", "test_user")
 
 	// 提交批量操作
 	batchOp, err := batchOpService.Submit(ctx, req)
@@ -468,7 +468,7 @@ func TestAllSuccess(t *testing.T) {
 	}
 
 	// 设置用户ID
-	ctx = context.WithValue(ctx, "userID", "test_user")
+	ctx = context.WithValue(ctx, "userId", "test_user")
 
 	// 提交批量操作
 	batchOp, err := batchOpService.Submit(ctx, req)
@@ -541,7 +541,7 @@ func TestAllFailure(t *testing.T) {
 	}
 
 	// 设置用户ID
-	ctx = context.WithValue(ctx, "userID", "test_user")
+	ctx = context.WithValue(ctx, "userId", "test_user")
 
 	// 提交批量操作
 	batchOp, err := batchOpService.Submit(ctx, req)
