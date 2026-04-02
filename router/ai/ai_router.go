@@ -10,7 +10,7 @@ import (
 )
 
 // InitAIRouter 初始化AI路由
-func InitAIRouter(r *gin.RouterGroup, aiService *ai.Service, chatService *ai.ChatService, quotaService *ai.QuotaService, phase3Client *ai.Phase3Client) {
+func InitAIRouter(r *gin.RouterGroup, aiService *ai.Service, chatService *ai.ChatService, quotaService *ai.QuotaService, phase3Client *ai.Phase3Client, storyWriteApi *aiApi.StoryWriteApi) {
 	// 创建API实例
 	writingApiHandler := aiApi.NewWritingApi(aiService, quotaService)
 	chatApiHandler := aiApi.NewChatApi(chatService, quotaService)
@@ -87,6 +87,17 @@ func InitAIRouter(r *gin.RouterGroup, aiService *ai.Service, chatService *ai.Cha
 			chatGroup.GET("/sessions", chatApiHandler.GetChatSessions)
 			chatGroup.GET("/sessions/:sessionId", chatApiHandler.GetChatHistory)
 			chatGroup.DELETE("/sessions/:sessionId", chatApiHandler.DeleteChatSession)
+		}
+
+		// ============ 故事上下文写作 ============
+		if storyWriteApi != nil {
+			storyGroup := aiGroup.Group("/story")
+			storyGroup.Use(middleware.QuotaCheckMiddleware(quotaService))
+			{
+				storyGroup.POST("/generate", storyWriteApi.Generate)
+				storyGroup.GET("/context-preview", storyWriteApi.ContextPreview)
+				storyGroup.PUT("/documents/:id/scene-state", storyWriteApi.UpdateSceneState)
+			}
 		}
 
 		// ============ 兼容性路由（支持旧的API路径） ============

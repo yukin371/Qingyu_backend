@@ -47,6 +47,10 @@ type Document struct {
 	Notes string   `bson:"notes,omitempty" json:"notes,omitempty" validate:"max=500"`
 
 	// 双向映射：关联的大纲节点ID
+	// 场景状态（结构化舞台数据）
+	SceneGoal      string `bson:"scene_goal,omitempty" json:"sceneGoal,omitempty" validate:"max=300"`       // 场景目标
+	ActiveConflict string `bson:"active_conflict,omitempty" json:"activeConflict,omitempty" validate:"max=300"` // 活跃冲突
+
 	OutlineNodeID string `bson:"outline_node_id,omitempty" json:"outlineNodeId,omitempty"` // 关联的大纲节点ID
 }
 

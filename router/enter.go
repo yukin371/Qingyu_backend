@@ -11,6 +11,7 @@ import (
 	searchRouter "Qingyu_backend/api/v1/search"
 	adminRouter "Qingyu_backend/router/admin"
 	aiRouter "Qingyu_backend/router/ai"
+	aiApi "Qingyu_backend/api/v1/ai"
 	announcementsRouter "Qingyu_backend/router/announcements"
 	bookstoreRouter "Qingyu_backend/router/bookstore"
 	financeRouter "Qingyu_backend/router/finance"
@@ -36,6 +37,7 @@ import (
 	"Qingyu_backend/service"
 	baseService "Qingyu_backend/service/base"
 	adminservice "Qingyu_backend/service/admin"
+	aiService "Qingyu_backend/service/ai"
 	bookstore "Qingyu_backend/service/bookstore"
 	"Qingyu_backend/service/container"
 	serviceInterfaces "Qingyu_backend/service/interfaces"
@@ -620,7 +622,14 @@ func RegisterRoutes(r *gin.Engine) {
 			phase3Client = nil
 		}
 
-		aiRouter.InitAIRouter(v1, aiSvc, chatService, quotaService, phase3Client)
+		// 创建故事上下文写作 API
+		var storyWriteApi *aiApi.StoryWriteApi
+		contextEngine := serviceContainer.GetStoryContextEngine()
+		if contextEngine != nil && quotaService != nil {
+			storyWriteApi = aiApi.NewStoryWriteApi(contextEngine, quotaService)
+		}
+
+		aiRouter.InitAIRouter(v1, aiSvc, chatService, quotaService, phase3Client, storyWriteApi)
 
 		logger.Info("✓ AI服务路由已注册到: /api/v1/ai/")
 		logger.Info("  - /api/v1/ai/writing/* (续写、改写)")

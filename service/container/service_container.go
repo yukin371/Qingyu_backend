@@ -109,6 +109,7 @@ type ServiceContainer struct {
 	chatService   *aiService.ChatService
 	phase3Client  *aiService.Phase3Client
 	unifiedClient *aiService.UnifiedClient
+	storyContextEngine *aiService.StoryContextEngine
 
 	// Shared services
 	authService           auth.AuthService
@@ -340,6 +341,11 @@ func (c *ServiceContainer) GetPhase3Client() (*aiService.Phase3Client, error) {
 		return nil, fmt.Errorf("Phase3Client未初始化")
 	}
 	return c.phase3Client, nil
+}
+
+// GetStoryContextEngine 获取故事上下文引擎
+func (c *ServiceContainer) GetStoryContextEngine() *aiService.StoryContextEngine {
+	return c.storyContextEngine
 }
 
 // GetUnifiedClient 获取统一AI服务gRPC客户端
@@ -938,6 +944,22 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	} else {
 		fmt.Println("警告: AI服务配置为空，跳过UnifiedClient初始化")
 	}
+
+	// ============ 5.3 故事上下文引擎 ============
+	charRepo := c.repositoryFactory.CreateCharacterRepository()
+	locRepo := c.repositoryFactory.CreateLocationRepository()
+	outlineRepo := c.repositoryFactory.CreateOutlineRepository()
+	docRepo := c.repositoryFactory.CreateDocumentRepository()
+	docContentRepo := c.repositoryFactory.CreateDocumentContentRepository()
+
+	c.storyContextEngine = aiService.NewStoryContextEngine(
+		docRepo,
+		docContentRepo,
+		charRepo,
+		locRepo,
+		outlineRepo,
+	)
+	fmt.Println("  ✓ StoryContextEngine初始化完成")
 
 	// ============ 5. 共享服务初始化 ============
 
