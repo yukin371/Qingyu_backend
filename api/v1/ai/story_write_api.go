@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	aiService "Qingyu_backend/service/ai"
+	writerRepo "Qingyu_backend/repository/interfaces/writer"
 
 	"Qingyu_backend/pkg/response"
 
@@ -14,17 +15,20 @@ import (
 // StoryWriteApi 故事上下文写作 API
 type StoryWriteApi struct {
 	contextEngine *aiService.StoryContextEngine
-	quotaService  *aiService.QuotaService
+	quotaService *aiService.QuotaService
+	documentRepo writerRepo.DocumentRepository
 }
 
 // NewStoryWriteApi 创建故事上下文写作 API 实例
 func NewStoryWriteApi(
 	contextEngine *aiService.StoryContextEngine,
 	quotaService *aiService.QuotaService,
+	documentRepo writerRepo.DocumentRepository,
 ) *StoryWriteApi {
 	return &StoryWriteApi{
 		contextEngine: contextEngine,
 		quotaService:  quotaService,
+		documentRepo:  documentRepo,
 	}
 }
 
@@ -146,7 +150,17 @@ func (api *StoryWriteApi) UpdateSceneState(c *gin.Context) {
 		return
 	}
 
-	// TODO: 调用 documentRepo.Update 更新 SceneGoal/ActiveConflict 字段
+	// 更新文档的场景状态
+	if err := api.documentRepo.Update(
+		c.Request.Context(), documentID, map[string]interface{}{
+			"scene_goal":       req.SceneGoal,
+			"active_conflict": req.ActiveConflict,
+		},
+	); err != nil {
+		response.InternalError(c, fmt.Errorf("更新文档失败: %w", err))
+		return
+	}
+
 	response.SuccessWithMessage(c, "场景状态已更新", gin.H{
 		"documentId":     documentID,
 		"sceneGoal":      req.SceneGoal,

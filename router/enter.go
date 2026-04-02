@@ -37,7 +37,6 @@ import (
 	"Qingyu_backend/service"
 	baseService "Qingyu_backend/service/base"
 	adminservice "Qingyu_backend/service/admin"
-	aiService "Qingyu_backend/service/ai"
 	bookstore "Qingyu_backend/service/bookstore"
 	"Qingyu_backend/service/container"
 	serviceInterfaces "Qingyu_backend/service/interfaces"
@@ -625,8 +624,9 @@ func RegisterRoutes(r *gin.Engine) {
 		// 创建故事上下文写作 API
 		var storyWriteApi *aiApi.StoryWriteApi
 		contextEngine := serviceContainer.GetStoryContextEngine()
-		if contextEngine != nil && quotaService != nil {
-			storyWriteApi = aiApi.NewStoryWriteApi(contextEngine, quotaService)
+		docRepo := serviceContainer.GetRepositoryFactory().CreateDocumentRepository()
+		if contextEngine != nil && quotaService != nil && docRepo != nil {
+			storyWriteApi = aiApi.NewStoryWriteApi(contextEngine, quotaService, docRepo)
 		}
 
 		aiRouter.InitAIRouter(v1, aiSvc, chatService, quotaService, phase3Client, storyWriteApi)
@@ -763,10 +763,10 @@ func RegisterRoutes(r *gin.Engine) {
 		}
 
 		// 注册管理员路由（包含用户管理和权限管理）
-		adminRouter.RegisterAdminRoutes(v1, userSvc, quotaService, auditSvc, adminSvc, configSvc, announcementSvc, userAdminSvc, permissionSvc, serviceContainer.GetPersistedEventBus(), categorySvc, publicationSvc, bannerSvc, mongoDB)
+		adminRouter.RegisterAdminRoutes(v1, userSvc, quotaService, auditSvc, adminSvc, configSvc, announcementSvc, userAdminSvc, permissionSvc, serviceContainer.GetPersistedEventBus(), categorySvc, publicationSvc, bannerSvc)
 	} else {
 		// 如果 MongoDB 不可用，不注册用户管理和权限管理路由
-		adminRouter.RegisterAdminRoutes(v1, userSvc, quotaService, auditSvc, adminSvc, configSvc, announcementSvc, nil, nil, serviceContainer.GetPersistedEventBus(), nil, publicationSvc, nil, nil)
+		adminRouter.RegisterAdminRoutes(v1, userSvc, quotaService, auditSvc, adminSvc, configSvc, announcementSvc, nil, nil, serviceContainer.GetPersistedEventBus(), nil, publicationSvc, nil)
 	}
 
 	logger.Info("✓ 管理员路由已注册到: /api/v1/admin/")

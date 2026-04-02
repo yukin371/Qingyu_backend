@@ -91,12 +91,15 @@ func InitAIRouter(r *gin.RouterGroup, aiService *ai.Service, chatService *ai.Cha
 
 		// ============ 故事上下文写作 ============
 		if storyWriteApi != nil {
+			// context-preview 是调试端点，不需要配额检查
+			aiGroup.GET("/story/context-preview", storyWriteApi.ContextPreview)
+			// UpdateSceneState 只写文档，不需要配额检查
+			aiGroup.PUT("/story/documents/:id/scene-state", storyWriteApi.UpdateSceneState)
+			// Generate 需要配额
 			storyGroup := aiGroup.Group("/story")
-			storyGroup.Use(middleware.QuotaCheckMiddleware(quotaService))
+			storyGroup.Use(middleware.LightQuotaCheckMiddleware(quotaService))
 			{
 				storyGroup.POST("/generate", storyWriteApi.Generate)
-				storyGroup.GET("/context-preview", storyWriteApi.ContextPreview)
-				storyGroup.PUT("/documents/:id/scene-state", storyWriteApi.UpdateSceneState)
 			}
 		}
 

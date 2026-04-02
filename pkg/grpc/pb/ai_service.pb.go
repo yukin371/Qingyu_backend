@@ -7,12 +7,11 @@
 package pb
 
 import (
+	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
-
-	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
-	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
 
 const (
@@ -3730,6 +3729,242 @@ func (x *HealthCheckResponse) GetChecks() map[string]string {
 	return nil
 }
 
+type StoryContextRequest struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	ProjectId       string                 `protobuf:"bytes,1,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
+	DocumentId      string                 `protobuf:"bytes,2,opt,name=document_id,json=documentId,proto3" json:"document_id,omitempty"`
+	Mode            string                 `protobuf:"bytes,3,opt,name=mode,proto3" json:"mode,omitempty"`                                              // continue | rewrite | suggest
+	Instruction     string                 `protobuf:"bytes,4,opt,name=instruction,proto3" json:"instruction,omitempty"`                                // 用户写作指令
+	SelectedText    string                 `protobuf:"bytes,5,opt,name=selected_text,json=selectedText,proto3" json:"selected_text,omitempty"`          // 改写选中文本
+	AssembledPrompt string                 `protobuf:"bytes,6,opt,name=assembled_prompt,json=assembledPrompt,proto3" json:"assembled_prompt,omitempty"` // Go后端已组装好的完整prompt
+	Options         *GenerateOptions       `protobuf:"bytes,7,opt,name=options,proto3" json:"options,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *StoryContextRequest) Reset() {
+	*x = StoryContextRequest{}
+	mi := &file_qingyu_ai_v1_ai_service_proto_msgTypes[51]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StoryContextRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StoryContextRequest) ProtoMessage() {}
+
+func (x *StoryContextRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_qingyu_ai_v1_ai_service_proto_msgTypes[51]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StoryContextRequest.ProtoReflect.Descriptor instead.
+func (*StoryContextRequest) Descriptor() ([]byte, []int) {
+	return file_qingyu_ai_v1_ai_service_proto_rawDescGZIP(), []int{51}
+}
+
+func (x *StoryContextRequest) GetProjectId() string {
+	if x != nil {
+		return x.ProjectId
+	}
+	return ""
+}
+
+func (x *StoryContextRequest) GetDocumentId() string {
+	if x != nil {
+		return x.DocumentId
+	}
+	return ""
+}
+
+func (x *StoryContextRequest) GetMode() string {
+	if x != nil {
+		return x.Mode
+	}
+	return ""
+}
+
+func (x *StoryContextRequest) GetInstruction() string {
+	if x != nil {
+		return x.Instruction
+	}
+	return ""
+}
+
+func (x *StoryContextRequest) GetSelectedText() string {
+	if x != nil {
+		return x.SelectedText
+	}
+	return ""
+}
+
+func (x *StoryContextRequest) GetAssembledPrompt() string {
+	if x != nil {
+		return x.AssembledPrompt
+	}
+	return ""
+}
+
+func (x *StoryContextRequest) GetOptions() *GenerateOptions {
+	if x != nil {
+		return x.Options
+	}
+	return nil
+}
+
+type StoryContextResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Content       string                 `protobuf:"bytes,1,opt,name=content,proto3" json:"content,omitempty"`
+	TokensUsed    int32                  `protobuf:"varint,2,opt,name=tokens_used,json=tokensUsed,proto3" json:"tokens_used,omitempty"`
+	Model         string                 `protobuf:"bytes,3,opt,name=model,proto3" json:"model,omitempty"`
+	GeneratedAt   int64                  `protobuf:"varint,4,opt,name=generated_at,json=generatedAt,proto3" json:"generated_at,omitempty"`
+	ContextStats  *StoryContextStats     `protobuf:"bytes,5,opt,name=context_stats,json=contextStats,proto3" json:"context_stats,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *StoryContextResponse) Reset() {
+	*x = StoryContextResponse{}
+	mi := &file_qingyu_ai_v1_ai_service_proto_msgTypes[52]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StoryContextResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StoryContextResponse) ProtoMessage() {}
+
+func (x *StoryContextResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_qingyu_ai_v1_ai_service_proto_msgTypes[52]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StoryContextResponse.ProtoReflect.Descriptor instead.
+func (*StoryContextResponse) Descriptor() ([]byte, []int) {
+	return file_qingyu_ai_v1_ai_service_proto_rawDescGZIP(), []int{52}
+}
+
+func (x *StoryContextResponse) GetContent() string {
+	if x != nil {
+		return x.Content
+	}
+	return ""
+}
+
+func (x *StoryContextResponse) GetTokensUsed() int32 {
+	if x != nil {
+		return x.TokensUsed
+	}
+	return 0
+}
+
+func (x *StoryContextResponse) GetModel() string {
+	if x != nil {
+		return x.Model
+	}
+	return ""
+}
+
+func (x *StoryContextResponse) GetGeneratedAt() int64 {
+	if x != nil {
+		return x.GeneratedAt
+	}
+	return 0
+}
+
+func (x *StoryContextResponse) GetContextStats() *StoryContextStats {
+	if x != nil {
+		return x.ContextStats
+	}
+	return nil
+}
+
+type StoryContextStats struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	StageTokens   int32                  `protobuf:"varint,1,opt,name=stage_tokens,json=stageTokens,proto3" json:"stage_tokens,omitempty"`
+	OutlineTokens int32                  `protobuf:"varint,2,opt,name=outline_tokens,json=outlineTokens,proto3" json:"outline_tokens,omitempty"`
+	RagTokens     int32                  `protobuf:"varint,3,opt,name=rag_tokens,json=ragTokens,proto3" json:"rag_tokens,omitempty"`
+	TotalTokens   int32                  `protobuf:"varint,4,opt,name=total_tokens,json=totalTokens,proto3" json:"total_tokens,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *StoryContextStats) Reset() {
+	*x = StoryContextStats{}
+	mi := &file_qingyu_ai_v1_ai_service_proto_msgTypes[53]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StoryContextStats) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StoryContextStats) ProtoMessage() {}
+
+func (x *StoryContextStats) ProtoReflect() protoreflect.Message {
+	mi := &file_qingyu_ai_v1_ai_service_proto_msgTypes[53]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StoryContextStats.ProtoReflect.Descriptor instead.
+func (*StoryContextStats) Descriptor() ([]byte, []int) {
+	return file_qingyu_ai_v1_ai_service_proto_rawDescGZIP(), []int{53}
+}
+
+func (x *StoryContextStats) GetStageTokens() int32 {
+	if x != nil {
+		return x.StageTokens
+	}
+	return 0
+}
+
+func (x *StoryContextStats) GetOutlineTokens() int32 {
+	if x != nil {
+		return x.OutlineTokens
+	}
+	return 0
+}
+
+func (x *StoryContextStats) GetRagTokens() int32 {
+	if x != nil {
+		return x.RagTokens
+	}
+	return 0
+}
+
+func (x *StoryContextStats) GetTotalTokens() int32 {
+	if x != nil {
+		return x.TotalTokens
+	}
+	return 0
+}
+
 var File_qingyu_ai_v1_ai_service_proto protoreflect.FileDescriptor
 
 const file_qingyu_ai_v1_ai_service_proto_rawDesc = "" +
@@ -4110,7 +4345,30 @@ const file_qingyu_ai_v1_ai_service_proto_rawDesc = "" +
 	"\x06checks\x18\x02 \x03(\v2*.qingyu.ai.HealthCheckResponse.ChecksEntryR\x06checks\x1a9\n" +
 	"\vChecksEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x012\x9a\x06\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\x91\x02\n" +
+	"\x13StoryContextRequest\x12\x1d\n" +
+	"\n" +
+	"project_id\x18\x01 \x01(\tR\tprojectId\x12\x1f\n" +
+	"\vdocument_id\x18\x02 \x01(\tR\n" +
+	"documentId\x12\x12\n" +
+	"\x04mode\x18\x03 \x01(\tR\x04mode\x12 \n" +
+	"\vinstruction\x18\x04 \x01(\tR\vinstruction\x12#\n" +
+	"\rselected_text\x18\x05 \x01(\tR\fselectedText\x12)\n" +
+	"\x10assembled_prompt\x18\x06 \x01(\tR\x0fassembledPrompt\x124\n" +
+	"\aoptions\x18\a \x01(\v2\x1a.qingyu.ai.GenerateOptionsR\aoptions\"\xcd\x01\n" +
+	"\x14StoryContextResponse\x12\x18\n" +
+	"\acontent\x18\x01 \x01(\tR\acontent\x12\x1f\n" +
+	"\vtokens_used\x18\x02 \x01(\x05R\n" +
+	"tokensUsed\x12\x14\n" +
+	"\x05model\x18\x03 \x01(\tR\x05model\x12!\n" +
+	"\fgenerated_at\x18\x04 \x01(\x03R\vgeneratedAt\x12A\n" +
+	"\rcontext_stats\x18\x05 \x01(\v2\x1c.qingyu.ai.StoryContextStatsR\fcontextStats\"\x9f\x01\n" +
+	"\x11StoryContextStats\x12!\n" +
+	"\fstage_tokens\x18\x01 \x01(\x05R\vstageTokens\x12%\n" +
+	"\x0eoutline_tokens\x18\x02 \x01(\x05R\routlineTokens\x12\x1d\n" +
+	"\n" +
+	"rag_tokens\x18\x03 \x01(\x05R\tragTokens\x12!\n" +
+	"\ftotal_tokens\x18\x04 \x01(\x05R\vtotalTokens2\xe9\x06\n" +
 	"\tAIService\x12X\n" +
 	"\x0fGenerateContent\x12!.qingyu.ai.GenerateContentRequest\x1a\".qingyu.ai.GenerateContentResponse\x12I\n" +
 	"\x0eQueryKnowledge\x12\x1a.qingyu.ai.RAGQueryRequest\x1a\x1b.qingyu.ai.RAGQueryResponse\x12C\n" +
@@ -4120,7 +4378,9 @@ const file_qingyu_ai_v1_ai_service_proto_rawDesc = "" +
 	"\x17ExecuteCreativeWorkflow\x12\".qingyu.ai.CreativeWorkflowRequest\x1a#.qingyu.ai.CreativeWorkflowResponse\x12H\n" +
 	"\x0fGenerateOutline\x12\x19.qingyu.ai.OutlineRequest\x1a\x1a.qingyu.ai.OutlineResponse\x12Q\n" +
 	"\x12GenerateCharacters\x12\x1c.qingyu.ai.CharactersRequest\x1a\x1d.qingyu.ai.CharactersResponse\x12?\n" +
-	"\fGeneratePlot\x12\x16.qingyu.ai.PlotRequest\x1a\x17.qingyu.ai.PlotResponse\x12>\n" +
+	"\fGeneratePlot\x12\x16.qingyu.ai.PlotRequest\x1a\x17.qingyu.ai.PlotResponse\x12M\n" +
+	"\n" +
+	"StoryWrite\x12\x1e.qingyu.ai.StoryContextRequest\x1a\x1f.qingyu.ai.StoryContextResponse\x12>\n" +
 	"\tEmbedText\x12\x17.qingyu.ai.EmbedRequest\x1a\x18.qingyu.ai.EmbedResponse\x12L\n" +
 	"\vHealthCheck\x12\x1d.qingyu.ai.HealthCheckRequest\x1a\x1e.qingyu.ai.HealthCheckResponseB7Z5github.com/yukin371/Qingyu/Qingyu_backend/pkg/grpc/pbb\x06proto3"
 
@@ -4136,7 +4396,7 @@ func file_qingyu_ai_v1_ai_service_proto_rawDescGZIP() []byte {
 	return file_qingyu_ai_v1_ai_service_proto_rawDescData
 }
 
-var file_qingyu_ai_v1_ai_service_proto_msgTypes = make([]protoimpl.MessageInfo, 61)
+var file_qingyu_ai_v1_ai_service_proto_msgTypes = make([]protoimpl.MessageInfo, 64)
 var file_qingyu_ai_v1_ai_service_proto_goTypes = []any{
 	(*GenerateContentRequest)(nil),   // 0: qingyu.ai.GenerateContentRequest
 	(*GenerateOptions)(nil),          // 1: qingyu.ai.GenerateOptions
@@ -4189,43 +4449,46 @@ var file_qingyu_ai_v1_ai_service_proto_goTypes = []any{
 	(*DiagnosticIssue)(nil),          // 48: qingyu.ai.DiagnosticIssue
 	(*HealthCheckRequest)(nil),       // 49: qingyu.ai.HealthCheckRequest
 	(*HealthCheckResponse)(nil),      // 50: qingyu.ai.HealthCheckResponse
-	nil,                              // 51: qingyu.ai.RAGResult.MetadataEntry
-	nil,                              // 52: qingyu.ai.WorldSettings.SettingsEntry
-	nil,                              // 53: qingyu.ai.AgentExecutionRequest.ParametersEntry
-	nil,                              // 54: qingyu.ai.CreativeWorkflowRequest.WorkspaceContextEntry
-	nil,                              // 55: qingyu.ai.CreativeWorkflowResponse.ExecutionTimesEntry
-	nil,                              // 56: qingyu.ai.OutlineRequest.WorkspaceContextEntry
-	nil,                              // 57: qingyu.ai.CharactersRequest.WorkspaceContextEntry
-	nil,                              // 58: qingyu.ai.PlotRequest.WorkspaceContextEntry
-	nil,                              // 59: qingyu.ai.EventImpact.OnCharactersEntry
-	nil,                              // 60: qingyu.ai.HealthCheckResponse.ChecksEntry
+	(*StoryContextRequest)(nil),      // 51: qingyu.ai.StoryContextRequest
+	(*StoryContextResponse)(nil),     // 52: qingyu.ai.StoryContextResponse
+	(*StoryContextStats)(nil),        // 53: qingyu.ai.StoryContextStats
+	nil,                              // 54: qingyu.ai.RAGResult.MetadataEntry
+	nil,                              // 55: qingyu.ai.WorldSettings.SettingsEntry
+	nil,                              // 56: qingyu.ai.AgentExecutionRequest.ParametersEntry
+	nil,                              // 57: qingyu.ai.CreativeWorkflowRequest.WorkspaceContextEntry
+	nil,                              // 58: qingyu.ai.CreativeWorkflowResponse.ExecutionTimesEntry
+	nil,                              // 59: qingyu.ai.OutlineRequest.WorkspaceContextEntry
+	nil,                              // 60: qingyu.ai.CharactersRequest.WorkspaceContextEntry
+	nil,                              // 61: qingyu.ai.PlotRequest.WorkspaceContextEntry
+	nil,                              // 62: qingyu.ai.EventImpact.OnCharactersEntry
+	nil,                              // 63: qingyu.ai.HealthCheckResponse.ChecksEntry
 }
 var file_qingyu_ai_v1_ai_service_proto_depIdxs = []int32{
 	1,  // 0: qingyu.ai.GenerateContentRequest.options:type_name -> qingyu.ai.GenerateOptions
 	4,  // 1: qingyu.ai.RAGQueryRequest.filters:type_name -> qingyu.ai.RAGFilters
 	6,  // 2: qingyu.ai.RAGQueryResponse.results:type_name -> qingyu.ai.RAGResult
-	51, // 3: qingyu.ai.RAGResult.metadata:type_name -> qingyu.ai.RAGResult.MetadataEntry
+	54, // 3: qingyu.ai.RAGResult.metadata:type_name -> qingyu.ai.RAGResult.MetadataEntry
 	9,  // 4: qingyu.ai.ContextResponse.context:type_name -> qingyu.ai.WorkspaceContext
 	10, // 5: qingyu.ai.WorkspaceContext.previous_chapters:type_name -> qingyu.ai.ChapterSummary
 	11, // 6: qingyu.ai.WorkspaceContext.active_characters:type_name -> qingyu.ai.CharacterInfo
 	12, // 7: qingyu.ai.WorkspaceContext.timeline_events:type_name -> qingyu.ai.TimelineEvent
 	13, // 8: qingyu.ai.WorkspaceContext.outline_nodes:type_name -> qingyu.ai.OutlineNode
 	14, // 9: qingyu.ai.WorkspaceContext.world_settings:type_name -> qingyu.ai.WorldSettings
-	52, // 10: qingyu.ai.WorldSettings.settings:type_name -> qingyu.ai.WorldSettings.SettingsEntry
-	53, // 11: qingyu.ai.AgentExecutionRequest.parameters:type_name -> qingyu.ai.AgentExecutionRequest.ParametersEntry
+	55, // 10: qingyu.ai.WorldSettings.settings:type_name -> qingyu.ai.WorldSettings.SettingsEntry
+	56, // 11: qingyu.ai.AgentExecutionRequest.parameters:type_name -> qingyu.ai.AgentExecutionRequest.ParametersEntry
 	19, // 12: qingyu.ai.EmbedResponse.embeddings:type_name -> qingyu.ai.Embedding
-	54, // 13: qingyu.ai.CreativeWorkflowRequest.workspace_context:type_name -> qingyu.ai.CreativeWorkflowRequest.WorkspaceContextEntry
+	57, // 13: qingyu.ai.CreativeWorkflowRequest.workspace_context:type_name -> qingyu.ai.CreativeWorkflowRequest.WorkspaceContextEntry
 	24, // 14: qingyu.ai.CreativeWorkflowResponse.outline:type_name -> qingyu.ai.OutlineData
 	29, // 15: qingyu.ai.CreativeWorkflowResponse.characters:type_name -> qingyu.ai.CharactersData
 	41, // 16: qingyu.ai.CreativeWorkflowResponse.plot:type_name -> qingyu.ai.PlotData
 	47, // 17: qingyu.ai.CreativeWorkflowResponse.diagnostic_report:type_name -> qingyu.ai.DiagnosticReportData
-	55, // 18: qingyu.ai.CreativeWorkflowResponse.execution_times:type_name -> qingyu.ai.CreativeWorkflowResponse.ExecutionTimesEntry
-	56, // 19: qingyu.ai.OutlineRequest.workspace_context:type_name -> qingyu.ai.OutlineRequest.WorkspaceContextEntry
+	58, // 18: qingyu.ai.CreativeWorkflowResponse.execution_times:type_name -> qingyu.ai.CreativeWorkflowResponse.ExecutionTimesEntry
+	59, // 19: qingyu.ai.OutlineRequest.workspace_context:type_name -> qingyu.ai.OutlineRequest.WorkspaceContextEntry
 	24, // 20: qingyu.ai.OutlineResponse.outline:type_name -> qingyu.ai.OutlineData
 	25, // 21: qingyu.ai.OutlineData.chapters:type_name -> qingyu.ai.ChapterData
 	26, // 22: qingyu.ai.OutlineData.story_arc:type_name -> qingyu.ai.StoryArc
 	24, // 23: qingyu.ai.CharactersRequest.outline:type_name -> qingyu.ai.OutlineData
-	57, // 24: qingyu.ai.CharactersRequest.workspace_context:type_name -> qingyu.ai.CharactersRequest.WorkspaceContextEntry
+	60, // 24: qingyu.ai.CharactersRequest.workspace_context:type_name -> qingyu.ai.CharactersRequest.WorkspaceContextEntry
 	29, // 25: qingyu.ai.CharactersResponse.characters:type_name -> qingyu.ai.CharactersData
 	30, // 26: qingyu.ai.CharactersData.characters:type_name -> qingyu.ai.CharacterData
 	35, // 27: qingyu.ai.CharactersData.relationship_network:type_name -> qingyu.ai.RelationshipNetwork
@@ -4238,41 +4501,45 @@ var file_qingyu_ai_v1_ai_service_proto_depIdxs = []int32{
 	38, // 34: qingyu.ai.RelationshipNetwork.mentorships:type_name -> qingyu.ai.Mentorship
 	24, // 35: qingyu.ai.PlotRequest.outline:type_name -> qingyu.ai.OutlineData
 	29, // 36: qingyu.ai.PlotRequest.characters:type_name -> qingyu.ai.CharactersData
-	58, // 37: qingyu.ai.PlotRequest.workspace_context:type_name -> qingyu.ai.PlotRequest.WorkspaceContextEntry
+	61, // 37: qingyu.ai.PlotRequest.workspace_context:type_name -> qingyu.ai.PlotRequest.WorkspaceContextEntry
 	41, // 38: qingyu.ai.PlotResponse.plot:type_name -> qingyu.ai.PlotData
 	42, // 39: qingyu.ai.PlotData.timeline_events:type_name -> qingyu.ai.TimelineEventData
 	44, // 40: qingyu.ai.PlotData.plot_threads:type_name -> qingyu.ai.PlotThread
 	45, // 41: qingyu.ai.PlotData.conflicts:type_name -> qingyu.ai.ConflictData
 	46, // 42: qingyu.ai.PlotData.key_plot_points:type_name -> qingyu.ai.KeyPlotPoints
 	43, // 43: qingyu.ai.TimelineEventData.impact:type_name -> qingyu.ai.EventImpact
-	59, // 44: qingyu.ai.EventImpact.on_characters:type_name -> qingyu.ai.EventImpact.OnCharactersEntry
+	62, // 44: qingyu.ai.EventImpact.on_characters:type_name -> qingyu.ai.EventImpact.OnCharactersEntry
 	48, // 45: qingyu.ai.DiagnosticReportData.issues:type_name -> qingyu.ai.DiagnosticIssue
-	60, // 46: qingyu.ai.HealthCheckResponse.checks:type_name -> qingyu.ai.HealthCheckResponse.ChecksEntry
-	0,  // 47: qingyu.ai.AIService.GenerateContent:input_type -> qingyu.ai.GenerateContentRequest
-	3,  // 48: qingyu.ai.AIService.QueryKnowledge:input_type -> qingyu.ai.RAGQueryRequest
-	7,  // 49: qingyu.ai.AIService.GetContext:input_type -> qingyu.ai.ContextRequest
-	15, // 50: qingyu.ai.AIService.ExecuteAgent:input_type -> qingyu.ai.AgentExecutionRequest
-	20, // 51: qingyu.ai.AIService.ExecuteCreativeWorkflow:input_type -> qingyu.ai.CreativeWorkflowRequest
-	22, // 52: qingyu.ai.AIService.GenerateOutline:input_type -> qingyu.ai.OutlineRequest
-	27, // 53: qingyu.ai.AIService.GenerateCharacters:input_type -> qingyu.ai.CharactersRequest
-	39, // 54: qingyu.ai.AIService.GeneratePlot:input_type -> qingyu.ai.PlotRequest
-	17, // 55: qingyu.ai.AIService.EmbedText:input_type -> qingyu.ai.EmbedRequest
-	49, // 56: qingyu.ai.AIService.HealthCheck:input_type -> qingyu.ai.HealthCheckRequest
-	2,  // 57: qingyu.ai.AIService.GenerateContent:output_type -> qingyu.ai.GenerateContentResponse
-	5,  // 58: qingyu.ai.AIService.QueryKnowledge:output_type -> qingyu.ai.RAGQueryResponse
-	8,  // 59: qingyu.ai.AIService.GetContext:output_type -> qingyu.ai.ContextResponse
-	16, // 60: qingyu.ai.AIService.ExecuteAgent:output_type -> qingyu.ai.AgentExecutionResponse
-	21, // 61: qingyu.ai.AIService.ExecuteCreativeWorkflow:output_type -> qingyu.ai.CreativeWorkflowResponse
-	23, // 62: qingyu.ai.AIService.GenerateOutline:output_type -> qingyu.ai.OutlineResponse
-	28, // 63: qingyu.ai.AIService.GenerateCharacters:output_type -> qingyu.ai.CharactersResponse
-	40, // 64: qingyu.ai.AIService.GeneratePlot:output_type -> qingyu.ai.PlotResponse
-	18, // 65: qingyu.ai.AIService.EmbedText:output_type -> qingyu.ai.EmbedResponse
-	50, // 66: qingyu.ai.AIService.HealthCheck:output_type -> qingyu.ai.HealthCheckResponse
-	57, // [57:67] is the sub-list for method output_type
-	47, // [47:57] is the sub-list for method input_type
-	47, // [47:47] is the sub-list for extension type_name
-	47, // [47:47] is the sub-list for extension extendee
-	0,  // [0:47] is the sub-list for field type_name
+	63, // 46: qingyu.ai.HealthCheckResponse.checks:type_name -> qingyu.ai.HealthCheckResponse.ChecksEntry
+	1,  // 47: qingyu.ai.StoryContextRequest.options:type_name -> qingyu.ai.GenerateOptions
+	53, // 48: qingyu.ai.StoryContextResponse.context_stats:type_name -> qingyu.ai.StoryContextStats
+	0,  // 49: qingyu.ai.AIService.GenerateContent:input_type -> qingyu.ai.GenerateContentRequest
+	3,  // 50: qingyu.ai.AIService.QueryKnowledge:input_type -> qingyu.ai.RAGQueryRequest
+	7,  // 51: qingyu.ai.AIService.GetContext:input_type -> qingyu.ai.ContextRequest
+	15, // 52: qingyu.ai.AIService.ExecuteAgent:input_type -> qingyu.ai.AgentExecutionRequest
+	20, // 53: qingyu.ai.AIService.ExecuteCreativeWorkflow:input_type -> qingyu.ai.CreativeWorkflowRequest
+	22, // 54: qingyu.ai.AIService.GenerateOutline:input_type -> qingyu.ai.OutlineRequest
+	27, // 55: qingyu.ai.AIService.GenerateCharacters:input_type -> qingyu.ai.CharactersRequest
+	39, // 56: qingyu.ai.AIService.GeneratePlot:input_type -> qingyu.ai.PlotRequest
+	51, // 57: qingyu.ai.AIService.StoryWrite:input_type -> qingyu.ai.StoryContextRequest
+	17, // 58: qingyu.ai.AIService.EmbedText:input_type -> qingyu.ai.EmbedRequest
+	49, // 59: qingyu.ai.AIService.HealthCheck:input_type -> qingyu.ai.HealthCheckRequest
+	2,  // 60: qingyu.ai.AIService.GenerateContent:output_type -> qingyu.ai.GenerateContentResponse
+	5,  // 61: qingyu.ai.AIService.QueryKnowledge:output_type -> qingyu.ai.RAGQueryResponse
+	8,  // 62: qingyu.ai.AIService.GetContext:output_type -> qingyu.ai.ContextResponse
+	16, // 63: qingyu.ai.AIService.ExecuteAgent:output_type -> qingyu.ai.AgentExecutionResponse
+	21, // 64: qingyu.ai.AIService.ExecuteCreativeWorkflow:output_type -> qingyu.ai.CreativeWorkflowResponse
+	23, // 65: qingyu.ai.AIService.GenerateOutline:output_type -> qingyu.ai.OutlineResponse
+	28, // 66: qingyu.ai.AIService.GenerateCharacters:output_type -> qingyu.ai.CharactersResponse
+	40, // 67: qingyu.ai.AIService.GeneratePlot:output_type -> qingyu.ai.PlotResponse
+	52, // 68: qingyu.ai.AIService.StoryWrite:output_type -> qingyu.ai.StoryContextResponse
+	18, // 69: qingyu.ai.AIService.EmbedText:output_type -> qingyu.ai.EmbedResponse
+	50, // 70: qingyu.ai.AIService.HealthCheck:output_type -> qingyu.ai.HealthCheckResponse
+	60, // [60:71] is the sub-list for method output_type
+	49, // [49:60] is the sub-list for method input_type
+	49, // [49:49] is the sub-list for extension type_name
+	49, // [49:49] is the sub-list for extension extendee
+	0,  // [0:49] is the sub-list for field type_name
 }
 
 func init() { file_qingyu_ai_v1_ai_service_proto_init() }
@@ -4286,7 +4553,7 @@ func file_qingyu_ai_v1_ai_service_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_qingyu_ai_v1_ai_service_proto_rawDesc), len(file_qingyu_ai_v1_ai_service_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   61,
+			NumMessages:   64,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
