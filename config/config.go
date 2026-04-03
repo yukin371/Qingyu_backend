@@ -22,6 +22,7 @@ type Config struct {
 	JWT           *JWTConfig                        `mapstructure:"jwt"`
 	AI            *AIConfig                         `mapstructure:"ai"`
 	Elasticsearch *ElasticsearchConfig              `mapstructure:"elasticsearch"`
+	Milvus        *MilvusConfig                     `mapstructure:"milvus"`
 	External      *ExternalAPIConfig                `mapstructure:"external"`
 	AIQuota       *AIQuotaConfig                    `mapstructure:"ai_quota"`
 	Email         *EmailConfig                      `mapstructure:"email"`
@@ -42,6 +43,15 @@ type ElasticsearchConfig struct {
 type ElasticsearchGrayConfig struct {
 	Enabled bool `mapstructure:"enabled"`
 	Percent int  `mapstructure:"percent"`
+}
+
+// MilvusConfig Milvus 向量数据库配置
+type MilvusConfig struct {
+	Host           string `mapstructure:"host"`
+	Port           int    `mapstructure:"port"`
+	CollectionName string `mapstructure:"collection_name"`
+	Dimension      int    `mapstructure:"dimension"`
+	Enabled        bool   `mapstructure:"enabled"`
 }
 
 // ServerConfig 服务器配置
@@ -454,6 +464,13 @@ func setDefaults() {
 	v.SetDefault("elasticsearch.index_prefix", "qingyu")
 	v.SetDefault("elasticsearch.grayscale.enabled", false)
 	v.SetDefault("elasticsearch.grayscale.percent", 10)
+
+	// Milvus 默认配置
+	v.SetDefault("milvus.enabled", false)
+	v.SetDefault("milvus.host", "localhost")
+	v.SetDefault("milvus.port", 19530)
+	v.SetDefault("milvus.collection_name", "qingyu_books")
+	v.SetDefault("milvus.dimension", 1536)
 
 	// 邮件默认配置
 	v.SetDefault("email.enabled", false)

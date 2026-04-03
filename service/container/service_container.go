@@ -792,7 +792,7 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	// 这些服务使用缓存服务
 	c.bookDetailService = bookstoreService.NewBookDetailService(bookDetailRepo, bookstoreCacheService)
 	c.bookRatingService = bookstoreService.NewBookRatingService(bookRatingRepo, bookstoreCacheService)
-	c.bookStatisticsService = bookstoreService.NewBookStatisticsService(bookStatisticsRepo, bookstoreCacheService)
+	c.bookStatisticsService = bookstoreService.NewBookStatisticsService(bookStatisticsRepo, bookRatingRepo, bookstoreCacheService)
 
 	// ============ 3. 创建阅读器服务 ============
 	progressRepo := c.repositoryFactory.CreateReadingProgressRepository()
@@ -1646,6 +1646,203 @@ func (c *ServiceContainer) GetAllServicesMetrics() map[string]*metrics.ServiceMe
 	}
 
 	return result
+}
+
+// ServiceHealthStatus 单个依赖服务的健康检查结果
+type ServiceHealthStatus struct {
+	Status    string `json:"status"`     // "healthy", "unhealthy", "not_configured"
+	LatencyMs int64  `json:"latency_ms"` // 健康检查耗时（毫秒）
+	Error     string `json:"error,omitempty"`
+}
+
+// InfrastructureHealthResult 基础设施健康检查结果
+type InfrastructureHealthResult struct {
+	Status        string                       `json:"status"` // "healthy", "degraded", "unhealthy"
+	Services      map[string]*ServiceHealthStatus `json:"services"`
+	Version       string                       `json:"version"`
+	UptimeSeconds int64                        `json:"uptime_seconds"`
+}
+
+// startTime 记录服务启动时间
+var startTime = time.Now()
+
+// GetInfrastructureHealth 检查所有基础设施依赖的健康状态
+// 包括 MongoDB、Redis、Milvus、AI gRPC 服务
+func (c *ServiceContainer) GetInfrastructureHealth(ctx context.Context) *InfrastructureHealthResult {
+	result := &InfrastructureHealthResult{
+		Services: make(map[string]*ServiceHealthStatus),
+		Version:  "1.0.0",
+		UptimeSeconds: int64(time.Since(startTime).Seconds()),
+	}
+
+	// 检查 MongoDB（关键服务）
+	result.Services["mongodb"] = c.checkMongoDB(ctx)
+
+	// 检查 Redis（非关键服务）
+	result.Services["redis"] = c.checkRedis(ctx)
+
+	// 检查 Milvus（非关键服务）
+	result.Services["milvus"] = c.checkMilvus(ctx)
+
+	// 检查 AI gRPC 服务（非关键服务）
+	result.Services["ai_service"] = c.checkAIService(ctx)
+
+	// 确定整体状态
+	result.Status = c.determineOverallStatus(result.Services)
+
+	return result
+}
+
+// checkMongoDB 检查 MongoDB 健康状态
+func (c *ServiceContainer) checkMongoDB(ctx context.Context) *ServiceHealthStatus {
+	if c.mongoClient == nil {
+		return &ServiceHealthStatus{Status: "not_configured", Error: "MongoDB client not initialized"}
+	}
+
+	start := time.Now()
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
+	err := c.mongoClient.Ping(ctx, nil)
+	latency := time.Since(start).Milliseconds()
+
+	if err != nil {
+		return &ServiceHealthStatus{
+			Status:    "unhealthy",
+			LatencyMs: latency,
+			Error:     err.Error(),
+		}
+	}
+	return &ServiceHealthStatus{Status: "healthy", LatencyMs: latency}
+}
+
+// checkRedis 检查 Redis 健康状态
+func (c *ServiceContainer) checkRedis(ctx context.Context) *ServiceHealthStatus {
+	if c.redisClient == nil {
+		return &ServiceHealthStatus{Status: "not_configured", Error: "Redis client not initialized"}
+	}
+
+	start := time.Now()
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
+	err := c.redisClient.Ping(ctx)
+	latency := time.Since(start).Milliseconds()
+
+	if err != nil {
+		return &ServiceHealthStatus{
+			Status:    "unhealthy",
+			LatencyMs: latency,
+			Error:     err.Error(),
+		}
+	}
+	return &ServiceHealthStatus{Status: "healthy", LatencyMs: latency}
+}
+
+// checkMilvus 检查 Milvus 健康状态
+func (c *ServiceContainer) checkMilvus(ctx context.Context) *ServiceHealthStatus {
+	// 检查配置是否启用
+	cfg := config.GlobalConfig
+	if cfg == nil || cfg.Milvus == nil || !cfg.Milvus.Enabled {
+		return &ServiceHealthStatus{Status: "not_configured", Error: "Milvus not enabled in config"}
+	}
+
+	// 尝试创建临时连接进行健康检查
+	repo, err := searchRepo.NewMilvusRepository(cfg.Milvus.CollectionName, cfg.Milvus.Dimension)
+	if err != nil {
+		return &ServiceHealthStatus{Status: "unhealthy", Error: "Failed to create Milvus repository: " + err.Error()}
+	}
+
+	connectCtx, connectCancel := context.WithTimeout(ctx, 5*time.Second)
+	defer connectCancel()
+
+	if err := repo.Connect(connectCtx, cfg.Milvus.Host, cfg.Milvus.Port); err != nil {
+		return &ServiceHealthStatus{Status: "unhealthy", Error: "Failed to connect to Milvus: " + err.Error()}
+	}
+	defer repo.Close()
+
+	start := time.Now()
+	healthCtx, healthCancel := context.WithTimeout(ctx, 5*time.Second)
+	defer healthCancel()
+
+	err = repo.HealthCheck(healthCtx)
+	latency := time.Since(start).Milliseconds()
+
+	if err != nil {
+		return &ServiceHealthStatus{
+			Status:    "unhealthy",
+			LatencyMs: latency,
+			Error:     err.Error(),
+		}
+	}
+	return &ServiceHealthStatus{Status: "healthy", LatencyMs: latency}
+}
+
+// checkAIService 检查 AI gRPC 服务健康状态
+func (c *ServiceContainer) checkAIService(ctx context.Context) *ServiceHealthStatus {
+	// 优先使用 UnifiedClient，其次 Phase3Client
+	if c.unifiedClient != nil {
+		start := time.Now()
+		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		defer cancel()
+
+		err := c.unifiedClient.HealthCheckSimple(ctx)
+		latency := time.Since(start).Milliseconds()
+
+		if err != nil {
+			return &ServiceHealthStatus{
+				Status:    "unhealthy",
+				LatencyMs: latency,
+				Error:     err.Error(),
+			}
+		}
+		return &ServiceHealthStatus{Status: "healthy", LatencyMs: latency}
+	}
+
+	if c.phase3Client != nil {
+		start := time.Now()
+		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		defer cancel()
+
+		_, err := c.phase3Client.HealthCheck(ctx)
+		latency := time.Since(start).Milliseconds()
+
+		if err != nil {
+			return &ServiceHealthStatus{
+				Status:    "unhealthy",
+				LatencyMs: latency,
+				Error:     err.Error(),
+			}
+		}
+		return &ServiceHealthStatus{Status: "healthy", LatencyMs: latency}
+	}
+
+	return &ServiceHealthStatus{Status: "not_configured", Error: "AI gRPC client not initialized"}
+}
+
+// determineOverallStatus 根据各服务状态确定整体状态
+// MongoDB 是关键服务：不健康 → unhealthy
+// 其他服务不健康 → degraded
+func (c *ServiceContainer) determineOverallStatus(services map[string]*ServiceHealthStatus) string {
+	allHealthy := true
+	mongoHealthy := true
+
+	for name, status := range services {
+		if status.Status == "unhealthy" {
+			allHealthy = false
+			if name == "mongodb" {
+				mongoHealthy = false
+			}
+		}
+	}
+
+	if !mongoHealthy {
+		return "unhealthy"
+	}
+	if !allHealthy {
+		return "degraded"
+	}
+	return "healthy"
 }
 
 // GetAllServicesHealth 获取所有服务的健康状态

@@ -60,7 +60,7 @@ services:
 
   # Milvus向量数据库 (新增，用于Python AI的RAG)
   milvus:
-    image: milvusdb/milvus:v2.3.0
+    image: milvusdb/milvus:v2.3.4
     container_name: qingyu-milvus
     restart: unless-stopped
     command: ["milvus", "run", "standalone"]
@@ -73,13 +73,16 @@ services:
       - ETCD_ENDPOINTS=etcd:2379
       - MINIO_ADDRESS=minio:9000
     depends_on:
-      - etcd
-      - minio
+      etcd:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
     networks:
       - qingyu-network
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9091/healthz"]
       interval: 30s
+      start_period: 90s
       timeout: 20s
       retries: 5
 
@@ -100,6 +103,11 @@ services:
     command: etcd --listen-client-urls=http://0.0.0.0:2379 --advertise-client-urls=http://etcd:2379 --listen-peer-urls=http://0.0.0.0:2380 --initial-advertise-peer-urls=http://etcd:2380 --initial-cluster=default=http://etcd:2380 --data-dir=/etcd_data
     networks:
       - qingyu-network
+    healthcheck:
+      test: ["CMD", "etcdctl", "endpoint", "health"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
 
   # MinIO (Milvus存储)
   minio:
@@ -117,6 +125,11 @@ services:
     command: server /data --console-address ":9001"
     networks:
       - qingyu-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
 
   # Go后端服务 (重命名)
   go-backend:

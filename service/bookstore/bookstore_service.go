@@ -441,7 +441,48 @@ func (s *BookstoreServiceImpl) SearchBooksWithFilter(ctx context.Context, filter
 		}
 
 		// 应用排序
-		// TODO: 实现排序逻辑
+		// 排序逻辑实现
+		sort.SliceStable(filteredBooks, func(i, j int) bool {
+			switch filter.SortBy {
+			case "hot":
+				// 热度排序: view_count*1 + rating_count*3 + collect_count*5
+				scoreI := float64(filteredBooks[i].ViewCount)*1 + float64(filteredBooks[i].RatingCount)*3 + float64(filteredBooks[i].CollectCount)*5
+				scoreJ := float64(filteredBooks[j].ViewCount)*1 + float64(filteredBooks[j].RatingCount)*3 + float64(filteredBooks[j].CollectCount)*5
+				if scoreI != scoreJ {
+					if filter.SortOrder == "asc" {
+						return scoreI < scoreJ
+					}
+					return scoreI > scoreJ
+				}
+			case "rating":
+				if filteredBooks[i].Rating != filteredBooks[j].Rating {
+					if filter.SortOrder == "asc" {
+						return float64(filteredBooks[i].Rating) < float64(filteredBooks[j].Rating)
+					}
+					return float64(filteredBooks[i].Rating) > float64(filteredBooks[j].Rating)
+				}
+			case "updated_at":
+				ti := filteredBooks[i].UpdatedAt
+				tj := filteredBooks[j].UpdatedAt
+				if ti != tj {
+					if filter.SortOrder == "asc" {
+						return ti.Before(tj)
+					}
+					return ti.After(tj)
+				}
+			case "word_count":
+				if filteredBooks[i].WordCount != filteredBooks[j].WordCount {
+					if filter.SortOrder == "asc" {
+						return filteredBooks[i].WordCount < filteredBooks[j].WordCount
+					}
+					return filteredBooks[i].WordCount > filteredBooks[j].WordCount
+				}
+			default:
+				// 默认按创建时间倒序
+				return filteredBooks[i].CreatedAt.After(filteredBooks[j].CreatedAt)
+			}
+			return false
+		})
 
 		// 应用分页
 		total := int64(len(filteredBooks))
@@ -1076,7 +1117,7 @@ func SearchSimilarBooks(
 // 优先使用SearchService (Milvus向量搜索)，失败或空结果时fallback到MongoDB
 func (s *BookstoreServiceImpl) SearchByTitle(ctx context.Context, title string, page, size int) ([]*bookstore2.Book, int64, error) {
 	// 优先使用新路径 (SearchService - Milvus向量搜索)
-	// TODO: 实现SearchService集成
+	// TODO(SR1/SR2): SearchService集成 - Batch 3后续工作，Milvus向量搜索完成后再集成
 	_ = s.searchService // 暂时避免未使用警告
 
 	// Fallback 到旧路径 (MongoDB查询)
@@ -1105,7 +1146,7 @@ func (s *BookstoreServiceImpl) SearchByTitle(ctx context.Context, title string, 
 // 优先使用SearchService (Milvus向量搜索)，失败或空结果时fallback到MongoDB
 func (s *BookstoreServiceImpl) SearchByAuthor(ctx context.Context, author string, page, size int) ([]*bookstore2.Book, int64, error) {
 	// 优先使用新路径 (SearchService - Milvus向量搜索)
-	// TODO: 实现SearchService集成
+	// TODO(SR1/SR2): SearchService集成 - Batch 3后续工作，Milvus向量搜索完成后再集成
 	_ = s.searchService // 暂时避免未使用警告
 
 	// Fallback 到旧路径 (MongoDB查询)
