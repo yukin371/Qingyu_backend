@@ -250,7 +250,7 @@ type CreateOutlineRequest struct {
 	Title      string   `json:"title" validate:"required,min=1,max=200"`
 	ParentID   string   `json:"parentId,omitempty"`
 	Summary    string   `json:"summary,omitempty" validate:"max=1000"`
-	Type       string   `json:"type,omitempty" validate:"omitempty,oneof=arc chapter scene"`
+	Type       string   `json:"type,omitempty" validate:"omitempty,oneof=volume arc chapter scene"`
 	Tension    int      `json:"tension,omitempty" validate:"min=0,max=10"`
 	DocumentID string   `json:"documentId,omitempty"`
 	Characters []string `json:"characters,omitempty" validate:"max=50"`
@@ -263,7 +263,7 @@ type UpdateOutlineRequest struct {
 	Title      *string   `json:"title,omitempty" validate:"omitempty,min=1,max=200"`
 	ParentID   *string   `json:"parentId,omitempty"`
 	Summary    *string   `json:"summary,omitempty" validate:"omitempty,max=1000"`
-	Type       *string   `json:"type,omitempty" validate:"omitempty,oneof=arc chapter scene"`
+	Type       *string   `json:"type,omitempty" validate:"omitempty,oneof=volume arc chapter scene"`
 	Tension    *int      `json:"tension,omitempty" validate:"omitempty,min=0,max=10"`
 	DocumentID *string   `json:"documentId,omitempty"`
 	Characters *[]string `json:"characters,omitempty" validate:"omitempty,max=50"`

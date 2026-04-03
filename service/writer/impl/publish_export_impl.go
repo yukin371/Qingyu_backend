@@ -226,42 +226,113 @@ func (p *PublishExportImpl) convertPublicationStatus(status *serviceInterfaces.P
 
 // ExportDocument 导出文档
 func (p *PublishExportImpl) ExportDocument(ctx context.Context, documentID, projectID, userID string, req *serviceWriter.ExportDocumentRequest) (*serviceWriter.ExportTask, error) {
-	// TODO: 实现类型转换
-	return nil, nil
+	// 转换 DTO -> 接口层请求
+	exportReq := &serviceInterfaces.ExportDocumentRequest{
+		Format:      req.Format,
+		IncludeMeta: req.Options != nil && req.Options.IncludeMeta,
+	}
+	if req.Options != nil {
+		exportReq.Options = &serviceInterfaces.ExportOptions{
+			TOC:          req.Options.TOC,
+			IncludeNotes: req.Options.IncludeMeta,
+			IncludeTags:  req.Options.IncludeMeta,
+		}
+	}
+
+	task, err := p.exportService.ExportDocument(ctx, documentID, projectID, userID, exportReq)
+	if err != nil {
+		return nil, err
+	}
+	return p.convertExportTask(task), nil
 }
 
 // ExportProject 导出项目
 func (p *PublishExportImpl) ExportProject(ctx context.Context, projectID, userID string, req *serviceWriter.ExportProjectRequest) (*serviceWriter.ExportTask, error) {
-	// TODO: 实现类型转换
-	return nil, nil
+	// 转换 DTO -> 接口层请求
+	exportReq := &serviceInterfaces.ExportProjectRequest{
+		IncludeDocuments:  req.IncludeDocuments,
+		DocumentFormats:   req.Format,
+		IncludeCharacters: false,
+		IncludeLocations:  false,
+		IncludeTimeline:   false,
+	}
+	if req.IncludeMeta {
+		exportReq.Options = &serviceInterfaces.ExportOptions{
+			IncludeNotes: true,
+			IncludeTags:  true,
+		}
+	}
+
+	task, err := p.exportService.ExportProject(ctx, projectID, userID, exportReq)
+	if err != nil {
+		return nil, err
+	}
+	return p.convertExportTask(task), nil
 }
 
 // GetExportTask 获取导出任务
 func (p *PublishExportImpl) GetExportTask(ctx context.Context, taskID string) (*serviceWriter.ExportTask, error) {
-	// TODO: 实现类型转换
-	return nil, nil
+	task, err := p.exportService.GetExportTask(ctx, taskID)
+	if err != nil {
+		return nil, err
+	}
+	return p.convertExportTask(task), nil
 }
 
 // DownloadExportFile 下载导出文件
 func (p *PublishExportImpl) DownloadExportFile(ctx context.Context, taskID string) (*serviceWriter.ExportFile, error) {
-	// TODO: 实现类型转换
-	return nil, nil
+	file, err := p.exportService.DownloadExportFile(ctx, taskID)
+	if err != nil {
+		return nil, err
+	}
+	return &serviceWriter.ExportFile{
+		Filename: file.Filename,
+		URL:      file.URL,
+		MimeType: file.MimeType,
+		FileSize: file.FileSize,
+	}, nil
 }
 
 // ListExportTasks 列出导出任务
 func (p *PublishExportImpl) ListExportTasks(ctx context.Context, projectID string, page, pageSize int) ([]*serviceWriter.ExportTask, int64, error) {
-	// TODO: 实现类型转换
-	return nil, 0, nil
+	tasks, total, err := p.exportService.ListExportTasks(ctx, projectID, page, pageSize)
+	if err != nil {
+		return nil, 0, err
+	}
+	result := make([]*serviceWriter.ExportTask, 0, len(tasks))
+	for _, task := range tasks {
+		result = append(result, p.convertExportTask(task))
+	}
+	return result, total, nil
 }
 
 // DeleteExportTask 删除导出任务
 func (p *PublishExportImpl) DeleteExportTask(ctx context.Context, taskID, userID string) error {
-	// TODO: 实现类型转换
-	return nil
+	return p.exportService.DeleteExportTask(ctx, taskID, userID)
 }
 
 // CancelExportTask 取消导出任务
 func (p *PublishExportImpl) CancelExportTask(ctx context.Context, taskID, userID string) error {
-	// TODO: 实现类型转换
-	return nil
+	return p.exportService.CancelExportTask(ctx, taskID, userID)
+}
+
+// convertExportTask 将接口层 ExportTask 转换为 Port 层 ExportTask
+func (p *PublishExportImpl) convertExportTask(task *serviceInterfaces.ExportTask) *serviceWriter.ExportTask {
+	return &serviceWriter.ExportTask{
+		ID:            task.ID,
+		Type:          task.Type,
+		ResourceID:    task.ResourceID,
+		ResourceTitle: task.ResourceTitle,
+		Format:        task.Format,
+		Status:        task.Status,
+		Progress:      task.Progress,
+		FileURL:       task.FileURL,
+		FileSize:      task.FileSize,
+		ErrorMsg:      task.ErrorMsg,
+		CreatedBy:     task.CreatedBy,
+		CreatedAt:     task.CreatedAt,
+		UpdatedAt:     task.UpdatedAt,
+		CompletedAt:   task.CompletedAt,
+		ExpiresAt:     task.ExpiresAt,
+	}
 }

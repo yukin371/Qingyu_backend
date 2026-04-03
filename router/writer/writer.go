@@ -38,6 +38,17 @@ func InitWriterRouter(
 	versionApi := writer.NewVersionApi(versionService)
 	editorApi := writer.NewEditorApi(documentService)
 
+	// 仪表板统计API
+	var dashboardApi *writer.DashboardApi
+	dashboardApi = nil
+	if projectService != nil && publishService != nil {
+		dashboardSvc := writerservice.NewDashboardService(
+			writerservice.NewDashboardProjectRepoAdapter(projectService),
+			publishService,
+		)
+		dashboardApi = writer.NewDashboardApi(dashboardSvc)
+	}
+
 	// 锁定API（如果可用）
 	var lockApi *writer.LockAPI
 	if lockService != nil {
@@ -71,6 +82,11 @@ func InitWriterRouter(
 
 		// 编辑器路由
 		InitEditorRouter(writerGroup, editorApi)
+
+		// 仪表板统计路由
+		if dashboardApi != nil {
+			InitDashboardRouter(writerGroup, dashboardApi)
+		}
 
 		// 搜索路由
 		if searchSvc != nil {

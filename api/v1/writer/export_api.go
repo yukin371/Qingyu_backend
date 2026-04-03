@@ -1,6 +1,7 @@
 package writer
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
@@ -147,6 +148,17 @@ func (api *ExportApi) DownloadExportFile(c *gin.Context) {
 		return
 	}
 
+	if len(file.Content) > 0 {
+		filename := file.Filename
+		if filename == "" {
+			filename = fmt.Sprintf("export_%s", taskID)
+		}
+		c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
+		c.Header("Content-Length", fmt.Sprintf("%d", len(file.Content)))
+		c.Data(200, file.MimeType, file.Content)
+		return
+	}
+
 	response.Success(c, file)
 }
 
@@ -163,7 +175,7 @@ func (api *ExportApi) DownloadExportFile(c *gin.Context) {
 // @Failure 400 {object} response.APIResponse
 // @Router /api/v1/writer/projects/{projectId}/exports [get]
 func (api *ExportApi) ListExportTasks(c *gin.Context) {
-		projectID := c.Param("id")
+	projectID := c.Param("id")
 	if projectID == "" {
 		response.BadRequest(c, "参数错误", "项目ID不能为空")
 		return

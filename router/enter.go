@@ -625,8 +625,8 @@ func RegisterRoutes(r *gin.Engine) {
 		var storyWriteApi *aiApi.StoryWriteApi
 		contextEngine := serviceContainer.GetStoryContextEngine()
 		docRepo := serviceContainer.GetRepositoryFactory().CreateDocumentRepository()
-		if contextEngine != nil && quotaService != nil && docRepo != nil {
-			storyWriteApi = aiApi.NewStoryWriteApi(contextEngine, quotaService, docRepo)
+		if contextEngine != nil && quotaService != nil && docRepo != nil && phase3Client != nil {
+			storyWriteApi = aiApi.NewStoryWriteApi(contextEngine, quotaService, docRepo, phase3Client)
 		}
 
 		aiRouter.InitAIRouter(v1, aiSvc, chatService, quotaService, phase3Client, storyWriteApi)
@@ -660,6 +660,24 @@ func RegisterRoutes(r *gin.Engine) {
 		logger.Info("  - /api/v1/internal/ai/documents/* (文档管理)")
 		logger.Info("  - /api/v1/internal/ai/concepts/* (概念管理)")
 		logger.Info("  ⚠️  需要AI服务认证(X-AI-Service-Key)")
+
+		// ============ 注册内部上下文API路由 ============
+		// 供AI服务获取项目上下文数据（角色、大纲、文档内容、角色关系）
+		repoFactory := serviceContainer.GetRepositoryFactory()
+		if repoFactory != nil {
+			contextAggregator := internalAPIService.NewContextAggregator(repoFactory, logger)
+			internalAPIRouter.RegisterContextRoutes(v1, contextAggregator)
+
+			logger.Info("✓ 内部上下文API路由已注册到: /api/v1/internal/")
+			logger.Info("  - GET /api/v1/internal/projects/:id/context (项目上下文汇总)")
+			logger.Info("  - GET /api/v1/internal/projects/:id/characters (角色列表)")
+			logger.Info("  - GET /api/v1/internal/projects/:id/outline (大纲树)")
+			logger.Info("  - GET /api/v1/internal/projects/:id/relations (角色关系)")
+			logger.Info("  - GET /api/v1/internal/documents/:id/content (文档内容)")
+			logger.Info("  ⚠️  需要AI服务认证(X-AI-Service-Key)")
+		} else {
+			logger.Warn("⚠ RepositoryFactory未初始化，跳过内部上下文API路由注册")
+		}
 	} else {
 		logger.Warn("⚠ MongoDB未初始化，跳过内部AI API路由注册")
 	}

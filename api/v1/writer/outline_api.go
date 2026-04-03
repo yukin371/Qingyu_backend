@@ -17,6 +17,15 @@ type OutlineApi struct {
 	outlineService interfaces.OutlineService
 }
 
+func getOutlineProjectID(c *gin.Context) string {
+	projectID := c.Param("projectId")
+	if projectID != "" {
+		return projectID
+	}
+
+	return c.Param("id")
+}
+
 // NewOutlineApi 创建OutlineApi实例
 func NewOutlineApi(outlineService interfaces.OutlineService) *OutlineApi {
 	return &OutlineApi{
@@ -37,7 +46,7 @@ func NewOutlineApi(outlineService interfaces.OutlineService) *OutlineApi {
 // @Failure 401 {object} response.APIResponse
 // @Router /api/v1/writer/projects/{projectId}/outlines [post]
 func (api *OutlineApi) CreateOutline(c *gin.Context) {
-		projectID := c.Param("id")
+	projectID := getOutlineProjectID(c)
 	if projectID == "" {
 		response.BadRequest(c, "项目ID不能为空", "")
 		return
@@ -99,7 +108,7 @@ func (api *OutlineApi) GetOutline(c *gin.Context) {
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/writer/projects/{projectId}/outlines [get]
 func (api *OutlineApi) ListOutlines(c *gin.Context) {
-		projectID := c.Param("id")
+	projectID := getOutlineProjectID(c)
 	if projectID == "" {
 		response.BadRequest(c, "项目ID不能为空", "")
 		return
@@ -124,7 +133,7 @@ func (api *OutlineApi) ListOutlines(c *gin.Context) {
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/writer/projects/{projectId}/outlines/tree [get]
 func (api *OutlineApi) GetOutlineTree(c *gin.Context) {
-		projectID := c.Param("id")
+	projectID := getOutlineProjectID(c)
 	if projectID == "" {
 		response.BadRequest(c, "项目ID不能为空", "")
 		return
@@ -232,7 +241,7 @@ func (api *OutlineApi) DeleteOutline(c *gin.Context) {
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/writer/projects/{projectId}/outlines/children [get]
 func (api *OutlineApi) GetOutlineChildren(c *gin.Context) {
-		projectID := c.Param("id")
+	projectID := getOutlineProjectID(c)
 	if projectID == "" {
 		response.BadRequest(c, "项目ID不能为空", "")
 		return
