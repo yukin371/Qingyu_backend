@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"sync"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -214,11 +213,11 @@ func (i *InitializerImpl) ListMiddlewares() []string {
 
 // createRequestIDMiddleware 创建RequestID中间件
 func (i *InitializerImpl) createRequestIDMiddleware(config *middleware.RequestIDConfig) (Middleware, error) {
-	return &RequestIDMiddleware{
-		headerName: config.HeaderName,
-		forceGen:   config.ForceGen,
-		logger:     i.logger,
-	}, nil
+	mw := &RequestIDMiddleware{}
+	if factory, ok := registeredFactories["request_id"]; ok {
+		mw.handler = factory()
+	}
+	return mw, nil
 }
 
 // createRecoveryMiddleware 创建Recovery中间件
@@ -232,40 +231,34 @@ func (i *InitializerImpl) createRecoveryMiddleware(config *middleware.RecoveryCo
 
 // createSecurityMiddleware 创建Security中间件
 func (i *InitializerImpl) createSecurityMiddleware(config *middleware.SecurityConfig) (Middleware, error) {
-	return &SecurityMiddleware{
-		enableXFrameOptions: config.EnableXFrameOptions,
-		xFrameOptions:       config.XFrameOptions,
-		enableHSTS:          config.EnableHSTS,
-		enableCSP:           config.EnableCSP,
-		logger:              i.logger,
-	}, nil
+	mw := &SecurityMiddleware{}
+	if factory, ok := registeredFactories["security"]; ok {
+		mw.handler = factory()
+	}
+	return mw, nil
 }
 
 // createLoggerMiddleware 创建Logger中间件
 func (i *InitializerImpl) createLoggerMiddleware(config *middleware.LoggerConfig) (Middleware, error) {
-	skipPathsMap := make(map[string]bool)
-	for _, path := range config.SkipPaths {
-		skipPathsMap[path] = true
+	mw := &LoggerMiddleware{}
+	if factory, ok := registeredFactories["logger"]; ok {
+		mw.handler = factory()
 	}
-
-	return &LoggerMiddleware{
-		skipPaths: skipPathsMap,
-		logger:    i.logger,
-	}, nil
+	return mw, nil
 }
 
 // createCompressionMiddleware 创建Compression中间件
 func (i *InitializerImpl) createCompressionMiddleware(config *middleware.CompressionConfig) (Middleware, error) {
-	// 验证配置
+	// 验证压缩级别
 	if config.Level < 1 || config.Level > 9 {
 		return nil, fmt.Errorf("invalid compression level: %d (must be 1-9)", config.Level)
 	}
 
-	return &CompressionMiddleware{
-		level:  config.Level,
-		types:  config.Types,
-		logger: i.logger,
-	}, nil
+	mw := &CompressionMiddleware{}
+	if factory, ok := registeredFactories["compression"]; ok {
+		mw.handler = factory()
+	}
+	return mw, nil
 }
 
 // createRateLimitMiddleware 创建RateLimit中间件
@@ -275,14 +268,13 @@ func (i *InitializerImpl) createRateLimitMiddleware(config *middleware.RateLimit
 		return nil, fmt.Errorf("rate limit strategy cannot be empty")
 	}
 
-	return &RateLimitMiddleware{
-		strategy:   config.Strategy,
-		rate:       config.Rate,
-		burst:      config.Burst,
-		windowSize: config.WindowSize,
-		redisCfg:   config.Redis,
-		logger:     i.logger,
-	}, nil
+	mw := &RateLimitMiddleware{}
+	if factory, ok := registeredFactories["rate_limit"]; ok {
+		mw.handler = factory()
+	} else {
+		i.logger.Warn("RateLimit中间件工厂未注册，使用降级模式（放行所有请求）")
+	}
+	return mw, nil
 }
 
 // createAuthMiddleware 创建Auth中间件
@@ -291,16 +283,13 @@ func (i *InitializerImpl) createAuthMiddleware(config *middleware.AuthConfig) (M
 		return nil, fmt.Errorf("auth secret cannot be empty")
 	}
 
-	skipPathsMap := make(map[string]bool)
-	for _, path := range config.SkipPaths {
-		skipPathsMap[path] = true
+	mw := &AuthMiddleware{}
+	if factory, ok := registeredFactories["auth"]; ok {
+		mw.handler = factory()
+	} else {
+		i.logger.Warn("Auth中间件工厂未注册，使用降级模式（放行所有请求）")
 	}
-
-	return &AuthMiddleware{
-		secret:    config.Secret,
-		skipPaths: skipPathsMap,
-		logger:    i.logger,
-	}, nil
+	return mw, nil
 }
 
 // createPermissionMiddleware 创建Permission中间件
@@ -312,18 +301,13 @@ func (i *InitializerImpl) createPermissionMiddleware(config *middleware.Permissi
 		return nil, fmt.Errorf("permission config path cannot be empty")
 	}
 
-	skipPathsMap := make(map[string]bool)
-	for _, path := range config.SkipPaths {
-		skipPathsMap[path] = true
+	mw := &PermissionMiddleware{}
+	if factory, ok := registeredFactories["permission"]; ok {
+		mw.handler = factory()
+	} else {
+		i.logger.Warn("Permission中间件工厂未注册，使用降级模式（放行所有请求）")
 	}
-
-	return &PermissionMiddleware{
-		strategy:       config.Strategy,
-		configPath:     config.ConfigPath,
-		skipPaths:      skipPathsMap,
-		sessionTimeout: config.SessionTimeout,
-		logger:         i.logger,
-	}, nil
+	return mw, nil
 }
 
 // ========== 辅助方法 ==========
@@ -364,23 +348,32 @@ func (i *InitializerImpl) countDynamicConfigs(config *middleware.Config) int {
 	return count
 }
 
-// ========== 临时中间件实现（占位符）==========
-// TODO: 这些中间件将在后续Phase中完整实现
+// ========== 中间件实现（委托到真实实现）==========
+
+// MiddlewareFunc 是创建中间件 Handler 的工厂函数类型
+type MiddlewareFunc func() gin.HandlerFunc
+
+// registeredFactories 存储已注册的中间件工厂函数
+var registeredFactories = map[string]MiddlewareFunc{}
+
+// RegisterMiddlewareFactory 注册中间件工厂函数
+// 由 init 阶段的 wireup 代码调用，将真实实现注入到 core 包
+func RegisterMiddlewareFactory(name string, factory MiddlewareFunc) {
+	registeredFactories[name] = factory
+}
 
 // RequestIDMiddleware 请求ID中间件
 type RequestIDMiddleware struct {
-	headerName string
-	forceGen   bool
-	logger     *zap.Logger
+	handler gin.HandlerFunc
 }
 
-func (m *RequestIDMiddleware) Name() string        { return "request_id" }
-func (m *RequestIDMiddleware) Priority() int       { return 1 }
+func (m *RequestIDMiddleware) Name() string  { return "request_id" }
+func (m *RequestIDMiddleware) Priority() int { return 1 }
 func (m *RequestIDMiddleware) Handler() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		// TODO: 实现请求ID生成逻辑
-		c.Next()
+	if m.handler != nil {
+		return m.handler
 	}
+	return func(c *gin.Context) { c.Next() }
 }
 
 // RecoveryMiddleware 异常恢复中间件
@@ -398,102 +391,84 @@ func (m *RecoveryMiddleware) Handler() gin.HandlerFunc {
 
 // SecurityMiddleware 安全头中间件
 type SecurityMiddleware struct {
-	enableXFrameOptions bool
-	xFrameOptions       string
-	enableHSTS          bool
-	enableCSP           bool
-	logger              *zap.Logger
+	handler gin.HandlerFunc
 }
 
-func (m *SecurityMiddleware) Name() string        { return "security" }
-func (m *SecurityMiddleware) Priority() int       { return 3 }
+func (m *SecurityMiddleware) Name() string  { return "security" }
+func (m *SecurityMiddleware) Priority() int { return 3 }
 func (m *SecurityMiddleware) Handler() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		// TODO: 实现安全头设置逻辑
-		c.Next()
+	if m.handler != nil {
+		return m.handler
 	}
+	return func(c *gin.Context) { c.Next() }
 }
 
 // LoggerMiddleware 日志中间件
 type LoggerMiddleware struct {
-	skipPaths map[string]bool
-	logger    *zap.Logger
+	handler gin.HandlerFunc
 }
 
-func (m *LoggerMiddleware) Name() string        { return "logger" }
-func (m *LoggerMiddleware) Priority() int       { return 6 }
+func (m *LoggerMiddleware) Name() string  { return "logger" }
+func (m *LoggerMiddleware) Priority() int { return 6 }
 func (m *LoggerMiddleware) Handler() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		// TODO: 实现日志记录逻辑
-		c.Next()
+	if m.handler != nil {
+		return m.handler
 	}
+	return func(c *gin.Context) { c.Next() }
 }
 
 // CompressionMiddleware 压缩中间件
 type CompressionMiddleware struct {
-	level  int
-	types  []string
-	logger *zap.Logger
+	handler gin.HandlerFunc
 }
 
-func (m *CompressionMiddleware) Name() string        { return "compression" }
-func (m *CompressionMiddleware) Priority() int       { return 12 }
+func (m *CompressionMiddleware) Name() string  { return "compression" }
+func (m *CompressionMiddleware) Priority() int { return 12 }
 func (m *CompressionMiddleware) Handler() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		// TODO: 实现压缩逻辑
-		c.Next()
+	if m.handler != nil {
+		return m.handler
 	}
+	return func(c *gin.Context) { c.Next() }
 }
 
 // RateLimitMiddleware 限流中间件
 type RateLimitMiddleware struct {
-	strategy   string
-	rate       int
-	burst      int
-	windowSize int
-	redisCfg   *middleware.RedisConfig
-	logger     *zap.Logger
+	handler gin.HandlerFunc
 }
 
-func (m *RateLimitMiddleware) Name() string        { return "rate_limit" }
-func (m *RateLimitMiddleware) Priority() int       { return 8 }
+func (m *RateLimitMiddleware) Name() string  { return "rate_limit" }
+func (m *RateLimitMiddleware) Priority() int { return 8 }
 func (m *RateLimitMiddleware) Handler() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		// TODO: 实现限流逻辑
-		c.Next()
+	if m.handler != nil {
+		return m.handler
 	}
+	return func(c *gin.Context) { c.Next() }
 }
 
 // AuthMiddleware 认证中间件
 type AuthMiddleware struct {
-	secret    string
-	skipPaths map[string]bool
-	logger    *zap.Logger
+	handler gin.HandlerFunc
 }
 
-func (m *AuthMiddleware) Name() string        { return "auth" }
-func (m *AuthMiddleware) Priority() int       { return 9 }
+func (m *AuthMiddleware) Name() string  { return "auth" }
+func (m *AuthMiddleware) Priority() int { return 9 }
 func (m *AuthMiddleware) Handler() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		// TODO: 实现认证逻辑
-		c.Next()
+	if m.handler != nil {
+		return m.handler
 	}
+	return func(c *gin.Context) { c.Next() }
 }
 
 // PermissionMiddleware 权限中间件
 type PermissionMiddleware struct {
-	strategy       string
-	configPath     string
-	skipPaths      map[string]bool
-	sessionTimeout time.Duration
-	logger         *zap.Logger
+	handler gin.HandlerFunc
 }
 
-func (m *PermissionMiddleware) Name() string        { return "permission" }
-func (m *PermissionMiddleware) Priority() int       { return 10 }
+func (m *PermissionMiddleware) Name() string  { return "permission" }
+func (m *PermissionMiddleware) Priority() int { return 10 }
 func (m *PermissionMiddleware) Handler() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		// TODO: 实现权限检查逻辑
-		c.Next()
+	if m.handler != nil {
+		return m.handler
 	}
+	return func(c *gin.Context) { c.Next() }
 }

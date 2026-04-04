@@ -1,3 +1,4 @@
+// Deprecated: 该文件应该废弃，建议使用对应模块的接口替代
 package shared
 
 import (

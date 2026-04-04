@@ -585,6 +585,14 @@ func (m *MockChapterService) GetChapterContent(ctx context.Context, chapterID, u
 	return args.String(0), args.Error(1)
 }
 
+func (m *MockChapterService) GetChapterParagraphs(ctx context.Context, chapterID, userID string) ([]*bookstoreModel.ChapterContent, error) {
+	args := m.Called(ctx, chapterID, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*bookstoreModel.ChapterContent), args.Error(1)
+}
+
 func (m *MockChapterService) UpdateChapterContent(ctx context.Context, chapterID string, content string) error {
 	args := m.Called(ctx, chapterID, content)
 	return args.Error(0)

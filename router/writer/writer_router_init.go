@@ -5,9 +5,12 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
 	"Qingyu_backend/models/dto"
+	writerModel "Qingyu_backend/models/writer"
+	"Qingyu_backend/pkg/distlock"
 	"Qingyu_backend/pkg/lock"
 	mongoWriterRepo "Qingyu_backend/repository/mongodb/writer"
 	writerrepo "Qingyu_backend/repository/mongodb/writer"
@@ -25,14 +28,18 @@ func RegisterWriterRoutes(r *gin.RouterGroup, searchSvc *searchservice.SearchSer
 	serviceContainer := service.GetServiceContainer()
 	if serviceContainer == nil {
 		// 如果服务容器未初始化，跳过路由注册
+		zap.L().Error("RegisterWriterRoutes: 服务容器未初始化，跳过路由注册")
 		return
 	}
 
 	// 获取Repository工厂和EventBus
 	repositoryFactory := serviceContainer.GetRepositoryFactory()
 	if repositoryFactory == nil {
+		zap.L().Error("RegisterWriterRoutes: Repository工厂未初始化，跳过路由注册")
 		return
 	}
+
+	zap.L().Info("RegisterWriterRoutes: 开始注册写作模块路由...")
 
 	eventBus := serviceContainer.GetEventBus()
 
@@ -58,10 +65,31 @@ func RegisterWriterRoutes(r *gin.RouterGroup, searchSvc *searchservice.SearchSer
 
 	// 创建ExportService（导出服务）
 	// 注意：需要先实现ExportTaskRepository和FileStorage接口
-	// exportTaskRepo := repositoryFactory.CreateExportTaskRepository()
-	// fileStorage := serviceContainer.GetFileStorage()
-	// exportSvc := writerService.NewExportService(documentRepo, documentContentRepo, projectRepo, exportTaskRepo, fileStorage)
 	var exportSvc interfaces.ExportService
+
+	// 获取MongoDB数据库连接用于创建repository
+	if mongoDB != nil {
+		// 创建适配器以适配ExportService的内部接口
+		exportTaskRepo := mongoWriterRepo.NewMongoExportTaskRepository(mongoDB)
+		fileStorage := writerservice.NewLocalFileStorage("./exports", "/api/v1/writer/exports")
+
+		// 创建适配器来适配repository接口到ExportService的内部接口
+		docRepoAdapter := writerservice.NewDocumentRepoAdapter(documentRepo)
+		docContentRepo := repositoryFactory.CreateDocumentContentRepository()
+		docContentRepoAdapter := writerservice.NewDocumentContentRepoAdapter(docContentRepo)
+		projRepoAdapter := writerservice.NewProjectRepoAdapter(projectRepo)
+
+		exportSvc = writerservice.NewExportService(
+			docRepoAdapter,
+			docContentRepoAdapter,
+			projRepoAdapter,
+			exportTaskRepo,
+			fileStorage,
+		)
+		zap.L().Info("RegisterWriterRoutes: ExportService创建成功")
+	} else {
+		zap.L().Warn("RegisterWriterRoutes: mongoDB为nil，跳过ExportService创建")
+	}
 
 	// 创建PublishService（发布服务）
 	publicationRepo := mongoWriterRepo.NewMongoPublicationRepository(mongoDB)
@@ -101,6 +129,9 @@ func RegisterWriterRoutes(r *gin.RouterGroup, searchSvc *searchservice.SearchSer
 	var characterSvc interfaces.CharacterService
 	if characterRepo != nil {
 		characterSvc = writerservice.NewCharacterService(characterRepo, eventBus)
+		zap.L().Info("RegisterWriterRoutes: CharacterService创建成功")
+	} else {
+		zap.L().Warn("RegisterWriterRoutes: CharacterRepository为nil，跳过CharacterService创建")
 	}
 
 	// 创建LocationService（地点服务）
@@ -123,16 +154,61 @@ func RegisterWriterRoutes(r *gin.RouterGroup, searchSvc *searchservice.SearchSer
 	var outlineSvc interfaces.OutlineService
 	if outlineRepo != nil {
 		outlineSvc = writerservice.NewOutlineService(outlineRepo, eventBus)
+
+		// 创建分布式锁服务（用于保护全局总纲的并发创建）
+		var distLockSvc *distlock.RedisLockService
+		if redisClient != nil {
+			// 从接口中提取底层 redis.Client
+			rawClient := redisClient.GetClient()
+			if rawClient != nil {
+				if client, ok := rawClient.(*redis.Client); ok {
+					distLockSvc = distlock.NewRedisLockService(client, "distlock")
+					zap.L().Info("RegisterWriterRoutes: 分布式锁服务创建成功")
+				} else {
+					zap.L().Warn("RegisterWriterRoutes: 无法从 RedisClient 获取底层客户端，分布式锁服务未创建")
+				}
+			} else {
+				zap.L().Warn("RegisterWriterRoutes: RedisClient.GetClient() 返回 nil，分布式锁服务未创建")
+			}
+		} else {
+			zap.L().Warn("RegisterWriterRoutes: redisClient 为 nil，分布式锁服务未创建")
+		}
+
+		// 创建大纲-文档双向同步服务并注入
+		syncSvc := writerservice.NewOutlineDocumentSyncService(outlineRepo, documentRepo, projectRepo, outlineSvc.(*writerservice.OutlineService), distLockSvc)
+		outlineSvc.(*writerservice.OutlineService).SetSyncService(syncSvc)
+		zap.L().Info("RegisterWriterRoutes: OutlineDocumentSyncService创建并注入成功")
+
+		// 设置DocumentService的双向同步回调
+		documentSvc.SetOnDocumentCreated(func(ctx context.Context, projectID string, doc *writerModel.Document) {
+			syncSvc.SyncFromDocumentCreation(ctx, projectID, doc)
+		})
+		documentSvc.SetOnDocumentTitleUpdated(func(ctx context.Context, documentID string, newTitle string) {
+			syncSvc.SyncTitleToOutline(ctx, documentID, newTitle)
+		})
+		zap.L().Info("RegisterWriterRoutes: DocumentService双向同步回调设置成功")
 	}
 
 	// 获取阅读统计服务（用于writer统计路由）
 	statsSvc, _ := serviceContainer.GetReadingStatsService()
+	bookRepo := repositoryFactory.CreateBookRepository()
+	var dashboardSvc *writerservice.DashboardService
+	if projectRepo != nil && publishSvc != nil {
+		dashboardSvc = writerservice.NewDashboardService(projectRepo, publishSvc)
+	}
 
 	// 调用InitWriterRouter初始化文档编辑相关路由
-	InitWriterRouter(r, projectSvc, documentSvc, versionSvc, searchSvc, exportSvc, publishSvc, lockSvc, commentSvc, templateSvc, statsSvc, characterSvc, locationSvc)
+	InitWriterRouter(r, projectSvc, documentSvc, versionSvc, searchSvc, exportSvc, publishSvc, lockSvc, commentSvc, templateSvc, statsSvc, bookRepo, characterSvc, locationSvc, dashboardSvc)
 
 	// 调用InitWriterRoutes初始化设定百科路由（角色、地点、时间线、大纲）
+	zap.L().Info("RegisterWriterRoutes: 调用InitWriterRoutes注册设定百科路由",
+		zap.Bool("characterSvc", characterSvc != nil),
+		zap.Bool("locationSvc", locationSvc != nil),
+		zap.Bool("timelineSvc", timelineSvc != nil),
+		zap.Bool("outlineSvc", outlineSvc != nil),
+	)
 	InitWriterRoutes(r, characterSvc, locationSvc, timelineSvc, outlineSvc)
+	zap.L().Info("RegisterWriterRoutes: 设定百科路由注册完成")
 }
 
 // MockPublishService 用于E2E测试的Mock发布服务

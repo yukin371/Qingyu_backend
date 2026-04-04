@@ -256,7 +256,7 @@ func TestPreflightService_ValidateBatchOperation(t *testing.T) {
 		ProjectID: projectID,
 		Title:     "Test Doc 1",
 		StableRef: generateStableRef(),
-		OrderKey:  "a0", // DefaultOrderKey
+		OrderKey:  "UUUU", // DefaultOrderKey
 		Type:      writer.TypeChapter,
 		Level:     0,
 	}

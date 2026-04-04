@@ -66,7 +66,7 @@ func sanitizeCommentFilter(filter bson.M) (bson.M, error) {
 			default:
 				return nil, fmt.Errorf("unsupported _id filter value")
 			}
-		case "target_id", "author_id":
+		case "target_id", "author_id", "book_id", "chapter_id":
 			valueStr, ok := value.(string)
 			if !ok {
 				return nil, fmt.Errorf("invalid %s filter type", key)
@@ -91,8 +91,13 @@ func sanitizeCommentFilter(filter bson.M) (bson.M, error) {
 			}
 			safeFilter[key] = objectID.Hex()
 		case "target_type":
-			valueStr, ok := value.(string)
-			if !ok {
+			var valueStr string
+			switch typed := value.(type) {
+			case string:
+				valueStr = typed
+			case social.CommentTargetType:
+				valueStr = string(typed)
+			default:
 				return nil, fmt.Errorf("invalid target_type filter type")
 			}
 			switch social.CommentTargetType(valueStr) {
@@ -102,8 +107,13 @@ func sanitizeCommentFilter(filter bson.M) (bson.M, error) {
 				return nil, fmt.Errorf("invalid target_type")
 			}
 		case "state":
-			valueStr, ok := value.(string)
-			if !ok {
+			var valueStr string
+			switch typed := value.(type) {
+			case string:
+				valueStr = typed
+			case social.CommentState:
+				valueStr = string(typed)
+			default:
 				return nil, fmt.Errorf("invalid state filter type")
 			}
 			switch social.CommentState(valueStr) {
@@ -112,7 +122,13 @@ func sanitizeCommentFilter(filter bson.M) (bson.M, error) {
 			default:
 				return nil, fmt.Errorf("invalid state")
 			}
-		case "rating":
+		case "rich_content.paragraph_id":
+			valueStr, ok := value.(string)
+			if !ok {
+				return nil, fmt.Errorf("invalid rich_content.paragraph_id filter type")
+			}
+			safeFilter[key] = valueStr
+		case "rich_content.paragraph_index", "rating":
 			safeFilter[key] = value
 		default:
 			return nil, fmt.Errorf("unsupported filter key: %s", key)
@@ -417,6 +433,54 @@ func (r *MongoCommentRepository) GetCommentsByChapterID(ctx context.Context, cha
 	if err := cursor.All(ctx, &comments); err != nil {
 		return nil, 0, fmt.Errorf("failed to decode comments: %w", err)
 	}
+	return comments, total, nil
+}
+
+// ListByFilter 根据过滤条件获取评论列表
+func (r *MongoCommentRepository) ListByFilter(ctx context.Context, filter *social.CommentFilter) ([]*social.Comment, int64, error) {
+	if filter == nil {
+		filter = &social.CommentFilter{}
+	}
+	if err := filter.Validate(); err != nil {
+		return nil, 0, err
+	}
+
+	query, err := sanitizeCommentFilter(bson.M(filter.GetConditions()))
+	if err != nil {
+		return nil, 0, err
+	}
+
+	total, err := r.collection.CountDocuments(ctx, query)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count comments: %w", err)
+	}
+
+	opts := options.Find()
+	if sort := filter.GetSort(); len(sort) > 0 {
+		sortDoc := make(bson.D, 0, len(sort))
+		for key, value := range sort {
+			sortDoc = append(sortDoc, bson.E{Key: key, Value: value})
+		}
+		opts.SetSort(sortDoc)
+	}
+	if filter.Limit > 0 {
+		opts.SetLimit(int64(filter.Limit))
+	}
+	if filter.Offset > 0 {
+		opts.SetSkip(int64(filter.Offset))
+	}
+
+	cursor, err := r.collection.Find(ctx, query, opts)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to find comments: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	var comments []*social.Comment
+	if err := cursor.All(ctx, &comments); err != nil {
+		return nil, 0, fmt.Errorf("failed to decode comments: %w", err)
+	}
+
 	return comments, total, nil
 }
 

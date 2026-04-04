@@ -3,6 +3,8 @@ package writer
 import (
 	"Qingyu_backend/models/writer"
 	"context"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // OutlineRepository 大纲Repository接口
@@ -17,6 +19,10 @@ type OutlineRepository interface {
 	// 树形结构支持
 	FindByParentID(ctx context.Context, projectID, parentID string) ([]*writer.OutlineNode, error)
 	FindRoots(ctx context.Context, projectID string) ([]*writer.OutlineNode, error)
+
+	// 双向同步支持
+	FindByDocumentID(ctx context.Context, documentID string) (*writer.OutlineNode, error)
+	FindByGlobalOutline(ctx context.Context, projectID primitive.ObjectID) (*writer.OutlineNode, error)
 
 	// 辅助方法
 	ExistsByID(ctx context.Context, outlineID string) (bool, error)

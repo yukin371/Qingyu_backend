@@ -3,6 +3,7 @@ package social
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"Qingyu_backend/models/social"
@@ -206,7 +207,16 @@ func (s *BookListService) LikeBookList(ctx context.Context, userID, bookListID s
 		}
 		return nil
 	}); err != nil {
-		return err
+		if !isBookListTransactionUnsupported(err) {
+			return err
+		}
+
+		if err := s.bookListRepo.CreateBookListLike(ctx, bookListLike); err != nil {
+			return fmt.Errorf("点赞失败: %w", err)
+		}
+		if err := s.bookListRepo.IncrementBookListLikeCount(ctx, bookListID); err != nil {
+			return fmt.Errorf("增加点赞数失败: %w", err)
+		}
 	}
 
 	return nil
@@ -236,7 +246,17 @@ func (s *BookListService) ForkBookList(ctx context.Context, userID, bookListID s
 		}
 		return nil
 	}); err != nil {
-		return nil, err
+		if !isBookListTransactionUnsupported(err) {
+			return nil, err
+		}
+
+		forkedList, err = s.bookListRepo.ForkBookList(ctx, bookListID, userID)
+		if err != nil {
+			return nil, fmt.Errorf("复制书单失败: %w", err)
+		}
+		if err := s.bookListRepo.IncrementForkCount(ctx, bookListID); err != nil {
+			return nil, fmt.Errorf("增加复制次数失败: %w", err)
+		}
 	}
 
 	s.publishBookListEvent(ctx, "booklist.forked", userID, forkedList.ID.Hex())
@@ -273,4 +293,14 @@ func (s *BookListService) publishBookListEvent(ctx context.Context, eventType, u
 	}
 
 	s.eventBus.PublishAsync(ctx, event)
+}
+
+func isBookListTransactionUnsupported(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	message := err.Error()
+	return strings.Contains(message, "Transaction numbers are only allowed on a replica set member or mongos") ||
+		strings.Contains(message, "transactions are not supported")
 }

@@ -2,6 +2,7 @@ package project
 
 import (
 	"Qingyu_backend/models/writer"
+	"Qingyu_backend/repository"
 	"context"
 	"errors"
 	"fmt"
@@ -30,7 +31,7 @@ func (s *VersionService) patchCol() *mongo.Collection   { return s.db.Collection
 func (s *VersionService) commitCol() *mongo.Collection  { return s.db.Collection("commits") }           // 提交集合
 
 func objectIDFromHex(id, resource string) (primitive.ObjectID, error) {
-	objectID, err := primitive.ObjectIDFromHex(id)
+	objectID, err := repository.ParseID(id)
 	if err != nil {
 		return primitive.NilObjectID, fmt.Errorf("invalid %s id: %w", resource, err)
 	}

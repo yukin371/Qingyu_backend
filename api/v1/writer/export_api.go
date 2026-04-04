@@ -1,10 +1,10 @@
 package writer
 
 import (
-	"strconv"
-
+	"fmt"
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/interfaces"
 )
@@ -44,18 +44,12 @@ func (api *ExportApi) ExportDocument(c *gin.Context) {
 	}
 
 	var req interfaces.ExportDocumentRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
 	// 从上下文获取用户ID
-	userID := ""
-	if uid, exists := c.Get("user_id"); exists {
-		if uidStr, ok := uid.(string); ok {
-			userID = uidStr
-		}
-	}
+	userID := shared.GetUserIDOptional(c)
 
 	task, err := api.exportService.ExportDocument(c.Request.Context(), documentID, projectID, userID, &req)
 	if err != nil {
@@ -87,18 +81,12 @@ func (api *ExportApi) ExportProject(c *gin.Context) {
 	}
 
 	var req interfaces.ExportProjectRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
 	// 从上下文获取用户ID
-	userID := ""
-	if uid, exists := c.Get("user_id"); exists {
-		if uidStr, ok := uid.(string); ok {
-			userID = uidStr
-		}
-	}
+	userID := shared.GetUserIDOptional(c)
 
 	task, err := api.exportService.ExportProject(c.Request.Context(), projectID, userID, &req)
 	if err != nil {
@@ -160,6 +148,17 @@ func (api *ExportApi) DownloadExportFile(c *gin.Context) {
 		return
 	}
 
+	if len(file.Content) > 0 {
+		filename := file.Filename
+		if filename == "" {
+			filename = fmt.Sprintf("export_%s", taskID)
+		}
+		c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", filename))
+		c.Header("Content-Length", fmt.Sprintf("%d", len(file.Content)))
+		c.Data(200, file.MimeType, file.Content)
+		return
+	}
+
 	response.Success(c, file)
 }
 
@@ -176,15 +175,16 @@ func (api *ExportApi) DownloadExportFile(c *gin.Context) {
 // @Failure 400 {object} response.APIResponse
 // @Router /api/v1/writer/projects/{projectId}/exports [get]
 func (api *ExportApi) ListExportTasks(c *gin.Context) {
-	projectID := c.Param("projectId")
+	projectID := c.Param("id")
 	if projectID == "" {
 		response.BadRequest(c, "参数错误", "项目ID不能为空")
 		return
 	}
 
 	// 获取分页参数
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "20"))
+	pagination := shared.GetPaginationParamsStandard(c)
+	page := pagination.Page
+	pageSize := pagination.PageSize
 
 	tasks, total, err := api.exportService.ListExportTasks(c.Request.Context(), projectID, page, pageSize)
 	if err != nil {
@@ -214,12 +214,7 @@ func (api *ExportApi) DeleteExportTask(c *gin.Context) {
 	}
 
 	// 从上下文获取用户ID
-	userID := ""
-	if uid, exists := c.Get("user_id"); exists {
-		if uidStr, ok := uid.(string); ok {
-			userID = uidStr
-		}
-	}
+	userID := shared.GetUserIDOptional(c)
 
 	err := api.exportService.DeleteExportTask(c.Request.Context(), taskID, userID)
 	if err != nil {
@@ -250,12 +245,7 @@ func (api *ExportApi) CancelExportTask(c *gin.Context) {
 	}
 
 	// 从上下文获取用户ID
-	userID := ""
-	if uid, exists := c.Get("user_id"); exists {
-		if uidStr, ok := uid.(string); ok {
-			userID = uidStr
-		}
-	}
+	userID := shared.GetUserIDOptional(c)
 
 	err := api.exportService.CancelExportTask(c.Request.Context(), taskID, userID)
 	if err != nil {

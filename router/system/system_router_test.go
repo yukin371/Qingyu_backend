@@ -24,6 +24,7 @@ func TestInitSystemRoutes_RegistersUnderAPIV1Prefix(t *testing.T) {
 	assert.True(t, paths["/api/v1/system/health/:service"])
 	assert.True(t, paths["/api/v1/system/metrics"])
 	assert.True(t, paths["/api/v1/system/metrics/:service"])
+	assert.True(t, paths["/api/v1/errors/report"])
 	assert.False(t, paths["/system/health"])
 	assert.False(t, paths["/system/metrics"])
 }

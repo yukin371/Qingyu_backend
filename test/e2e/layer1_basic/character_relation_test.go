@@ -97,25 +97,21 @@ func TestCharacterRelationGraph(t *testing.T) {
 
 		w := env.DoRequest("POST", "/api/v1/projects/"+projectId+"/characters", character1Req, token)
 
-		if w.Code == 200 || w.Code == 201 {
-			t.Log("✓ 角色1创建成功")
-
-			response := env.ParseJSONResponse(w)
-			if data, ok := response["data"].(map[string]interface{}); ok {
-				if charId, ok := data["id"].(string); ok {
-					env.SetTestData("character1_id", charId)
-					t.Logf("✓ 角色1 ID: %s", charId)
-				} else if charId, ok := data["characterId"].(string); ok {
-					env.SetTestData("character1_id", charId)
-					t.Logf("✓ 角色1 ID: %s", charId)
-				}
-			}
-		} else if w.Code == 404 {
-			t.Log("⚠ 角色管理API未实现（404）")
-			t.Skip("角色API未实现，跳过后续测试")
-			return
-		} else {
+		if w.Code != 200 && w.Code != 201 {
 			t.Errorf("✗ 角色创建失败，状态码: %d, 响应: %s", w.Code, w.Body.String())
+			return
+		}
+
+		t.Log("✓ 角色1创建成功")
+		response := env.ParseJSONResponse(w)
+		if data, ok := response["data"].(map[string]interface{}); ok {
+			if charId, ok := data["id"].(string); ok {
+				env.SetTestData("character1_id", charId)
+				t.Logf("✓ 角色1 ID: %s", charId)
+			} else if charId, ok := data["characterId"].(string); ok {
+				env.SetTestData("character1_id", charId)
+				t.Logf("✓ 角色1 ID: %s", charId)
+			}
 		}
 
 		// 创建第二个角色
@@ -205,8 +201,6 @@ func TestCharacterRelationGraph(t *testing.T) {
 					t.Logf("✓ 关系ID: %s", relationId)
 				}
 			}
-		} else if w.Code == 404 {
-			t.Log("⚠ 角色关系API未实现（404）")
 		} else {
 			t.Logf("ℹ 角色关系设置尝试，状态码: %d", w.Code)
 		}
@@ -225,37 +219,35 @@ func TestCharacterRelationGraph(t *testing.T) {
 
 		w := env.DoRequest("GET", "/api/v1/projects/"+projectId+"/characters", nil, token)
 
-		if w.Code == 200 {
-			t.Log("✓ 角色列表查询成功")
+		if w.Code != 200 {
+			t.Errorf("✗ 角色列表查询失败，状态码: %d", w.Code)
+			return
+		}
 
-			response := env.ParseJSONResponse(w)
-			if dataList, ok := response["data"].([]interface{}); ok {
-				t.Logf("✓ 找到 %d 个角色", len(dataList))
-				for _, char := range dataList {
+		t.Log("✓ 角色列表查询成功")
+		response := env.ParseJSONResponse(w)
+		if dataList, ok := response["data"].([]interface{}); ok {
+			t.Logf("✓ 找到 %d 个角色", len(dataList))
+			for _, char := range dataList {
+				if charMap, ok := char.(map[string]interface{}); ok {
+					if name, ok := charMap["name"].(string); ok {
+						t.Logf("  - %s", name)
+					}
+				}
+			}
+			return
+		}
+		if data, ok := response["data"].(map[string]interface{}); ok {
+			if characters, ok := data["characters"].([]interface{}); ok {
+				t.Logf("✓ 找到 %d 个角色", len(characters))
+				for _, char := range characters {
 					if charMap, ok := char.(map[string]interface{}); ok {
 						if name, ok := charMap["name"].(string); ok {
 							t.Logf("  - %s", name)
 						}
 					}
 				}
-				return
 			}
-			if data, ok := response["data"].(map[string]interface{}); ok {
-				if characters, ok := data["characters"].([]interface{}); ok {
-					t.Logf("✓ 找到 %d 个角色", len(characters))
-					for _, char := range characters {
-						if charMap, ok := char.(map[string]interface{}); ok {
-							if name, ok := charMap["name"].(string); ok {
-								t.Logf("  - %s", name)
-							}
-						}
-					}
-				}
-			}
-		} else if w.Code == 404 {
-			t.Log("⚠ 角色列表API未实现（404）")
-		} else {
-			t.Errorf("✗ 角色列表查询失败，状态码: %d", w.Code)
 		}
 	})
 
@@ -301,8 +293,6 @@ func TestCharacterRelationGraph(t *testing.T) {
 					}
 				}
 			}
-		} else if w.Code == 404 {
-			t.Log("⚠ 角色详情API未实现（404）")
 		} else {
 			t.Errorf("✗ 角色详情获取失败，状态码: %d", w.Code)
 		}
@@ -321,35 +311,32 @@ func TestCharacterRelationGraph(t *testing.T) {
 
 		w := env.DoRequest("GET", "/api/v1/projects/"+projectId+"/characters/graph", nil, token)
 
-		if w.Code == 200 {
-			t.Log("✓ 关系图生成成功")
+		if w.Code != 200 {
+			t.Logf("ℹ 关系图生成尝试，状态码: %d", w.Code)
+			return
+		}
 
-			response := env.ParseJSONResponse(w)
-			if data, ok := response["data"].(map[string]interface{}); ok {
-				if nodes, ok := data["nodes"].([]interface{}); ok {
-					t.Logf("✓ 关系图节点数: %d", len(nodes))
-				}
-				if edges, ok := data["edges"].([]interface{}); ok {
-					t.Logf("✓ 关系图边数: %d", len(edges))
-				}
+		t.Log("✓ 关系图生成成功")
+		response := env.ParseJSONResponse(w)
+		if data, ok := response["data"].(map[string]interface{}); ok {
+			if nodes, ok := data["nodes"].([]interface{}); ok {
+				t.Logf("✓ 关系图节点数: %d", len(nodes))
+			}
+			if edges, ok := data["edges"].([]interface{}); ok {
+				t.Logf("✓ 关系图边数: %d", len(edges))
+			}
 
-				// 验证图数据结构
-				if nodes, ok := data["nodes"].([]interface{}); ok {
-					for _, node := range nodes {
-						if nodeMap, ok := node.(map[string]interface{}); ok {
-							if id, ok := nodeMap["id"].(string); ok {
-								if label, ok := nodeMap["label"].(string); ok {
-									t.Logf("  节点: %s (%s)", label, id[:8])
-								}
+			if nodes, ok := data["nodes"].([]interface{}); ok {
+				for _, node := range nodes {
+					if nodeMap, ok := node.(map[string]interface{}); ok {
+						if id, ok := nodeMap["id"].(string); ok {
+							if label, ok := nodeMap["label"].(string); ok {
+								t.Logf("  节点: %s (%s)", label, id[:8])
 							}
 						}
 					}
 				}
 			}
-		} else if w.Code == 404 {
-			t.Log("⚠ 关系图API未实现（404）")
-		} else {
-			t.Logf("ℹ 关系图生成尝试，状态码: %d", w.Code)
 		}
 	})
 
@@ -386,8 +373,6 @@ func TestCharacterRelationGraph(t *testing.T) {
 					t.Logf("✓ 更新后的性格特征: %v", personality)
 				}
 			}
-		} else if w.Code == 404 {
-			t.Log("⚠ 角色更新API未实现（404）")
 		} else {
 			t.Logf("ℹ 角色更新尝试，状态码: %d", w.Code)
 		}
@@ -414,8 +399,6 @@ func TestCharacterRelationGraph(t *testing.T) {
 
 		if w.Code == 200 {
 			t.Log("✓ 角色删除成功")
-		} else if w.Code == 404 {
-			t.Log("⚠ 角色删除API未实现（404）")
 		} else {
 			t.Logf("ℹ 角色删除尝试，状态码: %d", w.Code)
 		}

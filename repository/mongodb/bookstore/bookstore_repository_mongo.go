@@ -276,7 +276,7 @@ func (r *MongoBookRepository) GetRecommended(ctx context.Context, limit, offset 
 		SetSkip(int64(offset)).
 		SetSort(bson.D{{Key: "created_at", Value: -1}, {Key: "title", Value: 1}})
 
-	// 查询所有书籍，不再只返回推荐的
+	// 查询所有书籍
 	cursor, err := r.GetCollection().Find(ctx, bson.M{}, opts)
 	if err != nil {
 		return nil, err

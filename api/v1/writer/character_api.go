@@ -1,8 +1,11 @@
 package writer
 
 import (
+	"log"
+
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/api/v1/shared"
 	writerModels "Qingyu_backend/models/writer" // Import for Swagger annotations
 	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/interfaces"
@@ -33,25 +36,19 @@ func NewCharacterApi(characterService interfaces.CharacterService) *CharacterApi
 // @Failure 401 {object} response.APIResponse
 // @Router /api/v1/projects/{projectId}/characters [post]
 func (api *CharacterApi) CreateCharacter(c *gin.Context) {
-	projectID := c.Param("projectId")
+	projectID := c.Param("id")
 	if projectID == "" {
 		response.BadRequest(c, "项目ID不能为空", "")
 		return
 	}
 
 	var req interfaces.CreateCharacterRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
 	// 从上下文获取用户ID
-	userID := ""
-	if uid, exists := c.Get("user_id"); exists {
-		if uidStr, ok := uid.(string); ok {
-			userID = uidStr
-		}
-	}
+	userID := shared.GetUserIDOptional(c)
 
 	character, err := api.characterService.Create(c.Request.Context(), projectID, userID, &req)
 	if err != nil {
@@ -101,16 +98,24 @@ func (api *CharacterApi) GetCharacter(c *gin.Context) {
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/projects/{projectId}/characters [get]
 func (api *CharacterApi) ListCharacters(c *gin.Context) {
-	projectID := c.Param("projectId")
+	projectID := c.Param("id")
 	if projectID == "" {
 		response.BadRequest(c, "项目ID不能为空", "")
 		return
 	}
 
+	log.Printf("[ListCharacters] 获取项目角色列表, projectID=%s", projectID)
+
 	characters, err := api.characterService.List(c.Request.Context(), projectID)
 	if err != nil {
+		log.Printf("[ListCharacters] 获取角色列表失败: %v", err)
 		c.Error(err)
 		return
+	}
+
+	log.Printf("[ListCharacters] 成功获取角色, 数量=%d", len(characters))
+	if len(characters) > 0 {
+		log.Printf("[ListCharacters] 第一个角色: ID=%s, Name=%s", characters[0].ID, characters[0].Name)
 	}
 
 	response.Success(c, characters)
@@ -139,8 +144,7 @@ func (api *CharacterApi) UpdateCharacter(c *gin.Context) {
 	}
 
 	var req interfaces.UpdateCharacterRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
@@ -201,8 +205,7 @@ func (api *CharacterApi) CreateCharacterRelation(c *gin.Context) {
 	}
 
 	var req interfaces.CreateRelationRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
@@ -226,7 +229,7 @@ func (api *CharacterApi) CreateCharacterRelation(c *gin.Context) {
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/projects/{projectId}/characters/relations [get]
 func (api *CharacterApi) ListCharacterRelations(c *gin.Context) {
-	projectID := c.Param("projectId")
+	projectID := c.Param("id")
 	if projectID == "" {
 		response.BadRequest(c, "项目ID不能为空", "")
 		return
@@ -238,10 +241,18 @@ func (api *CharacterApi) ListCharacterRelations(c *gin.Context) {
 		charIDPtr = &characterID
 	}
 
+	log.Printf("[ListCharacterRelations] 获取项目关系列表, projectID=%s, characterID=%s", projectID, characterID)
+
 	relations, err := api.characterService.ListRelations(c.Request.Context(), projectID, charIDPtr)
 	if err != nil {
+		log.Printf("[ListCharacterRelations] 获取关系列表失败: %v", err)
 		c.Error(err)
 		return
+	}
+
+	log.Printf("[ListCharacterRelations] 成功获取关系, 数量=%d", len(relations))
+	if len(relations) > 0 {
+		log.Printf("[ListCharacterRelations] 第一个关系: ID=%s, FromID=%s, ToID=%s", relations[0].ID, relations[0].FromID, relations[0].ToID)
 	}
 
 	response.Success(c, relations)
@@ -286,7 +297,7 @@ func (api *CharacterApi) DeleteCharacterRelation(c *gin.Context) {
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/projects/{projectId}/characters/graph [get]
 func (api *CharacterApi) GetCharacterGraph(c *gin.Context) {
-	projectID := c.Param("projectId")
+	projectID := c.Param("id")
 	if projectID == "" {
 		response.BadRequest(c, "项目ID不能为空", "")
 		return
@@ -299,6 +310,134 @@ func (api *CharacterApi) GetCharacterGraph(c *gin.Context) {
 	}
 
 	response.Success(c, graph)
+}
+
+// CreateRelationTimelineEvent 创建关系时序变化事件
+// @Summary 创建关系时序变化事件
+// @Description 在指定章节创建关系时序变化事件
+// @Tags 角色管理
+// @Accept json
+// @Produce json
+// @Param relationId path string true "关系ID"
+// @Param projectId query string true "项目ID"
+// @Param request body object true "时序事件请求"
+// @Success 201 {object} response.APIResponse
+// @Failure 400 {object} response.APIResponse
+// @Router /api/v1/characters/relations/{relationId}/timeline [post]
+func (api *CharacterApi) CreateRelationTimelineEvent(c *gin.Context) {
+	relationID := c.Param("relationId")
+	projectID := c.Query("projectId")
+
+	if relationID == "" || projectID == "" {
+		response.BadRequest(c, "参数错误", "relationId和projectId不能为空")
+		return
+	}
+
+	var req interfaces.CreateRelationTimelineEventRequest
+	if !shared.BindJSON(c, &req) {
+		return
+	}
+
+	// 确保relationId一致
+	req.RelationID = relationID
+
+	event, err := api.characterService.CreateRelationTimelineEvent(c.Request.Context(), projectID, &req)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.Created(c, event)
+}
+
+// GetRelationTimeline 获取关系时序历史
+// @Summary 获取关系时序历史
+// @Description 获取指定关系的所有时序变化事件
+// @Tags 角色管理
+// @Accept json
+// @Produce json
+// @Param relationId path string true "关系ID"
+// @Param projectId query string true "项目ID"
+// @Success 200 {object} response.APIResponse
+// @Router /api/v1/characters/relations/{relationId}/timeline [get]
+func (api *CharacterApi) GetRelationTimeline(c *gin.Context) {
+	relationID := c.Param("relationId")
+	projectID := c.Query("projectId")
+
+	if relationID == "" || projectID == "" {
+		response.BadRequest(c, "参数错误", "relationId和projectId不能为空")
+		return
+	}
+
+	events, err := api.characterService.GetRelationTimeline(c.Request.Context(), relationID, projectID)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.Success(c, events)
+}
+
+// UpdateRelationTimelineEvent 更新关系时序事件
+// @Summary 更新关系时序事件
+// @Description 更新指定关系时序事件
+// @Tags 角色管理
+// @Accept json
+// @Produce json
+// @Param eventId path string true "事件ID"
+// @Param projectId query string true "项目ID"
+// @Param request body object true "更新请求"
+// @Success 200 {object} response.APIResponse
+// @Router /api/v1/characters/relations/timeline-events/{eventId} [put]
+func (api *CharacterApi) UpdateRelationTimelineEvent(c *gin.Context) {
+	eventID := c.Param("eventId")
+	projectID := c.Query("projectId")
+
+	if eventID == "" || projectID == "" {
+		response.BadRequest(c, "参数错误", "eventId和projectId不能为空")
+		return
+	}
+
+	var req interfaces.UpdateRelationTimelineEventRequest
+	if !shared.BindJSON(c, &req) {
+		return
+	}
+
+	event, err := api.characterService.UpdateRelationTimelineEvent(c.Request.Context(), eventID, projectID, &req)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.Success(c, event)
+}
+
+// DeleteRelationTimelineEvent 删除关系时序事件
+// @Summary 删除关系时序事件
+// @Description 删除指定关系时序事件
+// @Tags 角色管理
+// @Accept json
+// @Produce json
+// @Param eventId path string true "事件ID"
+// @Param projectId query string true "项目ID"
+// @Success 200 {object} response.APIResponse
+// @Router /api/v1/characters/relations/timeline-events/{eventId} [delete]
+func (api *CharacterApi) DeleteRelationTimelineEvent(c *gin.Context) {
+	eventID := c.Param("eventId")
+	projectID := c.Query("projectId")
+
+	if eventID == "" || projectID == "" {
+		response.BadRequest(c, "参数错误", "eventId和projectId不能为空")
+		return
+	}
+
+	err := api.characterService.DeleteRelationTimelineEvent(c.Request.Context(), eventID, projectID)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	response.Success(c, nil)
 }
 
 var _ = writerModels.Character{}

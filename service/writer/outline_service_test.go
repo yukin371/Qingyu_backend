@@ -68,6 +68,14 @@ func (m *MockOutlineRepository) FindRoots(ctx context.Context, projectID string)
 	return args.Get(0).([]*writerModels.OutlineNode), args.Error(1)
 }
 
+func (m *MockOutlineRepository) FindByDocumentID(ctx context.Context, documentID string) (*writerModels.OutlineNode, error) {
+	args := m.Called(ctx, documentID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*writerModels.OutlineNode), args.Error(1)
+}
+
 func (m *MockOutlineRepository) ExistsByID(ctx context.Context, outlineID string) (bool, error) {
 	args := m.Called(ctx, outlineID)
 	return args.Bool(0), args.Error(1)
@@ -87,6 +95,14 @@ func (m *MockOutlineRepository) CountByParentID(ctx context.Context, projectID, 
 		return 0, args.Error(1)
 	}
 	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *MockOutlineRepository) FindByGlobalOutline(ctx context.Context, projectID primitive.ObjectID) (*writerModels.OutlineNode, error) {
+	args := m.Called(ctx, projectID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*writerModels.OutlineNode), args.Error(1)
 }
 
 // Ensure MockOutlineRepository implements the interface
@@ -120,9 +136,10 @@ func (m *MockEventBus) Unsubscribe(eventType string, handlerName string) error {
 // 辅助函数：创建测试大纲节点
 func createTestOutlineNode(projectID, title, parentID string, order int) *writerModels.OutlineNode {
 	id := primitive.NewObjectID()
+	projectOID, _ := primitive.ObjectIDFromHex(projectID)
 	outline := &writerModels.OutlineNode{}
 	outline.ID = id
-	outline.ProjectID = projectID
+	outline.ProjectID = projectOID
 	outline.Title = title
 	outline.ParentID = parentID
 	outline.Order = order

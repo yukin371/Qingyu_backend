@@ -100,6 +100,7 @@ type RepositoryFactory interface {
 
 	// ========== 向后兼容的方法 (使用 shared 接口) ==========
 	// Deprecated: 这些方法为了向后兼容而保留，新代码应使用上面的新接口
+	// todo: 清理掉这些方法
 
 	// Auth相关Repository (向后兼容)
 	CreateAuthRepository() SharedInterfaces.AuthRepository
@@ -109,6 +110,7 @@ type RepositoryFactory interface {
 
 	// Social相关Repository
 	CreateBookListRepository() SocialInterfaces.BookListRepository
+	CreateReviewRepository() SocialInterfaces.ReviewRepository
 	CreateFollowRepository() SocialInterfaces.FollowRepository
 
 	// Stats相关Repository

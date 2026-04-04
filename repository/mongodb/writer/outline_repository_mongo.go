@@ -90,8 +90,9 @@ func (r *OutlineRepositoryMongo) FindByProjectID(ctx context.Context, projectID 
 	if err != nil {
 		return nil, err
 	}
+	projectObjectID, _ := primitive.ObjectIDFromHex(safeProjectID)
 
-	filter := bson.M{"project_id": safeProjectID}
+	filter := bson.M{"project_id": projectObjectID}
 
 	cursor, err := r.GetCollection().Find(ctx, filter)
 	if err != nil {
@@ -158,9 +159,10 @@ func (r *OutlineRepositoryMongo) FindByParentID(ctx context.Context, projectID, 
 	if err != nil {
 		return nil, err
 	}
+	projectObjectID, _ := primitive.ObjectIDFromHex(safeProjectID)
 
 	filter := bson.M{
-		"project_id": safeProjectID,
+		"project_id": projectObjectID,
 		"parent_id":  safeParentID,
 	}
 
@@ -187,9 +189,10 @@ func (r *OutlineRepositoryMongo) FindRoots(ctx context.Context, projectID string
 	if err != nil {
 		return nil, err
 	}
+	projectObjectID, _ := primitive.ObjectIDFromHex(safeProjectID)
 
 	filter := bson.M{
-		"project_id": safeProjectID,
+		"project_id": projectObjectID,
 		"$or": []bson.M{
 			{"parent_id": ""},
 			{"parent_id": bson.M{"$exists": false}},
@@ -213,6 +216,24 @@ func (r *OutlineRepositoryMongo) FindRoots(ctx context.Context, projectID string
 	return outlines, nil
 }
 
+// FindByDocumentID 根据关联文档ID查询大纲节点（用于双向同步去重）
+func (r *OutlineRepositoryMongo) FindByDocumentID(ctx context.Context, documentID string) (*writer.OutlineNode, error) {
+	filter := bson.M{
+		"document_id": documentID,
+	}
+
+	var outline writer.OutlineNode
+	err := r.GetCollection().FindOne(ctx, filter).Decode(&outline)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil // 没有找到，返回 nil 而不是错误
+		}
+		return nil, errors.NewRepositoryError(errors.RepositoryErrorInternal, "find outline by document_id failed", err)
+	}
+
+	return &outline, nil
+}
+
 // ExistsByID 检查大纲节点是否存在
 func (r *OutlineRepositoryMongo) ExistsByID(ctx context.Context, outlineID string) (bool, error) {
 	objectID, err := primitive.ObjectIDFromHex(outlineID)
@@ -234,8 +255,9 @@ func (r *OutlineRepositoryMongo) CountByProjectID(ctx context.Context, projectID
 	if err != nil {
 		return 0, err
 	}
+	projectObjectID, _ := primitive.ObjectIDFromHex(safeProjectID)
 
-	filter := bson.M{"project_id": safeProjectID}
+	filter := bson.M{"project_id": projectObjectID}
 	count, err := r.GetCollection().CountDocuments(ctx, filter)
 	if err != nil {
 		return 0, errors.NewRepositoryError(errors.RepositoryErrorInternal, "count outlines failed", err)
@@ -253,13 +275,14 @@ func (r *OutlineRepositoryMongo) CountByParentID(ctx context.Context, projectID,
 	if err != nil {
 		return 0, err
 	}
+	projectObjectID, _ := primitive.ObjectIDFromHex(safeProjectID)
 
 	var filter bson.M
 
 	if safeParentID == "" {
 		// 查询根节点（parent_id为空或不存在）
 		filter = bson.M{
-			"project_id": safeProjectID,
+			"project_id": projectObjectID,
 			"$or": []bson.M{
 				{"parent_id": ""},
 				{"parent_id": bson.M{"$exists": false}},
@@ -268,7 +291,7 @@ func (r *OutlineRepositoryMongo) CountByParentID(ctx context.Context, projectID,
 	} else {
 		// 查询指定父节点的子节点
 		filter = bson.M{
-			"project_id": safeProjectID,
+			"project_id": projectObjectID,
 			"parent_id":  safeParentID,
 		}
 	}
@@ -278,4 +301,81 @@ func (r *OutlineRepositoryMongo) CountByParentID(ctx context.Context, projectID,
 		return 0, errors.NewRepositoryError(errors.RepositoryErrorInternal, "count outline children failed", err)
 	}
 	return count, nil
+}
+
+// FindByGlobalOutline 查找项目的全局总纲节点（type="global", parent_id为空或不存在, 无 document_id）
+// 如果不存在则原子性地创建（使用 findOneAndUpdate + upsert）
+func (r *OutlineRepositoryMongo) FindByGlobalOutline(ctx context.Context, projectID primitive.ObjectID) (*writer.OutlineNode, error) {
+	// 使用 findOneAndUpdate + upsert 实现原子性的"查找或创建"
+	// filter 只使用精确匹配的字段来确保最多只有一个匹配
+	filter := bson.M{
+		"project_id":  projectID,
+		"type":        "global",
+		"document_id": "",
+	}
+
+	// 使用 $setOnInsert 在插入时设置默认值
+	update := bson.M{
+		"$setOnInsert": bson.M{
+			"title":     "总纲",
+			"parent_id": "", // 对于 upsert，必须设置一个具体的值
+			"order":     0,
+			"tags":      []string{},
+			"tension":   0,
+		},
+	}
+
+	opts := options.FindOneAndUpdate().
+		SetUpsert(true).
+		SetReturnDocument(options.After)
+
+	var outline writer.OutlineNode
+	err := r.GetCollection().FindOneAndUpdate(ctx, filter, update, opts).Decode(&outline)
+	if err == nil {
+		// 成功（可能是找到了已有的，或者是创建了新的）
+		return &outline, nil
+	}
+
+	if err == mongo.ErrNoDocuments {
+		// findOneAndUpdate + upsert 模式下理论上不会返回 ErrNoDocuments
+		// 但为了安全，再查一次
+		err = r.GetCollection().FindOne(ctx, filter).Decode(&outline)
+		if err == nil {
+			return &outline, nil
+		}
+		if err == mongo.ErrNoDocuments {
+			return nil, nil
+		}
+		return nil, errors.NewRepositoryError(errors.RepositoryErrorInternal, "find global outline after upsert failed", err)
+	}
+
+	return nil, errors.NewRepositoryError(errors.RepositoryErrorInternal, "findOrCreate global outline failed", err)
+}
+
+// EnsureIndexes 创建索引
+func (r *OutlineRepositoryMongo) EnsureIndexes(ctx context.Context) error {
+	indexes := []mongo.IndexModel{
+		// project_id + parent_id 索引，用于查询子节点
+		{
+			Keys: bson.D{
+				{Key: "project_id", Value: 1},
+				{Key: "parent_id", Value: 1},
+			},
+			Options: options.Index(),
+		},
+		// document_id 索引，用于双向引用查询
+		{
+			Keys: bson.D{
+				{Key: "document_id", Value: 1},
+			},
+			Options: options.Index().SetSparse(true),
+		},
+	}
+
+	_, err := r.GetCollection().Indexes().CreateMany(ctx, indexes)
+	if err != nil {
+		return errors.NewRepositoryError(errors.RepositoryErrorInternal, "create outline indexes failed", err)
+	}
+
+	return nil
 }

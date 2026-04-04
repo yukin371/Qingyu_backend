@@ -32,7 +32,7 @@ func (l *Location) Validate() error {
 	if err := base.ValidateName(l.Name, 100); err != nil {
 		return err
 	}
-	if l.ProjectID == "" {
+	if l.ProjectID.IsZero() {
 		return base.ErrProjectIDRequired
 	}
 	if err := base.ValidateURL(l.ImageURL); err != nil {
@@ -62,7 +62,7 @@ func (lr *LocationRelation) TouchForCreate() {
 
 // Validate 验证地点关系
 func (lr *LocationRelation) Validate() error {
-	if lr.ProjectID == "" {
+	if lr.ProjectID.IsZero() {
 		return base.ErrProjectIDRequired
 	}
 	if !lr.Type.IsValid() {

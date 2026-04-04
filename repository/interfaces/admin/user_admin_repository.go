@@ -57,6 +57,23 @@ type UserAdminRepository interface {
 
 	// GetActiveUsers 获取活跃用户（admin特有）
 	GetActiveUsers(ctx context.Context, days int, limit int) ([]*users.User, error)
+
+	// === 新增：统计方法（用于Dashboard） ===
+
+	// GetTotalCount 获取总用户数
+	GetTotalCount(ctx context.Context) (int64, error)
+
+	// CountActiveUsers 统计活跃用户数量（指定天数内登录过的用户）
+	CountActiveUsers(ctx context.Context, days int) (int64, error)
+
+	// CountNewUsersToday 统计今日新增用户数
+	CountNewUsersToday(ctx context.Context) (int64, error)
+
+	// CountByRole 统计指定角色的用户数量（已存在，确认接口）
+	// CountByRole(ctx context.Context, role string) (int64, error)
+
+	// CountAuthors 统计作者用户数量
+	CountAuthors(ctx context.Context) (int64, error)
 }
 
 // 注意：以下方法已通过 BaseUserRepository 提供（使用string ID）：

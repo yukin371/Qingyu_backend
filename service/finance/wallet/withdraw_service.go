@@ -109,10 +109,12 @@ func (s *WithdrawServiceImpl) ApproveWithdraw(ctx context.Context, requestID, re
 	now := time.Now()
 	updates := map[string]interface{}{
 		"status":       "approved",
-		"reviewer_id":  reviewerID,
+		"reviewed_by":  reviewerID,
 		"reviewed_at":  now,
-		"remark":       remark,
 		"processed_at": now,
+	}
+	if remark != "" {
+		updates["reject_reason"] = ""
 	}
 
 	transaction := &financeModel.Transaction{
@@ -156,10 +158,10 @@ func (s *WithdrawServiceImpl) RejectWithdraw(ctx context.Context, requestID, rev
 
 	now := time.Now()
 	updates := map[string]interface{}{
-		"status":      "rejected",
-		"reviewer_id": reviewerID,
-		"reviewed_at": now,
-		"remark":      reason,
+		"status":        "rejected",
+		"reviewed_by":   reviewerID,
+		"reviewed_at":   now,
+		"reject_reason": reason,
 	}
 
 	return runWalletTransaction(ctx, s.txRunner, func(txCtx context.Context) error {

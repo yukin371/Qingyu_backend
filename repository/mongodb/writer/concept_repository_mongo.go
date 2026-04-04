@@ -21,7 +21,7 @@ var conceptCategoryPattern = regexp.MustCompile(`^[\p{L}\p{N}_\-\s]{1,64}$`)
 
 // normalizeAndValidateConceptQueryID 规范化并验证设定查询ID
 //
-// 确保ID格式正确，避免不同大小写/格式带来的查询歧义喵~
+// 确保ID格式正确，避免不同大小写/格式带来的查询歧义
 func normalizeAndValidateConceptQueryID(field, value string, allowEmpty bool) (string, error) {
 	normalized := strings.TrimSpace(value)
 	if normalized == "" {
@@ -68,7 +68,7 @@ func NewConceptRepository(db *mongo.Database) writerInterface.ConceptRepository 
 
 // Create 创建设定
 //
-// 在创建前会自动设置默认值（时间戳等）喵~
+// 在创建前会自动设置默认值（时间戳等）
 func (r *ConceptRepositoryMongo) Create(ctx context.Context, concept *writer.Concept) error {
 	// 设置默认值
 	concept.BeforeCreate()

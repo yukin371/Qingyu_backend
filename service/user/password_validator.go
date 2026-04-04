@@ -1,6 +1,7 @@
 package user
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 )
@@ -8,30 +9,54 @@ import (
 // PasswordValidator 密码验证器
 type PasswordValidator struct {
 	minLength        int
+	maxLength        int
 	requireUppercase bool
 	requireLowercase bool
 	requireDigit     bool
 	requireSpecial   bool
 	commonPasswords  map[string]bool
+	looseMode        bool // 宽松模式（测试用）
 }
 
 // NewPasswordValidator 创建密码验证器
 func NewPasswordValidator() *PasswordValidator {
 	return &PasswordValidator{
 		minLength:        8,
+		maxLength:        32,
 		requireUppercase: true,
 		requireLowercase: true,
 		requireDigit:     true,
 		requireSpecial:   false, // 特殊字符可选
 		commonPasswords:  loadCommonPasswords(),
+		looseMode:        false,
+	}
+}
+
+// NewLoosePasswordValidator 创建宽松的密码验证器（测试用）
+// 只要求长度 >= 4，无其他限制
+func NewLoosePasswordValidator() *PasswordValidator {
+	return &PasswordValidator{
+		minLength:        4,
+		maxLength:        128,
+		requireUppercase: false,
+		requireLowercase: false,
+		requireDigit:     false,
+		requireSpecial:   false,
+		commonPasswords:  make(map[string]bool),
+		looseMode:        true,
 	}
 }
 
 // ValidateStrength 验证密码强度
 func (v *PasswordValidator) ValidateStrength(password string) (bool, string) {
-	// 1. 检查长度
+	// 1. 检查最小长度
 	if len(password) < v.minLength {
 		return false, "密码长度不能少于8位"
+	}
+
+	// 1.5 检查最大长度
+	if len(password) > v.maxLength {
+		return false, "密码长度不能超过32位"
 	}
 
 	// 2. 检查大写字母
@@ -133,6 +158,126 @@ func (v *PasswordValidator) GetStrengthLevel(password string) string {
 	} else {
 		return "弱"
 	}
+}
+
+// ValidatePassword 验证密码（返回 error，兼容 auth 包接口）
+// 使用简化规则：长度8-32位，至少一个字母，至少一个数字
+// 宽松模式下只检查最小长度
+func (v *PasswordValidator) ValidatePassword(password string) error {
+	// 宽松模式：只检查最小长度
+	if v.looseMode {
+		if len(password) < v.minLength {
+			return fmt.Errorf("密码长度不能少于%d位", v.minLength)
+		}
+		return nil
+	}
+
+	// 1. 检查长度
+	if len(password) < v.minLength {
+		return fmt.Errorf("密码长度不能少于%d位", v.minLength)
+	}
+	if len(password) > v.maxLength {
+		return fmt.Errorf("密码长度不能超过%d位", v.maxLength)
+	}
+
+	// 2. 检查是否包含字母（不区分大小写）
+	hasLetter := regexp.MustCompile(`[a-zA-Z]`).MatchString(password)
+	if !hasLetter {
+		return fmt.Errorf("密码必须包含至少一个字母")
+	}
+
+	// 3. 检查是否包含数字
+	hasDigit := regexp.MustCompile(`[0-9]`).MatchString(password)
+	if !hasDigit {
+		return fmt.Errorf("密码必须包含至少一个数字")
+	}
+
+	return nil
+}
+
+// ValidatePasswordStrength 返回密码强度等级（英文，兼容测试）
+// 返回值：weak, medium, strong
+// 评分标准（调整后与原 auth 版本一致）：
+// - weak: 纯数字或常见弱密码
+// - medium: 有大小写和数字
+// - strong: 有大小写、数字和特殊字符
+func (v *PasswordValidator) ValidatePasswordStrength(password string) string {
+	// 简化评分逻辑，与原 auth 版本保持一致
+	score := 0
+
+	// 基础长度分
+	if len(password) >= 8 {
+		score += 1
+	}
+	if len(password) >= 12 {
+		score += 1
+	}
+
+	// 字符类型分
+	hasNumber := regexp.MustCompile(`[0-9]`).MatchString(password)
+	hasLower := regexp.MustCompile(`[a-z]`).MatchString(password)
+	hasUpper := regexp.MustCompile(`[A-Z]`).MatchString(password)
+	hasSpecial := regexp.MustCompile(`[!@#$%^&*(),.?":{}|<>]`).MatchString(password)
+
+	if hasNumber {
+		score += 1
+	}
+	if hasLower && hasUpper {
+		score += 2
+	} else if hasLower || hasUpper {
+		score += 1
+	}
+	if hasSpecial {
+		score += 2
+	}
+
+	// 评级
+	if score <= 2 {
+		return "weak"
+	} else if score <= 5 {
+		return "medium"
+	}
+	return "strong"
+}
+
+// GetPasswordRequirements 获取密码要求说明
+func (v *PasswordValidator) GetPasswordRequirements() string {
+	return fmt.Sprintf(
+		"密码要求：长度至少%d位，至少包含一个大写字母、一个小写字母和一个数字",
+		v.minLength,
+	)
+}
+
+// --- 配置方法（Builder 模式）---
+
+// SetMinLength 设置最小长度
+func (v *PasswordValidator) SetMinLength(length int) *PasswordValidator {
+	v.minLength = length
+	return v
+}
+
+// SetRequireUppercase 设置是否要求大写字母
+func (v *PasswordValidator) SetRequireUppercase(require bool) *PasswordValidator {
+	v.requireUppercase = require
+	return v
+}
+
+// SetRequireLowercase 设置是否要求小写字母
+func (v *PasswordValidator) SetRequireLowercase(require bool) *PasswordValidator {
+	v.requireLowercase = require
+	return v
+}
+
+// SetRequireDigit 设置是否要求数字
+func (v *PasswordValidator) SetRequireDigit(require bool) *PasswordValidator {
+	v.requireDigit = require
+	return v
+}
+
+// SetRequireSpecial 设置是否要求特殊字符
+func (v *PasswordValidator) SetRequireSpecial(require bool) *PasswordValidator {
+	v.requireSpecial = require
+	return v
 }
 
 // ============ 辅助函数 ============

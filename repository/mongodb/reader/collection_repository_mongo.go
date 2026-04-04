@@ -614,6 +614,25 @@ func (r *MongoCollectionRepository) CountUserCollections(ctx context.Context, us
 	return count, nil
 }
 
+// CountBookCollections 统计书籍收藏数
+func (r *MongoCollectionRepository) CountBookCollections(ctx context.Context, bookID string) (int64, error) {
+	if strings.TrimSpace(bookID) == "" {
+		return 0, fmt.Errorf("书籍ID不能为空")
+	}
+
+	filterBookID := strings.TrimSpace(bookID)
+	if normalized, err := normalizeObjectIDHex("book_id", filterBookID); err == nil {
+		filterBookID = normalized
+	}
+
+	count, err := r.collectionColl.CountDocuments(ctx, bson.M{"book_id": filterBookID})
+	if err != nil {
+		return 0, fmt.Errorf("failed to count book collections: %w", err)
+	}
+
+	return count, nil
+}
+
 // Health 健康检查
 func (r *MongoCollectionRepository) Health(ctx context.Context) error {
 	return r.collectionColl.Database().Client().Ping(ctx, nil)

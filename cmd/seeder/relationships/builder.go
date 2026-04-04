@@ -7,8 +7,8 @@ import (
 	"math/rand"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson"
 	"Qingyu_backend/cmd/seeder/utils"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 // RelationshipBuilder 关联关系构建器
@@ -53,18 +53,7 @@ func (rb *RelationshipBuilder) BuildSubscriptions() error {
 	totalSubscriptions := 0
 
 	for _, book := range books {
-		// 根据评分确定订阅数
-		var targetSubscriptions int
-		if book.Rating > 8.5 {
-			// 热门书籍: 200-500 个订阅
-			targetSubscriptions = rand.Intn(300) + 200
-		} else if book.Rating > 6.0 {
-			// 普通书籍: 20-200 个订阅
-			targetSubscriptions = rand.Intn(180) + 20
-		} else {
-			// 冷门书籍: 0-20 个订阅
-			targetSubscriptions = rand.Intn(20)
-		}
+		targetSubscriptions := rb.calculateTargetSubscriptions(book)
 
 		// 如果目标订阅数超过用户总数，则限制为用户总数
 		if targetSubscriptions > len(userIDs) {
@@ -105,10 +94,37 @@ func (rb *RelationshipBuilder) BuildSubscriptions() error {
 
 // BookInfo 书籍信息结构体
 type BookInfo struct {
-	ID          string    `bson:"_id"`
-	Title       string    `bson:"title"`
-	Rating      float64   `bson:"rating"`
-	PublishedAt time.Time `bson:"published_at"`
+	ID           string    `bson:"_id"`
+	Title        string    `bson:"title"`
+	Rating       float64   `bson:"rating"`
+	ViewCount    int64     `bson:"view_count"`
+	ChapterCount int       `bson:"chapter_count"`
+	PublishedAt  time.Time `bson:"published_at"`
+}
+
+func (rb *RelationshipBuilder) calculateTargetSubscriptions(book BookInfo) int {
+	rating := book.Rating
+	if rating <= 5 {
+		rating *= 2
+	}
+
+	switch {
+	case rating >= 8.5:
+		return rand.Intn(300) + 200
+	case rating >= 6.0:
+		return rand.Intn(180) + 20
+	}
+
+	switch {
+	case book.ViewCount >= 5000:
+		return rand.Intn(120) + 60
+	case book.ViewCount >= 500:
+		return rand.Intn(50) + 15
+	case book.ChapterCount >= 3:
+		return rand.Intn(18) + 6
+	default:
+		return rand.Intn(8)
+	}
 }
 
 // getBooksWithRating 获取所有书籍及其评分
@@ -116,9 +132,8 @@ func (rb *RelationshipBuilder) getBooksWithRating(ctx context.Context) ([]BookIn
 	collection := rb.db.Collection("books")
 
 	// 查询所有书籍，只获取需要的字段
-	cursor, err := collection.Find(ctx, bson.M{},
-		// 使用 projection 只获取需要的字段
-	)
+	cursor, err := collection.Find(ctx, bson.M{})// 使用 projection 只获取需要的字段
+
 	if err != nil {
 		return nil, err
 	}

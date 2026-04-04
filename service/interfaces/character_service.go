@@ -20,6 +20,12 @@ type CharacterService interface {
 	ListRelations(ctx context.Context, projectID string, characterID *string) ([]*writer.CharacterRelation, error)
 	DeleteRelation(ctx context.Context, relationID, projectID string) error
 
+	// 关系时序事件管理
+	CreateRelationTimelineEvent(ctx context.Context, projectID string, req *CreateRelationTimelineEventRequest) (*writer.RelationTimelineEvent, error)
+	GetRelationTimeline(ctx context.Context, relationID, projectID string) ([]*writer.RelationTimelineEvent, error)
+	UpdateRelationTimelineEvent(ctx context.Context, eventID, projectID string, req *UpdateRelationTimelineEventRequest) (*writer.RelationTimelineEvent, error)
+	DeleteRelationTimelineEvent(ctx context.Context, eventID, projectID string) error
+
 	// 关系图
 	GetCharacterGraph(ctx context.Context, projectID string) (*CharacterGraph, error)
 }
@@ -41,4 +47,21 @@ type CreateRelationRequest = dto.CreateRelationRequest
 type CharacterGraph struct {
 	Nodes []*writer.Character         `json:"nodes"`
 	Edges []*writer.CharacterRelation `json:"edges"`
+}
+
+// CreateRelationTimelineEventRequest 创建关系时序事件请求
+type CreateRelationTimelineEventRequest struct {
+	RelationID  string `json:"relationId"`
+	ChapterID   string `json:"chapterId"`
+	ChapterTitle string `json:"chapterTitle"`
+	NewType     string `json:"newType"`
+	NewStrength int    `json:"newStrength"`
+	Notes       string `json:"notes,omitempty"`
+}
+
+// UpdateRelationTimelineEventRequest 更新关系时序事件请求
+type UpdateRelationTimelineEventRequest struct {
+	NewType     string `json:"newType,omitempty"`
+	NewStrength int    `json:"newStrength,omitempty"`
+	Notes       string `json:"notes,omitempty"`
 }

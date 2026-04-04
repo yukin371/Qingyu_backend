@@ -6,10 +6,9 @@ import (
 	"fmt"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
-
 	"Qingyu_backend/models/shared"
 	"Qingyu_backend/models/shared/types"
+	"Qingyu_backend/repository"
 	readerRepo "Qingyu_backend/repository/interfaces/reader"
 	"Qingyu_backend/service/base"
 	bookstoreService "Qingyu_backend/service/bookstore"
@@ -136,11 +135,11 @@ func (s *ReaderService) GetReadingProgress(ctx context.Context, userID, bookID s
 
 	// 如果没有阅读记录，返回空进度
 	if progress == nil {
-		userOID, err := primitive.ObjectIDFromHex(userID)
+		userOID, err := repository.ParseID(userID)
 		if err != nil {
 			return nil, fmt.Errorf("无效的用户ID: %w", err)
 		}
-		bookOID, err := primitive.ObjectIDFromHex(bookID)
+		bookOID, err := repository.ParseID(bookID)
 		if err != nil {
 			return nil, fmt.Errorf("无效的书籍ID: %w", err)
 		}
@@ -312,11 +311,11 @@ func (s *ReaderService) UpdateBookStatus(ctx context.Context, userID, bookID, st
 
 	// 如果没有进度记录，创建一个新记录
 	if progress == nil {
-		userOID, err := primitive.ObjectIDFromHex(userID)
+		userOID, err := repository.ParseID(userID)
 		if err != nil {
 			return fmt.Errorf("无效的用户ID: %w", err)
 		}
-		bookOID, err := primitive.ObjectIDFromHex(bookID)
+		bookOID, err := repository.ParseID(bookID)
 		if err != nil {
 			return fmt.Errorf("无效的书籍ID: %w", err)
 		}
@@ -838,7 +837,7 @@ func (s *ReaderService) SyncAnnotations(ctx context.Context, userID string, req 
 	uploadedCount := 0
 	if len(syncReq.LocalAnnotations) > 0 {
 		for _, ann := range syncReq.LocalAnnotations {
-			userOID, err := primitive.ObjectIDFromHex(userID)
+			userOID, err := repository.ParseID(userID)
 			if err != nil {
 				return nil, fmt.Errorf("无效的用户ID: %w", err)
 			}

@@ -5,6 +5,7 @@ import (
 
 	"Qingyu_backend/models/writer/base"
 	"Qingyu_backend/models/writer/types"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // Project 项目模型
@@ -67,9 +68,10 @@ type ProjectStats struct {
 
 // ProjectSettings 项目设置
 type ProjectSettings struct {
-	AutoBackup     bool `bson:"auto_backup" json:"autoBackup"`                            // 自动备份
-	BackupInterval int  `bson:"backup_interval" json:"backupInterval"`                    // 备份间隔（小时）
-	WordCountGoal  int  `bson:"word_count_goal,omitempty" json:"wordCountGoal,omitempty"` // 字数目标
+	AutoBackup     bool             `bson:"auto_backup" json:"autoBackup"`                            // 自动备份
+	BackupInterval int              `bson:"backup_interval" json:"backupInterval"`                    // 备份间隔（小时）
+	WordCountGoal  int              `bson:"word_count_goal,omitempty" json:"wordCountGoal,omitempty"` // 字数目标
+	CharacterRoles []CharacterRole  `bson:"character_roles,omitempty" json:"characterRoles,omitempty"` // 角色类型配置
 }
 
 // Collaborator 协作者
@@ -91,7 +93,11 @@ const (
 
 // IsOwner 判断用户是否为项目所有者
 func (p *Project) IsOwner(userID string) bool {
-	return p.OwnedEntity.AuthorID == userID
+	objectID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return false
+	}
+	return p.OwnedEntity.AuthorID == objectID
 }
 
 // CanEdit 判断用户是否可以编辑项目
@@ -180,7 +186,7 @@ func (p *Project) Validate() error {
 	}
 
 	// 验证作者ID
-	if p.AuthorID == "" {
+	if p.AuthorID.IsZero() {
 		return base.ErrAuthorIDRequired
 	}
 

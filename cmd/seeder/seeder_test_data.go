@@ -82,6 +82,10 @@ func (s *TestDataSeeder) SeedTestData() error {
 		return fmt.Errorf("填充测试章节失败: %w", err)
 	}
 
+	if err := s.seedTestOutlines(); err != nil {
+		return fmt.Errorf("填充测试大纲失败: %w", err)
+	}
+
 	fmt.Println("✅ 测试数据填充完成!")
 	return nil
 }
@@ -143,124 +147,124 @@ func (s *TestDataSeeder) seedTestBooks() error {
 
 	books := []models.Book{
 		{
-			ID:           primitive.NewObjectID(),
-			Title:        "修仙世界",
-			Author:       "飞升作者",
-			Introduction: "一个普通少年，意外获得神秘传承，踏上修仙之路。历经千辛万苦，最终飞升成仙，成为一代传奇。",
-			Cover:        "/images/covers/xiuxian_shijie.jpg",
-			Categories:   []string{"玄幻", "修仙"},
-			Tags:         []string{"修仙", "玄幻", "升级", "热血"},
-			Status:       "ongoing",
-			Rating:       8.5,
-			RatingCount:  1250,
-			ViewCount:    45000,
-			WordCount:    1500000,
-			ChapterCount: 450,
-			Price:        0,
-			IsFree:       true,
+			ID:            primitive.NewObjectID(),
+			Title:         "修仙世界",
+			Author:        "飞升作者",
+			Introduction:  "一个普通少年，意外获得神秘传承，踏上修仙之路。历经千辛万苦，最终飞升成仙，成为一代传奇。",
+			Cover:         "/images/covers/xiuxian_shijie.jpg",
+			Categories:    []string{"玄幻", "修仙"},
+			Tags:          []string{"修仙", "玄幻", "升级", "热血"},
+			Status:        "ongoing",
+			Rating:        8.5,
+			RatingCount:   1250,
+			ViewCount:     45000,
+			WordCount:     1500000,
+			ChapterCount:  450,
+			Price:         0,
+			IsFree:        true,
 			IsRecommended: true,
-			IsFeatured:   true,
-			IsHot:        true,
-			PublishedAt:  publishedAt,
-			LastUpdateAt: now.Add(-24 * time.Hour),
-			CreatedAt:    now,
-			UpdatedAt:    now,
+			IsFeatured:    true,
+			IsHot:         true,
+			PublishedAt:   publishedAt,
+			LastUpdateAt:  now.Add(-24 * time.Hour),
+			CreatedAt:     now,
+			UpdatedAt:     now,
 		},
 		{
-			ID:           primitive.NewObjectID(),
-			Title:        "修仙归来",
-			Author:       "逍遥子",
-			Introduction: "一代仙尊渡劫失败，重生回到地球。这一世，他要弥补所有遗憾，守护所爱之人，再登巅峰！",
-			Cover:        "/images/covers/xiuxian Guilai.jpg",
-			Categories:   []string{"玄幻", "修仙"},
-			Tags:         []string{"修仙", "玄幻", "重生", "爽文"},
-			Status:       "ongoing",
-			Rating:       9.2,
-			RatingCount:  8900,
-			ViewCount:    120000,
-			WordCount:    2800000,
-			ChapterCount: 820,
-			Price:        9.9,
-			IsFree:       false,
+			ID:            primitive.NewObjectID(),
+			Title:         "修仙归来",
+			Author:        "逍遥子",
+			Introduction:  "一代仙尊渡劫失败，重生回到地球。这一世，他要弥补所有遗憾，守护所爱之人，再登巅峰！",
+			Cover:         "/images/covers/xiuxian Guilai.jpg",
+			Categories:    []string{"玄幻", "修仙"},
+			Tags:          []string{"修仙", "玄幻", "重生", "爽文"},
+			Status:        "ongoing",
+			Rating:        9.2,
+			RatingCount:   8900,
+			ViewCount:     120000,
+			WordCount:     2800000,
+			ChapterCount:  820,
+			Price:         9.9,
+			IsFree:        false,
 			IsRecommended: true,
-			IsFeatured:   true,
-			IsHot:        true,
-			PublishedAt:  publishedAt.Add(-30 * 24 * time.Hour),
-			LastUpdateAt: now.Add(-12 * time.Hour),
-			CreatedAt:    now,
-			UpdatedAt:    now,
+			IsFeatured:    true,
+			IsHot:         true,
+			PublishedAt:   publishedAt.Add(-30 * 24 * time.Hour),
+			LastUpdateAt:  now.Add(-12 * time.Hour),
+			CreatedAt:     now,
+			UpdatedAt:     now,
 		},
 		{
-			ID:           primitive.NewObjectID(),
-			Title:        "修仙传说之无敌天下",
-			Author:       "剑气纵横",
-			Introduction: "天地不仁，以万物为刍狗。既然天道不公，那我便逆天而行，成就无上霸业！",
-			Cover:        "/images/covers/xiuxian_chuanshuo.jpg",
-			Categories:   []string{"玄幻", "修仙"},
-			Tags:         []string{"修仙", "玄幻", "热血", "冒险"},
-			Status:       "completed",
-			Rating:       7.8,
-			RatingCount:  560,
-			ViewCount:    28000,
-			WordCount:    980000,
-			ChapterCount: 320,
-			Price:        0,
-			IsFree:       true,
+			ID:            primitive.NewObjectID(),
+			Title:         "修仙传说之无敌天下",
+			Author:        "剑气纵横",
+			Introduction:  "天地不仁，以万物为刍狗。既然天道不公，那我便逆天而行，成就无上霸业！",
+			Cover:         "/images/covers/xiuxian_chuanshuo.jpg",
+			Categories:    []string{"玄幻", "修仙"},
+			Tags:          []string{"修仙", "玄幻", "热血", "冒险"},
+			Status:        "completed",
+			Rating:        7.8,
+			RatingCount:   560,
+			ViewCount:     28000,
+			WordCount:     980000,
+			ChapterCount:  320,
+			Price:         0,
+			IsFree:        true,
 			IsRecommended: false,
-			IsFeatured:   false,
-			IsHot:        false,
-			PublishedAt:  publishedAt.Add(-90 * 24 * time.Hour),
-			LastUpdateAt: now.Add(-60 * 24 * time.Hour),
-			CreatedAt:    now,
-			UpdatedAt:    now,
+			IsFeatured:    false,
+			IsHot:         false,
+			PublishedAt:   publishedAt.Add(-90 * 24 * time.Hour),
+			LastUpdateAt:  now.Add(-60 * 24 * time.Hour),
+			CreatedAt:     now,
+			UpdatedAt:     now,
 		},
 		{
-			ID:           primitive.NewObjectID(),
-			Title:        "万古修仙",
-			Author:       "虚无居士",
-			Introduction: "上古修仙界，强者如林。少年叶凡，偶得神秘小鼎，开启了一段波澜壮阔的修仙之旅。",
-			Cover:        "/images/covers/wangu_xiuxian.jpg",
-			Categories:   []string{"玄幻", "修仙"},
-			Tags:         []string{"修仙", "玄幻", "冒险", "升级"},
-			Status:       "ongoing",
-			Rating:       8.8,
-			RatingCount:  3200,
-			ViewCount:    78000,
-			WordCount:    1850000,
-			ChapterCount: 580,
-			Price:        19.9,
-			IsFree:       false,
+			ID:            primitive.NewObjectID(),
+			Title:         "万古修仙",
+			Author:        "虚无居士",
+			Introduction:  "上古修仙界，强者如林。少年叶凡，偶得神秘小鼎，开启了一段波澜壮阔的修仙之旅。",
+			Cover:         "/images/covers/wangu_xiuxian.jpg",
+			Categories:    []string{"玄幻", "修仙"},
+			Tags:          []string{"修仙", "玄幻", "冒险", "升级"},
+			Status:        "ongoing",
+			Rating:        8.8,
+			RatingCount:   3200,
+			ViewCount:     78000,
+			WordCount:     1850000,
+			ChapterCount:  580,
+			Price:         19.9,
+			IsFree:        false,
 			IsRecommended: true,
-			IsFeatured:   true,
-			IsHot:        true,
-			PublishedAt:  publishedAt.Add(-60 * 24 * time.Hour),
-			LastUpdateAt: now.Add(-6 * time.Hour),
-			CreatedAt:    now,
-			UpdatedAt:    now,
+			IsFeatured:    true,
+			IsHot:         true,
+			PublishedAt:   publishedAt.Add(-60 * 24 * time.Hour),
+			LastUpdateAt:  now.Add(-6 * time.Hour),
+			CreatedAt:     now,
+			UpdatedAt:     now,
 		},
 		{
-			ID:           primitive.NewObjectID(),
-			Title:        "修仙从娃娃抓起",
-			Author:       "童心未泯",
-			Introduction: "穿越到修仙世界，发现自己竟然变成了婴儿。不过没关系，修仙就要从娃娃抓起！",
-			Cover:        "/images/covers/xiuxian_wawa.jpg",
-			Categories:   []string{"玄幻", "修仙"},
-			Tags:         []string{"修仙", "玄幻", "搞笑", "轻松"},
-			Status:       "ongoing",
-			Rating:       7.2,
-			RatingCount:  890,
-			ViewCount:    15000,
-			WordCount:    650000,
-			ChapterCount: 210,
-			Price:        0,
-			IsFree:       true,
+			ID:            primitive.NewObjectID(),
+			Title:         "修仙从娃娃抓起",
+			Author:        "童心未泯",
+			Introduction:  "穿越到修仙世界，发现自己竟然变成了婴儿。不过没关系，修仙就要从娃娃抓起！",
+			Cover:         "/images/covers/xiuxian_wawa.jpg",
+			Categories:    []string{"玄幻", "修仙"},
+			Tags:          []string{"修仙", "玄幻", "搞笑", "轻松"},
+			Status:        "ongoing",
+			Rating:        7.2,
+			RatingCount:   890,
+			ViewCount:     15000,
+			WordCount:     650000,
+			ChapterCount:  210,
+			Price:         0,
+			IsFree:        true,
 			IsRecommended: false,
-			IsFeatured:   false,
-			IsHot:        false,
-			PublishedAt:  publishedAt.Add(-45 * 24 * time.Hour),
-			LastUpdateAt: now.Add(-3 * 24 * time.Hour),
-			CreatedAt:    now,
-			UpdatedAt:    now,
+			IsFeatured:    false,
+			IsHot:         false,
+			PublishedAt:   publishedAt.Add(-45 * 24 * time.Hour),
+			LastUpdateAt:  now.Add(-3 * 24 * time.Hour),
+			CreatedAt:     now,
+			UpdatedAt:     now,
 		},
 	}
 
@@ -295,28 +299,28 @@ func (s *TestDataSeeder) seedTestCategories() error {
 
 	categories := []interface{}{
 		bson.M{
-			"_id":        primitive.NewObjectID(),
-			"name":       "玄幻",
-			"slug":       "xuanhuan",
+			"_id":         primitive.NewObjectID(),
+			"name":        "玄幻",
+			"slug":        "xuanhuan",
 			"description": "奇幻玄幻，想象力无限",
-			"icon":       "/images/icons/xuanhuan.png",
-			"parent_id":  nil,
-			"sort_order": 1,
-			"is_active":  true,
-			"created_at": now,
-			"updated_at": now,
+			"icon":        "/images/icons/xuanhuan.png",
+			"parent_id":   nil,
+			"sort_order":  1,
+			"is_active":   true,
+			"created_at":  now,
+			"updated_at":  now,
 		},
 		bson.M{
-			"_id":        primitive.NewObjectID(),
-			"name":       "修仙",
-			"slug":       "xiuxian",
+			"_id":         primitive.NewObjectID(),
+			"name":        "修仙",
+			"slug":        "xiuxian",
 			"description": "修仙问道，长生不老",
-			"icon":       "/images/icons/xiuxian.png",
-			"parent_id":  nil,
-			"sort_order": 2,
-			"is_active":  true,
-			"created_at": now,
-			"updated_at": now,
+			"icon":        "/images/icons/xiuxian.png",
+			"parent_id":   nil,
+			"sort_order":  2,
+			"is_active":   true,
+			"created_at":  now,
+			"updated_at":  now,
 		},
 	}
 
@@ -358,7 +362,7 @@ func (s *TestDataSeeder) seedTestChapters() error {
 	// 为每本书创建10个测试章节
 	for _, book := range books {
 		// 检查是否已有章节
-		count, _ := chaptersCollection.CountDocuments(ctx, bson.M{"book_id": book.ID})
+		count, _ := chaptersCollection.CountDocuments(ctx, bson.M{"book_id": book.ID.Hex()})
 		if count > 0 {
 			fmt.Printf("✓ 《%s》已有 %d 个章节，跳过\n", book.Title, count)
 			continue
@@ -373,7 +377,7 @@ func (s *TestDataSeeder) seedTestChapters() error {
 
 			chapter := models.Chapter{
 				ID:          chapterID,
-				BookID:      book.ID,
+				BookID:      book.ID.Hex(),
 				ChapterNum:  i,
 				Title:       fmt.Sprintf("第%d章 %s", i, s.getChapterTitleSuffix(i)),
 				WordCount:   1000 + rand.Intn(500),
@@ -456,4 +460,91 @@ func (s *TestDataSeeder) generateTestChapterContent(chapterNum int) string {
 
 （本章测试内容，共约1000字）
 `, chapterNum, title)
+}
+
+// seedTestOutlines 填充大纲测试数据
+func (s *TestDataSeeder) seedTestOutlines() error {
+	ctx := context.Background()
+	collection := s.db.Collection("outlines")
+
+	// 检查是否已经有大纲数据
+	count, _ := collection.CountDocuments(ctx, bson.M{})
+	if count > 0 {
+		fmt.Println("✓ 大纲测试数据已存在")
+		return nil
+	}
+
+	now := time.Now()
+
+	// 创建测试大纲节点
+	outlines := []interface{}{
+		bson.M{
+			"_id":       primitive.NewObjectID(),
+			"project_id": "project-yljs-1", // 使用测试项目ID
+			"title":     "第一卷：开篇",
+			"parent_id": "",
+			"summary":   "故事的开篇，介绍主角背景和世界观",
+			"type":      "arc",
+			"tension":   3,
+			"document_id": "", // 1级细纲暂时不绑定卷
+			"characters": []string{},
+			"items":      []string{},
+			"order":      0,
+			"created_at": now,
+			"updated_at": now,
+		},
+		bson.M{
+			"_id":       primitive.NewObjectID(),
+			"project_id": "project-yljs-1",
+			"title":     "第一章：初入江湖",
+			"parent_id": "",
+			"summary":   "主角踏入修仙界，第一次遭遇危险",
+			"type":      "scene",
+			"tension":   5,
+			"document_id": "",
+			"characters": []string{"char-001", "char-002"},
+			"items":      []string{"item-001"},
+			"order":      0,
+			"created_at": now,
+			"updated_at": now,
+		},
+		bson.M{
+			"_id":       primitive.NewObjectID(),
+			"project_id": "project-yljs-1",
+			"title":     "第二章：机缘巧合",
+			"parent_id": "",
+			"summary":   "意外获得神秘传承",
+			"type":      "scene",
+			"tension":   7,
+			"document_id": "",
+			"characters": []string{"char-001"},
+			"items":      []string{},
+			"order":      1,
+			"created_at": now,
+			"updated_at": now,
+		},
+		bson.M{
+			"_id":       primitive.NewObjectID(),
+			"project_id": "project-yljs-1",
+			"title":     "场景：主角觉醒",
+			"parent_id": "", // TODO: 设置父节点ID
+			"summary":   "战斗中的关键时刻，主角力量觉醒",
+			"type":      "scene",
+			"tension":   9,
+			"document_id": "",
+			"characters": []string{},
+			"items":      []string{},
+			"order":      0,
+			"created_at": now,
+			"updated_at": now,
+		},
+	}
+
+	_, err := collection.InsertMany(ctx, outlines)
+	if err != nil {
+		return fmt.Errorf("插入大纲测试数据失败: %w", err)
+	}
+
+	fmt.Printf("✓ 创建了 %d 个大纲测试节点\n", len(outlines))
+	return nil
 }

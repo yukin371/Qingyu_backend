@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	"Qingyu_backend/api/v1/shared"
 	writermodels "Qingyu_backend/models/writer"
 	"Qingyu_backend/pkg/response"
 	writerservice "Qingyu_backend/service/writer"
@@ -58,25 +59,20 @@ func (api *CommentAPI) CreateComment(c *gin.Context) {
 	}
 
 	var req CreateCommentRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
 	// 获取用户信息
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "需要登录")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
-	userName := ""
-	if name, exists := c.Get("userName"); exists {
-		userName = name.(string)
-	}
+	userName := shared.GetUserName(c)
 
 	// 构建批注
-	comment, err := req.ToComment(documentID, userID.(string), userName)
+	comment, err := req.ToComment(documentID, userID, userName)
 	if err != nil {
 		response.BadRequest(c, "参数错误", err.Error())
 		return
@@ -289,13 +285,12 @@ func (api *CommentAPI) ResolveComment(c *gin.Context) {
 		return
 	}
 
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "需要登录")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
-	if err := api.commentService.ResolveComment(c.Request.Context(), commentID, userID.(string)); err != nil {
+	if err := api.commentService.ResolveComment(c.Request.Context(), commentID, userID); err != nil {
 		if isWriterErrorCode(err, writerservice.ErrCommentNotFound) {
 			response.NotFound(c, "批注不存在")
 			return
@@ -365,23 +360,18 @@ func (api *CommentAPI) ReplyComment(c *gin.Context) {
 	}
 
 	var req ReplyCommentRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "需要登录")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
-	userName := ""
-	if name, exists := c.Get("userName"); exists {
-		userName = name.(string)
-	}
+	userName := shared.GetUserName(c)
 
-	reply, err := api.commentService.ReplyComment(c.Request.Context(), parentID, req.Content, userID.(string), userName)
+	reply, err := api.commentService.ReplyComment(c.Request.Context(), parentID, req.Content, userID, userName)
 	if err != nil {
 		c.Error(err)
 		return

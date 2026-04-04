@@ -12,7 +12,7 @@ func InitOutlineRoutes(router *gin.RouterGroup, outlineService interfaces.Outlin
 	api := writer.NewOutlineApi(outlineService)
 
 	// 项目级别的大纲路由（需要认证）
-	projectGroup := router.Group("/projects/:projectId")
+	projectGroup := router.Group("/projects/:id")
 	{
 		// 创建和列表查询
 		projectGroup.POST("/outlines", api.CreateOutline)

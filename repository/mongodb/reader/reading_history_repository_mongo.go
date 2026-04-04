@@ -14,6 +14,17 @@ import (
 	readerRepo "Qingyu_backend/repository/interfaces/reader"
 )
 
+func parseHistoryObjectID(fieldName, id string) (primitive.ObjectID, error) {
+	if id == "" {
+		return primitive.NilObjectID, fmt.Errorf("%s不能为空", fieldName)
+	}
+	objectID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return primitive.NilObjectID, fmt.Errorf("无效的%s: %w", fieldName, err)
+	}
+	return objectID, nil
+}
+
 // MongoReadingHistoryRepository MongoDB实现的阅读历史Repository
 type MongoReadingHistoryRepository struct {
 	collection *mongo.Collection
@@ -156,7 +167,12 @@ func (r *MongoReadingHistoryRepository) GetUserHistories(ctx context.Context, us
 		return nil, fmt.Errorf("用户ID不能为空")
 	}
 
-	filter := bson.M{"user_id": userID}
+	userOID, err := parseHistoryObjectID("用户ID", userID)
+	if err != nil {
+		return nil, err
+	}
+
+	filter := bson.M{"user_id": userOID}
 	opts := options.Find().
 		SetSort(bson.D{{Key: "created_at", Value: -1}}).
 		SetLimit(int64(limit)).
@@ -189,9 +205,18 @@ func (r *MongoReadingHistoryRepository) GetUserHistoriesByBook(ctx context.Conte
 		return nil, fmt.Errorf("书籍ID不能为空")
 	}
 
+	userOID, err := parseHistoryObjectID("用户ID", userID)
+	if err != nil {
+		return nil, err
+	}
+	bookOID, err := parseHistoryObjectID("书籍ID", bookID)
+	if err != nil {
+		return nil, err
+	}
+
 	filter := bson.M{
-		"user_id": userID,
-		"book_id": bookID,
+		"user_id": userOID,
+		"book_id": bookOID,
 	}
 	opts := options.Find().
 		SetSort(bson.D{{Key: "created_at", Value: -1}}).
@@ -222,8 +247,13 @@ func (r *MongoReadingHistoryRepository) GetUserHistoriesByTimeRange(ctx context.
 		return nil, fmt.Errorf("用户ID不能为空")
 	}
 
+	userOID, err := parseHistoryObjectID("用户ID", userID)
+	if err != nil {
+		return nil, err
+	}
+
 	filter := bson.M{
-		"user_id": userID,
+		"user_id": userOID,
 		"created_at": bson.M{
 			"$gte": startTime,
 			"$lte": endTime,
@@ -262,7 +292,12 @@ func (r *MongoReadingHistoryRepository) CountUserHistories(ctx context.Context, 
 		return 0, fmt.Errorf("用户ID不能为空")
 	}
 
-	filter := bson.M{"user_id": userID}
+	userOID, err := parseHistoryObjectID("用户ID", userID)
+	if err != nil {
+		return 0, err
+	}
+
+	filter := bson.M{"user_id": userOID}
 	count, err := r.collection.CountDocuments(ctx, filter)
 	if err != nil {
 		return 0, fmt.Errorf("统计阅读历史失败: %w", err)
@@ -277,9 +312,14 @@ func (r *MongoReadingHistoryRepository) GetUserReadingStats(ctx context.Context,
 		return nil, fmt.Errorf("用户ID不能为空")
 	}
 
+	userOID, err := parseHistoryObjectID("用户ID", userID)
+	if err != nil {
+		return nil, err
+	}
+
 	// 使用聚合管道统计
 	pipeline := mongo.Pipeline{
-		{{Key: "$match", Value: bson.M{"user_id": userID}}},
+		{{Key: "$match", Value: bson.M{"user_id": userOID}}},
 		{{Key: "$group", Value: bson.M{
 			"_id":            nil,
 			"total_duration": bson.M{"$sum": "$read_duration"},
@@ -332,7 +372,7 @@ func (r *MongoReadingHistoryRepository) GetUserReadingStats(ctx context.Context,
 		// 获取第一条记录的时间
 		var firstHistory reader.ReadingHistory
 		opts := options.FindOne().SetSort(bson.D{{Key: "created_at", Value: 1}})
-		err := r.collection.FindOne(ctx, bson.M{"user_id": userID}, opts).Decode(&firstHistory)
+		err := r.collection.FindOne(ctx, bson.M{"user_id": userOID}, opts).Decode(&firstHistory)
 		if err == nil {
 			days := int(time.Since(firstHistory.CreatedAt).Hours() / 24)
 			if days == 0 {
@@ -360,13 +400,18 @@ func (r *MongoReadingHistoryRepository) GetUserDailyReadingStats(ctx context.Con
 		days = 7 // 默认7天
 	}
 
+	userOID, err := parseHistoryObjectID("用户ID", userID)
+	if err != nil {
+		return nil, err
+	}
+
 	// 计算起始日期
 	startDate := time.Now().AddDate(0, 0, -days+1).Truncate(24 * time.Hour)
 
 	// 聚合管道
 	pipeline := mongo.Pipeline{
 		{{Key: "$match", Value: bson.M{
-			"user_id":    userID,
+			"user_id":    userOID,
 			"created_at": bson.M{"$gte": startDate},
 		}}},
 		{{Key: "$group", Value: bson.M{
@@ -416,8 +461,13 @@ func (r *MongoReadingHistoryRepository) DeleteUserHistories(ctx context.Context,
 		return fmt.Errorf("用户ID不能为空")
 	}
 
-	filter := bson.M{"user_id": userID}
-	_, err := r.collection.DeleteMany(ctx, filter)
+	userOID, err := parseHistoryObjectID("用户ID", userID)
+	if err != nil {
+		return err
+	}
+
+	filter := bson.M{"user_id": userOID}
+	_, err = r.collection.DeleteMany(ctx, filter)
 	if err != nil {
 		return fmt.Errorf("删除用户历史记录失败: %w", err)
 	}

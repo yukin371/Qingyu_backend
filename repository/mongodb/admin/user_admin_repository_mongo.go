@@ -571,3 +571,87 @@ func userHasRole(user *users.User, role string) bool {
 	}
 	return false
 }
+
+// ==================== Dashboard 统计方法 ====================
+
+// GetTotalCount 获取总用户数
+func (r *MongoUserAdminRepository) GetTotalCount(ctx context.Context) (int64, error) {
+	count, err := r.db.Collection(UserCollection).CountDocuments(ctx, bson.M{
+		"status": bson.M{"$ne": "deleted"},
+	})
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+// CountActiveUsers 统计活跃用户数量（指定天数内登录过的用户）
+func (r *MongoUserAdminRepository) CountActiveUsers(ctx context.Context, days int) (int64, error) {
+	if days <= 0 {
+		days = 1 // 默认1天
+	}
+	cutoffDate := time.Now().AddDate(0, 0, -days)
+
+	count, err := r.db.Collection(UserCollection).CountDocuments(ctx, bson.M{
+		"last_login_at": bson.M{"$gte": cutoffDate},
+		"status":        bson.M{"$ne": "deleted"},
+	})
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+// CountNewUsersToday 统计今日新增用户数
+func (r *MongoUserAdminRepository) CountNewUsersToday(ctx context.Context) (int64, error) {
+	// 获取今天0点的时间
+	now := time.Now()
+	startOfDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+
+	count, err := r.db.Collection(UserCollection).CountDocuments(ctx, bson.M{
+		"created_at": bson.M{"$gte": startOfDay},
+		"status":     bson.M{"$ne": "deleted"},
+	})
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+// CountAuthors 统计作者用户数量
+func (r *MongoUserAdminRepository) CountAuthors(ctx context.Context) (int64, error) {
+	// 使用聚合管道统计拥有author角色的用户
+	pipeline := []bson.M{
+		{
+			"$match": bson.M{
+				"status": bson.M{"$ne": "deleted"},
+				"roles": bson.M{"$in": []string{"author", "Author", "AUTHOR"}},
+			},
+		},
+		{
+			"$count": "author_count",
+		},
+	}
+
+	cursor, err := r.db.Collection(UserCollection).Aggregate(ctx, pipeline)
+	if err != nil {
+		return 0, err
+	}
+	defer cursor.Close(ctx)
+
+	var result []bson.M
+	if err = cursor.All(ctx, &result); err != nil {
+		return 0, err
+	}
+
+	if len(result) > 0 {
+		if count, ok := result[0]["author_count"].(int32); ok {
+			return int64(count), nil
+		}
+		if count, ok := result[0]["author_count"].(int64); ok {
+			return count, nil
+		}
+	}
+
+	return 0, nil
+}

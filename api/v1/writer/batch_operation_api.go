@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/models/writer"
 	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/writer/document"
@@ -55,15 +56,13 @@ type SubmitBatchOperationResponse struct {
 // @Router /api/v1/writer/batch-operations [post]
 func (api *BatchOperationAPI) SubmitBatchOperation(c *gin.Context) {
 	var req SubmitBatchOperationRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
 	// 从上下文获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
@@ -76,7 +75,7 @@ func (api *BatchOperationAPI) SubmitBatchOperation(c *gin.Context) {
 		ConflictPolicy:     req.ConflictPolicy,
 		ExpectedVersions:   req.ExpectedVersions,
 		ClientRequestID:    req.ClientRequestID,
-		UserID:             userID.(string),
+		UserID:             userID,
 		IncludeDescendants: req.IncludeDescendants,
 	}
 
@@ -143,9 +142,8 @@ func (api *BatchOperationAPI) CancelBatchOperation(c *gin.Context) {
 		return
 	}
 
-	_, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	_, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
@@ -175,13 +173,12 @@ func (api *BatchOperationAPI) UndoBatchOperation(c *gin.Context) {
 		return
 	}
 
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
-	err = api.batchOpSvc.Undo(c.Request.Context(), batchID.Hex(), userID.(string))
+	err = api.batchOpSvc.Undo(c.Request.Context(), batchID.Hex(), userID)
 	if err != nil {
 		response.BadRequest(c, "撤销操作失败", err.Error())
 		return

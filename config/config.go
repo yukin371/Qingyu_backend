@@ -22,6 +22,7 @@ type Config struct {
 	JWT           *JWTConfig                        `mapstructure:"jwt"`
 	AI            *AIConfig                         `mapstructure:"ai"`
 	Elasticsearch *ElasticsearchConfig              `mapstructure:"elasticsearch"`
+	Milvus        *MilvusConfig                     `mapstructure:"milvus"`
 	External      *ExternalAPIConfig                `mapstructure:"external"`
 	AIQuota       *AIQuotaConfig                    `mapstructure:"ai_quota"`
 	Email         *EmailConfig                      `mapstructure:"email"`
@@ -42,6 +43,15 @@ type ElasticsearchConfig struct {
 type ElasticsearchGrayConfig struct {
 	Enabled bool `mapstructure:"enabled"`
 	Percent int  `mapstructure:"percent"`
+}
+
+// MilvusConfig Milvus 向量数据库配置
+type MilvusConfig struct {
+	Host           string `mapstructure:"host"`
+	Port           int    `mapstructure:"port"`
+	CollectionName string `mapstructure:"collection_name"`
+	Dimension      int    `mapstructure:"dimension"`
+	Enabled        bool   `mapstructure:"enabled"`
 }
 
 // ServerConfig 服务器配置
@@ -156,6 +166,7 @@ type EmailConfig struct {
 	FromName    string `mapstructure:"from_name"`
 	UseTLS      bool   `mapstructure:"use_tls"`
 	UseSSL      bool   `mapstructure:"use_ssl"`
+	FixedCode   string `mapstructure:"fixed_code"`
 }
 
 // PaymentConfig 支付配置
@@ -454,6 +465,13 @@ func setDefaults() {
 	v.SetDefault("elasticsearch.grayscale.enabled", false)
 	v.SetDefault("elasticsearch.grayscale.percent", 10)
 
+	// Milvus 默认配置
+	v.SetDefault("milvus.enabled", false)
+	v.SetDefault("milvus.host", "localhost")
+	v.SetDefault("milvus.port", 19530)
+	v.SetDefault("milvus.collection_name", "qingyu_books")
+	v.SetDefault("milvus.dimension", 1536)
+
 	// 邮件默认配置
 	v.SetDefault("email.enabled", false)
 	v.SetDefault("email.smtp_host", "smtp.example.com")
@@ -464,6 +482,7 @@ func setDefaults() {
 	v.SetDefault("email.from_name", "青羽阅读")
 	v.SetDefault("email.use_tls", true)
 	v.SetDefault("email.use_ssl", false)
+	v.SetDefault("email.fixed_code", "")
 
 	// 支付默认配置
 	v.SetDefault("payment.enabled", false)

@@ -9,7 +9,7 @@ import (
 )
 
 // ConceptService 设定百科服务
-// 处理Concept的CRUD操作，支持AI写作助手功能中的设定百科管理喵~
+// 处理Concept的CRUD操作，支持AI写作助手功能中的设定百科管理
 type ConceptService struct {
 	repo writerRepo.ConceptRepository
 }

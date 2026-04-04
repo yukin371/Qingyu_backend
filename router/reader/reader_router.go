@@ -4,6 +4,7 @@ import (
 	readerApi "Qingyu_backend/api/v1/reader"
 	socialApi "Qingyu_backend/api/v1/social"
 	"Qingyu_backend/internal/middleware/auth"
+	readerRepo "Qingyu_backend/repository/interfaces/reader"
 	syncService "Qingyu_backend/pkg/sync"
 	"Qingyu_backend/service/bookstore"
 	readerservice "Qingyu_backend/service/reader"
@@ -23,15 +24,17 @@ func InitReaderRouter(
 	readingHistoryService *readerservice.ReadingHistoryService,
 	progressSyncService *syncService.ProgressSyncService,
 	bookmarkService readerservice.BookmarkService,
+	deviceRepo readerRepo.DeviceRepository,
 ) {
 	// 创建API实例
-	progressApiHandler := readerApi.NewProgressAPI(readerService)
+	progressApiHandler := readerApi.NewProgressAPI(readerService, deviceRepo)
 	annotationsApiHandler := readerApi.NewAnnotationsAPI(readerService)
 	settingApiHandler := readerApi.NewSettingAPI(readerService)
 	booksApiHandler := readerApi.NewBooksAPI(readerService)
 	themeApiHandler := readerApi.NewThemeAPI()
 	fontApiHandler := readerApi.NewFontAPI()
 	chapterCommentApiHandler := readerApi.NewChapterCommentAPI()
+	chapterCommentApiHandler.BindServices(commentService, chapterService)
 
 	// 章节API（使用阅读器专属服务）
 	chapterServiceForReader := readerservice.NewChapterService(chapterService, readerService, nil)
@@ -68,6 +71,14 @@ func InitReaderRouter(
 	if collectionService != nil {
 		collectionApiHandler = socialApi.NewCollectionAPI(collectionService)
 	}
+
+	readerStatisticsAPI := readerApi.NewReaderStatisticsAPI(
+		readerService,
+		bookmarkService,
+		likeService,
+		collectionService,
+		readingHistoryService,
+	)
 
 	// 阅读历史API（如果readingHistoryService可用）
 	var historyApiHandler *readerApi.ReadingHistoryAPI
@@ -132,14 +143,16 @@ func InitReaderRouter(
 		// 阅读进度
 		progress := readerGroup.Group("/progress")
 		{
-			progress.GET("/:bookId", progressApiHandler.GetReadingProgress)    // 获取阅读进度
-			progress.POST("", progressApiHandler.SaveReadingProgress)          // 保存阅读进度
-			progress.POST("/time", progressApiHandler.UpdateReadingTime)       // 更新阅读时长
+			// 注意：静态路由必须放在动态路由（/:bookId）之前，否则会被动态路由捕获
 			progress.GET("/recent", progressApiHandler.GetRecentReading)       // 获取最近阅读
 			progress.GET("/history", progressApiHandler.GetReadingHistory)     // 获取阅读历史
 			progress.GET("/stats", progressApiHandler.GetReadingStats)         // 获取阅读统计
 			progress.GET("/unfinished", progressApiHandler.GetUnfinishedBooks) // 获取未读完的书
 			progress.GET("/finished", progressApiHandler.GetFinishedBooks)     // 获取已读完的书
+			progress.GET("/devices", progressApiHandler.GetDevicesProgress)    // 获取跨设备阅读记录
+			progress.POST("", progressApiHandler.SaveReadingProgress)          // 保存阅读进度
+			progress.POST("/time", progressApiHandler.UpdateReadingTime)       // 更新阅读时长
+			progress.GET("/:bookId", progressApiHandler.GetReadingProgress)    // 获取阅读进度（动态路由放最后）
 
 			// 进度同步（如果syncApiHandler可用）
 			if syncApiHandler != nil {
@@ -322,6 +335,15 @@ func InitReaderRouter(
 				history.DELETE("/:id", historyApiHandler.DeleteHistory)  // 删除单条历史记录
 				history.DELETE("", historyApiHandler.ClearHistories)     // 清空历史记录
 			}
+		}
+
+		statistics := readerGroup.Group("/statistics")
+		{
+			statistics.GET("", readerStatisticsAPI.GetOverview)
+			statistics.GET("/overview", readerStatisticsAPI.GetOverview)
+			statistics.GET("/reading-time", readerStatisticsAPI.GetReadingTime)
+			statistics.GET("/heatmap", readerStatisticsAPI.GetHeatmap)
+			statistics.GET("/trends", readerStatisticsAPI.GetTrends)
 		}
 	}
 }

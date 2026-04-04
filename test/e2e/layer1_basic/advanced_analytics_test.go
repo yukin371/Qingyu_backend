@@ -119,40 +119,31 @@ func TestAdvancedAnalytics(t *testing.T) {
 		bookID := env.GetTestData("book_id").(string)
 
 		// 获取热力图数据
-		w := env.DoRequest("GET", "/api/v1/writer/books/"+bookID+"/heatmap", nil, token)
+		path := "/api/v1/writer/books/" + bookID + "/heatmap"
+		w := env.DoRequest("GET", path, nil, token)
+		if w.Code != 200 {
+			t.Fatalf("请求 %s 失败: 状态码 %d, 响应: %s", path, w.Code, w.Body.String())
+		}
+		response := env.ParseJSONResponse(w)
+		heatmapData, ok := response["data"].([]interface{})
+		if !ok {
+			t.Fatalf("请求 %s 返回的 data 不是数组: %s", path, w.Body.String())
+		}
+		t.Log("✓ 热力图数据获取成功")
 
-		if w.Code == 200 {
-			t.Log("✓ 热力图数据获取成功")
-
-			response := env.ParseJSONResponse(w)
-			if data, ok := response["data"].(map[string]interface{}); ok {
-				// 检查热力图数据
-				if heatmap, ok := data["heatmap"].([]interface{}); ok {
-					t.Logf("✓ 热力图数据点数: %d", len(heatmap))
-
-					// 验证数据结构
-					for i, point := range heatmap {
-						if i < 3 { // 只打印前3个
-							if pointMap, ok := point.(map[string]interface{}); ok {
-								if timestamp, ok := pointMap["timestamp"].(string); ok {
-									if count, ok := pointMap["count"].(float64); ok {
-										t.Logf("  时间: %s, 阅读数: %d", timestamp[:19], int(count))
-									}
-								}
+		t.Logf("✓ 热力图数据点数: %d", len(heatmapData))
+		for i, point := range heatmapData {
+			if i < 3 {
+				if pointMap, ok := point.(map[string]interface{}); ok {
+					if day, ok := pointMap["day"].(float64); ok {
+						if hour, ok := pointMap["hour"].(float64); ok {
+							if value, ok := pointMap["value"].(float64); ok {
+								t.Logf("  星期%d %02d:00 -> %d", int(day), int(hour), int(value))
 							}
 						}
 					}
 				}
-
-				// 检查时间段分布
-				if timeDistribution, ok := data["timeDistribution"].(map[string]interface{}); ok {
-					t.Logf("✓ 时间段分布: %v", timeDistribution)
-				}
 			}
-		} else if w.Code == 404 {
-			t.Log("⚠ 热力图API未实现（404）")
-		} else {
-			t.Logf("ℹ 热力图数据获取尝试，状态码: %d", w.Code)
 		}
 	})
 
@@ -161,58 +152,19 @@ func TestAdvancedAnalytics(t *testing.T) {
 		t.Log("测试章节留存率分析...")
 
 		token := env.GetTestData("auth_token").(string)
-		bookID := env.GetTestData("book_id").(string)
+		projectID := env.GetTestData("project_id").(string)
 
 		// 获取留存率数据
-		w := env.DoRequest("GET", "/api/v1/writer/books/"+bookID+"/retention?days=7", nil, token)
+		path := "/api/v1/writer/stats/overview?projectId=" + projectID
+		w := env.DoRequest("GET", path, nil, token)
+		data := requireStatsResponseData(t, env, path, w)
+		t.Log("✓ 留存率数据获取成功")
 
-		if w.Code == 200 {
-			t.Log("✓ 留存率数据获取成功")
-
-			response := env.ParseJSONResponse(w)
-			if data, ok := response["data"].(map[string]interface{}); ok {
-				// 检查章节留存率
-				if chapterRetention, ok := data["chapterRetention"].([]interface{}); ok {
-					t.Logf("✓ 章节留存率数据: %d 个章节", len(chapterRetention))
-
-					for i, item := range chapterRetention {
-						if i < 5 { // 只打印前5个
-							if itemMap, ok := item.(map[string]interface{}); ok {
-								if chapterNum, ok := itemMap["chapterNum"].(float64); ok {
-									if retention, ok := itemMap["retention"].(float64); ok {
-										t.Logf("  第%d章留存率: %.2f%%", int(chapterNum), retention*100)
-									}
-								}
-							}
-						}
-					}
-				}
-
-				// 检查总体留存率
-				if overallRetention, ok := data["overallRetention"].(float64); ok {
-					t.Logf("✓ 总体留存率: %.2f%%", overallRetention*100)
-				}
-
-				// 检查关键流失点
-				if dropOffPoints, ok := data["dropOffPoints"].([]interface{}); ok {
-					t.Logf("✓ 关键流失点数: %d", len(dropOffPoints))
-					for i, point := range dropOffPoints {
-						if i < 3 {
-							if pointMap, ok := point.(map[string]interface{}); ok {
-								if chapterNum, ok := pointMap["chapterNum"].(float64); ok {
-									if dropOffRate, ok := pointMap["dropOffRate"].(float64); ok {
-										t.Logf("  第%d章流失率: %.2f%%", int(chapterNum), dropOffRate*100)
-									}
-								}
-							}
-						}
-					}
-				}
-			}
-		} else if w.Code == 404 {
-			t.Log("⚠ 留存率API未实现（404）")
-		} else {
-			t.Logf("ℹ 留存率数据获取尝试，状态码: %d", w.Code)
+		if overallRetention, ok := data["retentionRate"].(float64); ok {
+			t.Logf("✓ 总体留存率: %.2f%%", overallRetention*100)
+		}
+		if today, ok := data["today"].(map[string]interface{}); ok {
+			t.Logf("✓ 今日统计摘要: %v", today)
 		}
 	})
 
@@ -224,57 +176,32 @@ func TestAdvancedAnalytics(t *testing.T) {
 		bookID := env.GetTestData("book_id").(string)
 
 		// 获取跳出点数据
-		w := env.DoRequest("GET", "/api/v1/writer/books/"+bookID+"/drop-off-points", nil, token)
+		path := "/api/v1/writer/books/" + bookID + "/drop-off-points"
+		w := env.DoRequest("GET", path, nil, token)
+		if w.Code != 200 {
+			t.Fatalf("请求 %s 失败: 状态码 %d, 响应: %s", path, w.Code, w.Body.String())
+		}
+		response := env.ParseJSONResponse(w)
+		t.Log("✓ 跳出点数据获取成功")
 
-		if w.Code == 200 {
-			t.Log("✓ 跳出点数据获取成功")
+		if response["data"] == nil {
+			t.Log("✓ 当前无跳出点数据")
+			return
+		}
 
-			response := env.ParseJSONResponse(w)
-			if data, ok := response["data"].(map[string]interface{}); ok {
-				// 检查跳出点列表
-				if bouncePoints, ok := data["bouncePoints"].([]interface{}); ok {
-					t.Logf("✓ 发现 %d 个跳出点", len(bouncePoints))
+		data, ok := response["data"].(map[string]interface{})
+		if !ok {
+			t.Fatalf("请求 %s 返回的 data 不是对象: %s", path, w.Body.String())
+		}
 
-					for i, point := range bouncePoints {
-						if i < 5 {
-							if pointMap, ok := point.(map[string]interface{}); ok {
-								if chapterNum, ok := pointMap["chapterNum"].(float64); ok {
-									if bounceRate, ok := pointMap["bounceRate"].(float64); ok {
-										if position, ok := pointMap["position"].(string); ok {
-											t.Logf("  第%d章 [%s]: 跳出率 %.2f%%", int(chapterNum), position, bounceRate*100)
-										}
-									}
-								}
-							}
-						}
-					}
-				}
-
-				// 检查最高跳出点
-				if highestBounce, ok := data["highestBounce"].(map[string]interface{}); ok {
-					if chapterNum, ok := highestBounce["chapterNum"].(float64); ok {
-						if rate, ok := highestBounce["rate"].(float64); ok {
-							t.Logf("✓ 最高跳出点: 第%d章 (%.2f%%)", int(chapterNum), rate*100)
-						}
-					}
-				}
-
-				// 检查建议
-				if recommendations, ok := data["recommendations"].([]interface{}); ok {
-					t.Logf("✓ 优化建议数: %d", len(recommendations))
-					for i, rec := range recommendations {
-						if i < 3 {
-							if recStr, ok := rec.(string); ok {
-								t.Logf("  建议%d: %s", i+1, recStr)
-							}
-						}
-					}
-				}
-			}
-		} else if w.Code == 404 {
-			t.Log("⚠ 跳出点分析API未实现（404）")
-		} else {
-			t.Logf("ℹ 跳出点数据获取尝试，状态码: %d", w.Code)
+		if bouncePoints, ok := data["bouncePoints"].([]interface{}); ok {
+			t.Logf("✓ 发现 %d 个跳出点", len(bouncePoints))
+		}
+		if highestBounce, ok := data["highestBounce"].(map[string]interface{}); ok {
+			t.Logf("✓ 最高跳出点: %v", highestBounce)
+		}
+		if recommendations, ok := data["recommendations"].([]interface{}); ok {
+			t.Logf("✓ 优化建议数: %d", len(recommendations))
 		}
 	})
 
@@ -283,43 +210,19 @@ func TestAdvancedAnalytics(t *testing.T) {
 		t.Log("测试每日统计分布...")
 
 		token := env.GetTestData("auth_token").(string)
-		bookID := env.GetTestData("book_id").(string)
+		projectID := env.GetTestData("project_id").(string)
 
 		// 获取每日统计
-		w := env.DoRequest("GET", "/api/v1/writer/books/"+bookID+"/daily-stats?days=7", nil, token)
+		path := "/api/v1/writer/stats/views?projectId=" + projectID + "&days=7"
+		w := env.DoRequest("GET", path, nil, token)
+		data := requireStatsResponseData(t, env, path, w)
+		t.Log("✓ 阅读时长分布获取成功")
 
-		if w.Code == 200 {
-			t.Log("✓ 阅读时长分布获取成功")
-
-			response := env.ParseJSONResponse(w)
-			if data, ok := response["data"].(map[string]interface{}); ok {
-				// 检查时长分布
-				if distribution, ok := data["distribution"].(map[string]interface{}); ok {
-					t.Logf("✓ 时长分布: %v", distribution)
-
-					// 验证各时段
-					ranges := []string{"0-5min", "5-10min", "10-30min", "30-60min", "60min+"}
-					for _, r := range ranges {
-						if count, ok := distribution[r].(float64); ok {
-							t.Logf("  %s: %d 人", r, int(count))
-						}
-					}
-				}
-
-				// 检查平均阅读时长
-				if avgDuration, ok := data["avgDuration"].(float64); ok {
-					t.Logf("✓ 平均阅读时长: %.2f 分钟", avgDuration)
-				}
-
-				// 检查峰值阅读时段
-				if peakTime, ok := data["peakTime"].(string); ok {
-					t.Logf("✓ 峰值阅读时段: %s", peakTime)
-				}
-			}
-		} else if w.Code == 404 {
-			t.Log("⚠ 每日统计API未实现（404）")
-		} else {
-			t.Logf("ℹ 每日统计获取尝试，状态码: %d", w.Code)
+		if items, ok := data["items"].([]interface{}); ok {
+			t.Logf("✓ 趋势记录数: %d", len(items))
+		}
+		if total, ok := data["total"].(float64); ok {
+			t.Logf("✓ 周期总阅读量: %d", int(total))
 		}
 	})
 
@@ -328,53 +231,30 @@ func TestAdvancedAnalytics(t *testing.T) {
 		t.Log("测试热门章节分析...")
 
 		token := env.GetTestData("auth_token").(string)
-		bookID := env.GetTestData("book_id").(string)
+		projectID := env.GetTestData("project_id").(string)
 
 		// 获取热门章节
-		w := env.DoRequest("GET", "/api/v1/writer/books/"+bookID+"/top-chapters", nil, token)
+		path := "/api/v1/writer/stats/chapters?projectId=" + projectID + "&page=1&size=10"
+		w := env.DoRequest("GET", path, nil, token)
+		data := requireStatsResponseData(t, env, path, w)
+		t.Log("✓ 章节行为统计获取成功")
 
-		if w.Code == 200 {
-			t.Log("✓ 用户行为路径获取成功")
-
-			response := env.ParseJSONResponse(w)
-			if data, ok := response["data"].(map[string]interface{}); ok {
-				// 检查常见路径
-				if commonPaths, ok := data["commonPaths"].([]interface{}); ok {
-					t.Logf("✓ 常见路径数: %d", len(commonPaths))
-
-					for i, path := range commonPaths {
-						if i < 3 {
-							if pathMap, ok := path.(map[string]interface{}); ok {
-								if steps, ok := pathMap["steps"].([]interface{}); ok {
-									if percentage, ok := pathMap["percentage"].(float64); ok {
-										t.Logf("  路径%d (%.1f%%): %d 步", i+1, percentage*100, len(steps))
-									}
-								}
-							}
-						}
-					}
-				}
-
-				// 检查典型用户画像
-				if userPersonas, ok := data["userPersonas"].([]interface{}); ok {
-					t.Logf("✓ 用户画像数: %d", len(userPersonas))
-					for i, persona := range userPersonas {
-						if i < 3 {
-							if personaMap, ok := persona.(map[string]interface{}); ok {
-								if typeName, ok := personaMap["type"].(string); ok {
-									if percentage, ok := personaMap["percentage"].(float64); ok {
-										t.Logf("  %s: %.1f%%", typeName, percentage*100)
-									}
-								}
+		if items, ok := data["items"].([]interface{}); ok {
+			t.Logf("✓ 章节统计条数: %d", len(items))
+			for i, item := range items {
+				if i < 3 {
+					if itemMap, ok := item.(map[string]interface{}); ok {
+						if title, ok := itemMap["title"].(string); ok {
+							if completionRate, ok := itemMap["completionRate"].(float64); ok {
+								t.Logf("  %s: 完读率 %.2f%%", title, completionRate*100)
 							}
 						}
 					}
 				}
 			}
-		} else if w.Code == 404 {
-			t.Log("⚠ 热门章节API未实现（404）")
-		} else {
-			t.Logf("ℹ 热门章节获取尝试，状态码: %d", w.Code)
+		}
+		if total, ok := data["total"].(float64); ok {
+			t.Logf("✓ 章节总数: %d", int(total))
 		}
 	})
 

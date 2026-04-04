@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
 
 	usersModel "Qingyu_backend/models/users"
+	"Qingyu_backend/repository"
 	repoInterfaces "Qingyu_backend/repository/interfaces/user"
 )
 
@@ -70,7 +70,7 @@ func (s *PasswordService) ResetPassword(ctx context.Context, email, code, newPas
 // UpdatePassword 修改密码（需要旧密码）
 func (s *PasswordService) UpdatePassword(ctx context.Context, userID string, oldPassword, newPassword string) error {
 	// 验证userID格式
-	if _, err := primitive.ObjectIDFromHex(userID); err != nil {
+	if _, err := repository.ParseID(userID); err != nil {
 		return fmt.Errorf("无效的用户ID")
 	}
 

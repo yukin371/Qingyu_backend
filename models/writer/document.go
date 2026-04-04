@@ -22,7 +22,7 @@ type Document struct {
 	OrderKey  string `bson:"order_key" json:"orderKey" validate:"required"` // LexoRank排序键
 	// ===== v1.1 新增结束 =====
 
-	// 层级结构（保持BSON字段名不变，确保数据库兼容）
+	// 层级结构
 	ParentID primitive.ObjectID `bson:"parent_id,omitempty" json:"parentId,omitempty"` // 父文档ID，空值表示根文档
 	Type     string             `bson:"type" json:"type" validate:"required"`          // 动态类型（如：volume, chapter, section, scene, article, act, beat等）
 	Level    int                `bson:"level" json:"level" validate:"min=0"`           // 层级深度
@@ -32,7 +32,7 @@ type Document struct {
 	// 统计信息（从DocumentContent同步）
 	WordCount int `bson:"word_count" json:"wordCount"` // 字数统计
 
-	// 关联信息（保持BSON字段名不变，确保数据库兼容）
+	// 关联信息
 	CharacterIDs []primitive.ObjectID `bson:"character_ids,omitempty" json:"characterIds,omitempty" validate:"max=50"` // 关联角色
 	LocationIDs  []primitive.ObjectID `bson:"location_ids,omitempty" json:"locationIds,omitempty" validate:"max=50"`   // 关联地点
 	TimelineIDs  []primitive.ObjectID `bson:"timeline_ids,omitempty" json:"timelineIds,omitempty" validate:"max=20"`   // 关联时间线
@@ -45,6 +45,13 @@ type Document struct {
 	// 标签和备注
 	Tags  []string `bson:"tags,omitempty" json:"tags,omitempty" validate:"max=10"`
 	Notes string   `bson:"notes,omitempty" json:"notes,omitempty" validate:"max=500"`
+
+	// 双向映射：关联的大纲节点ID
+	// 场景状态（结构化舞台数据）
+	SceneGoal      string `bson:"scene_goal,omitempty" json:"sceneGoal,omitempty" validate:"max=300"`       // 场景目标
+	ActiveConflict string `bson:"active_conflict,omitempty" json:"activeConflict,omitempty" validate:"max=300"` // 活跃冲突
+
+	OutlineNodeID string `bson:"outline_node_id,omitempty" json:"outlineNodeId,omitempty"` // 关联的大纲节点ID
 }
 
 // DocumentStatus 文档状态常量（保持向后兼容）
@@ -54,7 +61,8 @@ const (
 	DocumentStatusCompleted = "completed" // 已完成
 
 	// 默认OrderKey（用于新文档）
-	DefaultOrderKey = "a0"
+	// 使用4位 base62 中间值 "UUUU"
+	DefaultOrderKey = "UUUU"
 )
 
 // 历史文档类型常量（保持向后兼容，但已废弃，建议使用WritingType系统）

@@ -58,6 +58,7 @@ type Book struct {
 	Rating        types.Rating         `bson:"rating" json:"rating" validate:"min=0,max=5"`            // 评分 (0-5星，平均分可为0)
 	RatingCount   int64                `bson:"rating_count" json:"ratingCount" validate:"min=0"`       // 评分人数
 	ViewCount     int64                `bson:"view_count" json:"viewCount" validate:"min=0"`           // 浏览量
+	CollectCount  int64                `bson:"collect_count,omitempty" json:"collectCount,omitempty"`  // 收藏数
 	WordCount     int64                `bson:"word_count" json:"wordCount" validate:"min=0"`           // 字数
 	ChapterCount  int                  `bson:"chapter_count" json:"chapterCount"`                      // 章节数
 	Price         float64              `bson:"price" json:"price" validate:"min=0"`                    // 价格 (分，使用float64以兼容MongoDB默认数字类型)

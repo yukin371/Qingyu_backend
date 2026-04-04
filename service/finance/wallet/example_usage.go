@@ -81,6 +81,7 @@ func ExampleWalletServiceUsage(db *mongo.Database) {
 
 // ExampleDirectServiceUsage 展示如何直接使用分离的服务（不推荐）
 // 推荐使用UnifiedWalletService
+// Deprecated: 该文件应该废弃，建议使用对应模块的接口替代
 func ExampleDirectServiceUsage(walletRepo sharedRepo.WalletRepository) {
 	// 这是旧的使用方式，不推荐
 	// 这里展示是为了向后兼容

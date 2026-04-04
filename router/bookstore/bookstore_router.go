@@ -164,6 +164,11 @@ func InitBookstoreRouter(
 				public.GET("/chapters/:chapterId/price", chapterCatalogApiHandler.GetChapterPrice)     // 获取章节价格
 				public.GET("/chapters/:chapterId/access", chapterCatalogApiHandler.CheckChapterAccess) // 检查章节访问权限
 			}
+
+			// 兼容旧版前端的评分摘要接口
+			if ratingApiHandler != nil {
+				public.GET("/ratings/book/:bookId", ratingApiHandler.GetBookRatingCompat)
+			}
 		}
 	}
 
@@ -178,6 +183,10 @@ func InitBookstoreRouter(
 			authenticated.PUT("/books/:id/rating", ratingApiHandler.UpdateRating)
 			authenticated.DELETE("/books/:id/rating", ratingApiHandler.DeleteRating)
 			authenticated.GET("/ratings/user/:id", ratingApiHandler.GetRatingsByUserID)
+			authenticated.POST("/ratings", ratingApiHandler.CreateOrUpdateRatingCompat)
+			authenticated.PUT("/ratings/:id", ratingApiHandler.UpdateUserRatingCompat)
+			authenticated.DELETE("/ratings/:id", ratingApiHandler.DeleteUserRatingCompat)
+			authenticated.GET("/ratings/user/me/book/:bookId", ratingApiHandler.GetCurrentUserBookRatingCompat)
 		}
 	}
 }

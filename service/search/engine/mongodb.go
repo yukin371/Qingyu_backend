@@ -12,6 +12,7 @@ import (
 	"go.uber.org/zap"
 
 	"Qingyu_backend/pkg/logger"
+	"Qingyu_backend/repository"
 )
 
 // MongoEngine MongoDB 搜索引擎实现
@@ -259,7 +260,7 @@ func (m *MongoEngine) Index(ctx context.Context, index string, documents []Docum
 
 		// 设置文档 ID
 		if doc.ID != "" {
-			if objectID, err := primitive.ObjectIDFromHex(doc.ID); err == nil {
+			if objectID, err := repository.ParseID(doc.ID); err == nil {
 				mongoDoc["_id"] = objectID
 			} else {
 				mongoDoc["_id"] = doc.ID
@@ -298,7 +299,7 @@ func (m *MongoEngine) Update(ctx context.Context, index string, id string, docum
 
 	// 构建 ID 过滤器
 	var filter bson.M
-	if objectID, err := primitive.ObjectIDFromHex(id); err == nil {
+	if objectID, err := repository.ParseID(id); err == nil {
 		filter = bson.M{"_id": objectID}
 	} else {
 		filter = bson.M{"_id": id}
@@ -345,7 +346,7 @@ func (m *MongoEngine) Delete(ctx context.Context, index string, id string) error
 
 	// 构建 ID 过滤器
 	var filter bson.M
-	if objectID, err := primitive.ObjectIDFromHex(id); err == nil {
+	if objectID, err := repository.ParseID(id); err == nil {
 		filter = bson.M{"_id": objectID}
 	} else {
 		filter = bson.M{"_id": id}

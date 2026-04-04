@@ -4,6 +4,8 @@ import (
 	"archive/zip"
 	"bytes"
 	"context"
+	"io"
+	"strings"
 	"testing"
 	"time"
 
@@ -105,6 +107,33 @@ func (m *MockExportTaskRepositoryForExport) FindByUser(ctx context.Context, user
 		return nil, args.Get(1).(int64), args.Error(2)
 	}
 	return args.Get(0).([]*serviceInterfaces.ExportTask), args.Get(1).(int64), args.Error(2)
+}
+
+type MockFileStorageForExport struct {
+	mock.Mock
+}
+
+func (m *MockFileStorageForExport) Upload(ctx context.Context, filename string, content io.Reader, mimeType string) (string, error) {
+	args := m.Called(ctx, filename, content, mimeType)
+	return args.String(0), args.Error(1)
+}
+
+func (m *MockFileStorageForExport) Download(ctx context.Context, url string) (io.ReadCloser, error) {
+	args := m.Called(ctx, url)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(io.ReadCloser), args.Error(1)
+}
+
+func (m *MockFileStorageForExport) Delete(ctx context.Context, url string) error {
+	args := m.Called(ctx, url)
+	return args.Error(0)
+}
+
+func (m *MockFileStorageForExport) GetSignedURL(ctx context.Context, url string, expiration time.Duration) (string, error) {
+	args := m.Called(ctx, url, expiration)
+	return args.String(0), args.Error(1)
 }
 
 // TestExportService_ExportProjectAsZip_Success 测试成功导出项目为ZIP
@@ -248,6 +277,41 @@ func TestExportService_ImportProject_Success(t *testing.T) {
 	assert.GreaterOrEqual(t, result.DocumentCount, 2)
 }
 
+func TestExportService_DownloadExportFile_ReturnsFileContent(t *testing.T) {
+	mockDocRepo := new(MockDocumentRepositoryForExport)
+	mockContentRepo := new(MockDocumentContentRepositoryForExport)
+	mockProjectRepo := new(MockProjectRepositoryForExport)
+	mockTaskRepo := new(MockExportTaskRepositoryForExport)
+	mockFileStorage := new(MockFileStorageForExport)
+
+	task := &serviceInterfaces.ExportTask{
+		ID:            primitive.NewObjectID().Hex(),
+		ResourceTitle: "测试章节",
+		Format:        serviceInterfaces.ExportFormatMD,
+		Status:        serviceInterfaces.ExportStatusCompleted,
+		FileURL:       "/exports/test.md",
+		FileSize:      int64(len("hello export")),
+		ExpiresAt:     time.Now().Add(time.Hour),
+	}
+
+	mockTaskRepo.On("FindByID", mock.Anything, task.ID).Return(task, nil)
+	mockFileStorage.On("Download", mock.Anything, task.FileURL).Return(io.NopCloser(strings.NewReader("hello export")), nil)
+
+	service := NewExportService(mockDocRepo, mockContentRepo, mockProjectRepo, mockTaskRepo, mockFileStorage)
+
+	exportFile, err := service.DownloadExportFile(context.Background(), task.ID)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, exportFile)
+	assert.Equal(t, "测试章节.md", exportFile.Filename)
+	assert.Equal(t, "text/markdown; charset=utf-8", exportFile.MimeType)
+	assert.Equal(t, []byte("hello export"), exportFile.Content)
+	assert.Empty(t, exportFile.URL)
+
+	mockTaskRepo.AssertExpectations(t)
+	mockFileStorage.AssertExpectations(t)
+}
+
 // createTestZipData 创建测试用的ZIP数据
 func createTestZipData(t *testing.T, projectName string, files map[string]string) []byte {
 	buf := new(bytes.Buffer)
@@ -271,6 +335,7 @@ var _ DocumentRepository = (*MockDocumentRepositoryForExport)(nil)
 var _ DocumentContentRepository = (*MockDocumentContentRepositoryForExport)(nil)
 var _ ProjectRepository = (*MockProjectRepositoryForExport)(nil)
 var _ ExportTaskRepository = (*MockExportTaskRepositoryForExport)(nil)
+var _ FileStorage = (*MockFileStorageForExport)(nil)
 
 // 确保ID可以被设置
 var _ = baseModel.IdentifiedEntity{}

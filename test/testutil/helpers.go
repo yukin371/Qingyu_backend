@@ -153,7 +153,8 @@ func CreateTestProject(userID string, opts ...ProjectOption) *writer.Project {
 			BackupInterval: 24,
 		},
 	}
-	project.OwnedEntity.AuthorID = userID
+	objectID, _ := primitive.ObjectIDFromHex(userID)
+	project.OwnedEntity.AuthorID = objectID
 	project.TitledEntity.Title = "测试项目"
 	project.Timestamps.CreatedAt = now
 	project.Timestamps.UpdatedAt = now

@@ -32,7 +32,7 @@ func NewMongoProjectRepository(db *mongo.Database) writingInterface.ProjectRepos
 
 // Create 创建项目
 // 重构：移除业务逻辑，默认值设置现在由 Service 层的 SetProjectDefaults 方法处理
-// Repository 层只负责数据持久化，参见 Issue #010
+// Repository 层只负责数据持久化
 func (r *MongoProjectRepository) Create(ctx context.Context, project *writer.Project) error {
 	if project == nil {
 		return fmt.Errorf("项目对象不能为空")
@@ -208,8 +208,14 @@ func (r *MongoProjectRepository) Count(ctx context.Context, filter infrastructur
 
 // GetListByOwnerID 获取作者的项目列表
 func (r *MongoProjectRepository) GetListByOwnerID(ctx context.Context, ownerID string, limit, offset int64) ([]*writer.Project, error) {
+	// 将字符串ownerID转换为ObjectID
+	objectID, err := primitive.ObjectIDFromHex(ownerID)
+	if err != nil {
+		return nil, fmt.Errorf("无效的所有者ID: %w", err)
+	}
+
 	filter := bson.M{
-		"author_id":  ownerID,
+		"author_id":  objectID,
 		"deleted_at": nil,
 	}
 
@@ -234,8 +240,14 @@ func (r *MongoProjectRepository) GetListByOwnerID(ctx context.Context, ownerID s
 
 // GetByOwnerAndStatus 根据作者和状态查询项目
 func (r *MongoProjectRepository) GetByOwnerAndStatus(ctx context.Context, ownerID, status string, limit, offset int64) ([]*writer.Project, error) {
+	// 将字符串ownerID转换为ObjectID
+	objectID, err := primitive.ObjectIDFromHex(ownerID)
+	if err != nil {
+		return nil, fmt.Errorf("无效的所有者ID: %w", err)
+	}
+
 	filter := bson.M{
-		"author_id":  ownerID,
+		"author_id":  objectID,
 		"status":     status,
 		"deleted_at": nil,
 	}
@@ -266,12 +278,17 @@ func (r *MongoProjectRepository) UpdateByOwner(ctx context.Context, projectID, o
 		return fmt.Errorf("无效的项目ID格式: %w", err)
 	}
 
+	ownerObjectID, err := primitive.ObjectIDFromHex(ownerID)
+	if err != nil {
+		return fmt.Errorf("无效的所有者ID: %w", err)
+	}
+
 	// 自动更新updated_at
 	updates["updated_at"] = time.Now()
 
 	filter := bson.M{
 		"_id":        projectObjectID,
-		"author_id":  ownerID,
+		"author_id":  ownerObjectID,
 		"deleted_at": nil,
 	}
 	update := bson.M{"$set": updates}
@@ -295,9 +312,14 @@ func (r *MongoProjectRepository) IsOwner(ctx context.Context, projectID, ownerID
 		return false, fmt.Errorf("无效的项目ID格式: %w", err)
 	}
 
+	ownerObjectID, err := primitive.ObjectIDFromHex(ownerID)
+	if err != nil {
+		return false, fmt.Errorf("无效的所有者ID: %w", err)
+	}
+
 	filter := bson.M{
 		"_id":        projectObjectID,
-		"author_id":  ownerID,
+		"author_id":  ownerObjectID,
 		"deleted_at": nil,
 	}
 
@@ -316,11 +338,16 @@ func (r *MongoProjectRepository) SoftDelete(ctx context.Context, projectID, owne
 		return fmt.Errorf("无效的项目ID格式: %w", err)
 	}
 
+	ownerObjectID, err := primitive.ObjectIDFromHex(ownerID)
+	if err != nil {
+		return fmt.Errorf("无效的所有者ID: %w", err)
+	}
+
 	now := time.Now()
 
 	filter := bson.M{
 		"_id":        projectObjectID,
-		"author_id":  ownerID,
+		"author_id":  ownerObjectID,
 		"deleted_at": nil,
 	}
 	update := bson.M{
@@ -370,9 +397,14 @@ func (r *MongoProjectRepository) Restore(ctx context.Context, projectID, ownerID
 		return fmt.Errorf("无效的项目ID格式: %w", err)
 	}
 
+	ownerObjectID, err := primitive.ObjectIDFromHex(ownerID)
+	if err != nil {
+		return fmt.Errorf("无效的所有者ID: %w", err)
+	}
+
 	filter := bson.M{
 		"_id":       projectObjectID,
-		"author_id": ownerID,
+		"author_id": ownerObjectID,
 	}
 	update := bson.M{
 		"$set": bson.M{
@@ -395,8 +427,13 @@ func (r *MongoProjectRepository) Restore(ctx context.Context, projectID, ownerID
 
 // CountByOwner 统计作者的项目数
 func (r *MongoProjectRepository) CountByOwner(ctx context.Context, ownerID string) (int64, error) {
+	objectID, err := primitive.ObjectIDFromHex(ownerID)
+	if err != nil {
+		return 0, fmt.Errorf("无效的所有者ID: %w", err)
+	}
+
 	filter := bson.M{
-		"author_id":  ownerID,
+		"author_id":  objectID,
 		"deleted_at": nil,
 	}
 

@@ -3,6 +3,7 @@ package messaging
 import (
 	"Qingyu_backend/models/messaging"
 	"Qingyu_backend/pkg/errors"
+	"Qingyu_backend/repository"
 	repo "Qingyu_backend/repository/interfaces/messaging"
 	"context"
 	"time"
@@ -90,7 +91,7 @@ type BatchUpdateAnnouncementStatusRequest struct {
 
 // GetAnnouncementByID 获取公告详情
 func (s *announcementServiceImpl) GetAnnouncementByID(ctx context.Context, id string) (*messaging.Announcement, error) {
-	announcementID, err := primitive.ObjectIDFromHex(id)
+	announcementID, err := repository.ParseID(id)
 	if err != nil {
 		return nil, errors.BookstoreServiceFactory.ValidationError("INVALID_ID", "无效的公告ID", id)
 	}
@@ -201,7 +202,7 @@ func (s *announcementServiceImpl) CreateAnnouncement(ctx context.Context, req *C
 
 // UpdateAnnouncement 更新公告
 func (s *announcementServiceImpl) UpdateAnnouncement(ctx context.Context, id string, req *UpdateAnnouncementRequest) error {
-	announcementID, err := primitive.ObjectIDFromHex(id)
+	announcementID, err := repository.ParseID(id)
 	if err != nil {
 		return errors.BookstoreServiceFactory.ValidationError("INVALID_ID", "无效的公告ID", id)
 	}
@@ -260,7 +261,7 @@ func (s *announcementServiceImpl) UpdateAnnouncement(ctx context.Context, id str
 
 // DeleteAnnouncement 删除公告
 func (s *announcementServiceImpl) DeleteAnnouncement(ctx context.Context, id string) error {
-	announcementID, err := primitive.ObjectIDFromHex(id)
+	announcementID, err := repository.ParseID(id)
 	if err != nil {
 		return errors.BookstoreServiceFactory.ValidationError("INVALID_ID", "无效的公告ID", id)
 	}
@@ -281,7 +282,7 @@ func (s *announcementServiceImpl) BatchUpdateStatus(ctx context.Context, req *Ba
 	// 转换ID
 	announcementIDs := make([]primitive.ObjectID, 0, len(req.AnnouncementIDs))
 	for _, idStr := range req.AnnouncementIDs {
-		id, err := primitive.ObjectIDFromHex(idStr)
+		id, err := repository.ParseID(idStr)
 		if err != nil {
 			return errors.BookstoreServiceFactory.ValidationError("INVALID_ID", "无效的公告ID", idStr)
 		}
@@ -304,7 +305,7 @@ func (s *announcementServiceImpl) BatchDelete(ctx context.Context, ids []string)
 	// 转换ID
 	announcementIDs := make([]primitive.ObjectID, 0, len(ids))
 	for _, idStr := range ids {
-		id, err := primitive.ObjectIDFromHex(idStr)
+		id, err := repository.ParseID(idStr)
 		if err != nil {
 			return errors.BookstoreServiceFactory.ValidationError("INVALID_ID", "无效的公告ID", idStr)
 		}
@@ -320,7 +321,7 @@ func (s *announcementServiceImpl) BatchDelete(ctx context.Context, ids []string)
 
 // IncrementViewCount 增加查看次数
 func (s *announcementServiceImpl) IncrementViewCount(ctx context.Context, id string) error {
-	announcementID, err := primitive.ObjectIDFromHex(id)
+	announcementID, err := repository.ParseID(id)
 	if err != nil {
 		return errors.BookstoreServiceFactory.ValidationError("INVALID_ID", "无效的公告ID", id)
 	}

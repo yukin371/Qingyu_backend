@@ -3,6 +3,7 @@ package writer
 import (
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/interfaces"
 )
@@ -21,24 +22,18 @@ func NewLocationApi(locationService interfaces.LocationService) *LocationApi {
 
 // CreateLocation 创建地点
 func (api *LocationApi) CreateLocation(c *gin.Context) {
-	projectID := c.Param("projectId")
+		projectID := c.Param("id")
 	if projectID == "" {
 		response.BadRequest(c, "项目ID不能为空", "")
 		return
 	}
 
 	var req interfaces.CreateLocationRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
-	userID := ""
-	if uid, exists := c.Get("user_id"); exists {
-		if uidStr, ok := uid.(string); ok {
-			userID = uidStr
-		}
-	}
+	userID := shared.GetUserIDOptional(c)
 
 	location, err := api.locationService.Create(c.Request.Context(), projectID, userID, &req)
 	if err != nil {
@@ -70,7 +65,7 @@ func (api *LocationApi) GetLocation(c *gin.Context) {
 
 // ListLocations 获取项目地点列表
 func (api *LocationApi) ListLocations(c *gin.Context) {
-	projectID := c.Param("projectId")
+		projectID := c.Param("id")
 	if projectID == "" {
 		response.BadRequest(c, "项目ID不能为空", "")
 		return
@@ -87,7 +82,7 @@ func (api *LocationApi) ListLocations(c *gin.Context) {
 
 // GetLocationTree 获取地点层级树
 func (api *LocationApi) GetLocationTree(c *gin.Context) {
-	projectID := c.Param("projectId")
+		projectID := c.Param("id")
 	if projectID == "" {
 		response.BadRequest(c, "项目ID不能为空", "")
 		return
@@ -113,8 +108,7 @@ func (api *LocationApi) UpdateLocation(c *gin.Context) {
 	}
 
 	var req interfaces.UpdateLocationRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
@@ -155,8 +149,7 @@ func (api *LocationApi) CreateLocationRelation(c *gin.Context) {
 	}
 
 	var req interfaces.CreateLocationRelationRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
@@ -171,7 +164,7 @@ func (api *LocationApi) CreateLocationRelation(c *gin.Context) {
 
 // ListLocationRelations 获取地点关系列表
 func (api *LocationApi) ListLocationRelations(c *gin.Context) {
-	projectID := c.Param("projectId")
+		projectID := c.Param("id")
 	if projectID == "" {
 		response.BadRequest(c, "项目ID不能为空", "")
 		return

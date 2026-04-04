@@ -41,8 +41,8 @@ func (s *WalletSeeder) SeedWallets() error {
 	defer cursor.Close(ctx)
 
 	var users []struct {
-		ID   string `bson:"_id"`
-		Role string `bson:"role"`
+		ID    string   `bson:"_id"`
+		Roles []string `bson:"roles"`
 	}
 	if err := cursor.All(ctx, &users); err != nil {
 		return fmt.Errorf("解析用户列表失败: %w", err)
@@ -73,33 +73,39 @@ func (s *WalletSeeder) SeedWallets() error {
 		var initialBalance float64
 		var transactions []interface{}
 
-		switch user.Role {
+		// 获取用户的主要角色（优先级：admin > author > reader）
+		primaryRole := "reader"
+		for _, role := range user.Roles {
+			if role == "admin" {
+				primaryRole = "admin"
+				break
+			}
+			if role == "author" && primaryRole != "admin" {
+				primaryRole = "author"
+			}
+		}
+
+		switch primaryRole {
 		case "admin":
 			initialBalance = 10000.0
 			transactions = s.generateAdminTransactions(user.ID)
-		case "vip":
+		case "author":
 			initialBalance = 5000.0 + rand.Float64()*5000
 			transactions = s.generateAuthorTransactions(user.ID, initialBalance)
-		case "author":
-			initialBalance = 3000.0 + rand.Float64()*3000
-			transactions = s.generateAuthorTransactions(user.ID, initialBalance)
-		default: // user/reader
+		default: // reader
 			initialBalance = 100.0 + rand.Float64()*900
 			transactions = s.generateReaderTransactions(user.ID, initialBalance)
 		}
 
-		// 创建钱包
+		// 创建钱包（使用cents字段匹配模型定义）
 		now := time.Now()
 		wallet := bson.M{
-			"_id":                primitive.NewObjectID(),
-			"user_id":            user.ID,
-			"balance":            initialBalance,
-			"frozen":             false,
-			"frozen_amount":      0,
-			"total_recharge":     initialBalance * 0.5,
-			"total_consume":      initialBalance * 0.1,
-			"created_at":         now,
-			"updated_at":         now,
+			"_id":          primitive.NewObjectID(),
+			"user_id":      user.ID,
+			"balance_cents": int64(initialBalance * 100), // 转换为分
+			"frozen":       false,
+			"created_at":   now,
+			"updated_at":   now,
 		}
 
 		_, err = walletCollection.InsertOne(ctx, wallet)
@@ -128,18 +134,19 @@ func (s *WalletSeeder) SeedWallets() error {
 func (s *WalletSeeder) generateAdminTransactions(userID string) []interface{} {
 	var transactions []interface{}
 
-	// 充值记录
+	// 充值记录（使用cents字段匹配模型定义）
 	for i := 0; i < 5; i++ {
 		amount := 1000.0 + rand.Float64()*1000
 		transactions = append(transactions, bson.M{
-			"_id":          primitive.NewObjectID(),
-			"user_id":      userID,
-			"type":         "recharge",
-			"amount":       amount,
-			"balance":      10000.0 - float64(5-i-1)*2000,
-			"description":  "系统充值",
-			"status":       "completed",
-			"created_at":   time.Now().Add(-time.Duration(rand.Intn(720)) * time.Hour),
+			"_id":             primitive.NewObjectID(),
+			"user_id":         userID,
+			"type":            "recharge",
+			"amount_cents":    int64(amount * 100),       // 转换为分
+			"balance_cents":   int64(10000.0 * 100),      // 转换为分
+			"reason":          "系统充值",
+			"status":          "success",
+			"transaction_time": time.Now().Add(-time.Duration(rand.Intn(720)) * time.Hour),
+			"created_at":      time.Now().Add(-time.Duration(rand.Intn(720)) * time.Hour),
 		})
 	}
 
@@ -150,18 +157,19 @@ func (s *WalletSeeder) generateAdminTransactions(userID string) []interface{} {
 func (s *WalletSeeder) generateAuthorTransactions(userID string, balance float64) []interface{} {
 	var transactions []interface{}
 
-	// 充值记录
+	// 充值记录（使用cents字段匹配模型定义）
 	for i := 0; i < 3; i++ {
 		amount := 500.0 + rand.Float64()*500
 		transactions = append(transactions, bson.M{
-			"_id":          primitive.NewObjectID(),
-			"user_id":      userID,
-			"type":         "recharge",
-			"amount":       amount,
-			"balance":      balance - float64(3-i-1)*1000,
-			"description":  "充值",
-			"status":       "completed",
-			"created_at":   time.Now().Add(-time.Duration(rand.Intn(720)) * time.Hour),
+			"_id":             primitive.NewObjectID(),
+			"user_id":         userID,
+			"type":            "recharge",
+			"amount_cents":    int64(amount * 100),
+			"balance_cents":   int64(balance * 100),
+			"reason":          "充值",
+			"status":          "success",
+			"transaction_time": time.Now().Add(-time.Duration(rand.Intn(720)) * time.Hour),
+			"created_at":      time.Now().Add(-time.Duration(rand.Intn(720)) * time.Hour),
 		})
 	}
 
@@ -169,14 +177,15 @@ func (s *WalletSeeder) generateAuthorTransactions(userID string, balance float64
 	for i := 0; i < 2; i++ {
 		amount := 100.0 + rand.Float64()*200
 		transactions = append(transactions, bson.M{
-			"_id":          primitive.NewObjectID(),
-			"user_id":      userID,
-			"type":         "income",
-			"amount":       amount,
-			"balance":      balance + float64(i)*200,
-			"description":  "稿费收入",
-			"status":       "completed",
-			"created_at":   time.Now().Add(-time.Duration(rand.Intn(720)) * time.Hour),
+			"_id":             primitive.NewObjectID(),
+			"user_id":         userID,
+			"type":            "transfer_in", // 使用模型定义的类型
+			"amount_cents":    int64(amount * 100),
+			"balance_cents":   int64((balance + float64(i)*200) * 100),
+			"reason":          "稿费收入",
+			"status":          "success",
+			"transaction_time": time.Now().Add(-time.Duration(rand.Intn(720)) * time.Hour),
+			"created_at":      time.Now().Add(-time.Duration(rand.Intn(720)) * time.Hour),
 		})
 	}
 
@@ -187,19 +196,20 @@ func (s *WalletSeeder) generateAuthorTransactions(userID string, balance float64
 func (s *WalletSeeder) generateReaderTransactions(userID string, balance float64) []interface{} {
 	var transactions []interface{}
 
-	// 充值记录
+	// 充值记录（使用cents字段匹配模型定义）
 	rechargeCount := 1 + rand.Intn(3)
 	for i := 0; i < rechargeCount; i++ {
 		amount := 50.0 + rand.Float64()*100
 		transactions = append(transactions, bson.M{
-			"_id":          primitive.NewObjectID(),
-			"user_id":      userID,
-			"type":         "recharge",
-			"amount":       amount,
-			"balance":      balance - float64(rechargeCount-i-1)*50,
-			"description":  "充值",
-			"status":       "completed",
-			"created_at":   time.Now().Add(-time.Duration(rand.Intn(720)) * time.Hour),
+			"_id":             primitive.NewObjectID(),
+			"user_id":         userID,
+			"type":            "recharge",
+			"amount_cents":    int64(amount * 100),
+			"balance_cents":   int64(balance * 100),
+			"reason":          "充值",
+			"status":          "success",
+			"transaction_time": time.Now().Add(-time.Duration(rand.Intn(720)) * time.Hour),
+			"created_at":      time.Now().Add(-time.Duration(rand.Intn(720)) * time.Hour),
 		})
 	}
 
@@ -208,14 +218,15 @@ func (s *WalletSeeder) generateReaderTransactions(userID string, balance float64
 	for i := 0; i < consumeCount; i++ {
 		amount := 5.0 + rand.Float64()*20
 		transactions = append(transactions, bson.M{
-			"_id":          primitive.NewObjectID(),
-			"user_id":      userID,
-			"type":         "consume",
-			"amount":       amount,
-			"balance":      balance - float64(i)*10,
-			"description":  "购买章节",
-			"status":       "completed",
-			"created_at":   time.Now().Add(-time.Duration(rand.Intn(720)) * time.Hour),
+			"_id":             primitive.NewObjectID(),
+			"user_id":         userID,
+			"type":            "consume",
+			"amount_cents":    int64(amount * 100),
+			"balance_cents":   int64((balance - float64(i)*10) * 100),
+			"reason":          "购买章节",
+			"status":          "success",
+			"transaction_time": time.Now().Add(-time.Duration(rand.Intn(720)) * time.Hour),
+			"created_at":      time.Now().Add(-time.Duration(rand.Intn(720)) * time.Hour),
 		})
 	}
 

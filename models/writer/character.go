@@ -23,6 +23,10 @@ type Character struct {
 	SpeechPattern     string `bson:"speech_pattern,omitempty" json:"speechPattern,omitempty" validate:"max=500"`          // 角色语音模式
 	CurrentState      string `bson:"current_state,omitempty" json:"currentState,omitempty" validate:"max=200"`            // 角色当前状态
 	ShortDescription  string `bson:"short_description,omitempty" json:"shortDescription,omitempty" validate:"max=200"`    // 角色摘要
+
+	// 可选：汇总的登场信息（用于快速查询，非核心字段）
+	AppearanceCount    int     `bson:"appearance_count,omitempty" json:"appearanceCount,omitempty"`         // 登场次数
+	FirstAppearanceID  *string `bson:"first_appearance_id,omitempty" json:"firstAppearanceId,omitempty"`   // 首次登场的大纲节点ID
 }
 
 // TouchForCreate 创建时设置默认值
@@ -36,7 +40,7 @@ func (c *Character) Validate() error {
 	if err := base.ValidateName(c.Name, 100); err != nil {
 		return err
 	}
-	if c.ProjectID == "" {
+	if c.ProjectID.IsZero() {
 		return base.ErrProjectIDRequired
 	}
 	if err := base.ValidateURL(c.AvatarURL); err != nil {
@@ -69,6 +73,11 @@ type CharacterRelation struct {
 	Type     RelationType `bson:"type" json:"type" validate:"required"`
 	Strength int          `bson:"strength" json:"strength" validate:"min=0,max=100"`
 	Notes    string       `bson:"notes,omitempty" json:"notes,omitempty" validate:"max=500"`
+
+	// 时序控制字段（支持关系随剧情发展变化）
+	ValidFromChapterID  *string                 `bson:"valid_from_chapter_id,omitempty" json:"validFromChapterId,omitempty"`   // 关系生效的起始章节ID
+	ValidUntilChapterID *string                 `bson:"valid_until_chapter_id,omitempty" json:"validUntilChapterId,omitempty"` // 关系失效的章节ID
+	TimelineEvents      []RelationTimelineEvent `bson:"timeline_events,omitempty" json:"timelineEvents,omitempty"`               // 变化历史记录
 }
 
 // TouchForCreate 创建时设置默认值
@@ -79,7 +88,7 @@ func (cr *CharacterRelation) TouchForCreate() {
 
 // Validate 验证角色关系
 func (cr *CharacterRelation) Validate() error {
-	if cr.ProjectID == "" {
+	if cr.ProjectID.IsZero() {
 		return base.ErrProjectIDRequired
 	}
 	if !cr.Type.IsValid() {
@@ -101,4 +110,42 @@ func (rt RelationType) IsValid() bool {
 // IsValidRelationType 验证关系类型是否合法（保持向后兼容）
 func IsValidRelationType(t string) bool {
 	return RelationType(t).IsValid()
+}
+
+// IsValidAtChapter 判断关系在某章节是否有效
+// chapterOrder: 当前章节的序号
+// chapterOrderMap: 章节ID到序号的映射表
+func (cr *CharacterRelation) IsValidAtChapter(chapterOrder int, chapterOrderMap map[string]int) bool {
+	// 如果没有设置生效章节，默认全局有效
+	if cr.ValidFromChapterID == nil && cr.ValidUntilChapterID == nil {
+		return true
+	}
+
+	// 检查是否已经生效
+	if cr.ValidFromChapterID != nil {
+		fromOrder, exists := chapterOrderMap[*cr.ValidFromChapterID]
+		if !exists {
+			// 如果起始章节不存在，保守处理：认为关系有效
+			return true
+		}
+		if fromOrder > chapterOrder {
+			// 还未到生效章节
+			return false
+		}
+	}
+
+	// 检查是否已经失效
+	if cr.ValidUntilChapterID != nil {
+		untilOrder, exists := chapterOrderMap[*cr.ValidUntilChapterID]
+		if !exists {
+			// 如果失效章节不存在，保守处理：认为关系有效
+			return true
+		}
+		if untilOrder <= chapterOrder {
+			// 已经过了失效章节
+			return false
+		}
+	}
+
+	return true
 }

@@ -48,7 +48,7 @@ func (d *DocumentContent) Validate() error {
 	if d.ContentType == "" {
 		return fmt.Errorf("内容类型不能为空")
 	}
-	if d.ContentType != "markdown" && d.ContentType != "richtext" && d.ContentType != "tiptap" {
+	if d.ContentType != "markdown" && d.ContentType != "richtext" && d.ContentType != "tiptap" && d.ContentType != "tiptap_json" {
 		return fmt.Errorf("无效的内容类型: %s", d.ContentType)
 	}
 	return nil

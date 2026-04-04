@@ -7,9 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
-
 	usersModel "Qingyu_backend/models/users"
+	"Qingyu_backend/repository"
 	repoInterfaces "Qingyu_backend/repository/interfaces/user"
 )
 
@@ -504,7 +503,7 @@ func (v *UserValidator) ValidateUserID(userID string) *ValidationError {
 		}
 	}
 
-	if _, err := primitive.ObjectIDFromHex(userID); err != nil {
+	if _, err := repository.ParseID(userID); err != nil {
 		return &ValidationError{
 			Field:   "user_id",
 			Message: "用户ID格式错误",

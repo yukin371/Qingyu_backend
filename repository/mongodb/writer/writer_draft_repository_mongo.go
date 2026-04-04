@@ -5,14 +5,13 @@ import (
 	"fmt"
 	"strings"
 
+	"Qingyu_backend/models/shared/types"
 	"Qingyu_backend/models/writer"
+	"Qingyu_backend/pkg/errors"
 	writerInterface "Qingyu_backend/repository/interfaces/writer"
 	"Qingyu_backend/repository/mongodb/base"
 
-	"Qingyu_backend/pkg/errors"
-
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -28,7 +27,7 @@ func normalizeAndValidateDraftQueryID(field, value string, allowEmpty bool) (str
 		}
 		return "", errors.NewRepositoryError(errors.RepositoryErrorValidation, fmt.Sprintf("%s is required", field), nil)
 	}
-	objectID, err := primitive.ObjectIDFromHex(normalized)
+	objectID, err := types.ParseObjectID(normalized)
 	if err != nil {
 		return "", errors.NewRepositoryError(errors.RepositoryErrorValidation, fmt.Sprintf("invalid %s format", field), nil)
 	}
@@ -56,7 +55,15 @@ func NewWriterDraftRepository(db *mongo.Database) writerInterface.WriterDraftRep
 
 // Create 创建草稿
 //
-// 在创建前会自动设置默认值（时间戳、格式、状态等）喵~
+// 参数：
+//   - ctx: 上下文对象，用于取消操作和超时设置
+//   - doc: 要创建的草稿文档指针
+//
+// 返回：
+//   - error: 操作错误，成功时为 nil
+//
+// 功能：
+//   - 在创建前会自动设置默认值（时间戳、格式、状态等）
 func (r *WriterDraftRepositoryMongo) Create(ctx context.Context, doc *writer.WriterDraft) error {
 	// 设置默认值
 	doc.BeforeCreate()

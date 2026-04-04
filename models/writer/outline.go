@@ -22,10 +22,11 @@ type OutlineNode struct {
 	Type    string `bson:"type,omitempty" json:"type,omitempty" validate:"max=50"`         // 结构类型（如：英雄之旅阶段、起承转合）
 	Tension int    `bson:"tension" json:"tension" validate:"min=0,max=10"`                 // 紧张度/情绪值，用于生成情绪曲线
 
-	// 关联实体（保持BSON字段名不变，确保数据库兼容）
-	ChapterID  string   `bson:"chapter_id,omitempty" json:"chapterId,omitempty"`                    // 对应实际写的章节ID
+	// 关联实体
+	DocumentID string   `bson:"document_id,omitempty" json:"documentId,omitempty"`              // 关联的文档ID（写作端Document）
 	Characters []string `bson:"characters,omitempty" json:"characters,omitempty" validate:"max=20"` // 本节登场人物ID列表
 	Items      []string `bson:"items,omitempty" json:"items,omitempty" validate:"max=20"`           // 涉及道具ID列表
+	Tags       []string `bson:"tags,omitempty" json:"tags,omitempty" validate:"max=20"`             // 标签列表（用于存储章节绑定等元数据，格式如：chapter-binding:{chapterId}）
 }
 
 // TouchForCreate 创建时设置默认值
@@ -52,7 +53,7 @@ func (o *OutlineNode) Validate() error {
 	}
 
 	// 验证项目ID
-	if o.ProjectID == "" {
+	if o.ProjectID.IsZero() {
 		return base.ErrProjectIDRequired
 	}
 

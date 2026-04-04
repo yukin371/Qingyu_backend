@@ -6,11 +6,28 @@ package layer1_basic
 import (
 	"encoding/json"
 	"fmt"
+	"net/http/httptest"
 	"testing"
 	"time"
 
 	e2e "Qingyu_backend/test/e2e/framework"
 )
+
+func requireStatsResponseData(t *testing.T, env *e2e.TestEnvironment, path string, w *httptest.ResponseRecorder) map[string]interface{} {
+	t.Helper()
+
+	if w.Code != 200 {
+		t.Fatalf("请求 %s 失败: 状态码 %d, 响应: %s", path, w.Code, w.Body.String())
+	}
+
+	response := env.ParseJSONResponse(w)
+	data, ok := response["data"].(map[string]interface{})
+	if !ok {
+		t.Fatalf("请求 %s 返回的 data 不是对象: %s", path, w.Body.String())
+	}
+
+	return data
+}
 
 // TestStatisticsView 测试数据分析查看功能
 // @P1 重要功能测试 - 数据分析查看
@@ -131,90 +148,58 @@ func TestStatisticsView(t *testing.T) {
 		}
 	})
 
-	// 步骤3: 获取书籍统计数据
-	t.Run("步骤3_获取书籍统计数据", func(t *testing.T) {
-		t.Log("获取书籍统计数据...")
+	// 步骤3: 获取作者统计概览
+	t.Run("步骤3_获取作者统计概览", func(t *testing.T) {
+		t.Log("获取作者统计概览...")
 
 		token := env.GetTestData("auth_token").(string)
-		bookId := env.GetTestData("published_book_id")
-
-		if bookId == nil {
-			t.Skip("发布结果未返回书城book_id，跳过书籍统计（避免404日志）")
-			return
-		}
-
-		path := fmt.Sprintf("/api/v1/writer/books/%s/stats", bookId.(string))
+		projectID := env.GetTestData("project_id").(string)
+		path := fmt.Sprintf("/api/v1/writer/stats/overview?projectId=%s", projectID)
 		w := env.DoRequest("GET", path, nil, token)
+		data := requireStatsResponseData(t, env, path, w)
 
-		if w.Code == 200 {
-			response := env.ParseJSONResponse(w)
-			t.Logf("✓ 获取书籍统计成功")
-
-			if data, ok := response["data"].(map[string]interface{}); ok {
-				// 检查统计字段
-				if totalViews, ok := data["total_views"].(float64); ok {
-					t.Logf("  总阅读量: %d", int(totalViews))
-				}
-				if uniqueReaders, ok := data["unique_readers"].(float64); ok {
-					t.Logf("  独立读者: %d", int(uniqueReaders))
-				}
-				if totalRevenue, ok := data["total_revenue"].(float64); ok {
-					t.Logf("  总收入: %.2f", totalRevenue)
-				}
-				if completionRate, ok := data["completion_rate"].(float64); ok {
-					t.Logf("  完读率: %.2f%%", completionRate*100)
-				}
-
-				// 显示完整数据结构
-				statsJSON, _ := json.MarshalIndent(data, "  ", "  ")
-				t.Logf("书籍统计数据: %s", string(statsJSON))
-			}
-		} else {
-			t.Logf("获取书籍统计响应: 状态码 %d, 响应: %s", w.Code, w.Body.String())
+		if bookID, ok := data["bookId"].(string); ok {
+			t.Logf("  作品ID: %s", bookID)
 		}
+		if totalViews, ok := data["totalViews"].(float64); ok {
+			t.Logf("  总阅读量: %d", int(totalViews))
+		}
+		if subscribers, ok := data["subscribers"].(float64); ok {
+			t.Logf("  订阅数: %d", int(subscribers))
+		}
+		if totalRevenue, ok := data["totalRevenue"].(float64); ok {
+			t.Logf("  总收入: %.2f", totalRevenue)
+		}
+		if retentionRate, ok := data["retentionRate"].(float64); ok {
+			t.Logf("  留存率: %.2f%%", retentionRate*100)
+		}
+
+		statsJSON, _ := json.MarshalIndent(data, "  ", "  ")
+		t.Logf("作者统计概览数据: %s", string(statsJSON))
 	})
 
-	// 步骤4: 获取章节统计数据
-	t.Run("步骤4_获取章节统计数据", func(t *testing.T) {
-		t.Log("获取章节统计数据...")
+	// 步骤4: 获取作者今日统计
+	t.Run("步骤4_获取作者今日统计", func(t *testing.T) {
+		t.Log("获取作者今日统计...")
 
 		token := env.GetTestData("auth_token").(string)
-		chapterId := env.GetTestData("chapter_id")
-
-		if chapterId == nil {
-			t.Skip("章节ID未设置，跳过此步骤")
-			return
-		}
-		t.Skip("章节统计依赖章节统计聚合数据，当前E2E未建立稳定前置，跳过以避免404日志")
-		return
-
-		path := fmt.Sprintf("/api/v1/writer/chapters/%s/stats", chapterId.(string))
+		projectID := env.GetTestData("project_id").(string)
+		path := fmt.Sprintf("/api/v1/writer/stats/today?projectId=%s", projectID)
 		w := env.DoRequest("GET", path, nil, token)
+		data := requireStatsResponseData(t, env, path, w)
 
-		if w.Code == 200 {
-			response := env.ParseJSONResponse(w)
-			t.Logf("✓ 获取章节统计成功")
-
-			if data, ok := response["data"].(map[string]interface{}); ok {
-				if views, ok := data["views"].(float64); ok {
-					t.Logf("  章节阅读量: %d", int(views))
-				}
-				if uniqueReaders, ok := data["unique_readers"].(float64); ok {
-					t.Logf("  独立读者: %d", int(uniqueReaders))
-				}
-				if avgReadTime, ok := data["avg_read_time"].(float64); ok {
-					t.Logf("  平均阅读时间: %.2f分钟", avgReadTime)
-				}
-				if dropOffRate, ok := data["drop_off_rate"].(float64); ok {
-					t.Logf("  跳出率: %.2f%%", dropOffRate*100)
-				}
-
-				statsJSON, _ := json.MarshalIndent(data, "  ", "  ")
-				t.Logf("章节统计数据: %s", string(statsJSON))
-			}
-		} else {
-			t.Logf("获取章节统计响应: 状态码 %d, 响应: %s", w.Code, w.Body.String())
+		if todayViews, ok := data["todayViews"].(float64); ok {
+			t.Logf("  今日阅读量: %d", int(todayViews))
 		}
+		if todaySubscribers, ok := data["todaySubscribers"].(float64); ok {
+			t.Logf("  今日订阅数: %d", int(todaySubscribers))
+		}
+		if todayWords, ok := data["todayWords"].(float64); ok {
+			t.Logf("  今日字数: %d", int(todayWords))
+		}
+
+		statsJSON, _ := json.MarshalIndent(data, "  ", "  ")
+		t.Logf("作者今日统计数据: %s", string(statsJSON))
 	})
 
 	// 步骤5: 获取阅读热力图
@@ -313,97 +298,46 @@ func TestStatisticsView(t *testing.T) {
 		}
 	})
 
-	// 步骤7: 获取热门章节
-	t.Run("步骤7_获取热门章节", func(t *testing.T) {
-		t.Log("获取热门章节...")
+	// 步骤7: 获取章节表现统计
+	t.Run("步骤7_获取章节表现统计", func(t *testing.T) {
+		t.Log("获取章节表现统计...")
 
 		token := env.GetTestData("auth_token").(string)
-		bookId := env.GetTestData("book_id")
-
-		if bookId == nil {
-			t.Skip("书籍ID未设置，跳过此步骤")
-			return
-		}
-
-		path := fmt.Sprintf("/api/v1/writer/books/%s/top-chapters", bookId.(string))
+		projectID := env.GetTestData("project_id").(string)
+		path := fmt.Sprintf("/api/v1/writer/stats/chapters?projectId=%s&page=1&size=10", projectID)
 		w := env.DoRequest("GET", path, nil, token)
+		data := requireStatsResponseData(t, env, path, w)
 
-		if w.Code == 200 {
-			response := env.ParseJSONResponse(w)
-			t.Logf("✓ 获取热门章节成功")
-
-			if data, ok := response["data"].(map[string]interface{}); ok {
-				// 检查各种热门章节类型
-				if mostRead, ok := data["most_read"].([]interface{}); ok {
-					t.Logf("  阅读量最高章节: %d个", len(mostRead))
-				}
-				if mostRevenue, ok := data["most_revenue"].([]interface{}); ok {
-					t.Logf("  收入最高章节: %d个", len(mostRevenue))
-				}
-				if lowestCompletion, ok := data["lowest_completion"].([]interface{}); ok {
-					t.Logf("  完读率最低章节: %d个", len(lowestCompletion))
-				}
-				if highestDropOff, ok := data["highest_drop_off"].([]interface{}); ok {
-					t.Logf("  跳出率最高章节: %d个", len(highestDropOff))
-				}
-
-				topChaptersJSON, _ := json.MarshalIndent(data, "  ", "  ")
-				t.Logf("热门章节数据: %s", string(topChaptersJSON))
-			}
-		} else {
-			t.Logf("获取热门章节响应: 状态码 %d, 响应: %s", w.Code, w.Body.String())
+		if total, ok := data["total"].(float64); ok {
+			t.Logf("  章节统计总数: %d", int(total))
 		}
+		if items, ok := data["items"].([]interface{}); ok {
+			t.Logf("  当前页章节数: %d", len(items))
+		}
+
+		topChaptersJSON, _ := json.MarshalIndent(data, "  ", "  ")
+		t.Logf("章节表现数据: %s", string(topChaptersJSON))
 	})
 
-	// 步骤8: 获取每日统计
-	t.Run("步骤8_获取每日统计", func(t *testing.T) {
-		t.Log("获取每日统计...")
+	// 步骤8: 获取阅读量趋势
+	t.Run("步骤8_获取阅读量趋势", func(t *testing.T) {
+		t.Log("获取阅读量趋势...")
 
 		token := env.GetTestData("auth_token").(string)
-		bookId := env.GetTestData("book_id")
-
-		if bookId == nil {
-			t.Skip("书籍ID未设置，跳过此步骤")
-			return
-		}
-
-		// 获取最近7天的每日统计
-		path := fmt.Sprintf("/api/v1/writer/books/%s/daily-stats?days=7", bookId.(string))
+		projectID := env.GetTestData("project_id").(string)
+		path := fmt.Sprintf("/api/v1/writer/stats/views?projectId=%s&days=7", projectID)
 		w := env.DoRequest("GET", path, nil, token)
+		data := requireStatsResponseData(t, env, path, w)
 
-		if w.Code == 200 {
-			response := env.ParseJSONResponse(w)
-			t.Logf("✓ 获取每日统计成功")
-
-			if data, ok := response["data"].(map[string]interface{}); ok {
-				if dailyStats, ok := data["daily_stats"].([]interface{}); ok {
-					t.Logf("  每日统计记录数: %d", len(dailyStats))
-
-					// 显示前3天的数据
-					for i, stat := range dailyStats {
-						if i >= 3 {
-							break
-						}
-						if statMap, ok := stat.(map[string]interface{}); ok {
-							if date, ok := statMap["date"].(string); ok {
-								if views, ok := statMap["views"].(float64); ok {
-									t.Logf("  %s: %d次阅读", date, int(views))
-								}
-							}
-						}
-					}
-				}
-
-				if totalViews, ok := data["total_views"].(float64); ok {
-					t.Logf("  期间总阅读量: %d", int(totalViews))
-				}
-
-				dailyStatsJSON, _ := json.MarshalIndent(data, "  ", "  ")
-				t.Logf("每日统计数据: %s", string(dailyStatsJSON))
-			}
-		} else {
-			t.Logf("获取每日统计响应: 状态码 %d, 响应: %s", w.Code, w.Body.String())
+		if items, ok := data["items"].([]interface{}); ok {
+			t.Logf("  趋势记录数: %d", len(items))
 		}
+		if totalViews, ok := data["total"].(float64); ok {
+			t.Logf("  期间总阅读量: %d", int(totalViews))
+		}
+
+		dailyStatsJSON, _ := json.MarshalIndent(data, "  ", "  ")
+		t.Logf("阅读量趋势数据: %s", string(dailyStatsJSON))
 	})
 
 	// 步骤9: 获取跳出点分析
@@ -452,41 +386,63 @@ func TestStatisticsView(t *testing.T) {
 		}
 	})
 
-	// 步骤10: 获取留存率
-	t.Run("步骤10_获取留存率", func(t *testing.T) {
-		t.Log("获取留存率...")
+	// 步骤10: 获取订阅趋势
+	t.Run("步骤10_获取订阅趋势", func(t *testing.T) {
+		t.Log("获取订阅趋势...")
 
 		token := env.GetTestData("auth_token").(string)
-		bookId := env.GetTestData("book_id")
-
-		if bookId == nil {
-			t.Skip("书籍ID未设置，跳过此步骤")
-			return
-		}
-
-		// 获取7日留存率
-		path := fmt.Sprintf("/api/v1/writer/books/%s/retention?days=7", bookId.(string))
+		projectID := env.GetTestData("project_id").(string)
+		path := fmt.Sprintf("/api/v1/writer/stats/subscribers?projectId=%s&days=7", projectID)
 		w := env.DoRequest("GET", path, nil, token)
+		data := requireStatsResponseData(t, env, path, w)
 
-		if w.Code == 200 {
-			response := env.ParseJSONResponse(w)
-			t.Logf("✓ 获取留存率成功")
-
-			if data, ok := response["data"].(map[string]interface{}); ok {
-				if retentionRate, ok := data["retention_rate"].(float64); ok {
-					t.Logf("  7日留存率: %.2f%%", retentionRate*100)
-				}
-				if days, ok := data["days"].(float64); ok {
-					t.Logf("  统计天数: %d", int(days))
-				}
-
-				retentionJSON, _ := json.MarshalIndent(data, "  ", "  ")
-				t.Logf("留存率数据: %s", string(retentionJSON))
-			}
-		} else {
-			t.Logf("获取留存率响应: 状态码 %d, 响应: %s", w.Code, w.Body.String())
+		if total, ok := data["total"].(float64); ok {
+			t.Logf("  新增订阅总数: %d", int(total))
 		}
+		if items, ok := data["items"].([]interface{}); ok {
+			t.Logf("  订阅趋势记录数: %d", len(items))
+		}
+
+		retentionJSON, _ := json.MarshalIndent(data, "  ", "  ")
+		t.Logf("订阅趋势数据: %s", string(retentionJSON))
 	})
+}
+
+// TestReaderStatisticsAggregates 测试读者聚合统计接口
+func TestReaderStatisticsAggregates(t *testing.T) {
+	if testing.Short() {
+		t.Skip("跳过 E2E 测试")
+	}
+
+	env, cleanup := e2e.SetupTestEnvironment(t)
+	defer cleanup()
+
+	fixtures := env.Fixtures()
+	actions := env.Actions()
+
+	reader := fixtures.CreateUser()
+	token := actions.Login(reader.Username, "Test1234")
+
+	testCases := []struct {
+		name string
+		path string
+	}{
+		{name: "读者概览", path: "/api/v1/reader/statistics"},
+		{name: "读者概览别名", path: "/api/v1/reader/statistics/overview"},
+		{name: "阅读时长", path: "/api/v1/reader/statistics/reading-time?period=all"},
+		{name: "阅读热力图", path: "/api/v1/reader/statistics/heatmap?days=7"},
+		{name: "阅读趋势", path: "/api/v1/reader/statistics/trends?days=7"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			w := env.DoRequest("GET", tc.path, nil, token)
+			data := requireStatsResponseData(t, env, tc.path, w)
+
+			payloadJSON, _ := json.MarshalIndent(data, "  ", "  ")
+			t.Logf("%s响应: %s", tc.name, string(payloadJSON))
+		})
+	}
 }
 
 // TestStatisticsReaderProfile 测试读者画像功能

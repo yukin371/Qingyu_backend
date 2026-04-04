@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/response"
 	auditDTO "Qingyu_backend/service/audit"
 )
@@ -68,15 +69,14 @@ func (api *AuditApi) AuditDocument(c *gin.Context) {
 	}
 
 	// 从context获取用户ID
-	userID, exists := c.Get("userID")
-	if !exists {
-		response.Unauthorized(c, "无法获取用户信息")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
 	req.DocumentID = documentID
 
-	record, err := api.auditService.AuditDocument(c.Request.Context(), req.DocumentID, req.Content, userID.(string))
+	record, err := api.auditService.AuditDocument(c.Request.Context(), req.DocumentID, req.Content, userID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -135,13 +135,12 @@ func (api *AuditApi) SubmitAppeal(c *gin.Context) {
 	}
 
 	// 从context获取用户ID
-	userID, exists := c.Get("userID")
-	if !exists {
-		response.Unauthorized(c, "无法获取用户信息")
+	userID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
-	err := api.auditService.SubmitAppeal(c.Request.Context(), auditID, userID.(string), req.Reason)
+	err := api.auditService.SubmitAppeal(c.Request.Context(), auditID, userID, req.Reason)
 	if err != nil {
 		response.BadRequest(c, "提交申诉失败", err.Error())
 		return
@@ -158,7 +157,6 @@ func (api *AuditApi) SubmitAppeal(c *gin.Context) {
 // @Produce json
 // @Param limit query int false "数量限制" default(50)
 // @Success 200 {object} response.APIResponse
-// @Router /api/v1/admin/audit/pending [get]
 func (api *AuditApi) GetPendingReviews(c *gin.Context) {
 	limit := 50
 	if limitStr := c.Query("limit"); limitStr != "" {
@@ -190,7 +188,6 @@ func (api *AuditApi) GetPendingReviews(c *gin.Context) {
 // @Param id path string true "审核记录ID"
 // @Param request body object true "复核请求"
 // @Success 200 {object} response.APIResponse
-// @Router /api/v1/admin/audit/{id}/review [post]
 func (api *AuditApi) ReviewAudit(c *gin.Context) {
 	auditID := c.Param("id")
 
@@ -201,13 +198,12 @@ func (api *AuditApi) ReviewAudit(c *gin.Context) {
 	}
 
 	// 从context获取管理员ID
-	reviewerID, exists := c.Get("userID")
-	if !exists {
-		response.Unauthorized(c, "无法获取管理员信息")
+	reviewerID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
-	err := api.auditService.ReviewAudit(c.Request.Context(), auditID, reviewerID.(string), req.Approved, req.Note)
+	err := api.auditService.ReviewAudit(c.Request.Context(), auditID, reviewerID, req.Approved, req.Note)
 	if err != nil {
 		c.Error(err)
 		return
@@ -225,7 +221,6 @@ func (api *AuditApi) ReviewAudit(c *gin.Context) {
 // @Param id path string true "审核记录ID"
 // @Param request body object true "复核申诉请求"
 // @Success 200 {object} response.APIResponse
-// @Router /api/v1/admin/audit/{id}/appeal/review [post]
 func (api *AuditApi) ReviewAppeal(c *gin.Context) {
 	auditID := c.Param("id")
 
@@ -236,13 +231,12 @@ func (api *AuditApi) ReviewAppeal(c *gin.Context) {
 	}
 
 	// 从context获取管理员ID
-	reviewerID, exists := c.Get("userID")
-	if !exists {
-		response.Unauthorized(c, "无法获取管理员信息")
+	reviewerID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
-	err := api.auditService.ReviewAppeal(c.Request.Context(), auditID, reviewerID.(string), req.Approved, req.Note)
+	err := api.auditService.ReviewAppeal(c.Request.Context(), auditID, reviewerID, req.Approved, req.Note)
 	if err != nil {
 		c.Error(err)
 		return
@@ -264,17 +258,22 @@ func (api *AuditApi) GetUserViolations(c *gin.Context) {
 	userID := c.Param("userId")
 
 	// 验证权限：只能查看自己的违规记录，或管理员可以查看所有
-	currentUserID, exists := c.Get("userID")
-	if !exists {
-		response.Unauthorized(c, "无法获取用户信息")
+	currentUserID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
 	// 检查是否为管理员或用户本身
-	currentRole, roleExists := c.Get("role")
-	isAdmin := roleExists && currentRole.(string) == "admin"
+	roles := shared.GetUserRoles(c)
+	isAdmin := false
+	for _, r := range roles {
+		if r == "admin" {
+			isAdmin = true
+			break
+		}
+	}
 
-	if !isAdmin && currentUserID.(string) != userID {
+	if !isAdmin && currentUserID != userID {
 		response.Forbidden(c, "只能查看自己的违规记录")
 		return
 	}
@@ -306,17 +305,22 @@ func (api *AuditApi) GetUserViolationSummary(c *gin.Context) {
 	userID := c.Param("userId")
 
 	// 验证权限
-	currentUserID, exists := c.Get("userID")
-	if !exists {
-		response.Unauthorized(c, "无法获取用户信息")
+	currentUserID, ok := shared.GetUserID(c)
+	if !ok {
 		return
 	}
 
 	// 检查是否为管理员或用户本身
-	currentRole, roleExists := c.Get("role")
-	isAdmin := roleExists && currentRole.(string) == "admin"
+	roles := shared.GetUserRoles(c)
+	isAdmin := false
+	for _, r := range roles {
+		if r == "admin" {
+			isAdmin = true
+			break
+		}
+	}
 
-	if !isAdmin && currentUserID.(string) != userID {
+	if !isAdmin && currentUserID != userID {
 		response.Forbidden(c, "只能查看自己的违规统计")
 		return
 	}
@@ -341,7 +345,6 @@ func (api *AuditApi) GetUserViolationSummary(c *gin.Context) {
 // @Param minRiskLevel query int false "最低风险等级" default(3)
 // @Param limit query int false "数量限制" default(50)
 // @Success 200 {object} response.APIResponse
-// @Router /api/v1/admin/audit/high-risk [get]
 func (api *AuditApi) GetHighRiskAudits(c *gin.Context) {
 	minRiskLevel := 3
 	limit := 50

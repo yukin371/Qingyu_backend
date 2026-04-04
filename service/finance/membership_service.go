@@ -1,14 +1,16 @@
 package finance
 
 import (
-	financeModel "Qingyu_backend/models/finance"
-	"Qingyu_backend/models/shared/types"
-	pkgtransaction "Qingyu_backend/pkg/transaction"
-	"Qingyu_backend/repository/interfaces/finance"
-	sharedRepo "Qingyu_backend/repository/interfaces/shared"
 	"context"
 	"fmt"
 	"time"
+
+	financeModel "Qingyu_backend/models/finance"
+	"Qingyu_backend/models/shared/types"
+	pkgtransaction "Qingyu_backend/pkg/transaction"
+	"Qingyu_backend/repository"
+	"Qingyu_backend/repository/interfaces/finance"
+	sharedRepo "Qingyu_backend/repository/interfaces/shared"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -73,7 +75,7 @@ func (s *MembershipServiceImpl) GetPlans(ctx context.Context) ([]*financeModel.M
 
 // GetPlan 获取套餐详情
 func (s *MembershipServiceImpl) GetPlan(ctx context.Context, planID string) (*financeModel.MembershipPlan, error) {
-	oid, err := primitive.ObjectIDFromHex(planID)
+	oid, err := repository.ParseID(planID)
 	if err != nil {
 		return nil, fmt.Errorf("无效的套餐ID: %w", err)
 	}
@@ -91,7 +93,7 @@ func (s *MembershipServiceImpl) GetPlan(ctx context.Context, planID string) (*fi
 // Subscribe 订阅会员
 func (s *MembershipServiceImpl) Subscribe(ctx context.Context, userID string, planID string, paymentMethod string) (*financeModel.UserMembership, error) {
 	// 1. 验证套餐ID
-	planOID, err := primitive.ObjectIDFromHex(planID)
+	planOID, err := repository.ParseID(planID)
 	if err != nil {
 		return nil, fmt.Errorf("无效的套餐ID: %w", err)
 	}

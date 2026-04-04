@@ -23,14 +23,14 @@ func TestDocumentService_AutoSaveDocument_HandlesOptimisticConflictBySentinel(t 
 	contentRepo := new(servicemock.MockDocumentContentRepository)
 	svc := NewDocumentService(docRepo, contentRepo, projectRepo, nil)
 
-	userID := "user-1"
+	userObjID, _ := primitive.ObjectIDFromHex("507f1f77bcf86cd799439011")
 	projectOID := primitive.NewObjectID()
 	docID := primitive.NewObjectID().Hex()
 
-	project := &writer.Project{OwnedEntity: modelbase.OwnedEntity{AuthorID: userID}}
+	project := &writer.Project{OwnedEntity: modelbase.OwnedEntity{AuthorID: userObjID}}
 	doc := &writer.Document{ProjectID: projectOID}
 
-	ctx := context.WithValue(context.Background(), "userID", userID)
+	ctx := context.WithValue(context.Background(), "userId", userObjID.Hex())
 
 	docRepo.On("GetByID", mock.Anything, docID).Return(doc, nil).Once()
 	projectRepo.On("GetByID", mock.Anything, projectOID.Hex()).Return(project, nil).Once()
@@ -68,14 +68,14 @@ func TestDocumentService_UpdateDocumentContent_MapsSentinelConflictToBusinessErr
 	contentRepo := new(servicemock.MockDocumentContentRepository)
 	svc := NewDocumentService(docRepo, contentRepo, projectRepo, nil)
 
-	userID := "user-1"
+	userObjID, _ := primitive.ObjectIDFromHex("507f1f77bcf86cd799439011")
 	projectOID := primitive.NewObjectID()
 	docID := primitive.NewObjectID().Hex()
 
-	project := &writer.Project{OwnedEntity: modelbase.OwnedEntity{AuthorID: userID}}
+	project := &writer.Project{OwnedEntity: modelbase.OwnedEntity{AuthorID: userObjID}}
 	doc := &writer.Document{ProjectID: projectOID}
 
-	ctx := context.WithValue(context.Background(), "userID", userID)
+	ctx := context.WithValue(context.Background(), "userId", userObjID.Hex())
 
 	docRepo.On("GetByID", mock.Anything, docID).Return(doc, nil).Once()
 	projectRepo.On("GetByID", mock.Anything, projectOID.Hex()).Return(project, nil).Once()
@@ -108,14 +108,14 @@ func TestDocumentService_ReplaceDocumentContents_PreparesDataBeforeRepositoryCre
 	contentRepo := new(servicemock.MockDocumentContentRepository)
 	svc := NewDocumentService(docRepo, contentRepo, projectRepo, nil)
 
-	userID := "user-1"
+	userObjID, _ := primitive.ObjectIDFromHex("507f1f77bcf86cd799439011")
 	projectOID := primitive.NewObjectID()
 	docID := primitive.NewObjectID().Hex()
 
-	project := &writer.Project{OwnedEntity: modelbase.OwnedEntity{AuthorID: userID}}
+	project := &writer.Project{OwnedEntity: modelbase.OwnedEntity{AuthorID: userObjID}}
 	doc := &writer.Document{ProjectID: projectOID}
 
-	ctx := context.WithValue(context.Background(), "userID", userID)
+	ctx := context.WithValue(context.Background(), "userId", userObjID.Hex())
 
 	docRepo.On("GetByID", mock.Anything, docID).Return(doc, nil).Once()
 	projectRepo.On("GetByID", mock.Anything, projectOID.Hex()).Return(project, nil).Once()

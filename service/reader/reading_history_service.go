@@ -5,10 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
-
 	"Qingyu_backend/models/reader"
 	"Qingyu_backend/models/shared/types"
+	"Qingyu_backend/repository"
 	readerRepo "Qingyu_backend/repository/interfaces/reader"
 	"Qingyu_backend/service/base"
 )
@@ -105,15 +104,15 @@ func (s *ReadingHistoryService) RecordReading(
 	}
 
 	// 转换 ID
-	userOID, err := primitive.ObjectIDFromHex(userID)
+	userOID, err := repository.ParseID(userID)
 	if err != nil {
 		return fmt.Errorf("无效的用户ID: %w", err)
 	}
-	bookOID, err := primitive.ObjectIDFromHex(bookID)
+	bookOID, err := repository.ParseID(bookID)
 	if err != nil {
 		return fmt.Errorf("无效的书籍ID: %w", err)
 	}
-	chapterOID, err := primitive.ObjectIDFromHex(chapterID)
+	chapterOID, err := repository.ParseID(chapterID)
 	if err != nil {
 		return fmt.Errorf("无效的章节ID: %w", err)
 	}

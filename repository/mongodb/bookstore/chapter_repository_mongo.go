@@ -5,7 +5,6 @@ import (
 	"Qingyu_backend/repository/mongodb/base"
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -207,9 +206,6 @@ func (r *MongoChapterRepository) GetByBookID(ctx context.Context, bookID string,
 		return nil, errors.New("book ID cannot be empty")
 	}
 
-	fmt.Printf("[DEBUG] GetByBookID called with bookID=%s, limit=%d, offset=%d\n", bookID, limit, offset)
-	fmt.Printf("[DEBUG] Collection name: %s\n", r.GetCollection().Name())
-
 	opts := options.Find()
 	if limit > 0 {
 		opts.SetLimit(int64(limit))
@@ -219,12 +215,8 @@ func (r *MongoChapterRepository) GetByBookID(ctx context.Context, bookID string,
 	}
 	opts.SetSort(bson.D{{Key: "chapter_num", Value: 1}})
 
-	// 修复：book_id 字段存储为 string，不应该转换为 ObjectID
+	// book_id 字段存储为 string
 	filter := bson.M{"book_id": bookID}
-
-	// 添加：检查总文档数
-	totalCount, _ := r.GetCollection().CountDocuments(ctx, filter)
-	fmt.Printf("[DEBUG] Total documents in collection: %d\n", totalCount)
 
 	cursor, err := r.GetCollection().Find(ctx, filter, opts)
 	if err != nil {
@@ -527,7 +519,7 @@ func (r *MongoChapterRepository) CountByBookID(ctx context.Context, bookID strin
 		return 0, errors.New("book ID cannot be empty")
 	}
 
-	// 修复：book_id 字段存储为 string，不应该转换为 ObjectID
+	// book_id 字段存储为 string
 	filter := bson.M{"book_id": bookID}
 	return r.GetCollection().CountDocuments(ctx, filter)
 }
@@ -692,7 +684,7 @@ func (r *MongoChapterRepository) GetFirstChapter(ctx context.Context, bookID str
 	}
 
 	var chapter bookstore.Chapter
-	// 修复：book_id 字段存储为 string，不应该转换为 ObjectID
+	// book_id 字段存储为 string
 	filter := bson.M{"book_id": bookID}
 	opts := options.FindOne().SetSort(bson.D{{Key: "chapter_num", Value: 1}})
 
@@ -713,7 +705,7 @@ func (r *MongoChapterRepository) GetLastChapter(ctx context.Context, bookID stri
 	}
 
 	var chapter bookstore.Chapter
-	// 修复：book_id 字段存储为 string，不应该转换为 ObjectID
+	// book_id 字段存储为 string
 	filter := bson.M{"book_id": bookID}
 	opts := options.FindOne().SetSort(bson.D{{Key: "chapter_num", Value: -1}})
 

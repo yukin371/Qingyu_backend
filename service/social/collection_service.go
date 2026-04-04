@@ -1,3 +1,15 @@
+// Package social 提供社交相关的服务
+//
+// ✅ 已解决(2026-03-22): reader 包中的重复服务已删除
+// social 包现在是社交功能的唯一实现，包括：
+// - CollectionService (收藏服务)
+// - LikeService (点赞服务)
+// - CommentService (评论服务)
+// - FollowService (关注服务)
+// - RatingService (评分服务)
+// - BooklistService (书单服务)
+// - MessageService (消息服务)
+// - UserRelationService (用户关系服务)
 package social
 
 import (

@@ -10,7 +10,7 @@ import (
 )
 
 // InitAIRouter 初始化AI路由
-func InitAIRouter(r *gin.RouterGroup, aiService *ai.Service, chatService *ai.ChatService, quotaService *ai.QuotaService, phase3Client *ai.Phase3Client) {
+func InitAIRouter(r *gin.RouterGroup, aiService *ai.Service, chatService *ai.ChatService, quotaService *ai.QuotaService, phase3Client *ai.Phase3Client, storyWriteApi *aiApi.StoryWriteApi) {
 	// 创建API实例
 	writingApiHandler := aiApi.NewWritingApi(aiService, quotaService)
 	chatApiHandler := aiApi.NewChatApi(chatService, quotaService)
@@ -87,6 +87,20 @@ func InitAIRouter(r *gin.RouterGroup, aiService *ai.Service, chatService *ai.Cha
 			chatGroup.GET("/sessions", chatApiHandler.GetChatSessions)
 			chatGroup.GET("/sessions/:sessionId", chatApiHandler.GetChatHistory)
 			chatGroup.DELETE("/sessions/:sessionId", chatApiHandler.DeleteChatSession)
+		}
+
+		// ============ 故事上下文写作 ============
+		if storyWriteApi != nil {
+			// context-preview 是调试端点，不需要配额检查
+			aiGroup.GET("/story/context-preview", storyWriteApi.ContextPreview)
+			// UpdateSceneState 只写文档，不需要配额检查
+			aiGroup.PUT("/story/documents/:id/scene-state", storyWriteApi.UpdateSceneState)
+			// Generate 需要配额
+			storyGroup := aiGroup.Group("/story")
+			storyGroup.Use(middleware.LightQuotaCheckMiddleware(quotaService))
+			{
+				storyGroup.POST("/generate", storyWriteApi.Generate)
+			}
 		}
 
 		// ============ 兼容性路由（支持旧的API路径） ============

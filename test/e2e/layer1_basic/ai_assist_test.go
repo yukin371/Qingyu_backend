@@ -330,30 +330,35 @@ func TestAIAssistFunctionality(t *testing.T) {
 困难和挑战，但他从未放弃。最终，小明不仅找到了宝藏，还收获了珍贵的
 友谊和成长的经验。`
 
-		// 使用生成内容API来生成摘要
+		// 使用真实的写作摘要API生成摘要
 		summaryReq := map[string]interface{}{
-			"projectId": projectId,
-			"prompt":    "请为以下内容生成一个简短的摘要（不超过50字）：\n\n" + longText,
+			"projectId":   projectId,
+			"content":     longText,
+			"maxLength":   50,
+			"summaryType": "brief",
 		}
 
-		w := env.DoRequest("POST", "/api/v1/ai/generate", summaryReq, token)
+		w := env.DoRequest("POST", "/api/v1/ai/writing/summarize", summaryReq, token)
 
-		// 验证响应（这个API可能不存在，需要根据实际情况调整）
 		if w.Code == 200 {
 			t.Log("✓ AI摘要生成API调用成功")
 
 			response := env.ParseJSONResponse(w)
 			if data, ok := response["data"].(map[string]interface{}); ok {
-				if content, ok := data["content"].(string); ok {
-					t.Logf("✓ 摘要生成成功: %s", content)
+				if summary, ok := data["summary"].(string); ok {
+					t.Logf("✓ 摘要生成成功: %s", summary)
+					if len(summary) == 0 {
+						t.Error("⚠ 摘要内容为空")
+					}
+				}
+				if summaryLength, ok := data["summaryLength"].(float64); ok {
+					t.Logf("✓ 摘要长度: %d", int(summaryLength))
 				}
 			}
-		} else if w.Code == 404 {
-			t.Log("⚠ AI摘要生成API未实现（404），这可能是正常的")
 		} else if w.Code == 500 || w.Code == 503 {
 			t.Logf("⚠ AI服务不可用 (状态码: %d)", w.Code)
 		} else {
-			t.Logf("ℹ AI摘要生成尝试，状态码: %d", w.Code)
+			t.Errorf("✗ AI摘要生成失败，状态码: %d, 响应: %s", w.Code, w.Body.String())
 		}
 	})
 

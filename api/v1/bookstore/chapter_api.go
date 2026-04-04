@@ -16,6 +16,23 @@ type ChapterAPI struct {
 	service bookstoreService.ChapterService
 }
 
+// ChapterRequestDoc 章节请求文档模型
+type ChapterRequestDoc struct {
+	ID               string  `json:"id,omitempty"`
+	BookID           string  `json:"book_id"`
+	ProjectID        *string `json:"projectId,omitempty"`
+	ProjectChapterID *string `json:"projectChapterId,omitempty"`
+	Title            string  `json:"title"`
+	ChapterNum       int     `json:"chapter_num"`
+	WordCount        int     `json:"word_count"`
+	IsFree           bool    `json:"is_free"`
+	Price            float64 `json:"price"`
+	ContentURL       string  `json:"contentUrl,omitempty"`
+	ContentSize      int64   `json:"contentSize,omitempty"`
+	ContentHash      string  `json:"contentHash,omitempty"`
+	ContentVersion   int     `json:"contentVersion,omitempty"`
+}
+
 // NewChapterAPI 创建章节API实例
 func NewChapterAPI(service bookstoreService.ChapterService) *ChapterAPI {
 	return &ChapterAPI{
@@ -71,7 +88,6 @@ func (api *ChapterAPI) GetChapter(c *gin.Context) {
 //	@Success 200 {object} response.APIResponse
 //	@Failure		400		{object}	response.APIResponse
 //	@Failure		500		{object}	response.APIResponse
-//	@Router			/api/v1/bookstore/books/{id}/chapters [get]
 func (api *ChapterAPI) GetChaptersByBookID(c *gin.Context) {
 	bookIDStr := c.Param("id")
 	if bookIDStr == "" {
@@ -466,22 +482,47 @@ func (api *ChapterAPI) GetChapterContent(c *gin.Context) {
 	}
 
 	// 获取用户ID（从中间件设置的上下文中）
-	var userID primitive.ObjectID
+	userID := ""
 	if userIDValue, exists := c.Get("user_id"); exists {
 		if uid, ok := userIDValue.(string); ok {
-			userID, _ = primitive.ObjectIDFromHex(uid)
+			userID = uid
 		}
 	}
 
-	content, err := api.service.GetChapterContent(c.Request.Context(), id.Hex(), userID.Hex())
+	content, err := api.service.GetChapterContent(c.Request.Context(), id.Hex(), userID)
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
+	paragraphRows, err := api.service.GetChapterParagraphs(c.Request.Context(), id.Hex(), userID)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	paragraphs := make([]map[string]interface{}, 0, len(paragraphRows))
+	for idx, row := range paragraphRows {
+		if row == nil {
+			continue
+		}
+		order := row.ParagraphOrder
+		if order <= 0 {
+			order = idx + 1
+		}
+		paragraphs = append(paragraphs, map[string]interface{}{
+			"id":             row.ID.Hex(),
+			"paragraphOrder": order,
+			"content":        row.Content,
+			"format":         row.Format,
+			"wordCount":      row.WordCount,
+		})
+	}
+
 	response.SuccessWithMessage(c, "获取成功", map[string]interface{}{
 		"chapter_id": id.Hex(),
 		"content":    content,
+		"paragraphs": paragraphs,
 	})
 }
 
@@ -594,7 +635,7 @@ func (api *ChapterAPI) GetChapterStatistics(c *gin.Context) {
 //	@Tags			章节
 //	@Accept			json
 //	@Produce		json
-//	@Param			chapter	body		bookstore.Chapter	true	"章节信息"
+//	@Param			chapter	body		ChapterRequestDoc	true	"章节信息"
 //	@Success 201 {object} response.APIResponse
 //	@Failure		400		{object}	response.APIResponse
 //	@Failure		500		{object}	response.APIResponse
@@ -622,7 +663,7 @@ func (api *ChapterAPI) CreateChapter(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			id		path		string				true	"章节ID"
-//	@Param			chapter	body		bookstore.Chapter	true	"章节信息"
+//	@Param			chapter	body		ChapterRequestDoc	true	"章节信息"
 //	@Success 200 {object} response.APIResponse
 //	@Failure		400		{object}	response.APIResponse
 //	@Failure		404		{object}	response.APIResponse

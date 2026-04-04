@@ -19,6 +19,8 @@ type AdminService interface {
 
 	// 提现审核
 	ReviewWithdraw(ctx context.Context, withdrawID, adminID string, approved bool, reason string) error
+	ListWithdrawals(ctx context.Context, req *ListWithdrawalsRequest) ([]*WithdrawalRecord, int64, error)
+	GetWithdrawalStatistics(ctx context.Context, req *WithdrawalStatisticsRequest) (*WithdrawalStatistics, error)
 
 	// 操作日志
 	LogOperation(ctx context.Context, req *LogOperationRequest) error
@@ -78,6 +80,24 @@ type GetLogsRequest struct {
 	PageSize  int       `json:"page_size"`
 }
 
+// ListWithdrawalsRequest 提现列表查询请求
+type ListWithdrawalsRequest struct {
+	Page      int       `json:"page"`
+	PageSize  int       `json:"page_size"`
+	Status    string    `json:"status"`
+	Source    string    `json:"source"`
+	StartDate time.Time `json:"start_date"`
+	EndDate   time.Time `json:"end_date"`
+}
+
+// WithdrawalStatisticsRequest 提现统计查询请求
+type WithdrawalStatisticsRequest struct {
+	Status    string    `json:"status"`
+	Source    string    `json:"source"`
+	StartDate time.Time `json:"start_date"`
+	EndDate   time.Time `json:"end_date"`
+}
+
 // ============ 数据结构 ============
 
 // AuditRecord 审核记录
@@ -114,4 +134,42 @@ type UserStatistics struct {
 	TotalIncome      float64   `json:"total_income"`
 	RegistrationDate time.Time `json:"registration_date"`
 	LastLoginDate    time.Time `json:"last_login_date"`
+}
+
+// WithdrawalRecord 管理端提现记录
+type WithdrawalRecord struct {
+	ID            string     `json:"id"`
+	UserID        string     `json:"user_id"`
+	Username      string     `json:"username,omitempty"`
+	Email         string     `json:"email,omitempty"`
+	DisplayName   string     `json:"display_name,omitempty"`
+	Source        string     `json:"source"`
+	Status        string     `json:"status"`
+	Amount        float64    `json:"amount"`
+	Fee           float64    `json:"fee"`
+	ActualAmount  float64    `json:"actual_amount"`
+	Method        string     `json:"method,omitempty"`
+	Account       string     `json:"account,omitempty"`
+	AccountType   string     `json:"account_type,omitempty"`
+	AccountName   string     `json:"account_name,omitempty"`
+	BankName      string     `json:"bank_name,omitempty"`
+	OrderNo       string     `json:"order_no,omitempty"`
+	ReviewedBy    string     `json:"reviewed_by,omitempty"`
+	ReviewedAt    *time.Time `json:"reviewed_at,omitempty"`
+	RejectReason  string     `json:"reject_reason,omitempty"`
+	ProcessedAt   *time.Time `json:"processed_at,omitempty"`
+	TransactionID string     `json:"transaction_id,omitempty"`
+	CreatedAt     time.Time  `json:"created_at"`
+	UpdatedAt     time.Time  `json:"updated_at"`
+}
+
+// WithdrawalStatistics 提现统计
+type WithdrawalStatistics struct {
+	TotalCount         int64   `json:"total_count"`
+	PendingCount       int64   `json:"pending_count"`
+	ApprovedCount      int64   `json:"approved_count"`
+	RejectedCount      int64   `json:"rejected_count"`
+	ApprovedTodayCount int64   `json:"approved_today_count"`
+	PendingAmount      float64 `json:"pending_amount"`
+	ApprovedAmount     float64 `json:"approved_amount"`
 }

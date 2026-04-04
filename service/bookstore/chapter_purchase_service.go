@@ -2,6 +2,7 @@ package bookstore
 
 import (
 	"Qingyu_backend/models/bookstore"
+	"Qingyu_backend/repository"
 	"context"
 	"errors"
 	"fmt"
@@ -143,7 +144,7 @@ func (s *ChapterPurchaseServiceImpl) GetChapterCatalog(ctx context.Context, user
 	totalWordCount, _ := s.chapterRepo.GetTotalWordCount(ctx, bookID)
 
 	// 构建目录
-	bookOID, _ := primitive.ObjectIDFromHex(bookID)
+	bookOID, _ := repository.ParseID(bookID)
 	catalog := &bookstore.ChapterCatalog{
 		BookID:         bookOID,
 		BookTitle:      book.Title,
@@ -264,9 +265,9 @@ func (s *ChapterPurchaseServiceImpl) PurchaseChapter(ctx context.Context, userID
 		}
 
 		// 创建购买记录 - 需要将 string 转换为 primitive.ObjectID
-		userOID, _ := primitive.ObjectIDFromHex(userID)
-		chapterOID, _ := primitive.ObjectIDFromHex(chapterID)
-		bookOID, _ := primitive.ObjectIDFromHex(chapter.BookID)
+		userOID, _ := repository.ParseID(userID)
+		chapterOID, _ := repository.ParseID(chapterID)
+		bookOID, _ := repository.ParseID(chapter.BookID)
 		purchase = &bookstore.ChapterPurchase{
 			UserID:       userOID,
 			ChapterID:    chapterOID,
@@ -372,11 +373,11 @@ func (s *ChapterPurchaseServiceImpl) PurchaseChapters(ctx context.Context, userI
 		}
 
 		// 创建批量购买记录 - 需要转换类型
-		userOID, _ := primitive.ObjectIDFromHex(userID)
-		bookOID, _ := primitive.ObjectIDFromHex(bookID)
+		userOID, _ := repository.ParseID(userID)
+		bookOID, _ := repository.ParseID(bookID)
 		chapterOIDs := make([]primitive.ObjectID, len(chapterIDs))
 		for i, id := range chapterIDs {
-			chapterOIDs[i], _ = primitive.ObjectIDFromHex(id)
+			chapterOIDs[i], _ = repository.ParseID(id)
 		}
 
 		batch = &bookstore.ChapterPurchaseBatch{
@@ -397,7 +398,7 @@ func (s *ChapterPurchaseServiceImpl) PurchaseChapters(ctx context.Context, userI
 		// 为每个章节创建单独的购买记录
 		for _, chapter := range chapters {
 			chapterOID := chapter.ID
-			bookOID, _ := primitive.ObjectIDFromHex(chapter.BookID)
+			bookOID, _ := repository.ParseID(chapter.BookID)
 			purchase := &bookstore.ChapterPurchase{
 				UserID:       userOID,
 				ChapterID:    chapterOID,
@@ -489,8 +490,8 @@ func (s *ChapterPurchaseServiceImpl) PurchaseBook(ctx context.Context, userID, b
 		}
 
 		// 创建全书购买记录 - 需要转换类型
-		userOID, _ := primitive.ObjectIDFromHex(userID)
-		bookOID, _ := primitive.ObjectIDFromHex(bookID)
+		userOID, _ := repository.ParseID(userID)
+		bookOID, _ := repository.ParseID(bookID)
 		purchase = &bookstore.BookPurchase{
 			UserID:        userOID,
 			BookID:        bookOID,

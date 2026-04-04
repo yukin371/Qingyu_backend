@@ -7,9 +7,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 
-	"Qingyu_backend/pkg/testutil"
-	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/pkg/errors"
+	"Qingyu_backend/pkg/response"
+	"Qingyu_backend/pkg/testutil"
 )
 
 // TestValidationErrorFormat T4.1: 参数错误响应（400, 100001）
@@ -108,9 +108,8 @@ func TestErrorCodeMapping(t *testing.T) {
 	resp := th.ParseResponse(w)
 	code := int(resp["code"].(float64))
 
-	// 验证是6位错误码
-	// TODO 需要改为4位错误码
-	assert.GreaterOrEqual(t, code, 100000, "错误码应该是6位数字")
-	assert.Less(t, code, 1000000, "错误码应该是6位数字")
-	assert.Equal(t, 100001, code)
+	// 验证是4位错误码
+	assert.GreaterOrEqual(t, code, 1000, "错误码应该是4位数字")
+	assert.Less(t, code, 1000, "错误码应该是4位数字")
+	assert.Equal(t, 1001, code)
 }

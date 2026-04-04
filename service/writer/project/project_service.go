@@ -9,6 +9,8 @@ import (
 	pkgErrors "Qingyu_backend/pkg/errors"
 	writerRepo "Qingyu_backend/repository/interfaces/writer"
 	serviceBase "Qingyu_backend/service/base"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // ProjectService 项目服务
@@ -47,7 +49,8 @@ func (s *ProjectService) CreateProject(ctx context.Context, req *CreateProjectRe
 
 	// 3. 创建项目对象（使用base mixins）
 	project := &writer.Project{}
-	project.AuthorID = userID
+	objectID, _ := primitive.ObjectIDFromHex(userID)
+	project.AuthorID = objectID
 	project.Title = req.Title
 	project.Summary = req.Summary
 	project.CoverURL = req.CoverURL
@@ -334,7 +337,7 @@ func (s *ProjectService) GetProjectList(ctx context.Context, userID, status stri
 	}
 
 	// 使用上下文注入用户ID
-	ctxWithUser := context.WithValue(ctx, "userID", userID)
+	ctxWithUser := context.WithValue(ctx, "userId", userID)
 
 	// 调用ListMyProjects
 	resp, err := s.ListMyProjects(ctxWithUser, req)
@@ -365,7 +368,7 @@ func (s *ProjectService) UpdateProjectByID(ctx context.Context, projectID, userI
 	}
 
 	// 使用上下文注入用户ID
-	ctxWithUser := context.WithValue(ctx, "userID", userID)
+	ctxWithUser := context.WithValue(ctx, "userId", userID)
 
 	return s.UpdateProject(ctxWithUser, projectID, updateReq)
 }
@@ -373,7 +376,7 @@ func (s *ProjectService) UpdateProjectByID(ctx context.Context, projectID, userI
 // DeleteProjectByID 删除项目（兼容API层调用）
 func (s *ProjectService) DeleteProjectByID(ctx context.Context, projectID, userID string) error {
 	// 使用上下文注入用户ID
-	ctxWithUser := context.WithValue(ctx, "userID", userID)
+	ctxWithUser := context.WithValue(ctx, "userId", userID)
 
 	return s.DeleteProject(ctxWithUser, projectID)
 }

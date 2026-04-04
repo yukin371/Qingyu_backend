@@ -490,15 +490,13 @@ func TestAggregateRatings_Book(t *testing.T) {
 
 	// 设置Comment Repository返回书籍评分统计
 	statsMap := map[string]interface{}{
-		"average_rating": 4.3,
-		"total_ratings":  int64(10),
-		"distribution": map[string]int64{
-			"1": 0,
-			"2": 1,
-			"3": 2,
-			"4": 3,
-			"5": 4,
-		},
+		"average":     4.3,
+		"total_count": int64(10),
+		"one_star":    int64(0),
+		"two_star":    int64(1),
+		"three_star":  int64(2),
+		"four_star":   int64(3),
+		"five_star":   int64(4),
 	}
 	mockCommentRepo.On("GetBookRatingStats", mock.Anything, "book456").Return(statsMap, nil)
 

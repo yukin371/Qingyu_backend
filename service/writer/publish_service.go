@@ -196,7 +196,7 @@ func (s *PublishService) executeProjectPublish(
 	bookstoreReq := &BookstorePublishProjectRequest{
 		ProjectID:     project.ID.Hex(),
 		ProjectTitle:  project.Title,
-		AuthorID:      project.AuthorID,
+		AuthorID:      project.AuthorID.Hex(),
 		CategoryID:    req.CategoryID,
 		Tags:          req.Tags,
 		Description:   req.Description,

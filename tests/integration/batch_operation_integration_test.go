@@ -15,7 +15,7 @@ import (
 
 // withUserID 将用户ID添加到context中
 func withUserID(ctx context.Context, userID string) context.Context {
-	return context.WithValue(ctx, "userID", userID)
+	return context.WithValue(ctx, "userId", userID)
 }
 
 // TestBatchOperation_DeleteDocuments 测试批量删除文档

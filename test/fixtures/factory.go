@@ -105,7 +105,8 @@ func (f *ProjectFactory) Create(authorID string, opts ...func(*writer.Project)) 
 	}
 	// 设置嵌入字段
 	project.IdentifiedEntity.ID = primitive.NewObjectID()
-	project.OwnedEntity.AuthorID = authorID
+	authorObjID, _ := primitive.ObjectIDFromHex(authorID)
+	project.OwnedEntity.AuthorID = authorObjID
 	project.TitledEntity.Title = fmt.Sprintf("测试项目 %d", f.counter)
 	project.Timestamps.CreatedAt = now
 	project.Timestamps.UpdatedAt = now

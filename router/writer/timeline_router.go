@@ -12,7 +12,7 @@ func InitTimelineRoutes(router *gin.RouterGroup, timelineService interfaces.Time
 	api := writer.NewTimelineApi(timelineService)
 
 	// 项目级别的时间线路由
-	projectGroup := router.Group("/projects/:projectId")
+	projectGroup := router.Group("/projects/:id")
 	{
 		projectGroup.POST("/timelines", api.CreateTimeline)
 		projectGroup.GET("/timelines", api.ListTimelines)

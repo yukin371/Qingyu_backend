@@ -19,6 +19,7 @@ type BookStreamRepository struct {
 	cursorMgr *CursorManager
 }
 
+// todo:未调用函数
 // NewBookStreamRepository 创建书籍流式仓储
 func NewBookStreamRepository(baseRepo *MongoBookRepository) *BookStreamRepository {
 	return &BookStreamRepository{

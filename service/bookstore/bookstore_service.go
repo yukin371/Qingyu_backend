@@ -5,7 +5,9 @@ import (
 	searchModels "Qingyu_backend/models/search"
 	"Qingyu_backend/models/shared/types"
 	BookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
+	ReaderRepo "Qingyu_backend/repository/interfaces/reader"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"sort"
@@ -13,7 +15,7 @@ import (
 	"sync"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"Qingyu_backend/repository"
 )
 
 // BookstoreService 书城服务接口 - 专注于书城列表展示和首页聚合
@@ -64,15 +66,19 @@ type BookstoreService interface {
 	SearchByTitle(ctx context.Context, title string, page, size int) ([]*bookstore2.Book, int64, error)
 	SearchByAuthor(ctx context.Context, author string, page, size int) ([]*bookstore2.Book, int64, error)
 	GetSimilarBooks(ctx context.Context, bookID string, limit int) ([]*bookstore2.Book, error)
+
+	// 搜索服务注入
+	SetSearchService(searchService interface{})
 }
 
 // BookstoreServiceImpl 书城服务实现
 type BookstoreServiceImpl struct {
-	bookRepo      BookstoreRepo.BookRepository
-	categoryRepo  BookstoreRepo.CategoryRepository
-	bannerRepo    BookstoreRepo.BannerRepository
-	rankingRepo   BookstoreRepo.RankingRepository
-	searchService interface{} // SearchService接口（避免循环依赖）
+	bookRepo       BookstoreRepo.BookRepository
+	categoryRepo   BookstoreRepo.CategoryRepository
+	bannerRepo     BookstoreRepo.BannerRepository
+	rankingRepo    BookstoreRepo.RankingRepository
+	collectionRepo ReaderRepo.CollectionRepository
+	searchService  interface{} // SearchService接口（避免循环依赖）
 }
 
 // HomepageData 首页数据结构
@@ -94,12 +100,14 @@ func NewBookstoreService(
 	categoryRepo BookstoreRepo.CategoryRepository,
 	bannerRepo BookstoreRepo.BannerRepository,
 	rankingRepo BookstoreRepo.RankingRepository,
+	collectionRepo ReaderRepo.CollectionRepository,
 ) BookstoreService {
 	return &BookstoreServiceImpl{
-		bookRepo:     bookRepo,
-		categoryRepo: categoryRepo,
-		bannerRepo:   bannerRepo,
-		rankingRepo:  rankingRepo,
+		bookRepo:       bookRepo,
+		categoryRepo:   categoryRepo,
+		bannerRepo:     bannerRepo,
+		rankingRepo:    rankingRepo,
+		collectionRepo: collectionRepo,
 	}
 }
 
@@ -147,6 +155,15 @@ func (s *BookstoreServiceImpl) GetBookByID(ctx context.Context, id string) (*boo
 	if book.Status != bookstore2.BookStatusOngoing && book.Status != bookstore2.BookStatusCompleted {
 		fmt.Printf("[DEBUG] GetBookByID(%s) book status check failed: %s not in [ongoing, completed]\n", id, book.Status) // codeql[go/log-injection]
 		return nil, errors.New("book not available")
+	}
+
+	if s.collectionRepo != nil {
+		collectCount, countErr := s.collectionRepo.CountBookCollections(ctx, id)
+		if countErr != nil {
+			fmt.Printf("[WARN] GetBookByID(%s) failed to count collections: %v\n", id, countErr) // codeql[go/log-injection]
+		} else {
+			book.CollectCount = collectCount
+		}
 	}
 
 	fmt.Printf("[DEBUG] GetBookByID(%s) returning book successfully\n", id) // codeql[go/log-injection]
@@ -428,7 +445,48 @@ func (s *BookstoreServiceImpl) SearchBooksWithFilter(ctx context.Context, filter
 		}
 
 		// 应用排序
-		// TODO: 实现排序逻辑
+		// 排序逻辑实现
+		sort.SliceStable(filteredBooks, func(i, j int) bool {
+			switch filter.SortBy {
+			case "hot":
+				// 热度排序: view_count*1 + rating_count*3 + collect_count*5
+				scoreI := float64(filteredBooks[i].ViewCount)*1 + float64(filteredBooks[i].RatingCount)*3 + float64(filteredBooks[i].CollectCount)*5
+				scoreJ := float64(filteredBooks[j].ViewCount)*1 + float64(filteredBooks[j].RatingCount)*3 + float64(filteredBooks[j].CollectCount)*5
+				if scoreI != scoreJ {
+					if filter.SortOrder == "asc" {
+						return scoreI < scoreJ
+					}
+					return scoreI > scoreJ
+				}
+			case "rating":
+				if filteredBooks[i].Rating != filteredBooks[j].Rating {
+					if filter.SortOrder == "asc" {
+						return float64(filteredBooks[i].Rating) < float64(filteredBooks[j].Rating)
+					}
+					return float64(filteredBooks[i].Rating) > float64(filteredBooks[j].Rating)
+				}
+			case "updated_at":
+				ti := filteredBooks[i].UpdatedAt
+				tj := filteredBooks[j].UpdatedAt
+				if ti != tj {
+					if filter.SortOrder == "asc" {
+						return ti.Before(tj)
+					}
+					return ti.After(tj)
+				}
+			case "word_count":
+				if filteredBooks[i].WordCount != filteredBooks[j].WordCount {
+					if filter.SortOrder == "asc" {
+						return filteredBooks[i].WordCount < filteredBooks[j].WordCount
+					}
+					return filteredBooks[i].WordCount > filteredBooks[j].WordCount
+				}
+			default:
+				// 默认按创建时间倒序
+				return filteredBooks[i].CreatedAt.After(filteredBooks[j].CreatedAt)
+			}
+			return false
+		})
 
 		// 应用分页
 		total := int64(len(filteredBooks))
@@ -980,7 +1038,7 @@ func ConvertSearchResponseToBooks(items []searchModels.SearchItem) []*bookstore2
 
 		// 从 Data 中提取字段
 		if id, ok := item.Data["id"].(string); ok {
-			if objectID, err := primitive.ObjectIDFromHex(id); err == nil {
+			if objectID, err := repository.ParseID(id); err == nil {
 				book.ID = objectID
 			}
 		}
@@ -1062,9 +1120,12 @@ func SearchSimilarBooks(
 // SearchByTitle 按标题搜索书籍
 // 优先使用SearchService (Milvus向量搜索)，失败或空结果时fallback到MongoDB
 func (s *BookstoreServiceImpl) SearchByTitle(ctx context.Context, title string, page, size int) ([]*bookstore2.Book, int64, error) {
-	// 优先使用新路径 (SearchService - Milvus向量搜索)
-	// TODO: 实现SearchService集成
-	_ = s.searchService // 暂时避免未使用警告
+	// 优先使用SearchService
+	if s.searchService != nil {
+		if books, total, err := s.searchViaService(ctx, title, page, size); err == nil && len(books) > 0 {
+			return books, total, nil
+		}
+	}
 
 	// Fallback 到旧路径 (MongoDB查询)
 	filter := &bookstore2.BookFilter{
@@ -1091,9 +1152,12 @@ func (s *BookstoreServiceImpl) SearchByTitle(ctx context.Context, title string, 
 // SearchByAuthor 按作者搜索书籍
 // 优先使用SearchService (Milvus向量搜索)，失败或空结果时fallback到MongoDB
 func (s *BookstoreServiceImpl) SearchByAuthor(ctx context.Context, author string, page, size int) ([]*bookstore2.Book, int64, error) {
-	// 优先使用新路径 (SearchService - Milvus向量搜索)
-	// TODO: 实现SearchService集成
-	_ = s.searchService // 暂时避免未使用警告
+	// 优先使用SearchService
+	if s.searchService != nil {
+		if books, total, err := s.searchViaService(ctx, author, page, size); err == nil && len(books) > 0 {
+			return books, total, nil
+		}
+	}
 
 	// Fallback 到旧路径 (MongoDB查询)
 	filter := &bookstore2.BookFilter{
@@ -1115,6 +1179,78 @@ func (s *BookstoreServiceImpl) SearchByAuthor(ctx context.Context, author string
 	}
 
 	return books, total, nil
+}
+
+// searchViaService 通过 SearchService 搜索书籍
+func (s *BookstoreServiceImpl) searchViaService(ctx context.Context, query string, page, size int) ([]*bookstore2.Book, int64, error) {
+	// 类型断言获取 SearchService
+	ss, ok := s.searchService.(interface {
+		Search(ctx context.Context, req interface{}) (interface{}, error)
+	})
+	if !ok {
+		return nil, 0, fmt.Errorf("searchService does not implement Search method")
+	}
+
+	// 构建搜索请求
+	req := map[string]interface{}{
+		"type":      "books",
+		"query":     query,
+		"page":      page,
+		"page_size": size,
+	}
+
+	resp, err := ss.Search(ctx, req)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// 通过 JSON 转换响应
+	jsonBytes, err := json.Marshal(resp)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	type searchData struct {
+		Total   int64 `json:"total"`
+		Results []struct {
+			ID    string                 `json:"id"`
+			Score float64                `json:"score"`
+			Data  map[string]interface{} `json:"data"`
+		} `json:"results"`
+	}
+	type searchResponse struct {
+		Success bool         `json:"success"`
+		Data    *searchData `json:"data"`
+	}
+
+	var sr searchResponse
+	if err := json.Unmarshal(jsonBytes, &sr); err != nil {
+		return nil, 0, err
+	}
+
+	if !sr.Success || sr.Data == nil {
+		return nil, 0, fmt.Errorf("search service returned unsuccessful response")
+	}
+
+	books := make([]*bookstore2.Book, 0, len(sr.Data.Results))
+	for _, item := range sr.Data.Results {
+		if item.Data == nil {
+			continue
+		}
+		jsonData, err := json.Marshal(item.Data)
+		if err != nil {
+			continue
+		}
+		var book bookstore2.Book
+		if err := json.Unmarshal(jsonData, &book); err != nil {
+			continue
+		}
+		if !book.ID.IsZero() {
+			books = append(books, &book)
+		}
+	}
+
+	return books, sr.Data.Total, nil
 }
 
 // GetSimilarBooks 获取相似书籍推荐

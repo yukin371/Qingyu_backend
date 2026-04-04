@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"sort"
 	"time"
 )
 
@@ -203,6 +204,43 @@ func (s *ReadingStatsService) GenerateHeatmap(ctx context.Context, bookID string
 	return heatmap, nil
 }
 
+// GenerateReadingTimeHeatmap 生成年/月阅读时段热力图（按星期*小时聚合）
+func (s *ReadingStatsService) GenerateReadingTimeHeatmap(ctx context.Context, bookID string, days int) ([]map[string]int, error) {
+	endDate := time.Now()
+	startDate := endDate.AddDate(0, 0, -days)
+
+	behaviors, err := s.readerBehaviorRepo.GetByDateRange(ctx, bookID, startDate, endDate)
+	if err != nil {
+		return nil, fmt.Errorf("获取阅读行为失败: %w", err)
+	}
+
+	grid := make(map[[2]int]int)
+	for _, behavior := range behaviors {
+		readAt := behavior.ReadAt
+		day := int(readAt.Weekday())
+		if day == 0 {
+			day = 6
+		} else {
+			day--
+		}
+		hour := readAt.Hour()
+		grid[[2]int{hour, day}]++
+	}
+
+	result := make([]map[string]int, 0, 24*7)
+	for day := 0; day < 7; day++ {
+		for hour := 0; hour < 24; hour++ {
+			result = append(result, map[string]int{
+				"hour":  hour,
+				"day":   day,
+				"value": grid[[2]int{hour, day}],
+			})
+		}
+	}
+
+	return result, nil
+}
+
 // CalculateCompletionRate 计算完读率
 func (s *ReadingStatsService) CalculateCompletionRate(ctx context.Context, chapterID string) (float64, error) {
 	totalCount, err := s.readerBehaviorRepo.CountByChapter(ctx, chapterID)
@@ -260,7 +298,30 @@ func (s *ReadingStatsService) GetRevenueBreakdown(ctx context.Context, bookID st
 
 // GetTopChapters 获取热门章节
 func (s *ReadingStatsService) GetTopChapters(ctx context.Context, bookID string) (*stats.TopChapters, error) {
-	return s.bookStatsRepo.GetTopChapters(ctx, bookID)
+	mostViewed, err := s.chapterStatsRepo.GetTopViewedChapters(ctx, bookID, 10)
+	if err != nil {
+		return nil, fmt.Errorf("获取阅读量最高章节失败: %w", err)
+	}
+	highestRevenue, err := s.chapterStatsRepo.GetTopRevenueChapters(ctx, bookID, 10)
+	if err != nil {
+		return nil, fmt.Errorf("获取收入最高章节失败: %w", err)
+	}
+	lowestCompletion, err := s.chapterStatsRepo.GetLowestCompletionChapters(ctx, bookID, 10)
+	if err != nil {
+		return nil, fmt.Errorf("获取完读率最低章节失败: %w", err)
+	}
+	highestDropOff, err := s.chapterStatsRepo.GetHighestDropOffChapters(ctx, bookID, 10)
+	if err != nil {
+		return nil, fmt.Errorf("获取跳出率最高章节失败: %w", err)
+	}
+
+	return &stats.TopChapters{
+		BookID:           bookID,
+		MostViewed:       mostViewed,
+		HighestRevenue:   highestRevenue,
+		LowestCompletion: lowestCompletion,
+		HighestDropOff:   highestDropOff,
+	}, nil
 }
 
 // RecordReaderBehavior 记录读者行为
@@ -322,6 +383,168 @@ func (s *ReadingStatsService) GetDailyStats(ctx context.Context, bookID string, 
 	}
 
 	return dailyStats, nil
+}
+
+// GetChapterRankings 获取章节排行列表
+func (s *ReadingStatsService) GetChapterRankings(ctx context.Context, bookID string, page, size int) ([]*stats.ChapterStatsAggregate, int, error) {
+	all, err := s.chapterStatsRepo.GetChapterStatsAggregate(ctx, bookID)
+	if err != nil {
+		return nil, 0, fmt.Errorf("获取章节统计聚合失败: %w", err)
+	}
+
+	sort.SliceStable(all, func(i, j int) bool {
+		if all[i].ViewCount == all[j].ViewCount {
+			return all[i].Revenue > all[j].Revenue
+		}
+		return all[i].ViewCount > all[j].ViewCount
+	})
+
+	total := len(all)
+	if size <= 0 {
+		size = 20
+	}
+	if page <= 0 {
+		page = 1
+	}
+	start := (page - 1) * size
+	if start >= total {
+		return []*stats.ChapterStatsAggregate{}, total, nil
+	}
+	end := start + size
+	if end > total {
+		end = total
+	}
+	return all[start:end], total, nil
+}
+
+// GetSubscribersTrend 获取订阅趋势
+func (s *ReadingStatsService) GetSubscribersTrend(ctx context.Context, bookID string, days int) ([]*stats.BookStatsDaily, error) {
+	return s.GetDailyStats(ctx, bookID, days)
+}
+
+// GetReaderActivity 获取读者活跃度分布
+func (s *ReadingStatsService) GetReaderActivity(ctx context.Context, bookID string) ([]map[string]interface{}, error) {
+	totalUniqueReaders, err := s.readerBehaviorRepo.CountUniqueReaders(ctx, bookID)
+	if err != nil {
+		return nil, fmt.Errorf("获取独立读者数失败: %w", err)
+	}
+
+	now := time.Now()
+	startOfDay := now.Truncate(24 * time.Hour)
+	dailyUsers, err := s.readerBehaviorRepo.GetDistinctUsersByBookAndDateRange(ctx, bookID, startOfDay, now)
+	if err != nil {
+		return nil, fmt.Errorf("获取日活读者失败: %w", err)
+	}
+	weeklyUsers, err := s.readerBehaviorRepo.GetDistinctUsersByBookAndDateRange(ctx, bookID, now.AddDate(0, 0, -7), now)
+	if err != nil {
+		return nil, fmt.Errorf("获取周活读者失败: %w", err)
+	}
+	monthlyUsers, err := s.readerBehaviorRepo.GetDistinctUsersByBookAndDateRange(ctx, bookID, now.AddDate(0, 0, -30), now)
+	if err != nil {
+		return nil, fmt.Errorf("获取月活读者失败: %w", err)
+	}
+
+	monthlyCount := int64(len(monthlyUsers))
+	inactiveCount := totalUniqueReaders - monthlyCount
+	if inactiveCount < 0 {
+		inactiveCount = 0
+	}
+
+	buildItem := func(activityType, label string, count int64) map[string]interface{} {
+		percentage := 0.0
+		if totalUniqueReaders > 0 {
+			percentage = math.Round((float64(count)/float64(totalUniqueReaders))*10000) / 100
+		}
+		return map[string]interface{}{
+			"type":       activityType,
+			"label":      label,
+			"count":      count,
+			"percentage": percentage,
+		}
+	}
+
+	return []map[string]interface{}{
+		buildItem("daily", "日活跃", int64(len(dailyUsers))),
+		buildItem("weekly", "周活跃", int64(len(weeklyUsers))),
+		buildItem("monthly", "月活跃", monthlyCount),
+		buildItem("inactive", "不活跃", inactiveCount),
+	}, nil
+}
+
+// CompareBooks 对比多个作品的核心指标
+func (s *ReadingStatsService) CompareBooks(ctx context.Context, bookIDs []string, metrics []string, startDate, endDate *time.Time) ([]map[string]interface{}, error) {
+	results := make([]map[string]interface{}, 0, len(bookIDs))
+	for _, bookID := range bookIDs {
+		bookStats, err := s.bookStatsRepo.GetByBookID(ctx, bookID)
+		if err != nil {
+			return nil, fmt.Errorf("获取作品 %s 统计失败: %w", bookID, err)
+		}
+
+		var rangeStats *stats.TimeRangeStats
+		if startDate != nil && endDate != nil {
+			rangeStats, err = s.chapterStatsRepo.GetTimeRangeStats(ctx, bookID, *startDate, *endDate)
+			if err != nil {
+				return nil, fmt.Errorf("获取作品 %s 时间范围统计失败: %w", bookID, err)
+			}
+		}
+
+		item := map[string]interface{}{
+			"bookId": bookID,
+			"title":  "",
+		}
+		if bookStats != nil {
+			item["title"] = bookStats.Title
+		}
+
+		for _, metric := range metrics {
+			switch metric {
+			case "views":
+				if rangeStats != nil {
+					item["views"] = rangeStats.TotalViews
+				} else if bookStats != nil {
+					item["views"] = bookStats.TotalViews
+				} else {
+					item["views"] = int64(0)
+				}
+			case "subscribers":
+				if bookStats != nil {
+					item["subscribers"] = bookStats.TotalSubscribers
+				} else {
+					item["subscribers"] = int64(0)
+				}
+			case "favorites":
+				if bookStats != nil {
+					item["favorites"] = bookStats.TotalBookmarks
+				} else {
+					item["favorites"] = int64(0)
+				}
+			case "comments":
+				if bookStats != nil {
+					item["comments"] = bookStats.TotalComments
+				} else {
+					item["comments"] = int64(0)
+				}
+			case "revenue":
+				if rangeStats != nil {
+					item["revenue"] = rangeStats.TotalRevenue
+				} else if bookStats != nil {
+					item["revenue"] = bookStats.TotalRevenue
+				} else {
+					item["revenue"] = float64(0)
+				}
+			case "retention":
+				retention, err := s.CalculateRetention(ctx, bookID, 7)
+				if err != nil {
+					return nil, fmt.Errorf("计算作品 %s 留存率失败: %w", bookID, err)
+				}
+				item["retention"] = retention
+			}
+		}
+
+		results = append(results, item)
+	}
+
+	return results, nil
 }
 
 // AnalyzeTrend 分析趋势

@@ -24,18 +24,18 @@ func NewCommentAPI(commentService interfaces.CommentService) *CommentAPI {
 type CreateCommentRequest struct {
 	BookID    string `json:"book_id" binding:"required"`
 	ChapterID string `json:"chapter_id"`
-	Content   string `json:"content" binding:"required,min=10,max=500"`
+	Content   string `json:"content" binding:"required,min=1,max=500"`
 	Rating    int    `json:"rating" binding:"min=0,max=5"`
 }
 
 // ReplyCommentRequest 回复评论请求
 type ReplyCommentRequest struct {
-	Content string `json:"content" binding:"required,min=10,max=500"`
+	Content string `json:"content" binding:"required,min=1,max=500"`
 }
 
 // UpdateCommentRequest 更新评论请求
 type UpdateCommentRequest struct {
-	Content string `json:"content" binding:"required,min=10,max=500"`
+	Content string `json:"content" binding:"required,min=1,max=500"`
 }
 
 // CreateComment 发表评论
@@ -255,7 +255,6 @@ func (api *CommentAPI) ReplyComment(c *gin.Context) {
 //	@Tags		评论
 //	@Param		id	path		string	true	"评论ID"
 //	@Success	200	{object}	response.APIResponse
-//	@Router		/api/v1/reader/comments/{id}/like [post]
 func (api *CommentAPI) LikeComment(c *gin.Context) {
 	commentID, ok := shared.GetRequiredParam(c, "id", "评论ID")
 	if !ok {
@@ -289,7 +288,6 @@ func (api *CommentAPI) LikeComment(c *gin.Context) {
 //	@Tags		评论
 //	@Param		id	path		string	true	"评论ID"
 //	@Success	200	{object}	response.APIResponse
-//	@Router		/api/v1/reader/comments/{id}/like [delete]
 func (api *CommentAPI) UnlikeComment(c *gin.Context) {
 	commentID, ok := shared.GetRequiredParam(c, "id", "评论ID")
 	if !ok {

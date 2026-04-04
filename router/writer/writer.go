@@ -6,6 +6,7 @@ import (
 	"Qingyu_backend/api/v1/writer"
 	"Qingyu_backend/internal/middleware/auth"
 	"Qingyu_backend/pkg/lock"
+	bookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
 	"Qingyu_backend/service/interfaces"
 	readingStatsService "Qingyu_backend/service/reader/stats"
 	searchservice "Qingyu_backend/service/search"
@@ -27,14 +28,23 @@ func InitWriterRouter(
 	commentService writerservice.CommentService,
 	templateService *document.TemplateService,
 	statsService *readingStatsService.ReadingStatsService,
+	bookRepo bookstoreRepo.BookRepository,
 	characterService interfaces.CharacterService,
 	locationService interfaces.LocationService,
+		dashboardService *writerservice.DashboardService,
 ) {
 	// 创建API实例
 	projectApi := writer.NewProjectApi(projectService)
 	documentApi := writer.NewDocumentApi(documentService)
 	versionApi := writer.NewVersionApi(versionService)
 	editorApi := writer.NewEditorApi(documentService)
+
+	// 仪表板统计API
+	var dashboardApi *writer.DashboardApi
+	dashboardApi = nil
+	if dashboardService != nil {
+		dashboardApi = writer.NewDashboardApi(dashboardService)
+	}
 
 	// 锁定API（如果可用）
 	var lockApi *writer.LockAPI
@@ -70,6 +80,11 @@ func InitWriterRouter(
 		// 编辑器路由
 		InitEditorRouter(writerGroup, editorApi)
 
+		// 仪表板统计路由
+		if dashboardApi != nil {
+			InitDashboardRouter(writerGroup, dashboardApi)
+		}
+
 		// 搜索路由
 		if searchSvc != nil {
 			InitSearchRouter(writerGroup, searchSvc)
@@ -97,13 +112,16 @@ func InitWriterRouter(
 
 		// 统计路由
 		if statsService != nil {
-			InitStatsRouter(writerGroup, statsService)
+			InitStatsRouter(writerGroup, statsService, bookRepo)
 		}
 
 		// 关键词路由
 		if characterService != nil || locationService != nil {
 			InitKeywordRouter(writerGroup, characterService, locationService)
 		}
+
+		// 设定百科路由（概念）
+		InitEncyclopediaRouter(writerGroup)
 	}
 }
 

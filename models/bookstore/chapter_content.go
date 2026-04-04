@@ -10,11 +10,12 @@ import (
 
 // ChapterContent 章节内容模型（与元数据分离）
 type ChapterContent struct {
-	ID        primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	ChapterID primitive.ObjectID `bson:"chapter_id" json:"chapterId" binding:"required"`
-	Content   string             `bson:"content" json:"content" binding:"required"`
-	Format    string             `bson:"format" json:"format"`   // markdown, html, txt
-	Version   int                `bson:"version" json:"version"` // 版本号
+	ID             primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	ChapterID      primitive.ObjectID `bson:"chapter_id" json:"chapterId" binding:"required"`
+	Content        string             `bson:"content" json:"content" binding:"required"`
+	Format         string             `bson:"format" json:"format"`                            // markdown, html, txt, tiptap
+	Version        int                `bson:"version" json:"version"`                          // 版本号
+	ParagraphOrder int                `bson:"paragraph_order,omitempty" json:"paragraphOrder"` // 段落顺序（从1开始）
 
 	// 元数据
 	WordCount int    `bson:"word_count" json:"wordCount"`          // 字数统计
@@ -29,6 +30,7 @@ const (
 	ContentFormatMarkdown string = "markdown" // Markdown 格式
 	ContentFormatHTML     string = "html"     // HTML 格式
 	ContentFormatText     string = "text"     // 纯文本
+	ContentFormatTiptap   string = "tiptap"   // Tiptap 分段格式
 )
 
 // BeforeCreate 在创建前设置默认值

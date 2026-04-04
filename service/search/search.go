@@ -142,9 +142,6 @@ func (s *SearchService) getUserID(ctx context.Context) string {
 	if uid, exists := ctx.Value("userId").(string); exists {
 		return uid
 	}
-	if uid, exists := ctx.Value("user_id").(string); exists {
-		return uid
-	}
 	return ""
 }
 

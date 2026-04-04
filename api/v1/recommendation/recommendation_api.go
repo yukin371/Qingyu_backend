@@ -5,14 +5,20 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	bookstoreModel "Qingyu_backend/models/bookstore"
 	"Qingyu_backend/pkg/response"
+	"Qingyu_backend/repository/interfaces/bookstore"
 	"Qingyu_backend/service/recommendation"
 )
 
+// BookRepository 书籍仓储接口
+type BookRepository = bookstore.BookRepository
+
 // RecommendationAPI 推荐API
 type RecommendationAPI struct {
-	recoService  recommendation.RecommendationService
-	tableService recommendation.RecommendationTableService
+	recoService    recommendation.RecommendationService
+	tableService   recommendation.RecommendationTableService
+	bookRepo       BookRepository
 }
 
 // NewRecommendationAPI 创建推荐API实例
@@ -22,8 +28,15 @@ func NewRecommendationAPI(recoService recommendation.RecommendationService) *Rec
 	}
 }
 
+// WithTableService 设置推荐表格服务
 func (api *RecommendationAPI) WithTableService(tableService recommendation.RecommendationTableService) *RecommendationAPI {
 	api.tableService = tableService
+	return api
+}
+
+// WithBookRepository 设置书籍仓储（用于获取书籍详情）
+func (api *RecommendationAPI) WithBookRepository(bookRepo BookRepository) *RecommendationAPI {
+	api.bookRepo = bookRepo
 	return api
 }
 
@@ -153,14 +166,39 @@ func (api *RecommendationAPI) RecordBehavior(c *gin.Context) {
 	response.SuccessWithMessage(c, "记录成功", nil)
 }
 
+// BookRecommendationItem 书籍推荐项（包含书籍详情）
+type BookRecommendationItem struct {
+	ItemID   string  `json:"item_id"`
+	ItemType string  `json:"item_type"`
+	Score    float64 `json:"score"`
+	Reason   string  `json:"reason"`
+	Rank     int     `json:"rank"`
+	// 书籍详情（从bookstore服务补充）
+	BookID    string `json:"book_id,omitempty"`
+	Title     string `json:"title,omitempty"`
+	Author    string `json:"author,omitempty"`
+	Cover     string `json:"cover,omitempty"`
+	Rating    string `json:"rating,omitempty"`
+}
+
+// HomepageResponse 首页推荐响应
+type HomepageResponse struct {
+	Recommendations []BookRecommendationItem      `json:"recommendations"`
+	NewBooks       []*bookstoreModel.Book       `json:"new_books"`
+	EditorPicks    []*bookstoreModel.Book       `json:"editor_picks"`
+}
+
 // GetHomepageRecommendations 获取首页推荐
 //
 //	@Summary	获取首页推荐（混合推荐策略：个性化+热门）
+//	@Description	返回推荐列表、新书上架、编辑推荐
 //	@Tags		推荐系统
 //	@Param		limit	query		int	false	"推荐数量"	default(20)
-//	@Success	200		{object}	response.APIResponse
+//	@Success	200		{object}	response.APIResponse{data=HomepageResponse}
 //	@Router		/api/v1/recommendation/homepage [get]
 func (api *RecommendationAPI) GetHomepageRecommendations(c *gin.Context) {
+	ctx := c.Request.Context()
+
 	// 获取用户ID（可选）
 	userID, _ := c.Get("user_id")
 	userIDStr := ""
@@ -176,26 +214,70 @@ func (api *RecommendationAPI) GetHomepageRecommendations(c *gin.Context) {
 		}
 	}
 
-	var recommendations []*recommendation.RecommendedItem
+	// 1. 获取推荐列表
+	var recoItems []*recommendation.RecommendedItem
 	var err error
 
-	// 如果用户已登录，优先返回个性化推荐
 	if userIDStr != "" {
-		recommendations, err = api.recoService.GetPersonalizedRecommendations(c.Request.Context(), userIDStr, limit)
+		recoItems, err = api.recoService.GetPersonalizedRecommendations(ctx, userIDStr, limit)
 	}
 
-	// 如果未登录或个性化推荐失败，返回热门推荐
 	if userIDStr == "" || err != nil {
-		recommendations, err = api.recoService.GetHotItems(c.Request.Context(), "book", limit)
+		recoItems, err = api.recoService.GetHotItems(ctx, "book", limit)
 		if err != nil {
 			response.InternalError(c, err)
 			return
 		}
 	}
 
-	response.SuccessWithMessage(c, "获取成功", gin.H{
-		"recommendations": recommendations,
-		"count":           len(recommendations),
+	// 2. 转换推荐项并尝试填充书籍详情
+	recommendations := make([]BookRecommendationItem, 0, len(recoItems))
+	for _, item := range recoItems {
+		bookRec := BookRecommendationItem{
+			ItemID:   item.ItemID,
+			ItemType: item.ItemType,
+			Score:    item.Score,
+			Reason:   item.Reason,
+			Rank:     item.Rank,
+		}
+
+		// 如果有书籍仓储且ItemID看起来像真实ID，尝试获取书籍详情
+		if api.bookRepo != nil && item.ItemID != "" {
+			book, err := api.bookRepo.GetByID(ctx, item.ItemID)
+			if err == nil && book != nil {
+				bookRec.BookID = book.ID.Hex()
+				bookRec.Title = book.Title
+				bookRec.Author = book.Author
+				bookRec.Cover = book.Cover
+				bookRec.Rating = book.Rating.String()
+			}
+		}
+
+		recommendations = append(recommendations, bookRec)
+	}
+
+	// 3. 获取新书上架
+	var newBooks []*bookstoreModel.Book
+	if api.bookRepo != nil {
+		books, err := api.bookRepo.GetNewReleases(ctx, limit, 0)
+		if err == nil {
+			newBooks = books
+		}
+	}
+
+	// 4. 获取编辑推荐
+	var editorPicks []*bookstoreModel.Book
+	if api.bookRepo != nil {
+		books, err := api.bookRepo.GetFeatured(ctx, limit, 0)
+		if err == nil {
+			editorPicks = books
+		}
+	}
+
+	response.Success(c, HomepageResponse{
+		Recommendations: recommendations,
+		NewBooks:        newBooks,
+		EditorPicks:     editorPicks,
 	})
 }
 
@@ -228,7 +310,7 @@ func (api *RecommendationAPI) GetHotRecommendations(c *gin.Context) {
 
 	response.SuccessWithMessage(c, "获取成功", gin.H{
 		"recommendations": recommendations,
-		"count":           len(recommendations),
+		"count":          len(recommendations),
 	})
 }
 
@@ -265,7 +347,7 @@ func (api *RecommendationAPI) GetCategoryRecommendations(c *gin.Context) {
 
 	response.SuccessWithMessage(c, "获取成功", gin.H{
 		"recommendations": recommendations,
-		"count":           len(recommendations),
-		"category":        category,
+		"count":          len(recommendations),
+		"category":       category,
 	})
 }

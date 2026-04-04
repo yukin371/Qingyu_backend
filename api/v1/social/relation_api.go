@@ -176,7 +176,6 @@ func (api *UserRelationAPI) CheckIsFollowing(c *gin.Context) {
 //	@Success		200		{object}	response.APIResponse
 //	@Failure		400		{object}	response.APIResponse
 //	@Failure		500		{object}	response.APIResponse
-//	@Router			/api/v1/social/users/{userId}/followers [get]
 func (api *UserRelationAPI) GetFollowers(c *gin.Context) {
 	// 获取用户ID
 	userID := c.Param("userId")
@@ -217,7 +216,6 @@ func (api *UserRelationAPI) GetFollowers(c *gin.Context) {
 //	@Success		200		{object}	response.APIResponse
 //	@Failure		400		{object}	response.APIResponse
 //	@Failure		500		{object}	response.APIResponse
-//	@Router			/api/v1/social/users/{userId}/following [get]
 func (api *UserRelationAPI) GetFollowing(c *gin.Context) {
 	// 获取用户ID
 	userID := c.Param("userId")

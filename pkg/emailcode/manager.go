@@ -36,6 +36,7 @@ type Manager struct {
 
 	emailService channels.EmailService
 	fromName     string
+	fixedCode    string
 
 	codeTTL  time.Duration
 	cooldown time.Duration
@@ -58,6 +59,13 @@ func NewManager() *Manager {
 
 	emailCfg := config.GlobalConfig.Email
 	if !emailCfg.Enabled {
+		return m
+	}
+
+	if strings.TrimSpace(emailCfg.FixedCode) != "" {
+		m.fixedCode = strings.TrimSpace(emailCfg.FixedCode)
+		m.fromName = emailCfg.FromName
+		m.enabled = true
 		return m
 	}
 
@@ -109,23 +117,30 @@ func (m *Manager) SendRegisterCode(ctx context.Context, email string) error {
 	m.mu.Unlock()
 
 	code, err := generateNumericCode(defaultCodeLength)
-	if err != nil {
-		return fmt.Errorf("生成验证码失败: %w", err)
+	if m.fixedCode != "" {
+		code = m.fixedCode
+	} else {
+		code, err = generateNumericCode(defaultCodeLength)
+		if err != nil {
+			return fmt.Errorf("生成验证码失败: %w", err)
+		}
 	}
 
-	subject := "青羽阅读邮箱验证码"
-	body := fmt.Sprintf("您的注册验证码是：%s\n\n验证码 %d 分钟内有效，请勿泄露给他人。", code, int(m.codeTTL.Minutes()))
-	if m.fromName != "" {
-		subject = fmt.Sprintf("%s - 邮箱验证码", m.fromName)
-	}
+	if m.fixedCode == "" {
+		subject := "青羽阅读邮箱验证码"
+		body := fmt.Sprintf("您的注册验证码是：%s\n\n验证码 %d 分钟内有效，请勿泄露给他人。", code, int(m.codeTTL.Minutes()))
+		if m.fromName != "" {
+			subject = fmt.Sprintf("%s - 邮箱验证码", m.fromName)
+		}
 
-	if err := m.emailService.SendEmail(ctx, &channels.EmailRequest{
-		To:      []string{normalized},
-		Subject: subject,
-		Body:    body,
-		IsHTML:  false,
-	}); err != nil {
-		return fmt.Errorf("发送验证码失败: %w", err)
+		if err := m.emailService.SendEmail(ctx, &channels.EmailRequest{
+			To:      []string{normalized},
+			Subject: subject,
+			Body:    body,
+			IsHTML:  false,
+		}); err != nil {
+			return fmt.Errorf("发送验证码失败: %w", err)
+		}
 	}
 
 	record := &codeRecord{

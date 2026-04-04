@@ -32,7 +32,7 @@ func NewAuthHelper(
 // 返回: userID, project, error
 func (h *AuthHelper) VerifyProjectEdit(ctx context.Context, projectID string) (string, *writer.Project, error) {
 	// 1. 获取用户ID
-	userID, ok := ctx.Value("userID").(string)
+	userID, ok := ctx.Value("userId").(string)
 	if !ok || userID == "" {
 		return "", nil, pkgErrors.NewServiceError(
 			h.serviceName,
@@ -83,7 +83,7 @@ func (h *AuthHelper) VerifyProjectEdit(ctx context.Context, projectID string) (s
 // 返回: userID, project, error
 func (h *AuthHelper) VerifyProjectView(ctx context.Context, projectID string) (string, *writer.Project, error) {
 	// 1. 获取用户ID
-	userID, ok := ctx.Value("userID").(string)
+	userID, ok := ctx.Value("userId").(string)
 	if !ok || userID == "" {
 		return "", nil, pkgErrors.NewServiceError(
 			h.serviceName,
@@ -134,7 +134,7 @@ func (h *AuthHelper) VerifyProjectView(ctx context.Context, projectID string) (s
 // 返回: userID, document, project, error
 func (h *AuthHelper) VerifyDocumentEdit(ctx context.Context, documentID string) (string, *writer.Document, *writer.Project, error) {
 	// 1. 获取用户ID
-	userID, ok := ctx.Value("userID").(string)
+	userID, ok := ctx.Value("userId").(string)
 	if !ok || userID == "" {
 		return "", nil, nil, pkgErrors.NewServiceError(
 			h.serviceName,
@@ -206,7 +206,7 @@ func (h *AuthHelper) VerifyDocumentEdit(ctx context.Context, documentID string) 
 // 返回: userID, document, project, error
 func (h *AuthHelper) VerifyDocumentView(ctx context.Context, documentID string) (string, *writer.Document, *writer.Project, error) {
 	// 1. 获取用户ID
-	userID, ok := ctx.Value("userID").(string)
+	userID, ok := ctx.Value("userId").(string)
 	if !ok || userID == "" {
 		return "", nil, nil, pkgErrors.NewServiceError(
 			h.serviceName,
@@ -276,13 +276,13 @@ func (h *AuthHelper) VerifyDocumentView(ctx context.Context, documentID string) 
 
 // GetUserID 从上下文中获取用户ID
 func GetUserID(ctx context.Context) (string, bool) {
-	userID, ok := ctx.Value("userID").(string)
+	userID, ok := ctx.Value("userId").(string)
 	return userID, ok && userID != ""
 }
 
 // MustGetUserID 从上下文中获取用户ID，如果不存在则返回错误
 func MustGetUserID(ctx context.Context, serviceName string) (string, error) {
-	userID, ok := ctx.Value("userID").(string)
+	userID, ok := ctx.Value("userId").(string)
 	if !ok || userID == "" {
 		return "", pkgErrors.NewServiceError(
 			serviceName,

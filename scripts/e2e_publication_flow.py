@@ -142,10 +142,10 @@ def resolve_document(base_url: str, author_token: str, project_id: str, document
             token=author_token,
         )
         document = api_data(response)
-        if not isinstance(document, dict) or not document.get("documentId"):
+        if not isinstance(document, dict) or not (document.get("documentId") or document.get("id")):
             raise RuntimeError("document lookup returned no data")
         return {
-            "id": document["documentId"],
+            "id": document.get("documentId") or document.get("id"),
             "title": document.get("title"),
             "type": document.get("type"),
         }
@@ -572,6 +572,14 @@ def main() -> int:
         token=author_token,
     )
     reader_chapter = api_data(reader_chapter_resp)
+    if not isinstance(reader_chapter, dict):
+        raise RuntimeError("reader chapter lookup returned no data")
+    paragraphs = reader_chapter.get("paragraphs")
+    if not isinstance(paragraphs, list) or len(paragraphs) == 0:
+        raise RuntimeError("reader chapter response did not include published paragraphs")
+    first_paragraph = paragraphs[0]
+    if not isinstance(first_paragraph, dict) or not first_paragraph.get("content"):
+        raise RuntimeError("reader chapter first paragraph is empty")
 
     summary = {
         "author": author_user.get("username", args.author_username),
@@ -596,6 +604,7 @@ def main() -> int:
         "documentResetPerformed": document_reset_done,
         "chapterList": chapter_items,
         "readerChapter": reader_chapter,
+        "readerParagraphCount": len(paragraphs),
     }
     print(json.dumps(summary, ensure_ascii=False, indent=2))
     return 0

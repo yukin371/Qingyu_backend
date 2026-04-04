@@ -68,6 +68,14 @@ func (m *MockCommentRepository) GetCommentsByChapterID(ctx context.Context, chap
 	return args.Get(0).([]*social.Comment), args.Get(1).(int64), args.Error(2)
 }
 
+func (m *MockCommentRepository) ListByFilter(ctx context.Context, filter *social.CommentFilter) ([]*social.Comment, int64, error) {
+	args := m.Called(ctx, filter)
+	if args.Get(0) == nil {
+		return nil, args.Get(1).(int64), args.Error(2)
+	}
+	return args.Get(0).([]*social.Comment), args.Get(1).(int64), args.Error(2)
+}
+
 func (m *MockCommentRepository) GetCommentsByIDs(ctx context.Context, ids []string) ([]*social.Comment, error) {
 	args := m.Called(ctx, ids)
 	if args.Get(0) == nil {

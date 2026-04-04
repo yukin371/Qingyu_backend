@@ -138,31 +138,34 @@ func TestBatchOperations(t *testing.T) {
 
 		w := env.DoRequest("POST", "/api/v1/writer/batch-operations", batchReq, token)
 
-		// 验证响应
-		if w.Code == 200 || w.Code == 201 {
-			t.Log("✓ 批量操作提交成功")
+		if w.Code != 200 && w.Code != 201 {
+			t.Errorf("✗ 批量操作提交失败，状态码: %d, 响应: %s", w.Code, w.Body.String())
+			return
+		}
 
-			response := env.ParseJSONResponse(w)
-			if data, ok := response["data"].(map[string]interface{}); ok {
-				if batchId, ok := data["batchId"].(string); ok {
-					env.SetTestData("batch_id", batchId)
-					t.Logf("✓ 批量操作ID: %s", batchId)
+		t.Log("✓ 批量操作提交成功")
+		response := env.ParseJSONResponse(w)
+		if data, ok := response["data"].(map[string]interface{}); ok {
+			if batchId, ok := data["batchId"].(string); ok {
+				env.SetTestData("batch_id", batchId)
+				t.Logf("✓ 批量操作ID: %s", batchId)
+			}
+
+			if status, ok := data["status"].(string); ok {
+				t.Logf("✓ 初始状态: %s", status)
+			}
+
+			if preflight, ok := data["preflightSummary"].(map[string]interface{}); ok {
+				if total, ok := preflight["totalCount"].(float64); ok {
+					t.Logf("✓ 预检总数: %d", int(total))
 				}
-
-				// 检查预检摘要
-				if preflight, ok := data["preflightSummary"].(map[string]interface{}); ok {
-					if total, ok := preflight["total"].(float64); ok {
-						t.Logf("✓ 预检总数: %d", int(total))
-					}
-					if ready, ok := preflight["ready"].(float64); ok {
-						t.Logf("✓ 准备就绪: %d", int(ready))
-					}
+				if valid, ok := preflight["validCount"].(float64); ok {
+					t.Logf("✓ 有效项: %d", int(valid))
+				}
+				if invalid, ok := preflight["invalidCount"].(float64); ok {
+					t.Logf("✓ 无效项: %d", int(invalid))
 				}
 			}
-		} else if w.Code == 404 {
-			t.Log("⚠ 批量操作API未实现（404）")
-		} else {
-			t.Errorf("✗ 批量操作提交失败，状态码: %d, 响应: %s", w.Code, w.Body.String())
 		}
 	})
 
@@ -180,48 +183,28 @@ func TestBatchOperations(t *testing.T) {
 
 		w := env.DoRequest("GET", "/api/v1/writer/batch-operations/"+batchId, nil, token)
 
-		if w.Code == 200 {
-			t.Log("✓ 批量操作状态查询成功")
+		if w.Code != 200 {
+			t.Errorf("✗ 状态查询失败，状态码: %d", w.Code)
+			return
+		}
 
-			response := env.ParseJSONResponse(w)
-			if data, ok := response["data"].(map[string]interface{}); ok {
-				if status, ok := data["status"].(string); ok {
-					t.Logf("  批量操作状态: %s", status)
+		t.Log("✓ 批量操作状态查询成功")
+		response := env.ParseJSONResponse(w)
+		if data, ok := response["data"].(map[string]interface{}); ok {
+			if status, ok := data["status"].(string); ok {
+				t.Logf("  批量操作状态: %s", status)
+			}
+			if items, ok := data["items"].([]interface{}); ok {
+				t.Logf("  批量项数: %d", len(items))
+			}
+			if summary, ok := data["preflightSummary"].(map[string]interface{}); ok {
+				if success, ok := summary["successCount"].(float64); ok {
+					t.Logf("  成功项: %d", int(success))
 				}
-
-				// 检查进度
-				if progress, ok := data["progress"].(map[string]interface{}); ok {
-					if completed, ok := progress["completed"].(float64); ok {
-						t.Logf("  已完成: %d", int(completed))
-					}
-					if total, ok := progress["total"].(float64); ok {
-						t.Logf("  总数: %d", int(total))
-					}
-				}
-
-				// 检查结果
-				if results, ok := data["results"].([]interface{}); ok {
-					t.Logf("  结果数: %d", len(results))
-
-					// 统计成功和失败
-					successCount := 0
-					failedCount := 0
-					for _, result := range results {
-						if r, ok := result.(map[string]interface{}); ok {
-							if success, ok := r["success"].(bool); ok && success {
-								successCount++
-							} else {
-								failedCount++
-							}
-						}
-					}
-					t.Logf("  成功: %d, 失败: %d", successCount, failedCount)
+				if failed, ok := summary["failedCount"].(float64); ok {
+					t.Logf("  失败项: %d", int(failed))
 				}
 			}
-		} else if w.Code == 404 {
-			t.Log("⚠ 批量操作状态查询API未实现（404）")
-		} else {
-			t.Errorf("✗ 状态查询失败，状态码: %d", w.Code)
 		}
 	})
 
@@ -270,8 +253,6 @@ func TestBatchOperations(t *testing.T) {
 			// 可能不支持此操作类型
 			t.Logf("⚠ 批量定价操作可能不支持（状态码400）")
 			t.Logf("  响应: %s", w.Body.String())
-		} else if w.Code == 404 {
-			t.Log("⚠ 批量操作API未实现（404）")
 		} else {
 			t.Logf("ℹ 批量定价操作尝试，状态码: %d", w.Code)
 		}
@@ -319,8 +300,6 @@ func TestBatchOperations(t *testing.T) {
 			}
 		} else if w.Code == 400 {
 			t.Logf("⚠ 批量导出操作可能不支持（状态码400）")
-		} else if w.Code == 404 {
-			t.Log("⚠ 批量操作API未实现（404）")
 		} else {
 			t.Logf("ℹ 批量导出操作尝试，状态码: %d", w.Code)
 		}
@@ -353,13 +332,11 @@ func TestBatchOperations(t *testing.T) {
 			response := env.ParseJSONResponse(w)
 			if data, ok := response["data"].(map[string]interface{}); ok {
 				if preflight, ok := data["preflightSummary"].(map[string]interface{}); ok {
-					if failed, ok := preflight["failed"].(float64); ok {
+					if failed, ok := preflight["invalidCount"].(float64); ok {
 						t.Logf("✓ 预检识别出 %d 个无效项", int(failed))
 					}
 				}
 			}
-		} else if w.Code == 404 {
-			t.Skip("批量操作API未实现，跳过部分失败测试")
 		} else {
 			t.Logf("ℹ 部分失败测试，状态码: %d", w.Code)
 		}

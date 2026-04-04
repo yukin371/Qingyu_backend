@@ -64,6 +64,9 @@ func (m *commentRepoState) GetRepliesByCommentID(ctx context.Context, commentID 
 func (m *commentRepoState) GetCommentsByChapterID(ctx context.Context, chapterID string, page, size int) ([]*socialModel.Comment, int64, error) {
 	return nil, 0, nil
 }
+func (m *commentRepoState) ListByFilter(ctx context.Context, filter *socialModel.CommentFilter) ([]*socialModel.Comment, int64, error) {
+	return nil, 0, nil
+}
 func (m *commentRepoState) GetCommentsByBookIDSorted(ctx context.Context, bookID string, sortBy string, page, size int) ([]*socialModel.Comment, int64, error) {
 	return nil, 0, nil
 }

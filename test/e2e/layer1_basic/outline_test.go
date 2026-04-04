@@ -251,7 +251,7 @@ func TestOutlineManagement(t *testing.T) {
 			return
 		}
 
-		path := fmt.Sprintf("/api/v1/writer/project/%s/documents/tree", projectId)
+		path := fmt.Sprintf("/api/v1/projects/%s/documents/tree", projectId)
 		w := env.DoRequest("GET", path, nil, token)
 
 		if w.Code == 200 {

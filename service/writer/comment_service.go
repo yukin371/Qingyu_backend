@@ -8,6 +8,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"Qingyu_backend/models/writer"
+	"Qingyu_backend/repository"
 	writerrepo "Qingyu_backend/repository/interfaces/writer"
 )
 
@@ -113,7 +114,7 @@ func (s *CommentServiceImpl) CreateComment(ctx context.Context, comment *writer.
 
 // GetComment 获取批注详情
 func (s *CommentServiceImpl) GetComment(ctx context.Context, commentID string) (*writer.DocumentComment, error) {
-	id, err := primitive.ObjectIDFromHex(commentID)
+	id, err := repository.ParseID(commentID)
 	if err != nil {
 		return nil, fmt.Errorf("invalid comment ID: %w", err)
 	}
@@ -128,7 +129,7 @@ func (s *CommentServiceImpl) GetComment(ctx context.Context, commentID string) (
 
 // UpdateComment 更新批注
 func (s *CommentServiceImpl) UpdateComment(ctx context.Context, commentID string, comment *writer.DocumentComment) error {
-	id, err := primitive.ObjectIDFromHex(commentID)
+	id, err := repository.ParseID(commentID)
 	if err != nil {
 		return fmt.Errorf("invalid comment ID: %w", err)
 	}
@@ -150,7 +151,7 @@ func (s *CommentServiceImpl) UpdateComment(ctx context.Context, commentID string
 
 // DeleteComment 删除批注
 func (s *CommentServiceImpl) DeleteComment(ctx context.Context, commentID string) error {
-	id, err := primitive.ObjectIDFromHex(commentID)
+	id, err := repository.ParseID(commentID)
 	if err != nil {
 		return fmt.Errorf("invalid comment ID: %w", err)
 	}
@@ -172,7 +173,7 @@ func (s *CommentServiceImpl) ListComments(ctx context.Context, filter *writer.Co
 
 // GetDocumentComments 获取文档的所有批注
 func (s *CommentServiceImpl) GetDocumentComments(ctx context.Context, documentID string, includeResolved bool) ([]*writer.DocumentComment, error) {
-	id, err := primitive.ObjectIDFromHex(documentID)
+	id, err := repository.ParseID(documentID)
 	if err != nil {
 		return nil, fmt.Errorf("invalid document ID: %w", err)
 	}
@@ -182,7 +183,7 @@ func (s *CommentServiceImpl) GetDocumentComments(ctx context.Context, documentID
 
 // GetChapterComments 获取章节的所有批注
 func (s *CommentServiceImpl) GetChapterComments(ctx context.Context, chapterID string, includeResolved bool) ([]*writer.DocumentComment, error) {
-	id, err := primitive.ObjectIDFromHex(chapterID)
+	id, err := repository.ParseID(chapterID)
 	if err != nil {
 		return nil, fmt.Errorf("invalid chapter ID: %w", err)
 	}
@@ -192,12 +193,12 @@ func (s *CommentServiceImpl) GetChapterComments(ctx context.Context, chapterID s
 
 // ResolveComment 标记批注为已解决
 func (s *CommentServiceImpl) ResolveComment(ctx context.Context, commentID, userID string) error {
-	commentIDObj, err := primitive.ObjectIDFromHex(commentID)
+	commentIDObj, err := repository.ParseID(commentID)
 	if err != nil {
 		return fmt.Errorf("invalid comment ID: %w", err)
 	}
 
-	userIDObj, err := primitive.ObjectIDFromHex(userID)
+	userIDObj, err := repository.ParseID(userID)
 	if err != nil {
 		return fmt.Errorf("invalid user ID: %w", err)
 	}
@@ -216,7 +217,7 @@ func (s *CommentServiceImpl) ResolveComment(ctx context.Context, commentID, user
 
 // UnresolveComment 标记批注为未解决
 func (s *CommentServiceImpl) UnresolveComment(ctx context.Context, commentID string) error {
-	id, err := primitive.ObjectIDFromHex(commentID)
+	id, err := repository.ParseID(commentID)
 	if err != nil {
 		return fmt.Errorf("invalid comment ID: %w", err)
 	}
@@ -226,12 +227,12 @@ func (s *CommentServiceImpl) UnresolveComment(ctx context.Context, commentID str
 
 // ReplyComment 回复批注
 func (s *CommentServiceImpl) ReplyComment(ctx context.Context, parentID, content, userID, userName string) (*writer.DocumentComment, error) {
-	parentIDObj, err := primitive.ObjectIDFromHex(parentID)
+	parentIDObj, err := repository.ParseID(parentID)
 	if err != nil {
 		return nil, fmt.Errorf("invalid parent comment ID: %w", err)
 	}
 
-	userIDObj, err := primitive.ObjectIDFromHex(userID)
+	userIDObj, err := repository.ParseID(userID)
 	if err != nil {
 		return nil, fmt.Errorf("invalid user ID: %w", err)
 	}
@@ -268,7 +269,7 @@ func (s *CommentServiceImpl) ReplyComment(ctx context.Context, parentID, content
 
 // GetCommentThread 获取批注线程
 func (s *CommentServiceImpl) GetCommentThread(ctx context.Context, threadID string) (*writer.CommentThread, error) {
-	id, err := primitive.ObjectIDFromHex(threadID)
+	id, err := repository.ParseID(threadID)
 	if err != nil {
 		return nil, fmt.Errorf("invalid thread ID: %w", err)
 	}
@@ -278,7 +279,7 @@ func (s *CommentServiceImpl) GetCommentThread(ctx context.Context, threadID stri
 
 // GetCommentReplies 获取批注的回复
 func (s *CommentServiceImpl) GetCommentReplies(ctx context.Context, parentID string) ([]*writer.DocumentComment, error) {
-	id, err := primitive.ObjectIDFromHex(parentID)
+	id, err := repository.ParseID(parentID)
 	if err != nil {
 		return nil, fmt.Errorf("invalid parent comment ID: %w", err)
 	}
@@ -288,7 +289,7 @@ func (s *CommentServiceImpl) GetCommentReplies(ctx context.Context, parentID str
 
 // GetCommentStats 获取批注统计
 func (s *CommentServiceImpl) GetCommentStats(ctx context.Context, documentID string) (*writer.CommentStats, error) {
-	id, err := primitive.ObjectIDFromHex(documentID)
+	id, err := repository.ParseID(documentID)
 	if err != nil {
 		return nil, fmt.Errorf("invalid document ID: %w", err)
 	}
@@ -300,7 +301,7 @@ func (s *CommentServiceImpl) GetCommentStats(ctx context.Context, documentID str
 func (s *CommentServiceImpl) BatchDeleteComments(ctx context.Context, commentIDs []string) error {
 	ids := make([]primitive.ObjectID, 0, len(commentIDs))
 	for _, idStr := range commentIDs {
-		id, err := primitive.ObjectIDFromHex(idStr)
+		id, err := repository.ParseID(idStr)
 		if err != nil {
 			continue // 跳过无效ID
 		}
@@ -316,7 +317,7 @@ func (s *CommentServiceImpl) BatchDeleteComments(ctx context.Context, commentIDs
 
 // SearchComments 搜索批注
 func (s *CommentServiceImpl) SearchComments(ctx context.Context, keyword, documentID string, page, pageSize int) ([]*writer.DocumentComment, int64, error) {
-	id, err := primitive.ObjectIDFromHex(documentID)
+	id, err := repository.ParseID(documentID)
 	if err != nil {
 		return nil, 0, fmt.Errorf("invalid document ID: %w", err)
 	}

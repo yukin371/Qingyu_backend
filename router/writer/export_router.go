@@ -19,7 +19,7 @@ func InitExportRoutes(router *gin.RouterGroup, exportService interfaces.ExportSe
 	}
 
 	// 项目导出路由
-	projectGroup := router.Group("/projects/:projectId")
+	projectGroup := router.Group("/projects/:id")
 	{
 		projectGroup.POST("/export", api.ExportProject)
 		projectGroup.GET("/exports", api.ListExportTasks)

@@ -12,6 +12,7 @@ type ChapterComment struct {
 	Rating    int    `bson:"rating" json:"rating"`        // 评分（1-5，0表示无评分）
 
 	// 段落级评论
+	ParagraphID    *string `bson:"paragraph_id,omitempty" json:"paragraphId,omitempty"`       // 段落内容ID
 	ParagraphIndex *int    `bson:"paragraph_index,omitempty" json:"paragraphIndex,omitempty"` // 段落索引（从0开始）
 	ParagraphText  *string `bson:"paragraph_text,omitempty" json:"paragraphText,omitempty"`   // 段落文本摘要
 	CharStart      *int    `bson:"char_start,omitempty" json:"charStart,omitempty"`           // 字符起始位置
@@ -81,6 +82,7 @@ type CreateChapterCommentRequest struct {
 	Content        string  `json:"content" validate:"required,min=1,max=5000"`
 	Rating         int     `json:"rating" validate:"min=0,max=5"`
 	ParentID       *string `json:"parentId,omitempty"`
+	ParagraphID    *string `json:"paragraphId,omitempty"`
 	ParagraphIndex *int    `json:"paragraphIndex,omitempty"`
 	CharStart      *int    `json:"charStart,omitempty"`
 	CharEnd        *int    `json:"charEnd,omitempty"`
@@ -106,7 +108,19 @@ type ChapterCommentListResponse struct {
 // ParagraphCommentResponse 段落评论响应
 type ParagraphCommentResponse struct {
 	ParagraphIndex int               `json:"paragraphIndex"`
+	ParagraphID    string            `json:"paragraphId,omitempty"`
 	ParagraphText  string            `json:"paragraphText"`
 	CommentCount   int               `json:"commentCount"`
 	Comments       []*ChapterComment `json:"comments"`
+}
+
+type ParagraphCommentSummaryItem struct {
+	ParagraphID    string `json:"paragraphId"`
+	ParagraphIndex int    `json:"paragraphIndex"`
+	CommentCount   int    `json:"commentCount"`
+	LatestComment  *struct {
+		Content  string `json:"content"`
+		Username string `json:"username"`
+		Time     string `json:"time"`
+	} `json:"latestComment,omitempty"`
 }

@@ -7,12 +7,12 @@ import (
 	"fmt"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 
 	"Qingyu_backend/models/shared"
 	"Qingyu_backend/models/shared/types"
 	BookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
+	"Qingyu_backend/repository"
 )
 
 // BookStatisticsService 书籍统计服务接口
@@ -72,13 +72,15 @@ type BookStatisticsService interface {
 // BookStatisticsServiceImpl 书籍统计服务实现
 type BookStatisticsServiceImpl struct {
 	statsRepo    BookstoreRepo.BookStatisticsRepository
+	ratingRepo   BookstoreRepo.BookRatingRepository
 	cacheService CacheService
 }
 
 // NewBookStatisticsService 创建书籍统计服务实例
-func NewBookStatisticsService(statsRepo BookstoreRepo.BookStatisticsRepository, cacheService CacheService) BookStatisticsService {
+func NewBookStatisticsService(statsRepo BookstoreRepo.BookStatisticsRepository, ratingRepo BookstoreRepo.BookRatingRepository, cacheService CacheService) BookStatisticsService {
 	return &BookStatisticsServiceImpl{
 		statsRepo:    statsRepo,
+		ratingRepo:   ratingRepo,
 		cacheService: cacheService,
 	}
 }
@@ -166,7 +168,7 @@ func (s *BookStatisticsServiceImpl) GetStatisticsByBookID(ctx context.Context, b
 	// 如果不存在，创建默认统计数据
 	if stats == nil {
 		// 将 string bookID 转换为 primitive.ObjectID
-		objectID, err := primitive.ObjectIDFromHex(bookID)
+		objectID, err := repository.ParseID(bookID)
 		if err != nil {
 			return nil, fmt.Errorf("invalid book ID: %w", err)
 		}
@@ -722,15 +724,68 @@ func (s *BookStatisticsServiceImpl) RemoveRating(ctx context.Context, bookID str
 }
 
 // RecalculateRating 重新计算评分统计
+// 从评分表查询该书籍所有评分，重新计算平均分和分布
 func (s *BookStatisticsServiceImpl) RecalculateRating(ctx context.Context, bookID string) error {
 	if bookID == "" {
 		return errors.New("book ID cannot be empty")
 	}
 
-	// TODO: 这里应该从评分表重新计算平均评分和分布
-	// 简化处理，直接更新热度分数
-	if err := s.UpdateHotScore(ctx, bookID); err != nil {
-		return fmt.Errorf("failed to update hot score: %w", err)
+	// 获取当前统计数据
+	stats, err := s.statsRepo.GetByBookID(ctx, bookID)
+	if err != nil && err != mongo.ErrNoDocuments {
+		return fmt.Errorf("failed to get statistics: %w", err)
+	}
+	if stats == nil {
+		// 没有统计数据，无需重算
+		return nil
+	}
+
+	// 如果有 ratingRepo，从评分表重新计算
+	if s.ratingRepo != nil {
+		objectID, parseErr := repository.ParseID(bookID)
+		if parseErr != nil {
+			return fmt.Errorf("invalid book ID: %w", parseErr)
+		}
+
+		// 获取平均评分
+		avgRating, avgErr := s.ratingRepo.GetAverageRating(ctx, objectID)
+		if avgErr != nil {
+			return fmt.Errorf("failed to get average rating: %w", avgErr)
+		}
+
+		// 获取评分分布
+		distribution, distErr := s.ratingRepo.GetRatingDistribution(ctx, objectID)
+		if distErr != nil {
+			return fmt.Errorf("failed to get rating distribution: %w", distErr)
+		}
+
+		// 获取评分总数
+		ratingCount, countErr := s.ratingRepo.CountByBookID(ctx, objectID)
+		if countErr != nil {
+			return fmt.Errorf("failed to count ratings: %w", countErr)
+		}
+
+		// 更新统计数据
+		stats.AverageRating = types.Rating(avgRating)
+		stats.RatingCount = ratingCount
+		stats.RatingDistribution = types.RatingDistribution(distribution)
+		stats.CalculateHotScore()
+
+		// 写回数据库
+		if err := s.statsRepo.Update(ctx, stats.ID.Hex(), map[string]interface{}{
+			"average_rating":      stats.AverageRating,
+			"rating_count":        stats.RatingCount,
+			"rating_distribution": stats.RatingDistribution,
+			"hot_score":           stats.HotScore,
+			"updated_at":          time.Now(),
+		}); err != nil {
+			return fmt.Errorf("failed to update statistics: %w", err)
+		}
+	} else {
+		// 没有 ratingRepo，只重新计算热度分数
+		if err := s.UpdateHotScore(ctx, bookID); err != nil {
+			return fmt.Errorf("failed to update hot score: %w", err)
+		}
 	}
 
 	// 清除相关缓存

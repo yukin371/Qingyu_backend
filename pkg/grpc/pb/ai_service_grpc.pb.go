@@ -8,7 +8,6 @@ package pb
 
 import (
 	context "context"
-
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -28,6 +27,7 @@ const (
 	AIService_GenerateOutline_FullMethodName         = "/qingyu.ai.AIService/GenerateOutline"
 	AIService_GenerateCharacters_FullMethodName      = "/qingyu.ai.AIService/GenerateCharacters"
 	AIService_GeneratePlot_FullMethodName            = "/qingyu.ai.AIService/GeneratePlot"
+	AIService_StoryWrite_FullMethodName              = "/qingyu.ai.AIService/StoryWrite"
 	AIService_EmbedText_FullMethodName               = "/qingyu.ai.AIService/EmbedText"
 	AIService_HealthCheck_FullMethodName             = "/qingyu.ai.AIService/HealthCheck"
 )
@@ -54,6 +54,8 @@ type AIServiceClient interface {
 	GenerateCharacters(ctx context.Context, in *CharactersRequest, opts ...grpc.CallOption) (*CharactersResponse, error)
 	// Phase3: 生成情节
 	GeneratePlot(ctx context.Context, in *PlotRequest, opts ...grpc.CallOption) (*PlotResponse, error)
+	// 故事上下文写作
+	StoryWrite(ctx context.Context, in *StoryContextRequest, opts ...grpc.CallOption) (*StoryContextResponse, error)
 	// 向量化文本
 	EmbedText(ctx context.Context, in *EmbedRequest, opts ...grpc.CallOption) (*EmbedResponse, error)
 	// 健康检查
@@ -148,6 +150,16 @@ func (c *aIServiceClient) GeneratePlot(ctx context.Context, in *PlotRequest, opt
 	return out, nil
 }
 
+func (c *aIServiceClient) StoryWrite(ctx context.Context, in *StoryContextRequest, opts ...grpc.CallOption) (*StoryContextResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(StoryContextResponse)
+	err := c.cc.Invoke(ctx, AIService_StoryWrite_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *aIServiceClient) EmbedText(ctx context.Context, in *EmbedRequest, opts ...grpc.CallOption) (*EmbedResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(EmbedResponse)
@@ -190,6 +202,8 @@ type AIServiceServer interface {
 	GenerateCharacters(context.Context, *CharactersRequest) (*CharactersResponse, error)
 	// Phase3: 生成情节
 	GeneratePlot(context.Context, *PlotRequest) (*PlotResponse, error)
+	// 故事上下文写作
+	StoryWrite(context.Context, *StoryContextRequest) (*StoryContextResponse, error)
 	// 向量化文本
 	EmbedText(context.Context, *EmbedRequest) (*EmbedResponse, error)
 	// 健康检查
@@ -227,6 +241,9 @@ func (UnimplementedAIServiceServer) GenerateCharacters(context.Context, *Charact
 }
 func (UnimplementedAIServiceServer) GeneratePlot(context.Context, *PlotRequest) (*PlotResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method GeneratePlot not implemented")
+}
+func (UnimplementedAIServiceServer) StoryWrite(context.Context, *StoryContextRequest) (*StoryContextResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method StoryWrite not implemented")
 }
 func (UnimplementedAIServiceServer) EmbedText(context.Context, *EmbedRequest) (*EmbedResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method EmbedText not implemented")
@@ -399,6 +416,24 @@ func _AIService_GeneratePlot_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AIService_StoryWrite_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StoryContextRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AIServiceServer).StoryWrite(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AIService_StoryWrite_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AIServiceServer).StoryWrite(ctx, req.(*StoryContextRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _AIService_EmbedText_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(EmbedRequest)
 	if err := dec(in); err != nil {
@@ -473,6 +508,10 @@ var AIService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GeneratePlot",
 			Handler:    _AIService_GeneratePlot_Handler,
+		},
+		{
+			MethodName: "StoryWrite",
+			Handler:    _AIService_StoryWrite_Handler,
 		},
 		{
 			MethodName: "EmbedText",

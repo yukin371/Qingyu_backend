@@ -22,11 +22,14 @@ func TestBookstoreSeeder_SeedsGeneratedBooks(t *testing.T) {
 	totalBooks := scale.Books
 
 	categoryRatios := map[string]float64{
-		"仙侠": 0.30,
-		"都市": 0.25,
-		"科幻": 0.20,
-		"历史": 0.15,
-		"其他": 0.10,
+		"仙侠": 0.25,
+		"都市": 0.20,
+		"科幻": 0.15,
+		"历史": 0.10,
+		"玄幻": 0.10,
+		"武侠": 0.08,
+		"游戏": 0.07,
+		"奇幻": 0.05,
 	}
 
 	var totalCount int
@@ -78,11 +81,14 @@ func TestBookstoreSeeder_VerifyCategoryDistribution(t *testing.T) {
 	totalBooks := scale.Books
 
 	categoryRatios := map[string]float64{
-		"仙侠": 0.30,
-		"都市": 0.25,
-		"科幻": 0.20,
-		"历史": 0.15,
-		"其他": 0.10,
+		"仙侠": 0.25,
+		"都市": 0.20,
+		"科幻": 0.15,
+		"历史": 0.10,
+		"玄幻": 0.10,
+		"武侠": 0.08,
+		"游戏": 0.07,
+		"奇幻": 0.05,
 	}
 
 	t.Logf("测试规模: %s (总书籍数: %d)", cfg.Scale, totalBooks)

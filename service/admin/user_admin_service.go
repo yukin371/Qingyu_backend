@@ -6,11 +6,10 @@ import (
 	"fmt"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
-
 	"Qingyu_backend/models/admin"
 	"Qingyu_backend/models/users"
 	adminrepo "Qingyu_backend/repository/interfaces/admin"
+	"Qingyu_backend/repository"
 )
 
 var (
@@ -460,6 +459,7 @@ func (s *UserAdminServiceImpl) GetActiveUsers(ctx context.Context, days int, lim
 func isValidRole(role string) bool {
 	validRoles := map[string]bool{
 		"user":        true,
+		"reader":      true,
 		"author":      true,
 		"admin":       true,
 		"super_admin": true,
@@ -488,7 +488,7 @@ func isValidUserID(userID string) bool {
 	if userID == "" {
 		return false
 	}
-	_, err := primitive.ObjectIDFromHex(userID)
+	_, err := repository.ParseID(userID)
 	return err == nil
 }
 

@@ -536,7 +536,8 @@ func TestDocumentService_Integration_AutoSave(t *testing.T) {
 	}
 
 	// 准备测试数据
-	userID := primitive.NewObjectID().Hex()
+	userObjID := primitive.NewObjectID()
+	userID := userObjID.Hex()
 	projectID := primitive.NewObjectID().Hex()
 	documentID := primitive.NewObjectID().Hex()
 
@@ -558,7 +559,7 @@ func TestDocumentService_Integration_AutoSave(t *testing.T) {
 		projectObjID, _ := primitive.ObjectIDFromHex(projectID)
 		testProject := &writer.Project{
 			IdentifiedEntity: writerBase.IdentifiedEntity{ID: projectObjID},
-			OwnedEntity:      writerBase.OwnedEntity{AuthorID: userID},
+			OwnedEntity:      writerBase.OwnedEntity{AuthorID: userObjID},
 			TitledEntity:     shared.TitledEntity{Title: "测试项目"},
 			Timestamps:       shared.BaseEntity{CreatedAt: time.Now(), UpdatedAt: time.Now()},
 			WritingType:      "novel",
@@ -599,7 +600,7 @@ func TestDocumentService_Integration_AutoSave(t *testing.T) {
 		t.Logf("✓ 测试文档已创建，ID: %s", documentID)
 
 		// 设置用户上下文
-		ctx = context.WithValue(ctx, "userID", userID)
+		ctx = context.WithValue(ctx, "userId", userID)
 
 		// 步骤3：首次自动保存（Create操作）
 		t.Log("步骤3：首次自动保存（Create）")
@@ -720,7 +721,7 @@ func TestDocumentService_Integration_AutoSave(t *testing.T) {
 		testProjectObjID, _ := primitive.ObjectIDFromHex(testProjectID)
 		testProject := &writer.Project{
 			IdentifiedEntity: writerBase.IdentifiedEntity{ID: testProjectObjID},
-			OwnedEntity:      writerBase.OwnedEntity{AuthorID: userID},
+			OwnedEntity:      writerBase.OwnedEntity{AuthorID: userObjID},
 			TitledEntity:     shared.TitledEntity{Title: "版本冲突测试项目"},
 			Timestamps:       shared.BaseEntity{CreatedAt: time.Now(), UpdatedAt: time.Now()},
 			WritingType:      "novel",
@@ -761,7 +762,7 @@ func TestDocumentService_Integration_AutoSave(t *testing.T) {
 		t.Logf("✓ 测试文档已创建，ID: %s", testDocumentID)
 
 		// 设置用户上下文
-		ctx = context.WithValue(ctx, "userID", userID)
+		ctx = context.WithValue(ctx, "userId", userID)
 
 		// 步骤2：首次保存，创建版本1
 		t.Log("步骤2：首次保存")
@@ -862,7 +863,7 @@ func TestDocumentService_Integration_AutoSave(t *testing.T) {
 		testProjectObjID, _ := primitive.ObjectIDFromHex(testProjectID)
 		testProject := &writer.Project{
 			IdentifiedEntity: writerBase.IdentifiedEntity{ID: testProjectObjID},
-			OwnedEntity:      writerBase.OwnedEntity{AuthorID: userID},
+			OwnedEntity:      writerBase.OwnedEntity{AuthorID: userObjID},
 			TitledEntity:     shared.TitledEntity{Title: "并发测试项目"},
 			Timestamps:       shared.BaseEntity{CreatedAt: time.Now(), UpdatedAt: time.Now()},
 			WritingType:      "novel",
@@ -903,7 +904,7 @@ func TestDocumentService_Integration_AutoSave(t *testing.T) {
 		t.Logf("✓ 测试文档已创建，ID: %s", testDocumentID)
 
 		// 设置用户上下文
-		ctx = context.WithValue(ctx, "userID", userID)
+		ctx = context.WithValue(ctx, "userId", userID)
 
 		// 步骤2：首次保存创建版本1
 		t.Log("步骤2：首次保存创建版本1")
@@ -940,7 +941,7 @@ func TestDocumentService_Integration_AutoSave(t *testing.T) {
 				defer wg.Done()
 
 				// 每个goroutine都有自己的上下文（包含userID）
-				goCtx := context.WithValue(context.Background(), "userID", userID)
+				goCtx := context.WithValue(context.Background(), "userId", userID)
 
 				req := &documentService.AutoSaveRequest{
 					DocumentID:     testDocumentID,
@@ -1086,7 +1087,7 @@ func TestStatsService_Integration_RealData(t *testing.T) {
 			projectID := primitive.NewObjectID()
 			testProject := &writer.Project{
 				IdentifiedEntity: writerBase.IdentifiedEntity{ID: projectID},
-				OwnedEntity:      writerBase.OwnedEntity{AuthorID: userID},
+				OwnedEntity:      writerBase.OwnedEntity{AuthorID: userObjID},
 				TitledEntity:     shared.TitledEntity{Title: fmt.Sprintf("测试项目%d", i+1)},
 				Timestamps:       shared.BaseEntity{CreatedAt: time.Now(), UpdatedAt: time.Now()},
 				WritingType:      "novel",
@@ -1193,7 +1194,7 @@ func TestStatsService_Integration_RealData(t *testing.T) {
 			projectID := primitive.NewObjectID()
 			testProject := &writer.Project{
 				IdentifiedEntity: writerBase.IdentifiedEntity{ID: projectID},
-				OwnedEntity:      writerBase.OwnedEntity{AuthorID: userID},
+				OwnedEntity:      writerBase.OwnedEntity{AuthorID: userObjID},
 				TitledEntity:     shared.TitledEntity{Title: fmt.Sprintf("内容统计测试项目%d", i+1)},
 				Timestamps:       shared.BaseEntity{CreatedAt: time.Now(), UpdatedAt: time.Now()},
 				WritingType:      "novel",
@@ -1536,7 +1537,7 @@ func TestE2E_UserJourney(t *testing.T) {
 		testProjectObjID := primitive.NewObjectID()
 		testProject := &writer.Project{
 			IdentifiedEntity: writerBase.IdentifiedEntity{ID: testProjectObjID},
-			OwnedEntity:      writerBase.OwnedEntity{AuthorID: userID},
+			OwnedEntity:      writerBase.OwnedEntity{AuthorID: testUserObjID},
 			TitledEntity:     shared.TitledEntity{Title: "我的第一本小说"},
 			Timestamps:       shared.BaseEntity{CreatedAt: time.Now(), UpdatedAt: time.Now()},
 			WritingType:      "novel",
@@ -1588,7 +1589,7 @@ func TestE2E_UserJourney(t *testing.T) {
 
 		// ========== 步骤5: 自动保存 ==========
 		t.Log("\n【步骤5】自动保存")
-		ctx = context.WithValue(ctx, "userID", userID)
+		ctx = context.WithValue(ctx, "userId", userID)
 
 		// 第一次保存
 		firstContent := "这是我的小说开头，主人公在一个雨夜遇到了神秘人物..."
@@ -1890,13 +1891,14 @@ func TestStress_HighConcurrency(t *testing.T) {
 		t.Log("========================================")
 
 		// 准备测试数据
-		userID := primitive.NewObjectID().Hex()
+		userObjID := primitive.NewObjectID()
+		userID := userObjID.Hex()
 		projectID := primitive.NewObjectID()
 
 		// 创建测试项目
 		testProject := &writer.Project{
 			IdentifiedEntity: writerBase.IdentifiedEntity{ID: projectID},
-			OwnedEntity:      writerBase.OwnedEntity{AuthorID: userID},
+			OwnedEntity:      writerBase.OwnedEntity{AuthorID: userObjID},
 			TitledEntity:     shared.TitledEntity{Title: "压力测试项目"},
 			Timestamps:       shared.BaseEntity{CreatedAt: time.Now(), UpdatedAt: time.Now()},
 			WritingType:      "novel",
@@ -1977,7 +1979,7 @@ func TestStress_HighConcurrency(t *testing.T) {
 		)
 
 		// 设置用户上下文
-		ctx = context.WithValue(ctx, "userID", userID)
+		ctx = context.WithValue(ctx, "userId", userID)
 
 		// 记录开始时间
 		startTime := time.Now()

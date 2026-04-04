@@ -7,7 +7,6 @@ import (
 	"time"
 
 	repoInterfaces "Qingyu_backend/repository/interfaces"
-	userRepo "Qingyu_backend/repository/interfaces/user"
 	"Qingyu_backend/service/base"
 	serviceInterfaces "Qingyu_backend/service/interfaces/base"
 	userInterface "Qingyu_backend/service/interfaces/user"
@@ -35,7 +34,7 @@ import (
 	mongoNotification "Qingyu_backend/repository/mongodb/notification"
 	notificationService "Qingyu_backend/service/notification"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"Qingyu_backend/repository"
 
 	// Shared services
 	"Qingyu_backend/service/admin"
@@ -49,17 +48,22 @@ import (
 	adminModel "Qingyu_backend/models/users"
 	adminInterface "Qingyu_backend/repository/interfaces/admin"
 
+	// Search repository
+	searchRepo "Qingyu_backend/repository/search"
+
 	// Infrastructure
 	"Qingyu_backend/config"
 	"Qingyu_backend/pkg/cache"
 	pkgmetrics "Qingyu_backend/pkg/metrics"
 	pkgtransaction "Qingyu_backend/pkg/transaction"
 	"Qingyu_backend/repository/mongodb"
+	mongoAdminRepo "Qingyu_backend/repository/mongodb/admin"
 	mongoSocialRepo "Qingyu_backend/repository/mongodb/social"
 	eventservice "Qingyu_backend/service/events"
 
 	"github.com/redis/go-redis/v9"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.uber.org/zap"
@@ -108,6 +112,7 @@ type ServiceContainer struct {
 	chatService   *aiService.ChatService
 	phase3Client  *aiService.Phase3Client
 	unifiedClient *aiService.UnifiedClient
+	storyContextEngine *aiService.StoryContextEngine
 
 	// Shared services
 	authService           auth.AuthService
@@ -339,6 +344,11 @@ func (c *ServiceContainer) GetPhase3Client() (*aiService.Phase3Client, error) {
 		return nil, fmt.Errorf("Phase3Client未初始化")
 	}
 	return c.phase3Client, nil
+}
+
+// GetStoryContextEngine 获取故事上下文引擎
+func (c *ServiceContainer) GetStoryContextEngine() *aiService.StoryContextEngine {
+	return c.storyContextEngine
 }
 
 // GetUnifiedClient 获取统一AI服务gRPC客户端
@@ -748,29 +758,44 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	categoryRepo := c.repositoryFactory.CreateCategoryRepository()
 	bannerRepo := c.repositoryFactory.CreateBannerRepository()
 	rankingRepo := c.repositoryFactory.CreateRankingRepository()
+	readerCollectionRepo := c.repositoryFactory.CreateCollectionRepository()
 	chapterRepo := c.repositoryFactory.CreateBookstoreChapterRepository()      // ← 创建章节仓储
 	chapterContentRepo := c.repositoryFactory.CreateChapterContentRepository() // ← 创建章节内容仓储
 
-	c.bookstoreService = bookstoreService.NewBookstoreService(
+	// 创建书城缓存服务
+	var bookstoreCacheService bookstoreService.CacheService
+	if c.redisClient != nil {
+		rawClient := c.redisClient.GetClient()
+		if redisClient, ok := rawClient.(*redis.Client); ok {
+			bookstoreCacheService = bookstoreService.NewRedisCacheService(redisClient, "qingyu:bookstore")
+		}
+	}
+
+	// 创建基础书城服务
+	baseBookstoreService := bookstoreService.NewBookstoreService(
 		bookRepo,
 		categoryRepo,
 		bannerRepo,
+		// 注：BookstoreService 不完全实现 BaseService，不注册到 services map
 		rankingRepo,
+		readerCollectionRepo,
 	)
-	// 注意：BookstoreService 不完全实现 BaseService，不注册到 services map
 
-	// 创建章节服务（注入 ChapterContentRepository）
-	c.chapterService = bookstoreService.NewChapterService(chapterRepo, chapterContentRepo, nil) // ← 创建 ChapterService (CacheService暂时为nil)
+	// 用缓存装饰器包装书城服务，启用首页/榜单/书籍等缓存功能
+	c.bookstoreService = bookstoreService.NewCachedBookstoreService(baseBookstoreService, bookstoreCacheService)
+
+	// 创建章节服务（注入 ChapterContentRepository 和 CacheService）
+	c.chapterService = bookstoreService.NewChapterService(chapterRepo, chapterContentRepo, bookstoreCacheService)
 
 	// 创建书店详细服务
 	bookDetailRepo := c.repositoryFactory.CreateBookDetailRepository()
 	bookRatingRepo := c.repositoryFactory.CreateBookRatingRepository()
 	bookStatisticsRepo := c.repositoryFactory.CreateBookStatisticsRepository()
 
-	// 这些服务也需要 CacheService，暂时传 nil
-	c.bookDetailService = bookstoreService.NewBookDetailService(bookDetailRepo, nil)
-	c.bookRatingService = bookstoreService.NewBookRatingService(bookRatingRepo, nil)
-	c.bookStatisticsService = bookstoreService.NewBookStatisticsService(bookStatisticsRepo, nil)
+	// 这些服务使用缓存服务
+	c.bookDetailService = bookstoreService.NewBookDetailService(bookDetailRepo, bookstoreCacheService)
+	c.bookRatingService = bookstoreService.NewBookRatingService(bookRatingRepo, bookstoreCacheService)
+	c.bookStatisticsService = bookstoreService.NewBookStatisticsService(bookStatisticsRepo, bookRatingRepo, bookstoreCacheService)
 
 	// ============ 3. 创建阅读器服务 ============
 	progressRepo := c.repositoryFactory.CreateReadingProgressRepository()
@@ -922,6 +947,22 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	} else {
 		fmt.Println("警告: AI服务配置为空，跳过UnifiedClient初始化")
 	}
+
+	// ============ 5.3 故事上下文引擎 ============
+	charRepo := c.repositoryFactory.CreateCharacterRepository()
+	locRepo := c.repositoryFactory.CreateLocationRepository()
+	outlineRepo := c.repositoryFactory.CreateOutlineRepository()
+	docRepo := c.repositoryFactory.CreateDocumentRepository()
+	docContentRepo := c.repositoryFactory.CreateDocumentContentRepository()
+
+	c.storyContextEngine = aiService.NewStoryContextEngine(
+		docRepo,
+		docContentRepo,
+		charRepo,
+		locRepo,
+		outlineRepo,
+	)
+	fmt.Println("  ✓ StoryContextEngine初始化完成")
 
 	// ============ 5. 共享服务初始化 ============
 
@@ -1123,11 +1164,20 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	adminAuditRepo := &adminAuditRepositoryAdapter{repo: adminAuditRepoImpl}
 	adminLogRepo := &adminLogRepositoryAdapter{repo: adminLogRepoImpl}
 
-	// 创建 AdminService 需要的简化 UserRepository 适配器
-	adminUserRepo := &adminUserRepositoryAdapter{userRepo: c.repositoryFactory.CreateUserRepository()}
+	// 创建 AdminService 需要的 UserAdminRepository 适配器
+	userAdminRepo := mongoAdminRepo.NewMongoUserAdminRepository(c.mongoDB)
+	adminUserRepo := &adminUserRepositoryAdapter{userAdminRepo: userAdminRepo}
+	authorRevenueRepo := c.repositoryFactory.CreateAuthorRevenueRepository()
 
 	// 创建 AdminService
-	adminSvc := admin.NewAdminService(adminAuditRepo, adminLogRepo, adminUserRepo)
+	adminSvc := admin.NewAdminService(
+		adminAuditRepo,
+		adminLogRepo,
+		adminUserRepo,
+		c.walletService,
+		walletRepo,
+		authorRevenueRepo,
+	)
 	c.adminService = adminSvc
 
 	if baseAdminSvc, ok := adminSvc.(serviceInterfaces.BaseService); ok {
@@ -1225,7 +1275,7 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	}
 	c.membershipService = financeService.NewMembershipServiceWithDependencies(membershipRepo, walletRepo, mongoTxRunner)
 
-	authorRevenueRepo := c.repositoryFactory.CreateAuthorRevenueRepository()
+	authorRevenueRepo = c.repositoryFactory.CreateAuthorRevenueRepository()
 	c.authorRevenueService = financeService.NewAuthorRevenueServiceWithDependencies(authorRevenueRepo, walletRepo, mongoTxRunner)
 
 	fmt.Println("  ✓ Finance服务初始化完成")
@@ -1317,9 +1367,9 @@ func (c *ServiceContainer) GetServiceNames() []string {
 
 // ============ AdminService 适配器 ============
 
-// adminUserRepositoryAdapter 将 UserRepository 适配为 AdminService 需要的接口
+// adminUserRepositoryAdapter 将 UserAdminRepository 适配为 AdminService 需要的接口
 type adminUserRepositoryAdapter struct {
-	userRepo userRepo.UserRepository
+	userAdminRepo adminInterface.UserAdminRepository
 }
 
 // 确保实现了 admin.UserRepository 接口
@@ -1327,46 +1377,94 @@ var _ admin.UserRepository = (*adminUserRepositoryAdapter)(nil)
 
 // GetStatistics 获取用户统计信息
 func (a *adminUserRepositoryAdapter) GetStatistics(ctx context.Context, userID string) (*admin.UserStatistics, error) {
-	// 简化实现，返回基本统计信息
-	user, err := a.userRepo.GetByID(ctx, userID)
+	// 将 string ID 转换为 ObjectID
+	objectID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid user ID: %w", err)
+	}
+
+	// 从 UserAdminRepository 获取用户信息以获取注册时间
+	user, err := a.userAdminRepo.GetByID(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 
+	// 从 UserAdminRepository 获取统计数据
+	userStats, err := a.userAdminRepo.GetStatistics(ctx, objectID)
+	if err != nil {
+		return nil, err
+	}
+
+	// 转换为 admin.UserStatistics 类型
 	return &admin.UserStatistics{
-		UserID:           user.ID.Hex(),
-		TotalBooks:       0,   // 占位值：待接入 BookRepository 聚合
-		TotalChapters:    0,   // 占位值：待接入 ChapterRepository 聚合
-		TotalWords:       0,   // 占位值：待接入统计服务聚合
-		TotalReads:       0,   // 占位值：待接入 ReadingProgress 聚合
-		TotalIncome:      0.0, // 占位值：待接入 Wallet 聚合
-		RegistrationDate: user.CreatedAt,
-		LastLoginDate:    user.LastLoginAt,
+		UserID:           userStats.UserID,
+		TotalBooks:       userStats.TotalBooks,
+		TotalChapters:    userStats.TotalChapters,
+		TotalWords:       userStats.TotalWords,
+		TotalReads:       int64(userStats.TotalReaders), // 映射 TotalReaders 到 TotalReads
+		TotalIncome:      0.0,                           // 占位值，待接入 Wallet 聚合
+		RegistrationDate: user.CreatedAt,                // 从用户对象获取注册时间
+		LastLoginDate:    userStats.LastActiveAt,
 	}, nil
 }
 
 // BanUser 封禁用户
 func (a *adminUserRepositoryAdapter) BanUser(ctx context.Context, userID, reason string, until time.Time) error {
-	// 使用 UserRepository 的 Update 方法
+	// 使用 UserAdminRepository 的 Update 方法
 	updates := map[string]interface{}{
 		"status":     "banned",
 		"ban_reason": reason,
 		"ban_until":  until,
 		"updated_at": time.Now(),
 	}
-	return a.userRepo.Update(ctx, userID, updates)
+	return a.userAdminRepo.Update(ctx, userID, updates)
 }
 
 // UnbanUser 解封用户
 func (a *adminUserRepositoryAdapter) UnbanUser(ctx context.Context, userID string) error {
-	// 使用 UserRepository 的 Update 方法
+	// 使用 UserAdminRepository 的 Update 方法
 	updates := map[string]interface{}{
 		"status":     "active",
 		"ban_reason": "",
 		"ban_until":  nil,
 		"updated_at": time.Now(),
 	}
-	return a.userRepo.Update(ctx, userID, updates)
+	return a.userAdminRepo.Update(ctx, userID, updates)
+}
+
+// GetBasicProfile 获取用户基础信息
+func (a *adminUserRepositoryAdapter) GetBasicProfile(ctx context.Context, userID string) (*admin.UserBasicProfile, error) {
+	user, err := a.userAdminRepo.GetByID(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &admin.UserBasicProfile{
+		UserID:      user.ID.Hex(),
+		Username:    user.Username,
+		Email:       user.Email,
+		DisplayName: user.GetDisplayName(),
+	}, nil
+}
+
+// GetTotalCount 获取总用户数
+func (a *adminUserRepositoryAdapter) GetTotalCount(ctx context.Context) (int64, error) {
+	return a.userAdminRepo.GetTotalCount(ctx)
+}
+
+// CountActiveUsers 统计活跃用户数量
+func (a *adminUserRepositoryAdapter) CountActiveUsers(ctx context.Context, days int) (int64, error) {
+	return a.userAdminRepo.CountActiveUsers(ctx, days)
+}
+
+// CountNewUsersToday 统计今日新增用户数
+func (a *adminUserRepositoryAdapter) CountNewUsersToday(ctx context.Context) (int64, error) {
+	return a.userAdminRepo.CountNewUsersToday(ctx)
+}
+
+// CountAuthors 统计作者用户数量
+func (a *adminUserRepositoryAdapter) CountAuthors(ctx context.Context) (int64, error) {
+	return a.userAdminRepo.CountAuthors(ctx)
 }
 
 // ============ Admin Repository Adapters ============
@@ -1390,7 +1488,7 @@ func (a *adminAuditRepositoryAdapter) Create(ctx context.Context, record *admin.
 		UpdatedAt:   record.UpdatedAt,
 	}
 	if record.ID != "" {
-		if oid, err := primitive.ObjectIDFromHex(record.ID); err == nil {
+		if oid, err := repository.ParseID(record.ID); err == nil {
 			adminRecord.ID = oid
 		}
 	}
@@ -1482,7 +1580,7 @@ func (a *adminLogRepositoryAdapter) Create(ctx context.Context, log *admin.Admin
 		CreatedAt: log.CreatedAt,
 	}
 	if log.ID != "" {
-		if oid, err := primitive.ObjectIDFromHex(log.ID); err == nil {
+		if oid, err := repository.ParseID(log.ID); err == nil {
 			adminLog.ID = oid
 		}
 	}
@@ -1551,6 +1649,203 @@ func (c *ServiceContainer) GetAllServicesMetrics() map[string]*metrics.ServiceMe
 	}
 
 	return result
+}
+
+// ServiceHealthStatus 单个依赖服务的健康检查结果
+type ServiceHealthStatus struct {
+	Status    string `json:"status"`     // "healthy", "unhealthy", "not_configured"
+	LatencyMs int64  `json:"latency_ms"` // 健康检查耗时（毫秒）
+	Error     string `json:"error,omitempty"`
+}
+
+// InfrastructureHealthResult 基础设施健康检查结果
+type InfrastructureHealthResult struct {
+	Status        string                       `json:"status"` // "healthy", "degraded", "unhealthy"
+	Services      map[string]*ServiceHealthStatus `json:"services"`
+	Version       string                       `json:"version"`
+	UptimeSeconds int64                        `json:"uptime_seconds"`
+}
+
+// startTime 记录服务启动时间
+var startTime = time.Now()
+
+// GetInfrastructureHealth 检查所有基础设施依赖的健康状态
+// 包括 MongoDB、Redis、Milvus、AI gRPC 服务
+func (c *ServiceContainer) GetInfrastructureHealth(ctx context.Context) *InfrastructureHealthResult {
+	result := &InfrastructureHealthResult{
+		Services: make(map[string]*ServiceHealthStatus),
+		Version:  "1.0.0",
+		UptimeSeconds: int64(time.Since(startTime).Seconds()),
+	}
+
+	// 检查 MongoDB（关键服务）
+	result.Services["mongodb"] = c.checkMongoDB(ctx)
+
+	// 检查 Redis（非关键服务）
+	result.Services["redis"] = c.checkRedis(ctx)
+
+	// 检查 Milvus（非关键服务）
+	result.Services["milvus"] = c.checkMilvus(ctx)
+
+	// 检查 AI gRPC 服务（非关键服务）
+	result.Services["ai_service"] = c.checkAIService(ctx)
+
+	// 确定整体状态
+	result.Status = c.determineOverallStatus(result.Services)
+
+	return result
+}
+
+// checkMongoDB 检查 MongoDB 健康状态
+func (c *ServiceContainer) checkMongoDB(ctx context.Context) *ServiceHealthStatus {
+	if c.mongoClient == nil {
+		return &ServiceHealthStatus{Status: "not_configured", Error: "MongoDB client not initialized"}
+	}
+
+	start := time.Now()
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
+	err := c.mongoClient.Ping(ctx, nil)
+	latency := time.Since(start).Milliseconds()
+
+	if err != nil {
+		return &ServiceHealthStatus{
+			Status:    "unhealthy",
+			LatencyMs: latency,
+			Error:     err.Error(),
+		}
+	}
+	return &ServiceHealthStatus{Status: "healthy", LatencyMs: latency}
+}
+
+// checkRedis 检查 Redis 健康状态
+func (c *ServiceContainer) checkRedis(ctx context.Context) *ServiceHealthStatus {
+	if c.redisClient == nil {
+		return &ServiceHealthStatus{Status: "not_configured", Error: "Redis client not initialized"}
+	}
+
+	start := time.Now()
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
+	err := c.redisClient.Ping(ctx)
+	latency := time.Since(start).Milliseconds()
+
+	if err != nil {
+		return &ServiceHealthStatus{
+			Status:    "unhealthy",
+			LatencyMs: latency,
+			Error:     err.Error(),
+		}
+	}
+	return &ServiceHealthStatus{Status: "healthy", LatencyMs: latency}
+}
+
+// checkMilvus 检查 Milvus 健康状态
+func (c *ServiceContainer) checkMilvus(ctx context.Context) *ServiceHealthStatus {
+	// 检查配置是否启用
+	cfg := config.GlobalConfig
+	if cfg == nil || cfg.Milvus == nil || !cfg.Milvus.Enabled {
+		return &ServiceHealthStatus{Status: "not_configured", Error: "Milvus not enabled in config"}
+	}
+
+	// 尝试创建临时连接进行健康检查
+	repo, err := searchRepo.NewMilvusRepository(cfg.Milvus.CollectionName, cfg.Milvus.Dimension)
+	if err != nil {
+		return &ServiceHealthStatus{Status: "unhealthy", Error: "Failed to create Milvus repository: " + err.Error()}
+	}
+
+	connectCtx, connectCancel := context.WithTimeout(ctx, 5*time.Second)
+	defer connectCancel()
+
+	if err := repo.Connect(connectCtx, cfg.Milvus.Host, cfg.Milvus.Port); err != nil {
+		return &ServiceHealthStatus{Status: "unhealthy", Error: "Failed to connect to Milvus: " + err.Error()}
+	}
+	defer repo.Close()
+
+	start := time.Now()
+	healthCtx, healthCancel := context.WithTimeout(ctx, 5*time.Second)
+	defer healthCancel()
+
+	err = repo.HealthCheck(healthCtx)
+	latency := time.Since(start).Milliseconds()
+
+	if err != nil {
+		return &ServiceHealthStatus{
+			Status:    "unhealthy",
+			LatencyMs: latency,
+			Error:     err.Error(),
+		}
+	}
+	return &ServiceHealthStatus{Status: "healthy", LatencyMs: latency}
+}
+
+// checkAIService 检查 AI gRPC 服务健康状态
+func (c *ServiceContainer) checkAIService(ctx context.Context) *ServiceHealthStatus {
+	// 优先使用 UnifiedClient，其次 Phase3Client
+	if c.unifiedClient != nil {
+		start := time.Now()
+		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		defer cancel()
+
+		err := c.unifiedClient.HealthCheckSimple(ctx)
+		latency := time.Since(start).Milliseconds()
+
+		if err != nil {
+			return &ServiceHealthStatus{
+				Status:    "unhealthy",
+				LatencyMs: latency,
+				Error:     err.Error(),
+			}
+		}
+		return &ServiceHealthStatus{Status: "healthy", LatencyMs: latency}
+	}
+
+	if c.phase3Client != nil {
+		start := time.Now()
+		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		defer cancel()
+
+		_, err := c.phase3Client.HealthCheck(ctx)
+		latency := time.Since(start).Milliseconds()
+
+		if err != nil {
+			return &ServiceHealthStatus{
+				Status:    "unhealthy",
+				LatencyMs: latency,
+				Error:     err.Error(),
+			}
+		}
+		return &ServiceHealthStatus{Status: "healthy", LatencyMs: latency}
+	}
+
+	return &ServiceHealthStatus{Status: "not_configured", Error: "AI gRPC client not initialized"}
+}
+
+// determineOverallStatus 根据各服务状态确定整体状态
+// MongoDB 是关键服务：不健康 → unhealthy
+// 其他服务不健康 → degraded
+func (c *ServiceContainer) determineOverallStatus(services map[string]*ServiceHealthStatus) string {
+	allHealthy := true
+	mongoHealthy := true
+
+	for name, status := range services {
+		if status.Status == "unhealthy" {
+			allHealthy = false
+			if name == "mongodb" {
+				mongoHealthy = false
+			}
+		}
+	}
+
+	if !mongoHealthy {
+		return "unhealthy"
+	}
+	if !allHealthy {
+		return "degraded"
+	}
+	return "healthy"
 }
 
 // GetAllServicesHealth 获取所有服务的健康状态

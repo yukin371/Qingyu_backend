@@ -19,6 +19,15 @@ import (
 	serviceInterfaces "Qingyu_backend/service/interfaces"
 )
 
+func mustObjectID(t *testing.T, hex string) primitive.ObjectID {
+	t.Helper()
+
+	id, err := primitive.ObjectIDFromHex(hex)
+	assert.NoError(t, err)
+
+	return id
+}
+
 // MockOutlineService Mock大纲服务
 type MockOutlineService struct {
 	mock.Mock
@@ -138,7 +147,7 @@ func TestOutlineApi_CreateOutline_Success(t *testing.T) {
 
 	expectedOutline := &writer.OutlineNode{}
 	expectedOutline.ID = primitive.NewObjectID()
-	expectedOutline.ProjectID = projectID
+	expectedOutline.ProjectID = mustObjectID(t, projectID)
 	expectedOutline.Title = "第一卷"
 	expectedOutline.Summary = "这是第一卷的内容"
 	expectedOutline.Type = "volume"
@@ -260,14 +269,14 @@ func TestOutlineApi_ListOutlines_Success(t *testing.T) {
 			o := &writer.OutlineNode{}
 			o.ID = primitive.NewObjectID()
 			o.Title = "第一章"
-			o.ProjectID = projectID
+			o.ProjectID = mustObjectID(t, projectID)
 			return o
 		}(),
 		func() *writer.OutlineNode {
 			o := &writer.OutlineNode{}
 			o.ID = primitive.NewObjectID()
 			o.Title = "第二章"
-			o.ProjectID = projectID
+			o.ProjectID = mustObjectID(t, projectID)
 			return o
 		}(),
 	}
@@ -304,12 +313,12 @@ func TestOutlineApi_GetOutlineTree_Success(t *testing.T) {
 	volume := &writer.OutlineNode{}
 	volume.ID = primitive.NewObjectID()
 	volume.Title = "第一卷"
-	volume.ProjectID = projectID
+	volume.ProjectID = mustObjectID(t, projectID)
 
 	chapter1 := &writer.OutlineNode{}
 	chapter1.ID = primitive.NewObjectID()
 	chapter1.Title = "第一章"
-	chapter1.ProjectID = projectID
+	chapter1.ProjectID = mustObjectID(t, projectID)
 
 	expectedTree := []*serviceInterfaces.OutlineTreeNode{
 		{
@@ -355,7 +364,7 @@ func TestOutlineApi_GetOutlineChildren_Success(t *testing.T) {
 			o := &writer.OutlineNode{}
 			o.ID = primitive.NewObjectID()
 			o.Title = "第一章"
-			o.ProjectID = projectID
+			o.ProjectID = mustObjectID(t, projectID)
 			o.ParentID = parentID
 			return o
 		}(),
@@ -395,7 +404,7 @@ func TestOutlineApi_GetOutlineChildren_RootNodes(t *testing.T) {
 			o := &writer.OutlineNode{}
 			o.ID = primitive.NewObjectID()
 			o.Title = "第一卷"
-			o.ProjectID = projectID
+			o.ProjectID = mustObjectID(t, projectID)
 			o.ParentID = ""
 			return o
 		}(),
@@ -435,7 +444,7 @@ func TestOutlineApi_GetOutline_Success(t *testing.T) {
 	expectedOutline := &writer.OutlineNode{}
 	expectedOutline.ID = objID
 	expectedOutline.Title = "第一章"
-	expectedOutline.ProjectID = projectID
+	expectedOutline.ProjectID = mustObjectID(t, projectID)
 	expectedOutline.Summary = "这是第一章的内容"
 	expectedOutline.Type = "chapter"
 	expectedOutline.Tension = 5
@@ -534,7 +543,7 @@ func TestOutlineApi_UpdateOutline_Success(t *testing.T) {
 	expectedOutline := &writer.OutlineNode{}
 	expectedOutline.ID = objID
 	expectedOutline.Title = newTitle
-	expectedOutline.ProjectID = projectID
+	expectedOutline.ProjectID = mustObjectID(t, projectID)
 	expectedOutline.Summary = newSummary
 
 	mockService.On("Update", mock.Anything, outlineID, projectID, mock.Anything).Return(expectedOutline, nil)

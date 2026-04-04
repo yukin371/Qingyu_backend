@@ -5,7 +5,6 @@ import (
 
 	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/service"
-
 	"Qingyu_backend/pkg/response"
 	"errors"
 
@@ -22,39 +21,53 @@ func NewHealthAPI() *HealthAPI {
 
 // SystemHealth 系统整体健康检查
 // @Summary 系统健康检查
-// @Description 检查系统整体健康状态
+// @Description 检查系统整体健康状态，包括 MongoDB、Redis、Milvus、AI gRPC 服务
 // @Tags 系统监控
 // @Accept json
 // @Produce json
 // @Success 200 {object} response.APIResponse "健康"
-// @Failure 500 {object} response.APIResponse "不健康"
+// @Failure 503 {object} response.APIResponse "不健康"
 // @Router /api/v1/system/health [get]
 func (api *HealthAPI) SystemHealth(c *gin.Context) {
-	container := service.GetServiceContainer()
-	if container == nil {
-		c.Error(errors.New("服务容器未初始化: "))
+	svcContainer := service.GetServiceContainer()
+	if svcContainer == nil {
+		c.Error(errors.New("服务容器未初始化"))
 		return
 	}
 
-	// 获取所有服务健康状态
-	healthStatus := container.GetAllServicesHealth(c.Request.Context())
+	// 获取基础设施健康状态（含延迟检测）
+	infraHealth := svcContainer.GetInfrastructureHealth(c.Request.Context())
 
-	// 检查是否所有服务都健康
-	allHealthy := true
-	for _, healthy := range healthStatus {
-		if !healthy {
-			allHealthy = false
-			break
-		}
-	}
-
-	if allHealthy {
-		response.SuccessWithMessage(c, "系统健康", gin.H{
-			"status":   "healthy",
-			"services": healthStatus,
+	// 根据整体状态返回不同的 HTTP 状态码
+	switch infraHealth.Status {
+	case "unhealthy":
+		// 关键服务（MongoDB）不健康 → 503
+		response.JSON(c, http.StatusServiceUnavailable, gin.H{
+			"code":    http.StatusServiceUnavailable,
+			"message": "服务不健康：关键依赖不可用",
+			"data": gin.H{
+				"status":         infraHealth.Status,
+				"services":       infraHealth.Services,
+				"version":        infraHealth.Version,
+				"uptime_seconds": infraHealth.UptimeSeconds,
+			},
 		})
-	} else {
-		shared.Error(c, http.StatusServiceUnavailable, "部分服务不健康", "部分服务健康检查失败")
+	case "degraded":
+		// 非关键服务不健康但关键服务正常 → 200 + degraded
+		response.SuccessWithMessage(c, "服务降级：部分非关键依赖不可用", gin.H{
+			"status":         infraHealth.Status,
+			"services":       infraHealth.Services,
+			"version":        infraHealth.Version,
+			"uptime_seconds": infraHealth.UptimeSeconds,
+		})
+	default:
+		// 所有服务健康 → 200 + healthy
+		response.SuccessWithMessage(c, "系统健康", gin.H{
+			"status":         infraHealth.Status,
+			"services":       infraHealth.Services,
+			"version":        infraHealth.Version,
+			"uptime_seconds": infraHealth.UptimeSeconds,
+		})
 	}
 }
 

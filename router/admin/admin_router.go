@@ -7,6 +7,7 @@ import (
 	"Qingyu_backend/internal/middleware/auth"
 	adminservice "Qingyu_backend/service/admin"
 	aiService "Qingyu_backend/service/ai"
+	bookstoreService "Qingyu_backend/service/bookstore"
 	eventservice "Qingyu_backend/service/events"
 	publishService "Qingyu_backend/service/interfaces"
 	auditService "Qingyu_backend/service/interfaces/audit"
@@ -29,6 +30,7 @@ func RegisterAdminRoutes(
 	eventBus eventservice.PersistedEventBusInterface,
 	categorySvc adminservice.CategoryAdminService,
 	publicationSvc publishService.PublishService,
+	bannerSvc bookstoreService.BannerService,
 ) {
 	// 创建admin API实例
 	quotaAdminAPI := admin.NewQuotaAdminAPI(quotaSvc)
@@ -115,6 +117,8 @@ func RegisterAdminRoutes(
 				auditGroup.POST("/:id/review", auditAdminAPI.ReviewAudit)         // 审核内容
 				auditGroup.POST("/:id/appeal/review", auditAdminAPI.ReviewAppeal) // 审核申诉
 			}
+
+			adminGroup.GET("/stats/reviews", auditAdminAPI.GetAuditStatistics)
 		}
 
 		if publicationSvc != nil {
@@ -132,6 +136,10 @@ func RegisterAdminRoutes(
 		// 系统统计
 		if adminSvc != nil {
 			adminGroup.GET("/stats", systemAdminAPI.GetSystemStats)
+			adminGroup.GET("/stats/overview", systemAdminAPI.GetSystemStats)
+			adminGroup.GET("/stats/users", systemAdminAPI.GetSystemStats)
+			adminGroup.GET("/stats/content", systemAdminAPI.GetSystemStats)
+			adminGroup.GET("/stats/revenue", systemAdminAPI.GetWithdrawalStatistics)
 			adminGroup.GET("/operation-logs", systemAdminAPI.GetOperationLogs)
 		}
 
@@ -164,6 +172,8 @@ func RegisterAdminRoutes(
 
 		// 提现管理
 		if adminSvc != nil {
+			adminGroup.GET("/withdrawals", systemAdminAPI.ListWithdrawals)
+			adminGroup.GET("/withdrawals/stats", systemAdminAPI.GetWithdrawalStatistics)
 			adminGroup.POST("/withdraw/review", systemAdminAPI.ReviewWithdraw)
 		}
 
@@ -237,6 +247,23 @@ func RegisterAdminRoutes(
 				categoriesGroup.PUT("/:id/sort", categoryAdminAPI.SortCategory)
 				// TODO: 拖拽排序（后续实现）
 				// categoriesGroup.PUT("/batch-sort", categoryAdminAPI.BatchSortCategories)
+			}
+		}
+
+		// ===========================
+		// Banner管理
+		// ===========================
+		if bannerSvc != nil {
+			bannerAdminAPI := admin.NewBannerAPI(bannerSvc)
+			bannersGroup := adminGroup.Group("/banners")
+			{
+				bannersGroup.GET("", bannerAdminAPI.GetBanners)                     // 获取Banner列表
+				bannersGroup.GET("/:id", bannerAdminAPI.GetBannerByID)              // 获取Banner详情
+				bannersGroup.POST("", bannerAdminAPI.CreateBanner)                  // 创建Banner
+				bannersGroup.PUT("/:id", bannerAdminAPI.UpdateBanner)               // 更新Banner
+				bannersGroup.DELETE("/:id", bannerAdminAPI.DeleteBanner)            // 删除Banner
+				bannersGroup.PUT("/batch-status", bannerAdminAPI.BatchUpdateStatus) // 批量更新状态
+				bannersGroup.PUT("/batch-sort", bannerAdminAPI.BatchUpdateSort)     // 批量更新排序
 			}
 		}
 	}

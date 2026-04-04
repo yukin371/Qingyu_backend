@@ -111,6 +111,24 @@ func (s *stubUserAdminRepo) GetActiveUsers(ctx context.Context, days int, limit 
 	return nil, nil
 }
 
+// === Dashboard 统计方法 ===
+
+func (s *stubUserAdminRepo) GetTotalCount(ctx context.Context) (int64, error) {
+	return 0, nil
+}
+
+func (s *stubUserAdminRepo) CountActiveUsers(ctx context.Context, days int) (int64, error) {
+	return 0, nil
+}
+
+func (s *stubUserAdminRepo) CountNewUsersToday(ctx context.Context) (int64, error) {
+	return 0, nil
+}
+
+func (s *stubUserAdminRepo) CountAuthors(ctx context.Context) (int64, error) {
+	return 0, nil
+}
+
 type stubBanRecordRepo struct {
 	createFn func(ctx context.Context, record *adminModel.BanRecord) error
 }
