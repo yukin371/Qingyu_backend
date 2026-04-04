@@ -26,7 +26,7 @@ func NewDashboardApi(dashboardService *writer.DashboardService) *DashboardApi {
 // @Tags Writer-Dashboard
 // @Accept json
 // @Produce json
-// @Success 200 {object} response.APIResponse{data=writer.DashboardStats}
+// @Success 200 {object} response.APIResponse{data=map[string]interface{}}
 // @Failure 401 {object} response.APIResponse
 // @Failure 500 {object} response.APIResponse
 // @Router /api/v1/writer/dashboard/stats [get]

@@ -6074,6 +6074,117 @@
                 }
             }
         },
+        "/api/v1/ai/story/context-preview": {
+            "get": {
+                "description": "预览三层上下文组装结果，用于调试",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "AI写作"
+                ],
+                "summary": "上下文预览",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "项目ID",
+                        "name": "projectId",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "文档ID",
+                        "name": "documentId",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/ai/story/generate": {
+            "post": {
+                "description": "基于三层上下文进行 AI 故事生成",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "AI写作"
+                ],
+                "summary": "故事生成",
+                "parameters": [
+                    {
+                        "description": "故事生成请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Qingyu_backend_api_v1_ai.StoryGenerateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/ai/story/scene-state/{id}": {
+            "put": {
+                "description": "更新文档的场景目标和活跃冲突",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "AI写作"
+                ],
+                "summary": "更新场景状态",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "文档ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "场景状态请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/ai.UpdateSceneStateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/ai/writing/continue": {
             "post": {
                 "description": "基于当前文本进行智能续写",
@@ -9190,6 +9301,91 @@
                 }
             }
         },
+        "/api/v1/characters/relations/timeline-events/{eventId}": {
+            "put": {
+                "description": "更新指定关系时序事件",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "角色管理"
+                ],
+                "summary": "更新关系时序事件",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "事件ID",
+                        "name": "eventId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "项目ID",
+                        "name": "projectId",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "description": "更新请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "删除指定关系时序事件",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "角色管理"
+                ],
+                "summary": "删除关系时序事件",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "事件ID",
+                        "name": "eventId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "项目ID",
+                        "name": "projectId",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/characters/relations/{relationId}": {
             "delete": {
                 "description": "删除指定的角色关系",
@@ -9228,6 +9424,97 @@
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/characters/relations/{relationId}/timeline": {
+            "get": {
+                "description": "获取指定关系的所有时序变化事件",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "角色管理"
+                ],
+                "summary": "获取关系时序历史",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "关系ID",
+                        "name": "relationId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "项目ID",
+                        "name": "projectId",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "在指定章节创建关系时序变化事件",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "角色管理"
+                ],
+                "summary": "创建关系时序变化事件",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "关系ID",
+                        "name": "relationId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "项目ID",
+                        "name": "projectId",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "description": "时序事件请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/response.APIResponse"
                         }
@@ -9374,1776 +9661,6 @@
                     },
                     "404": {
                         "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/content/books/{bookId}/chapters": {
-            "get": {
-                "description": "获取书籍的所有章节列表",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "内容管理-章节"
-                ],
-                "summary": "获取章节列表",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "书籍ID",
-                        "name": "bookId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/content/books/{bookId}/chapters/by-number/{chapterNum}": {
-            "get": {
-                "description": "通过章节序号获取章节内容",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "内容管理-章节"
-                ],
-                "summary": "根据章节号获取章节",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "书籍ID",
-                        "name": "bookId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "description": "章节号",
-                        "name": "chapterNum",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/content/books/{bookId}/chapters/{chapterId}": {
-            "get": {
-                "description": "获取指定章节的完整内容",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "内容管理-章节"
-                ],
-                "summary": "获取章节内容",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "书籍ID",
-                        "name": "bookId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "章节ID",
-                        "name": "chapterId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/content/books/{bookId}/chapters/{chapterId}/info": {
-            "get": {
-                "description": "获取章节基本信息，不含正文内容",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "内容管理-章节"
-                ],
-                "summary": "获取章节信息",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "书籍ID",
-                        "name": "bookId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "章节ID",
-                        "name": "chapterId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/content/books/{bookId}/chapters/{chapterId}/next": {
-            "get": {
-                "description": "获取当前章节的下一章内容",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "内容管理-章节"
-                ],
-                "summary": "获取下一章",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "书籍ID",
-                        "name": "bookId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "章节ID",
-                        "name": "chapterId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/content/books/{bookId}/chapters/{chapterId}/previous": {
-            "get": {
-                "description": "获取当前章节的上一章内容",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "内容管理-章节"
-                ],
-                "summary": "获取上一章",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "书籍ID",
-                        "name": "bookId",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "章节ID",
-                        "name": "chapterId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/content/documents": {
-            "get": {
-                "description": "分页获取文档列表，支持按父节点和状态筛选",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "内容管理-文档"
-                ],
-                "summary": "获取文档列表",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "项目ID",
-                        "name": "projectId",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "父节点ID",
-                        "name": "parentId",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "状态",
-                        "name": "status",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 1,
-                        "description": "页码",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 20,
-                        "description": "每页数量",
-                        "name": "pageSize",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "创建新的文档节点（章节/场景/笔记）",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "内容管理-文档"
-                ],
-                "summary": "创建文档",
-                "parameters": [
-                    {
-                        "description": "创建文档请求",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.CreateDocumentRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/content/documents/autosave": {
-            "post": {
-                "description": "定时自动保存文档内容",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "内容管理-文档"
-                ],
-                "summary": "自动保存文档",
-                "parameters": [
-                    {
-                        "description": "自动保存请求",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.AutoSaveRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/content/documents/tree/{projectId}": {
-            "get": {
-                "description": "获取项目的完整文档树形结构",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "内容管理-文档"
-                ],
-                "summary": "获取文档树",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "项目ID",
-                        "name": "projectId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/content/documents/{id}": {
-            "get": {
-                "description": "根据文档ID获取文档详细信息（不含内容）",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "内容管理-文档"
-                ],
-                "summary": "获取文档详情",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "文档ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "description": "更新文档元数据信息",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "内容管理-文档"
-                ],
-                "summary": "更新文档",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "文档ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "更新文档请求",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.UpdateDocumentRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "软删除指定文档",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "内容管理-文档"
-                ],
-                "summary": "删除文档",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "文档ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/content/documents/{id}/content": {
-            "get": {
-                "description": "获取文档的实际文本内容",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "内容管理-文档"
-                ],
-                "summary": "获取文档内容",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "文档ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "description": "更新文档的文本内容",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "内容管理-文档"
-                ],
-                "summary": "更新文档内容",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "文档ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "更新内容请求",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.UpdateContentRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/content/documents/{id}/duplicate": {
-            "post": {
-                "description": "复制指定文档及其内容",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "内容管理-文档"
-                ],
-                "summary": "复制文档",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "文档ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "复制请求",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.DuplicateRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/content/documents/{id}/move": {
-            "put": {
-                "description": "移动文档到新的父节点",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "内容管理-文档"
-                ],
-                "summary": "移动文档",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "文档ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "移动请求",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.MoveDocumentRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/content/documents/{id}/versions": {
-            "get": {
-                "description": "获取文档的版本历史记录",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "内容管理-文档"
-                ],
-                "summary": "获取版本历史",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "文档ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "default": 1,
-                        "description": "页码",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 20,
-                        "description": "每页数量",
-                        "name": "pageSize",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/content/documents/{id}/versions/{versionId}/restore": {
-            "post": {
-                "description": "将文档内容恢复到指定版本",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "内容管理-文档"
-                ],
-                "summary": "恢复版本",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "文档ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "版本ID",
-                        "name": "versionId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/content/progress": {
-            "post": {
-                "description": "保存用户的阅读位置和进度百分比",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "内容管理-进度"
-                ],
-                "summary": "保存阅读进度",
-                "parameters": [
-                    {
-                        "description": "保存进度请求",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.SaveProgressRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/content/progress/finished": {
-            "get": {
-                "description": "返回所有已读完的书籍列表",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "内容管理-进度"
-                ],
-                "summary": "获取已读完的书籍",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/content/progress/history": {
-            "get": {
-                "description": "返回用户的阅读历史记录，支持分页",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "内容管理-进度"
-                ],
-                "summary": "获取阅读历史",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "default": 1,
-                        "description": "页码",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 20,
-                        "description": "每页数量",
-                        "name": "pageSize",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/content/progress/reading-time": {
-            "put": {
-                "description": "累加用户的阅读时长",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "内容管理-进度"
-                ],
-                "summary": "更新阅读时长",
-                "parameters": [
-                    {
-                        "description": "更新时长请求",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "type": "object",
-                            "properties": {
-                                "bookId": {
-                                    "type": "string"
-                                },
-                                "duration": {
-                                    "type": "integer"
-                                }
-                            }
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/content/progress/recent": {
-            "get": {
-                "description": "返回用户最近阅读的书籍列表",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "内容管理-进度"
-                ],
-                "summary": "获取最近阅读的书籍",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "default": 20,
-                        "description": "数量限制",
-                        "name": "limit",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/content/progress/stats": {
-            "get": {
-                "description": "返回用户的阅读统计数据",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "内容管理-进度"
-                ],
-                "summary": "获取阅读统计",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/content/progress/unfinished": {
-            "get": {
-                "description": "返回所有未读完的书籍列表",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "内容管理-进度"
-                ],
-                "summary": "获取未读完的书籍",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/content/progress/{bookId}": {
-            "get": {
-                "description": "获取用户对指定书籍的阅读进度",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "内容管理-进度"
-                ],
-                "summary": "获取阅读进度",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "书籍ID",
-                        "name": "bookId",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/content/projects": {
-            "get": {
-                "description": "分页获取项目列表，支持按状态和分类筛选",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "内容管理-项目"
-                ],
-                "summary": "获取项目列表",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "状态",
-                        "name": "status",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "分类",
-                        "name": "category",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 1,
-                        "description": "页码",
-                        "name": "page",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 20,
-                        "description": "每页数量",
-                        "name": "pageSize",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    }
-                }
-            },
-            "post": {
-                "description": "创建新的写作项目",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "内容管理-项目"
-                ],
-                "summary": "创建项目",
-                "parameters": [
-                    {
-                        "description": "创建项目请求",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.CreateProjectRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Created",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/content/projects/{id}": {
-            "get": {
-                "description": "根据项目ID获取项目详细信息",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "内容管理-项目"
-                ],
-                "summary": "获取项目详情",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "项目ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "description": "更新项目信息",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "内容管理-项目"
-                ],
-                "summary": "更新项目",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "项目ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "更新项目请求",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.UpdateProjectRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "软删除指定项目",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "内容管理-项目"
-                ],
-                "summary": "删除项目",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "项目ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/content/projects/{id}/statistics": {
-            "get": {
-                "description": "获取项目的详细统计数据",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "内容管理-项目"
-                ],
-                "summary": "获取项目统计",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "项目ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    }
-                }
-            },
-            "put": {
-                "description": "更新项目的统计数据",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "内容管理-项目"
-                ],
-                "summary": "更新项目统计",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "项目ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "统计数据",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/dto.ProjectStatistics"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/response.APIResponse"
                         }
@@ -14094,6 +12611,255 @@
                         "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/internal/documents/{id}/content": {
+            "get": {
+                "description": "根据文档ID获取文档正文内容和字数统计",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Internal-Context"
+                ],
+                "summary": "获取文档内容",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "文档ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/internal/projects/{id}/characters": {
+            "get": {
+                "description": "获取指定项目下所有角色卡片数据",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Internal-Context"
+                ],
+                "summary": "获取项目角色列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "项目ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/internal/projects/{id}/context": {
+            "get": {
+                "description": "获取项目基本信息、统计、设置等上下文数据",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Internal-Context"
+                ],
+                "summary": "获取项目上下文汇总",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "项目ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/internal/projects/{id}/outline": {
+            "get": {
+                "description": "获取指定项目的完整大纲树结构",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Internal-Context"
+                ],
+                "summary": "获取项目大纲树",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "项目ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/internal/projects/{id}/relations": {
+            "get": {
+                "description": "获取指定项目下所有角色关系数据",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Internal-Context"
+                ],
+                "summary": "获取角色关系列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "项目ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -21056,6 +19822,7 @@
         },
         "/api/v1/recommendation/homepage": {
             "get": {
+                "description": "返回推荐列表、新书上架、编辑推荐",
                 "tags": [
                     "推荐系统"
                 ],
@@ -21073,7 +19840,19 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/recommendation.HomepageResponse"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -24144,7 +22923,7 @@
         },
         "/api/v1/system/health": {
             "get": {
-                "description": "检查系统整体健康状态",
+                "description": "检查系统整体健康状态，包括 MongoDB、Redis、Milvus、AI gRPC 服务",
                 "consumes": [
                     "application/json"
                 ],
@@ -24162,7 +22941,7 @@
                             "$ref": "#/definitions/response.APIResponse"
                         }
                     },
-                    "500": {
+                    "503": {
                         "description": "不健康",
                         "schema": {
                             "$ref": "#/definitions/response.APIResponse"
@@ -25278,6 +24057,65 @@
                     },
                     "401": {
                         "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/user/users/batch": {
+            "get": {
+                "description": "根据用户ID列表批量获取用户的公开信息",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "用户管理-公开信息"
+                ],
+                "summary": "批量获取用户信息",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "用户ID列表，用逗号分隔",
+                        "name": "ids",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/dto.PublicUserProfileResponse"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/response.APIResponse"
                         }
@@ -26915,6 +25753,54 @@
                 }
             }
         },
+        "/api/v1/writer/dashboard/stats": {
+            "get": {
+                "description": "获取作者工作台的汇总统计，包括总字数、项目数、今日字数、待审核数、连续写作天数",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Writer-Dashboard"
+                ],
+                "summary": "获取作者仪表板统计数据",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "additionalProperties": true
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/writer/documents": {
             "post": {
                 "description": "在项目中创建新文档，project_id 从请求体获取",
@@ -27893,10 +26779,9 @@
                         "required": true
                     },
                     {
-                        "description": "字数统计请求",
+                        "description": "字数统计请求（可选，不传则自动获取文档内容）",
                         "name": "request",
                         "in": "body",
-                        "required": true,
                         "schema": {
                             "$ref": "#/definitions/writer.WordCountRequest"
                         }
@@ -28259,6 +27144,148 @@
                         "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/writer/projects/{id}/concepts": {
+            "get": {
+                "description": "获取项目下的所有概念",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "设定百科"
+                ],
+                "summary": "获取概念列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "项目ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/writer.Concept"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/writer/projects/{id}/concepts/search": {
+            "get": {
+                "description": "在项目下搜索概念",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "设定百科"
+                ],
+                "summary": "搜索概念",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "项目ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "搜索关键词",
+                        "name": "q",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/writer.Concept"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/writer/projects/{id}/concepts/{conceptId}": {
+            "get": {
+                "description": "获取指定概念的详细信息",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "设定百科"
+                ],
+                "summary": "获取概念详情",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "项目ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "概念ID",
+                        "name": "conceptId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/writer.Concept"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     }
                 }
@@ -29805,6 +28832,36 @@
                 }
             }
         },
+        "Qingyu_backend_api_v1_ai.StoryGenerateRequest": {
+            "type": "object",
+            "required": [
+                "documentId",
+                "mode",
+                "projectId"
+            ],
+            "properties": {
+                "documentId": {
+                    "type": "string"
+                },
+                "instruction": {
+                    "type": "string"
+                },
+                "mode": {
+                    "type": "string",
+                    "enum": [
+                        "continue",
+                        "rewrite",
+                        "suggest"
+                    ]
+                },
+                "projectId": {
+                    "type": "string"
+                },
+                "selectedText": {
+                    "type": "string"
+                }
+            }
+        },
         "Qingyu_backend_api_v1_finance.WithdrawRequest": {
             "type": "object",
             "required": [
@@ -31222,6 +30279,17 @@
                 }
             }
         },
+        "ai.UpdateSceneStateRequest": {
+            "type": "object",
+            "properties": {
+                "activeConflict": {
+                    "type": "string"
+                },
+                "sceneGoal": {
+                    "type": "string"
+                }
+            }
+        },
         "ai.WriterDraftDocument": {
             "type": "object",
             "properties": {
@@ -31334,6 +30402,182 @@
                 }
             }
         },
+        "bookstore.Book": {
+            "type": "object",
+            "required": [
+                "author",
+                "status",
+                "title"
+            ],
+            "properties": {
+                "author": {
+                    "description": "作者",
+                    "type": "string",
+                    "maxLength": 100,
+                    "minLength": 1
+                },
+                "authorId": {
+                    "description": "作者ID（字符串格式，支持UUID）",
+                    "type": "string"
+                },
+                "categories": {
+                    "description": "分类名称（冗余字段，便于展示）",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "categoryIds": {
+                    "description": "分类ID列表",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "chapterCount": {
+                    "description": "章节数",
+                    "type": "integer"
+                },
+                "collectCount": {
+                    "description": "收藏数",
+                    "type": "integer"
+                },
+                "cover": {
+                    "description": "封面URL",
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "deletedAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "introduction": {
+                    "description": "简介",
+                    "type": "string",
+                    "maxLength": 1000
+                },
+                "isFeatured": {
+                    "description": "是否精选",
+                    "type": "boolean"
+                },
+                "isFree": {
+                    "description": "是否免费",
+                    "type": "boolean"
+                },
+                "isHot": {
+                    "description": "是否热门",
+                    "type": "boolean"
+                },
+                "isRecommended": {
+                    "description": "是否推荐",
+                    "type": "boolean"
+                },
+                "lastSyncedAt": {
+                    "description": "最近同步时间",
+                    "type": "string"
+                },
+                "lastUpdateAt": {
+                    "description": "最后更新时间",
+                    "type": "string"
+                },
+                "price": {
+                    "description": "价格 (分，使用float64以兼容MongoDB默认数字类型)",
+                    "type": "number",
+                    "minimum": 0
+                },
+                "projectId": {
+                    "description": "来源项目ID（writer project）",
+                    "type": "string"
+                },
+                "publishedAt": {
+                    "description": "发布时间",
+                    "type": "string"
+                },
+                "rating": {
+                    "description": "评分 (0-5星，平均分可为0)",
+                    "type": "number",
+                    "maximum": 5,
+                    "minimum": 0
+                },
+                "ratingCount": {
+                    "description": "评分人数",
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "sourceType": {
+                    "description": "来源类型：writer_project 等",
+                    "type": "string"
+                },
+                "status": {
+                    "description": "状态",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/bookstore.BookStatus"
+                        }
+                    ]
+                },
+                "tags": {
+                    "description": "标签",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "title": {
+                    "description": "书名",
+                    "type": "string",
+                    "maxLength": 200,
+                    "minLength": 1
+                },
+                "updatedAt": {
+                    "type": "string"
+                },
+                "viewCount": {
+                    "description": "浏览量",
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "wordCount": {
+                    "description": "字数",
+                    "type": "integer",
+                    "minimum": 0
+                }
+            }
+        },
+        "bookstore.BookStatus": {
+            "type": "string",
+            "enum": [
+                "draft",
+                "ongoing",
+                "completed",
+                "paused",
+                "published"
+            ],
+            "x-enum-comments": {
+                "BookStatusCompleted": "已完结",
+                "BookStatusDraft": "草稿",
+                "BookStatusOngoing": "连载中 (已发布且正在更新)",
+                "BookStatusPaused": "暂停更新"
+            },
+            "x-enum-descriptions": [
+                "草稿",
+                "连载中 (已发布且正在更新)",
+                "已完结",
+                "暂停更新",
+                ""
+            ],
+            "x-enum-varnames": [
+                "BookStatusDraft",
+                "BookStatusOngoing",
+                "BookStatusCompleted",
+                "BookStatusPaused",
+                "legacyBookStatusPublished"
+            ]
+        },
         "bookstore.ChapterRequestDoc": {
             "type": "object",
             "properties": {
@@ -31375,34 +30619,6 @@
                 },
                 "word_count": {
                     "type": "integer"
-                }
-            }
-        },
-        "dto.AutoSaveRequest": {
-            "type": "object",
-            "required": [
-                "content",
-                "documentId"
-            ],
-            "properties": {
-                "content": {
-                    "type": "string"
-                },
-                "currentVersion": {
-                    "description": "客户端当前版本号",
-                    "type": "integer",
-                    "minimum": 0
-                },
-                "documentId": {
-                    "type": "string"
-                },
-                "saveType": {
-                    "description": "auto|manual",
-                    "type": "string",
-                    "enum": [
-                        "auto",
-                        "manual"
-                    ]
                 }
             }
         },
@@ -31495,82 +30711,6 @@
                 }
             }
         },
-        "dto.CreateDocumentRequest": {
-            "type": "object",
-            "required": [
-                "projectId",
-                "title",
-                "type"
-            ],
-            "properties": {
-                "characterIds": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "level": {
-                    "description": "0=volume, 1=chapter, 2=section/scene",
-                    "type": "integer",
-                    "maximum": 2,
-                    "minimum": 0
-                },
-                "locationIds": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "notes": {
-                    "type": "string"
-                },
-                "order": {
-                    "description": "向后兼容字段",
-                    "type": "integer",
-                    "minimum": 0
-                },
-                "orderKey": {
-                    "description": "LexoRank排序键，可选，不传则自动生成",
-                    "type": "string"
-                },
-                "parentId": {
-                    "type": "string"
-                },
-                "projectId": {
-                    "type": "string"
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "timelineIds": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "title": {
-                    "type": "string",
-                    "maxLength": 200,
-                    "minLength": 1
-                },
-                "type": {
-                    "enum": [
-                        "volume",
-                        "chapter",
-                        "section",
-                        "scene"
-                    ],
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/dto.DocumentType"
-                        }
-                    ]
-                }
-            }
-        },
         "dto.CreateProjectRequest": {
             "type": "object",
             "required": [
@@ -31620,77 +30760,6 @@
                 "password": {
                     "type": "string",
                     "minLength": 8
-                }
-            }
-        },
-        "dto.DocumentStatus": {
-            "type": "string",
-            "enum": [
-                "planned",
-                "writing",
-                "completed"
-            ],
-            "x-enum-comments": {
-                "DocumentStatusCompleted": "已完成",
-                "DocumentStatusPlanned": "计划中",
-                "DocumentStatusWriting": "写作中"
-            },
-            "x-enum-descriptions": [
-                "计划中",
-                "写作中",
-                "已完成"
-            ],
-            "x-enum-varnames": [
-                "DocumentStatusPlanned",
-                "DocumentStatusWriting",
-                "DocumentStatusCompleted"
-            ]
-        },
-        "dto.DocumentType": {
-            "type": "string",
-            "enum": [
-                "volume",
-                "chapter",
-                "section",
-                "scene"
-            ],
-            "x-enum-comments": {
-                "DocumentTypeChapter": "章",
-                "DocumentTypeScene": "场景",
-                "DocumentTypeSection": "节",
-                "DocumentTypeVolume": "卷"
-            },
-            "x-enum-descriptions": [
-                "卷",
-                "章",
-                "节",
-                "场景"
-            ],
-            "x-enum-varnames": [
-                "DocumentTypeVolume",
-                "DocumentTypeChapter",
-                "DocumentTypeSection",
-                "DocumentTypeScene"
-            ]
-        },
-        "dto.DuplicateRequest": {
-            "type": "object",
-            "required": [
-                "newTitle"
-            ],
-            "properties": {
-                "copyContent": {
-                    "description": "是否复制内容",
-                    "type": "boolean"
-                },
-                "newTitle": {
-                    "type": "string",
-                    "maxLength": 200,
-                    "minLength": 1
-                },
-                "targetProject": {
-                    "description": "目标项目ID，空则表示当前项目",
-                    "type": "string"
                 }
             }
         },
@@ -31842,52 +30911,6 @@
                 }
             }
         },
-        "dto.MoveDocumentRequest": {
-            "type": "object",
-            "required": [
-                "documentId"
-            ],
-            "properties": {
-                "documentId": {
-                    "type": "string"
-                },
-                "newParentId": {
-                    "type": "string"
-                },
-                "orderKey": {
-                    "type": "string"
-                }
-            }
-        },
-        "dto.ProjectStatistics": {
-            "type": "object",
-            "properties": {
-                "lastUpdateTime": {
-                    "type": "integer"
-                },
-                "totalChapters": {
-                    "type": "integer"
-                },
-                "totalChars": {
-                    "type": "integer"
-                },
-                "totalLocations": {
-                    "type": "integer"
-                },
-                "totalNotes": {
-                    "type": "integer"
-                },
-                "totalRoles": {
-                    "type": "integer"
-                },
-                "totalScenes": {
-                    "type": "integer"
-                },
-                "totalWords": {
-                    "type": "integer"
-                }
-            }
-        },
         "dto.PublicUserProfileResponse": {
             "type": "object",
             "properties": {
@@ -31994,30 +31017,6 @@
                 },
                 "success": {
                     "type": "boolean"
-                }
-            }
-        },
-        "dto.SaveProgressRequest": {
-            "type": "object",
-            "required": [
-                "bookId",
-                "chapterId",
-                "userId"
-            ],
-            "properties": {
-                "bookId": {
-                    "type": "string"
-                },
-                "chapterId": {
-                    "type": "string"
-                },
-                "progress": {
-                    "type": "number",
-                    "maximum": 1,
-                    "minimum": 0
-                },
-                "userId": {
-                    "type": "string"
                 }
             }
         },
@@ -32150,83 +31149,6 @@
                 }
             }
         },
-        "dto.UpdateContentRequest": {
-            "type": "object",
-            "required": [
-                "content",
-                "documentId"
-            ],
-            "properties": {
-                "content": {
-                    "type": "string"
-                },
-                "documentId": {
-                    "type": "string"
-                },
-                "version": {
-                    "description": "用于版本冲突检测",
-                    "type": "integer",
-                    "minimum": 0
-                }
-            }
-        },
-        "dto.UpdateDocumentRequest": {
-            "type": "object",
-            "properties": {
-                "characterIds": {
-                    "type": "array",
-                    "maxItems": 50,
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "locationIds": {
-                    "type": "array",
-                    "maxItems": 50,
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "notes": {
-                    "type": "string",
-                    "maxLength": 1000
-                },
-                "orderKey": {
-                    "type": "string"
-                },
-                "status": {
-                    "enum": [
-                        "planned",
-                        "writing",
-                        "completed"
-                    ],
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/dto.DocumentStatus"
-                        }
-                    ]
-                },
-                "tags": {
-                    "type": "array",
-                    "maxItems": 20,
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "timelineIds": {
-                    "type": "array",
-                    "maxItems": 50,
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "title": {
-                    "type": "string",
-                    "maxLength": 200,
-                    "minLength": 1
-                }
-            }
-        },
         "dto.UpdatePasswordRequest": {
             "type": "object",
             "required": [
@@ -32278,53 +31200,6 @@
                 },
                 "website": {
                     "type": "string"
-                }
-            }
-        },
-        "dto.UpdateProjectRequest": {
-            "type": "object",
-            "properties": {
-                "category": {
-                    "type": "string",
-                    "maxLength": 50
-                },
-                "coverUrl": {
-                    "type": "string",
-                    "maxLength": 500
-                },
-                "status": {
-                    "type": "string",
-                    "enum": [
-                        "draft",
-                        "serializing",
-                        "completed",
-                        "suspended",
-                        "archived"
-                    ]
-                },
-                "summary": {
-                    "type": "string",
-                    "maxLength": 500
-                },
-                "tags": {
-                    "type": "array",
-                    "maxItems": 10,
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "title": {
-                    "type": "string",
-                    "maxLength": 100,
-                    "minLength": 1
-                },
-                "writingType": {
-                    "type": "string",
-                    "enum": [
-                        "novel",
-                        "article",
-                        "script"
-                    ]
                 }
             }
         },
@@ -32626,15 +31501,15 @@
                 "title"
             ],
             "properties": {
-                "chapterId": {
-                    "type": "string"
-                },
                 "characters": {
                     "type": "array",
                     "maxItems": 50,
                     "items": {
                         "type": "string"
                     }
+                },
+                "documentId": {
+                    "type": "string"
                 },
                 "items": {
                     "type": "array",
@@ -32667,6 +31542,7 @@
                 "type": {
                     "type": "string",
                     "enum": [
+                        "volume",
                         "arc",
                         "chapter",
                         "scene"
@@ -32677,15 +31553,15 @@
         "interfaces.UpdateOutlineRequest": {
             "type": "object",
             "properties": {
-                "chapterId": {
-                    "type": "string"
-                },
                 "characters": {
                     "type": "array",
                     "maxItems": 50,
                     "items": {
                         "type": "string"
                     }
+                },
+                "documentId": {
+                    "type": "string"
                 },
                 "items": {
                     "type": "array",
@@ -32718,6 +31594,7 @@
                 "type": {
                     "type": "string",
                     "enum": [
+                        "volume",
                         "arc",
                         "chapter",
                         "scene"
@@ -33242,6 +32119,65 @@
                 }
             }
         },
+        "recommendation.BookRecommendationItem": {
+            "type": "object",
+            "properties": {
+                "author": {
+                    "type": "string"
+                },
+                "book_id": {
+                    "description": "书籍详情（从bookstore服务补充）",
+                    "type": "string"
+                },
+                "cover": {
+                    "type": "string"
+                },
+                "item_id": {
+                    "type": "string"
+                },
+                "item_type": {
+                    "type": "string"
+                },
+                "rank": {
+                    "type": "integer"
+                },
+                "rating": {
+                    "type": "string"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "score": {
+                    "type": "number"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "recommendation.HomepageResponse": {
+            "type": "object",
+            "properties": {
+                "editor_picks": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/bookstore.Book"
+                    }
+                },
+                "new_books": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/bookstore.Book"
+                    }
+                },
+                "recommendations": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/recommendation.BookRecommendationItem"
+                    }
+                }
+            }
+        },
         "response.APIResponse": {
             "type": "object",
             "properties": {
@@ -33669,7 +32605,7 @@
                 "content": {
                     "type": "string",
                     "maxLength": 500,
-                    "minLength": 10
+                    "minLength": 1
                 },
                 "rating": {
                     "type": "integer",
@@ -33757,7 +32693,7 @@
                 "content": {
                     "type": "string",
                     "maxLength": 500,
-                    "minLength": 10
+                    "minLength": 1
                 }
             }
         },
@@ -33819,7 +32755,7 @@
                 "content": {
                     "type": "string",
                     "maxLength": 500,
-                    "minLength": 10
+                    "minLength": 1
                 }
             }
         },
@@ -34282,6 +33218,47 @@
                 },
                 "selectedText": {
                     "description": "选中的文本",
+                    "type": "string"
+                }
+            }
+        },
+        "writer.Concept": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "description": "分类：魔法系统、地理环境、生物图鉴、历史背景",
+                    "type": "string"
+                },
+                "content": {
+                    "description": "详细设定内容 (Markdown/RichText)",
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "projectId": {
+                    "type": "string"
+                },
+                "relatedDocs": {
+                    "description": "关联",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "updatedAt": {
                     "type": "string"
                 }
             }

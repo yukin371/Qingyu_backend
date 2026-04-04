@@ -25,7 +25,7 @@ func NewEncyclopediaApi(conceptRepo writerInterface.ConceptRepository) *Encyclop
 // @Tags 设定百科
 // @Produce json
 // @Param id path string true "项目ID"
-// @Success 200 {object} response.APIResponse{data=[]*writerModels.Concept}
+// @Success 200 {object} response.APIResponse{data=[]writerModels.Concept}
 // @Router /api/v1/writer/projects/{id}/concepts [get]
 func (api *EncyclopediaApi) ListConcepts(c *gin.Context) {
 	projectID, ok := shared.GetRequiredParam(c, "id", "项目ID")
@@ -57,7 +57,7 @@ func (api *EncyclopediaApi) ListConcepts(c *gin.Context) {
 // @Produce json
 // @Param id path string true "项目ID"
 // @Param q query string false "搜索关键词"
-// @Success 200 {object} response.APIResponse{data=[]*writerModels.Concept}
+// @Success 200 {object} response.APIResponse{data=[]writerModels.Concept}
 // @Router /api/v1/writer/projects/{id}/concepts/search [get]
 func (api *EncyclopediaApi) SearchConcepts(c *gin.Context) {
 	projectID := c.Param("id")
@@ -97,7 +97,7 @@ func (api *EncyclopediaApi) SearchConcepts(c *gin.Context) {
 // @Produce json
 // @Param id path string true "项目ID"
 // @Param conceptId path string true "概念ID"
-// @Success 200 {object} response.APIResponse{data=*writerModels.Concept}
+// @Success 200 {object} response.APIResponse{data=writerModels.Concept}
 // @Router /api/v1/writer/projects/{id}/concepts/{conceptId} [get]
 func (api *EncyclopediaApi) GetConcept(c *gin.Context) {
 	conceptID := c.Param("conceptId")

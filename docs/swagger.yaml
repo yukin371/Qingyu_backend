@@ -19,6 +19,27 @@ definitions:
     required:
     - task
     type: object
+  Qingyu_backend_api_v1_ai.StoryGenerateRequest:
+    properties:
+      documentId:
+        type: string
+      instruction:
+        type: string
+      mode:
+        enum:
+        - continue
+        - rewrite
+        - suggest
+        type: string
+      projectId:
+        type: string
+      selectedText:
+        type: string
+    required:
+    - documentId
+    - mode
+    - projectId
+    type: object
   Qingyu_backend_api_v1_finance.WithdrawRequest:
     properties:
       account_name:
@@ -992,6 +1013,13 @@ definitions:
     - project_id
     - user_id
     type: object
+  ai.UpdateSceneStateRequest:
+    properties:
+      activeConflict:
+        type: string
+      sceneGoal:
+        type: string
+    type: object
   ai.WriterDraftDocument:
     properties:
       chapter_num:
@@ -1072,6 +1100,139 @@ definitions:
       message:
         type: string
     type: object
+  bookstore.Book:
+    properties:
+      author:
+        description: 作者
+        maxLength: 100
+        minLength: 1
+        type: string
+      authorId:
+        description: 作者ID（字符串格式，支持UUID）
+        type: string
+      categories:
+        description: 分类名称（冗余字段，便于展示）
+        items:
+          type: string
+        type: array
+      categoryIds:
+        description: 分类ID列表
+        items:
+          type: string
+        type: array
+      chapterCount:
+        description: 章节数
+        type: integer
+      collectCount:
+        description: 收藏数
+        type: integer
+      cover:
+        description: 封面URL
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        type: string
+      id:
+        type: string
+      introduction:
+        description: 简介
+        maxLength: 1000
+        type: string
+      isFeatured:
+        description: 是否精选
+        type: boolean
+      isFree:
+        description: 是否免费
+        type: boolean
+      isHot:
+        description: 是否热门
+        type: boolean
+      isRecommended:
+        description: 是否推荐
+        type: boolean
+      lastSyncedAt:
+        description: 最近同步时间
+        type: string
+      lastUpdateAt:
+        description: 最后更新时间
+        type: string
+      price:
+        description: 价格 (分，使用float64以兼容MongoDB默认数字类型)
+        minimum: 0
+        type: number
+      projectId:
+        description: 来源项目ID（writer project）
+        type: string
+      publishedAt:
+        description: 发布时间
+        type: string
+      rating:
+        description: 评分 (0-5星，平均分可为0)
+        maximum: 5
+        minimum: 0
+        type: number
+      ratingCount:
+        description: 评分人数
+        minimum: 0
+        type: integer
+      sourceType:
+        description: 来源类型：writer_project 等
+        type: string
+      status:
+        allOf:
+        - $ref: '#/definitions/bookstore.BookStatus'
+        description: 状态
+      tags:
+        description: 标签
+        items:
+          type: string
+        type: array
+      title:
+        description: 书名
+        maxLength: 200
+        minLength: 1
+        type: string
+      updatedAt:
+        type: string
+      viewCount:
+        description: 浏览量
+        minimum: 0
+        type: integer
+      wordCount:
+        description: 字数
+        minimum: 0
+        type: integer
+    required:
+    - author
+    - status
+    - title
+    type: object
+  bookstore.BookStatus:
+    enum:
+    - draft
+    - ongoing
+    - completed
+    - paused
+    - published
+    type: string
+    x-enum-comments:
+      BookStatusCompleted: 已完结
+      BookStatusDraft: 草稿
+      BookStatusOngoing: 连载中 (已发布且正在更新)
+      BookStatusPaused: 暂停更新
+    x-enum-descriptions:
+    - 草稿
+    - 连载中 (已发布且正在更新)
+    - 已完结
+    - 暂停更新
+    - ""
+    x-enum-varnames:
+    - BookStatusDraft
+    - BookStatusOngoing
+    - BookStatusCompleted
+    - BookStatusPaused
+    - legacyBookStatusPublished
   bookstore.ChapterRequestDoc:
     properties:
       book_id:
@@ -1100,26 +1261,6 @@ definitions:
         type: string
       word_count:
         type: integer
-    type: object
-  dto.AutoSaveRequest:
-    properties:
-      content:
-        type: string
-      currentVersion:
-        description: 客户端当前版本号
-        minimum: 0
-        type: integer
-      documentId:
-        type: string
-      saveType:
-        description: auto|manual
-        enum:
-        - auto
-        - manual
-        type: string
-    required:
-    - content
-    - documentId
     type: object
   dto.BatchDeleteRequest:
     properties:
@@ -1180,59 +1321,6 @@ definitions:
           type: string
         type: array
     type: object
-  dto.CreateDocumentRequest:
-    properties:
-      characterIds:
-        items:
-          type: string
-        type: array
-      level:
-        description: 0=volume, 1=chapter, 2=section/scene
-        maximum: 2
-        minimum: 0
-        type: integer
-      locationIds:
-        items:
-          type: string
-        type: array
-      notes:
-        type: string
-      order:
-        description: 向后兼容字段
-        minimum: 0
-        type: integer
-      orderKey:
-        description: LexoRank排序键，可选，不传则自动生成
-        type: string
-      parentId:
-        type: string
-      projectId:
-        type: string
-      tags:
-        items:
-          type: string
-        type: array
-      timelineIds:
-        items:
-          type: string
-        type: array
-      title:
-        maxLength: 200
-        minLength: 1
-        type: string
-      type:
-        allOf:
-        - $ref: '#/definitions/dto.DocumentType'
-        enum:
-        - volume
-        - chapter
-        - section
-        - scene
-    required:
-    - projectId
-    - title
-    - type
-    type: object
   dto.CreateProjectRequest:
     properties:
       category:
@@ -1269,61 +1357,6 @@ definitions:
         type: string
     required:
     - password
-    type: object
-  dto.DocumentStatus:
-    enum:
-    - planned
-    - writing
-    - completed
-    type: string
-    x-enum-comments:
-      DocumentStatusCompleted: 已完成
-      DocumentStatusPlanned: 计划中
-      DocumentStatusWriting: 写作中
-    x-enum-descriptions:
-    - 计划中
-    - 写作中
-    - 已完成
-    x-enum-varnames:
-    - DocumentStatusPlanned
-    - DocumentStatusWriting
-    - DocumentStatusCompleted
-  dto.DocumentType:
-    enum:
-    - volume
-    - chapter
-    - section
-    - scene
-    type: string
-    x-enum-comments:
-      DocumentTypeChapter: 章
-      DocumentTypeScene: 场景
-      DocumentTypeSection: 节
-      DocumentTypeVolume: 卷
-    x-enum-descriptions:
-    - 卷
-    - 章
-    - 节
-    - 场景
-    x-enum-varnames:
-    - DocumentTypeVolume
-    - DocumentTypeChapter
-    - DocumentTypeSection
-    - DocumentTypeScene
-  dto.DuplicateRequest:
-    properties:
-      copyContent:
-        description: 是否复制内容
-        type: boolean
-      newTitle:
-        maxLength: 200
-        minLength: 1
-        type: string
-      targetProject:
-        description: 目标项目ID，空则表示当前项目
-        type: string
-    required:
-    - newTitle
     type: object
   dto.GetMessagesResponse:
     properties:
@@ -1423,36 +1456,6 @@ definitions:
       type:
         type: string
     type: object
-  dto.MoveDocumentRequest:
-    properties:
-      documentId:
-        type: string
-      newParentId:
-        type: string
-      orderKey:
-        type: string
-    required:
-    - documentId
-    type: object
-  dto.ProjectStatistics:
-    properties:
-      lastUpdateTime:
-        type: integer
-      totalChapters:
-        type: integer
-      totalChars:
-        type: integer
-      totalLocations:
-        type: integer
-      totalNotes:
-        type: integer
-      totalRoles:
-        type: integer
-      totalScenes:
-        type: integer
-      totalWords:
-        type: integer
-    type: object
   dto.PublicUserProfileResponse:
     properties:
       avatar:
@@ -1526,23 +1529,6 @@ definitions:
         type: string
       success:
         type: boolean
-    type: object
-  dto.SaveProgressRequest:
-    properties:
-      bookId:
-        type: string
-      chapterId:
-        type: string
-      progress:
-        maximum: 1
-        minimum: 0
-        type: number
-      userId:
-        type: string
-    required:
-    - bookId
-    - chapterId
-    - userId
     type: object
   dto.SendCodeResponse:
     properties:
@@ -1631,59 +1617,6 @@ definitions:
     required:
     - password
     type: object
-  dto.UpdateContentRequest:
-    properties:
-      content:
-        type: string
-      documentId:
-        type: string
-      version:
-        description: 用于版本冲突检测
-        minimum: 0
-        type: integer
-    required:
-    - content
-    - documentId
-    type: object
-  dto.UpdateDocumentRequest:
-    properties:
-      characterIds:
-        items:
-          type: string
-        maxItems: 50
-        type: array
-      locationIds:
-        items:
-          type: string
-        maxItems: 50
-        type: array
-      notes:
-        maxLength: 1000
-        type: string
-      orderKey:
-        type: string
-      status:
-        allOf:
-        - $ref: '#/definitions/dto.DocumentStatus'
-        enum:
-        - planned
-        - writing
-        - completed
-      tags:
-        items:
-          type: string
-        maxItems: 20
-        type: array
-      timelineIds:
-        items:
-          type: string
-        maxItems: 50
-        type: array
-      title:
-        maxLength: 200
-        minLength: 1
-        type: string
-    type: object
   dto.UpdatePasswordRequest:
     properties:
       new_password:
@@ -1720,41 +1653,6 @@ definitions:
       phone:
         type: string
       website:
-        type: string
-    type: object
-  dto.UpdateProjectRequest:
-    properties:
-      category:
-        maxLength: 50
-        type: string
-      coverUrl:
-        maxLength: 500
-        type: string
-      status:
-        enum:
-        - draft
-        - serializing
-        - completed
-        - suspended
-        - archived
-        type: string
-      summary:
-        maxLength: 500
-        type: string
-      tags:
-        items:
-          type: string
-        maxItems: 10
-        type: array
-      title:
-        maxLength: 100
-        minLength: 1
-        type: string
-      writingType:
-        enum:
-        - novel
-        - article
-        - script
         type: string
     type: object
   dto.UploadAvatarResponse:
@@ -1958,13 +1856,13 @@ definitions:
     type: object
   interfaces.CreateOutlineRequest:
     properties:
-      chapterId:
-        type: string
       characters:
         items:
           type: string
         maxItems: 50
         type: array
+      documentId:
+        type: string
       items:
         items:
           type: string
@@ -1988,6 +1886,7 @@ definitions:
         type: string
       type:
         enum:
+        - volume
         - arc
         - chapter
         - scene
@@ -1997,13 +1896,13 @@ definitions:
     type: object
   interfaces.UpdateOutlineRequest:
     properties:
-      chapterId:
-        type: string
       characters:
         items:
           type: string
         maxItems: 50
         type: array
+      documentId:
+        type: string
       items:
         items:
           type: string
@@ -2027,6 +1926,7 @@ definitions:
         type: string
       type:
         enum:
+        - volume
         - arc
         - chapter
         - scene
@@ -2386,6 +2286,45 @@ definitions:
       textColor:
         type: string
     type: object
+  recommendation.BookRecommendationItem:
+    properties:
+      author:
+        type: string
+      book_id:
+        description: 书籍详情（从bookstore服务补充）
+        type: string
+      cover:
+        type: string
+      item_id:
+        type: string
+      item_type:
+        type: string
+      rank:
+        type: integer
+      rating:
+        type: string
+      reason:
+        type: string
+      score:
+        type: number
+      title:
+        type: string
+    type: object
+  recommendation.HomepageResponse:
+    properties:
+      editor_picks:
+        items:
+          $ref: '#/definitions/bookstore.Book'
+        type: array
+      new_books:
+        items:
+          $ref: '#/definitions/bookstore.Book'
+        type: array
+      recommendations:
+        items:
+          $ref: '#/definitions/recommendation.BookRecommendationItem'
+        type: array
+    type: object
   response.APIResponse:
     properties:
       code:
@@ -2677,7 +2616,7 @@ definitions:
         type: string
       content:
         maxLength: 500
-        minLength: 10
+        minLength: 1
         type: string
       rating:
         maximum: 5
@@ -2740,7 +2679,7 @@ definitions:
     properties:
       content:
         maxLength: 500
-        minLength: 10
+        minLength: 1
         type: string
     required:
     - content
@@ -2782,7 +2721,7 @@ definitions:
     properties:
       content:
         maxLength: 500
-        minLength: 10
+        minLength: 1
         type: string
     required:
     - content
@@ -3114,6 +3053,34 @@ definitions:
         type: integer
       selectedText:
         description: 选中的文本
+        type: string
+    type: object
+  writer.Concept:
+    properties:
+      category:
+        description: 分类：魔法系统、地理环境、生物图鉴、历史背景
+        type: string
+      content:
+        description: 详细设定内容 (Markdown/RichText)
+        type: string
+      createdAt:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      projectId:
+        type: string
+      relatedDocs:
+        description: 关联
+        items:
+          type: string
+        type: array
+      tags:
+        items:
+          type: string
+        type: array
+      updatedAt:
         type: string
     type: object
   writer.ConflictPolicy:
@@ -7444,6 +7411,79 @@ paths:
       summary: 搜索相似内容
       tags:
       - RAG检索
+  /api/v1/ai/story/context-preview:
+    get:
+      description: 预览三层上下文组装结果，用于调试
+      parameters:
+      - description: 项目ID
+        in: query
+        name: projectId
+        required: true
+        type: string
+      - description: 文档ID
+        in: query
+        name: documentId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      summary: 上下文预览
+      tags:
+      - AI写作
+  /api/v1/ai/story/generate:
+    post:
+      consumes:
+      - application/json
+      description: 基于三层上下文进行 AI 故事生成
+      parameters:
+      - description: 故事生成请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/Qingyu_backend_api_v1_ai.StoryGenerateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      summary: 故事生成
+      tags:
+      - AI写作
+  /api/v1/ai/story/scene-state/{id}:
+    put:
+      consumes:
+      - application/json
+      description: 更新文档的场景目标和活跃冲突
+      parameters:
+      - description: 文档ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 场景状态请求
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/ai.UpdateSceneStateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      summary: 更新场景状态
+      tags:
+      - AI写作
   /api/v1/ai/writing/continue:
     post:
       consumes:
@@ -9639,253 +9679,22 @@ paths:
       summary: 删除角色关系
       tags:
       - 角色管理
-  /api/v1/content/books/{bookId}/chapters:
+  /api/v1/characters/relations/{relationId}/timeline:
     get:
       consumes:
       - application/json
-      description: 获取书籍的所有章节列表
+      description: 获取指定关系的所有时序变化事件
       parameters:
-      - description: 书籍ID
+      - description: 关系ID
         in: path
-        name: bookId
+        name: relationId
         required: true
         type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-      summary: 获取章节列表
-      tags:
-      - 内容管理-章节
-  /api/v1/content/books/{bookId}/chapters/{chapterId}:
-    get:
-      consumes:
-      - application/json
-      description: 获取指定章节的完整内容
-      parameters:
-      - description: 书籍ID
-        in: path
-        name: bookId
-        required: true
-        type: string
-      - description: 章节ID
-        in: path
-        name: chapterId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-      summary: 获取章节内容
-      tags:
-      - 内容管理-章节
-  /api/v1/content/books/{bookId}/chapters/{chapterId}/info:
-    get:
-      consumes:
-      - application/json
-      description: 获取章节基本信息，不含正文内容
-      parameters:
-      - description: 书籍ID
-        in: path
-        name: bookId
-        required: true
-        type: string
-      - description: 章节ID
-        in: path
-        name: chapterId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-      summary: 获取章节信息
-      tags:
-      - 内容管理-章节
-  /api/v1/content/books/{bookId}/chapters/{chapterId}/next:
-    get:
-      consumes:
-      - application/json
-      description: 获取当前章节的下一章内容
-      parameters:
-      - description: 书籍ID
-        in: path
-        name: bookId
-        required: true
-        type: string
-      - description: 章节ID
-        in: path
-        name: chapterId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-      summary: 获取下一章
-      tags:
-      - 内容管理-章节
-  /api/v1/content/books/{bookId}/chapters/{chapterId}/previous:
-    get:
-      consumes:
-      - application/json
-      description: 获取当前章节的上一章内容
-      parameters:
-      - description: 书籍ID
-        in: path
-        name: bookId
-        required: true
-        type: string
-      - description: 章节ID
-        in: path
-        name: chapterId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-      summary: 获取上一章
-      tags:
-      - 内容管理-章节
-  /api/v1/content/books/{bookId}/chapters/by-number/{chapterNum}:
-    get:
-      consumes:
-      - application/json
-      description: 通过章节序号获取章节内容
-      parameters:
-      - description: 书籍ID
-        in: path
-        name: bookId
-        required: true
-        type: string
-      - description: 章节号
-        in: path
-        name: chapterNum
-        required: true
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-      summary: 根据章节号获取章节
-      tags:
-      - 内容管理-章节
-  /api/v1/content/documents:
-    get:
-      consumes:
-      - application/json
-      description: 分页获取文档列表，支持按父节点和状态筛选
-      parameters:
       - description: 项目ID
         in: query
         name: projectId
+        required: true
         type: string
-      - description: 父节点ID
-        in: query
-        name: parentId
-        type: string
-      - description: 状态
-        in: query
-        name: status
-        type: string
-      - default: 1
-        description: 页码
-        in: query
-        name: page
-        type: integer
-      - default: 20
-        description: 每页数量
-        in: query
-        name: pageSize
-        type: integer
       produces:
       - application/json
       responses:
@@ -9893,28 +9702,30 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/response.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-      summary: 获取文档列表
+      summary: 获取关系时序历史
       tags:
-      - 内容管理-文档
+      - 角色管理
     post:
       consumes:
       - application/json
-      description: 创建新的文档节点（章节/场景/笔记）
+      description: 在指定章节创建关系时序变化事件
       parameters:
-      - description: 创建文档请求
+      - description: 关系ID
+        in: path
+        name: relationId
+        required: true
+        type: string
+      - description: 项目ID
+        in: query
+        name: projectId
+        required: true
+        type: string
+      - description: 时序事件请求
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.CreateDocumentRequest'
+          type: object
       produces:
       - application/json
       responses:
@@ -9926,380 +9737,22 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/response.APIResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-      summary: 创建文档
+      summary: 创建关系时序变化事件
       tags:
-      - 内容管理-文档
-  /api/v1/content/documents/{id}:
+      - 角色管理
+  /api/v1/characters/relations/timeline-events/{eventId}:
     delete:
       consumes:
       - application/json
-      description: 软删除指定文档
+      description: 删除指定关系时序事件
       parameters:
-      - description: 文档ID
+      - description: 事件ID
         in: path
-        name: id
+        name: eventId
         required: true
         type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-      summary: 删除文档
-      tags:
-      - 内容管理-文档
-    get:
-      consumes:
-      - application/json
-      description: 根据文档ID获取文档详细信息（不含内容）
-      parameters:
-      - description: 文档ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-      summary: 获取文档详情
-      tags:
-      - 内容管理-文档
-    put:
-      consumes:
-      - application/json
-      description: 更新文档元数据信息
-      parameters:
-      - description: 文档ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: 更新文档请求
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/dto.UpdateDocumentRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-      summary: 更新文档
-      tags:
-      - 内容管理-文档
-  /api/v1/content/documents/{id}/content:
-    get:
-      consumes:
-      - application/json
-      description: 获取文档的实际文本内容
-      parameters:
-      - description: 文档ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-      summary: 获取文档内容
-      tags:
-      - 内容管理-文档
-    put:
-      consumes:
-      - application/json
-      description: 更新文档的文本内容
-      parameters:
-      - description: 文档ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: 更新内容请求
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/dto.UpdateContentRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-      summary: 更新文档内容
-      tags:
-      - 内容管理-文档
-  /api/v1/content/documents/{id}/duplicate:
-    post:
-      consumes:
-      - application/json
-      description: 复制指定文档及其内容
-      parameters:
-      - description: 文档ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: 复制请求
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/dto.DuplicateRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-      summary: 复制文档
-      tags:
-      - 内容管理-文档
-  /api/v1/content/documents/{id}/move:
-    put:
-      consumes:
-      - application/json
-      description: 移动文档到新的父节点
-      parameters:
-      - description: 文档ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: 移动请求
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/dto.MoveDocumentRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-      summary: 移动文档
-      tags:
-      - 内容管理-文档
-  /api/v1/content/documents/{id}/versions:
-    get:
-      consumes:
-      - application/json
-      description: 获取文档的版本历史记录
-      parameters:
-      - description: 文档ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - default: 1
-        description: 页码
-        in: query
-        name: page
-        type: integer
-      - default: 20
-        description: 每页数量
-        in: query
-        name: pageSize
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-      summary: 获取版本历史
-      tags:
-      - 内容管理-文档
-  /api/v1/content/documents/{id}/versions/{versionId}/restore:
-    post:
-      consumes:
-      - application/json
-      description: 将文档内容恢复到指定版本
-      parameters:
-      - description: 文档ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: 版本ID
-        in: path
-        name: versionId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-      summary: 恢复版本
-      tags:
-      - 内容管理-文档
-  /api/v1/content/documents/autosave:
-    post:
-      consumes:
-      - application/json
-      description: 定时自动保存文档内容
-      parameters:
-      - description: 自动保存请求
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/dto.AutoSaveRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-      summary: 自动保存文档
-      tags:
-      - 内容管理-文档
-  /api/v1/content/documents/tree/{projectId}:
-    get:
-      consumes:
-      - application/json
-      description: 获取项目的完整文档树形结构
-      parameters:
       - description: 项目ID
-        in: path
+        in: query
         name: projectId
         required: true
         type: string
@@ -10310,161 +9763,29 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/response.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-      summary: 获取文档树
+      summary: 删除关系时序事件
       tags:
-      - 内容管理-文档
-  /api/v1/content/progress:
-    post:
-      consumes:
-      - application/json
-      description: 保存用户的阅读位置和进度百分比
-      parameters:
-      - description: 保存进度请求
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/dto.SaveProgressRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-      summary: 保存阅读进度
-      tags:
-      - 内容管理-进度
-  /api/v1/content/progress/{bookId}:
-    get:
-      consumes:
-      - application/json
-      description: 获取用户对指定书籍的阅读进度
-      parameters:
-      - description: 书籍ID
-        in: path
-        name: bookId
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-      summary: 获取阅读进度
-      tags:
-      - 内容管理-进度
-  /api/v1/content/progress/finished:
-    get:
-      consumes:
-      - application/json
-      description: 返回所有已读完的书籍列表
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-      summary: 获取已读完的书籍
-      tags:
-      - 内容管理-进度
-  /api/v1/content/progress/history:
-    get:
-      consumes:
-      - application/json
-      description: 返回用户的阅读历史记录，支持分页
-      parameters:
-      - default: 1
-        description: 页码
-        in: query
-        name: page
-        type: integer
-      - default: 20
-        description: 每页数量
-        in: query
-        name: pageSize
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-      summary: 获取阅读历史
-      tags:
-      - 内容管理-进度
-  /api/v1/content/progress/reading-time:
+      - 角色管理
     put:
       consumes:
       - application/json
-      description: 累加用户的阅读时长
+      description: 更新指定关系时序事件
       parameters:
-      - description: 更新时长请求
+      - description: 事件ID
+        in: path
+        name: eventId
+        required: true
+        type: string
+      - description: 项目ID
+        in: query
+        name: projectId
+        required: true
+        type: string
+      - description: 更新请求
         in: body
         name: request
         required: true
         schema:
-          properties:
-            bookId:
-              type: string
-            duration:
-              type: integer
           type: object
       produces:
       - application/json
@@ -10473,345 +9794,9 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/response.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-      summary: 更新阅读时长
+      summary: 更新关系时序事件
       tags:
-      - 内容管理-进度
-  /api/v1/content/progress/recent:
-    get:
-      consumes:
-      - application/json
-      description: 返回用户最近阅读的书籍列表
-      parameters:
-      - default: 20
-        description: 数量限制
-        in: query
-        name: limit
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-      summary: 获取最近阅读的书籍
-      tags:
-      - 内容管理-进度
-  /api/v1/content/progress/stats:
-    get:
-      consumes:
-      - application/json
-      description: 返回用户的阅读统计数据
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-      summary: 获取阅读统计
-      tags:
-      - 内容管理-进度
-  /api/v1/content/progress/unfinished:
-    get:
-      consumes:
-      - application/json
-      description: 返回所有未读完的书籍列表
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-      summary: 获取未读完的书籍
-      tags:
-      - 内容管理-进度
-  /api/v1/content/projects:
-    get:
-      consumes:
-      - application/json
-      description: 分页获取项目列表，支持按状态和分类筛选
-      parameters:
-      - description: 状态
-        in: query
-        name: status
-        type: string
-      - description: 分类
-        in: query
-        name: category
-        type: string
-      - default: 1
-        description: 页码
-        in: query
-        name: page
-        type: integer
-      - default: 20
-        description: 每页数量
-        in: query
-        name: pageSize
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-      summary: 获取项目列表
-      tags:
-      - 内容管理-项目
-    post:
-      consumes:
-      - application/json
-      description: 创建新的写作项目
-      parameters:
-      - description: 创建项目请求
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/dto.CreateProjectRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-      summary: 创建项目
-      tags:
-      - 内容管理-项目
-  /api/v1/content/projects/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: 软删除指定项目
-      parameters:
-      - description: 项目ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-      summary: 删除项目
-      tags:
-      - 内容管理-项目
-    get:
-      consumes:
-      - application/json
-      description: 根据项目ID获取项目详细信息
-      parameters:
-      - description: 项目ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-      summary: 获取项目详情
-      tags:
-      - 内容管理-项目
-    put:
-      consumes:
-      - application/json
-      description: 更新项目信息
-      parameters:
-      - description: 项目ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: 更新项目请求
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/dto.UpdateProjectRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-      summary: 更新项目
-      tags:
-      - 内容管理-项目
-  /api/v1/content/projects/{id}/statistics:
-    get:
-      consumes:
-      - application/json
-      description: 获取项目的详细统计数据
-      parameters:
-      - description: 项目ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-      summary: 获取项目统计
-      tags:
-      - 内容管理-项目
-    put:
-      consumes:
-      - application/json
-      description: 更新项目的统计数据
-      parameters:
-      - description: 项目ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: 统计数据
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/dto.ProjectStatistics'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/response.APIResponse'
-      summary: 更新项目统计
-      tags:
-      - 内容管理-项目
+      - 角色管理
   /api/v1/documents/{documentId}/versions:
     get:
       consumes:
@@ -12715,6 +11700,172 @@ paths:
       summary: 批量获取文档
       tags:
       - Internal-AI-Documents
+  /api/v1/internal/documents/{id}/content:
+    get:
+      description: 根据文档ID获取文档正文内容和字数统计
+      parameters:
+      - description: 文档ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: 获取文档内容
+      tags:
+      - Internal-Context
+  /api/v1/internal/projects/{id}/characters:
+    get:
+      description: 获取指定项目下所有角色卡片数据
+      parameters:
+      - description: 项目ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: 获取项目角色列表
+      tags:
+      - Internal-Context
+  /api/v1/internal/projects/{id}/context:
+    get:
+      description: 获取项目基本信息、统计、设置等上下文数据
+      parameters:
+      - description: 项目ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: 获取项目上下文汇总
+      tags:
+      - Internal-Context
+  /api/v1/internal/projects/{id}/outline:
+    get:
+      description: 获取指定项目的完整大纲树结构
+      parameters:
+      - description: 项目ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: 获取项目大纲树
+      tags:
+      - Internal-Context
+  /api/v1/internal/projects/{id}/relations:
+    get:
+      description: 获取指定项目下所有角色关系数据
+      parameters:
+      - description: 项目ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: 获取角色关系列表
+      tags:
+      - Internal-Context
   /api/v1/notifications:
     get:
       consumes:
@@ -17206,6 +16357,7 @@ paths:
       - 推荐系统
   /api/v1/recommendation/homepage:
     get:
+      description: 返回推荐列表、新书上架、编辑推荐
       parameters:
       - default: 20
         description: 推荐数量
@@ -17216,7 +16368,12 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/response.APIResponse'
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/recommendation.HomepageResponse'
+              type: object
       summary: 获取首页推荐（混合推荐策略：个性化+热门）
       tags:
       - 推荐系统
@@ -19165,7 +18322,7 @@ paths:
     get:
       consumes:
       - application/json
-      description: 检查系统整体健康状态
+      description: 检查系统整体健康状态，包括 MongoDB、Redis、Milvus、AI gRPC 服务
       produces:
       - application/json
       responses:
@@ -19173,7 +18330,7 @@ paths:
           description: 健康
           schema:
             $ref: '#/definitions/response.APIResponse'
-        "500":
+        "503":
           description: 不健康
           schema:
             $ref: '#/definitions/response.APIResponse'
@@ -19998,6 +19155,42 @@ paths:
           schema:
             $ref: '#/definitions/response.APIResponse'
       summary: 获取用户详细资料
+      tags:
+      - 用户管理-公开信息
+  /api/v1/user/users/batch:
+    get:
+      consumes:
+      - application/json
+      description: 根据用户ID列表批量获取用户的公开信息
+      parameters:
+      - description: 用户ID列表，用逗号分隔
+        in: query
+        name: ids
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/dto.PublicUserProfileResponse'
+                  type: array
+              type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      summary: 批量获取用户信息
       tags:
       - 用户管理-公开信息
   /api/v1/users/{userId}/violation-summary:
@@ -20926,6 +20119,35 @@ paths:
       summary: 获取批注线程
       tags:
       - Writer-Comment
+  /api/v1/writer/dashboard/stats:
+    get:
+      consumes:
+      - application/json
+      description: 获取作者工作台的汇总统计，包括总字数、项目数、今日字数、待审核数、连续写作天数
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  additionalProperties: true
+                  type: object
+              type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/response.APIResponse'
+      summary: 获取作者仪表板统计数据
+      tags:
+      - Writer-Dashboard
   /api/v1/writer/documents:
     post:
       consumes:
@@ -21571,10 +20793,9 @@ paths:
         name: id
         required: true
         type: string
-      - description: 字数统计请求
+      - description: 字数统计请求（可选，不传则自动获取文档内容）
         in: body
         name: request
-        required: true
         schema:
           $ref: '#/definitions/writer.WordCountRequest'
       produces:
@@ -21788,6 +21009,91 @@ paths:
       summary: 更新大纲
       tags:
       - 大纲管理
+  /api/v1/writer/projects/{id}/concepts:
+    get:
+      description: 获取项目下的所有概念
+      parameters:
+      - description: 项目ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/writer.Concept'
+                  type: array
+              type: object
+      summary: 获取概念列表
+      tags:
+      - 设定百科
+  /api/v1/writer/projects/{id}/concepts/{conceptId}:
+    get:
+      description: 获取指定概念的详细信息
+      parameters:
+      - description: 项目ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 概念ID
+        in: path
+        name: conceptId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  $ref: '#/definitions/writer.Concept'
+              type: object
+      summary: 获取概念详情
+      tags:
+      - 设定百科
+  /api/v1/writer/projects/{id}/concepts/search:
+    get:
+      description: 在项目下搜索概念
+      parameters:
+      - description: 项目ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: 搜索关键词
+        in: query
+        name: q
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/response.APIResponse'
+            - properties:
+                data:
+                  items:
+                    $ref: '#/definitions/writer.Concept'
+                  type: array
+              type: object
+      summary: 搜索概念
+      tags:
+      - 设定百科
   /api/v1/writer/projects/{id}/documents/batch-publish:
     post:
       consumes:

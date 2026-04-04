@@ -13,7 +13,6 @@ import (
 
 	"Qingyu_backend/models/reader"
 	"Qingyu_backend/repository/interfaces/infrastructure"
-	ReaderRepo "Qingyu_backend/repository/interfaces/reader"
 	bookstoreService "Qingyu_backend/service/bookstore"
 )
 
