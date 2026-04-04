@@ -38,8 +38,9 @@ import (
 	baseService "Qingyu_backend/service/base"
 	adminservice "Qingyu_backend/service/admin"
 	bookstore "Qingyu_backend/service/bookstore"
-	"Qingyu_backend/service/container"
 	serviceInterfaces "Qingyu_backend/service/interfaces"
+	eventservice "Qingyu_backend/service/events"
+	"Qingyu_backend/service/container"
 	internalAPIService "Qingyu_backend/service/internalapi"
 	recommendationService "Qingyu_backend/service/recommendation"
 	searchService "Qingyu_backend/service/search"
@@ -185,7 +186,18 @@ func RegisterRoutes(r *gin.Engine) {
 
 	// ============ 初始化搜索服务（需要在书店路由之前）============
 	// 创建 MongoEngine、BookProvider，并注册到 SearchService
-	searchSvc := initSearchService(serviceContainer, logger)
+	searchSvc, searchEngine := initSearchService(serviceContainer, logger)
+
+	// 注册搜索索引处理器：订阅 project.published 事件，发布后自动索引
+	if searchEngine != nil {
+		searchIndexHandler := eventservice.NewSearchIndexHandler(searchEngine)
+		eventBus := serviceContainer.GetEventBus()
+		if err := eventBus.Subscribe("project.published", searchIndexHandler); err != nil {
+			logger.Warn("注册 SearchIndexHandler 失败", zap.Error(err))
+		} else {
+			logger.Info("✓ SearchIndexHandler 已注册：订阅 project.published 事件")
+		}
+	}
 
 	// ============ 注册书店路由 ============
 	bookstoreSvc, err := serviceContainer.GetBookstoreService()
@@ -882,21 +894,21 @@ func RegisterRoutes(r *gin.Engine) {
 // initSearchService 初始化搜索服务
 // 创建 MongoEngine、BookProvider，并注册到 SearchService
 // 如果启用 Elasticsearch，则同时创建 ES 引擎并配置灰度
-func initSearchService(container *container.ServiceContainer, logger *zap.Logger) *searchService.SearchService {
+func initSearchService(container *container.ServiceContainer, logger *zap.Logger) (*searchService.SearchService, searchengine.Engine) {
 	// 获取 MongoDB 客户端和数据库
 	mongoClient := container.GetMongoClient()
 	mongoDB := container.GetMongoDB()
 
 	if mongoClient == nil || mongoDB == nil {
 		logger.Warn("MongoDB client 或 database 未初始化，无法创建搜索服务")
-		return nil
+		return nil, nil
 	}
 
 	// 创建 MongoEngine
 	mongoEngine, err := searchengine.NewMongoEngine(mongoClient, mongoDB)
 	if err != nil {
 		logger.Error("创建 MongoEngine 失败", zap.Error(err))
-		return nil
+		return nil, nil
 	}
 	logger.Info("✓ MongoEngine 创建成功")
 
@@ -910,7 +922,7 @@ func initSearchService(container *container.ServiceContainer, logger *zap.Logger
 	bookProvider, err := searchprovider.NewBookProvider(mongoEngine, bookProviderConfig)
 	if err != nil {
 		logger.Error("创建 BookProvider 失败", zap.Error(err))
-		return nil
+		return nil, nil
 	}
 	logger.Info("✓ BookProvider 创建成功",
 		zap.Strings("allowed_statuses", bookProviderConfig.AllowedStatuses),
@@ -921,7 +933,7 @@ func initSearchService(container *container.ServiceContainer, logger *zap.Logger
 	userProvider, err := searchprovider.NewUserProvider(mongoEngine, userProviderConfig)
 	if err != nil {
 		logger.Error("创建 UserProvider 失败", zap.Error(err))
-		return nil
+		return nil, nil
 	}
 	logger.Info("✓ UserProvider 创建成功")
 
@@ -930,7 +942,7 @@ func initSearchService(container *container.ServiceContainer, logger *zap.Logger
 	projectProvider, err := searchprovider.NewProjectProvider(mongoEngine, projectProviderConfig)
 	if err != nil {
 		logger.Error("创建 ProjectProvider 失败", zap.Error(err))
-		return nil
+		return nil, nil
 	}
 	logger.Info("✓ ProjectProvider 创建成功")
 
@@ -939,7 +951,7 @@ func initSearchService(container *container.ServiceContainer, logger *zap.Logger
 	documentProvider, err := searchprovider.NewDocumentProvider(mongoEngine, documentProviderConfig)
 	if err != nil {
 		logger.Error("创建 DocumentProvider 失败", zap.Error(err))
-		return nil
+		return nil, nil
 	}
 	logger.Info("✓ DocumentProvider 创建成功")
 
@@ -1011,7 +1023,7 @@ func initSearchService(container *container.ServiceContainer, logger *zap.Logger
 		logger.Info("⚠ Elasticsearch 未配置或初始化失败，使用 MongoDB 搜索")
 	}
 
-	return searchSvc
+	return searchSvc, mongoEngine
 }
 
 // initElasticsearch 初始化 Elasticsearch 客户端和引擎
