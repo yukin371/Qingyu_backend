@@ -402,3 +402,10 @@ func (c *CachedBookstoreService) SearchByAuthor(ctx context.Context, author stri
 func (c *CachedBookstoreService) GetSimilarBooks(ctx context.Context, bookID string, limit int) ([]*bookstore2.Book, error) {
 	return c.service.GetSimilarBooks(ctx, bookID, limit)
 }
+
+// SetSearchService 委托到内部服务
+func (c *CachedBookstoreService) SetSearchService(searchService interface{}) {
+	if setter, ok := c.service.(interface{ SetSearchService(interface{}) }); ok {
+		setter.SetSearchService(searchService)
+	}
+}

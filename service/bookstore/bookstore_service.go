@@ -7,6 +7,7 @@ import (
 	BookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
 	ReaderRepo "Qingyu_backend/repository/interfaces/reader"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"sort"
@@ -65,6 +66,9 @@ type BookstoreService interface {
 	SearchByTitle(ctx context.Context, title string, page, size int) ([]*bookstore2.Book, int64, error)
 	SearchByAuthor(ctx context.Context, author string, page, size int) ([]*bookstore2.Book, int64, error)
 	GetSimilarBooks(ctx context.Context, bookID string, limit int) ([]*bookstore2.Book, error)
+
+	// 搜索服务注入
+	SetSearchService(searchService interface{})
 }
 
 // BookstoreServiceImpl 书城服务实现
@@ -1116,9 +1120,12 @@ func SearchSimilarBooks(
 // SearchByTitle 按标题搜索书籍
 // 优先使用SearchService (Milvus向量搜索)，失败或空结果时fallback到MongoDB
 func (s *BookstoreServiceImpl) SearchByTitle(ctx context.Context, title string, page, size int) ([]*bookstore2.Book, int64, error) {
-	// 优先使用新路径 (SearchService - Milvus向量搜索)
-	// TODO(SR1/SR2): SearchService集成 - Batch 3后续工作，Milvus向量搜索完成后再集成
-	_ = s.searchService // 暂时避免未使用警告
+	// 优先使用SearchService
+	if s.searchService != nil {
+		if books, total, err := s.searchViaService(ctx, title, page, size); err == nil && len(books) > 0 {
+			return books, total, nil
+		}
+	}
 
 	// Fallback 到旧路径 (MongoDB查询)
 	filter := &bookstore2.BookFilter{
@@ -1145,9 +1152,12 @@ func (s *BookstoreServiceImpl) SearchByTitle(ctx context.Context, title string, 
 // SearchByAuthor 按作者搜索书籍
 // 优先使用SearchService (Milvus向量搜索)，失败或空结果时fallback到MongoDB
 func (s *BookstoreServiceImpl) SearchByAuthor(ctx context.Context, author string, page, size int) ([]*bookstore2.Book, int64, error) {
-	// 优先使用新路径 (SearchService - Milvus向量搜索)
-	// TODO(SR1/SR2): SearchService集成 - Batch 3后续工作，Milvus向量搜索完成后再集成
-	_ = s.searchService // 暂时避免未使用警告
+	// 优先使用SearchService
+	if s.searchService != nil {
+		if books, total, err := s.searchViaService(ctx, author, page, size); err == nil && len(books) > 0 {
+			return books, total, nil
+		}
+	}
 
 	// Fallback 到旧路径 (MongoDB查询)
 	filter := &bookstore2.BookFilter{
@@ -1169,6 +1179,78 @@ func (s *BookstoreServiceImpl) SearchByAuthor(ctx context.Context, author string
 	}
 
 	return books, total, nil
+}
+
+// searchViaService 通过 SearchService 搜索书籍
+func (s *BookstoreServiceImpl) searchViaService(ctx context.Context, query string, page, size int) ([]*bookstore2.Book, int64, error) {
+	// 类型断言获取 SearchService
+	ss, ok := s.searchService.(interface {
+		Search(ctx context.Context, req interface{}) (interface{}, error)
+	})
+	if !ok {
+		return nil, 0, fmt.Errorf("searchService does not implement Search method")
+	}
+
+	// 构建搜索请求
+	req := map[string]interface{}{
+		"type":      "books",
+		"query":     query,
+		"page":      page,
+		"page_size": size,
+	}
+
+	resp, err := ss.Search(ctx, req)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// 通过 JSON 转换响应
+	jsonBytes, err := json.Marshal(resp)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	type searchData struct {
+		Total   int64 `json:"total"`
+		Results []struct {
+			ID    string                 `json:"id"`
+			Score float64                `json:"score"`
+			Data  map[string]interface{} `json:"data"`
+		} `json:"results"`
+	}
+	type searchResponse struct {
+		Success bool         `json:"success"`
+		Data    *searchData `json:"data"`
+	}
+
+	var sr searchResponse
+	if err := json.Unmarshal(jsonBytes, &sr); err != nil {
+		return nil, 0, err
+	}
+
+	if !sr.Success || sr.Data == nil {
+		return nil, 0, fmt.Errorf("search service returned unsuccessful response")
+	}
+
+	books := make([]*bookstore2.Book, 0, len(sr.Data.Results))
+	for _, item := range sr.Data.Results {
+		if item.Data == nil {
+			continue
+		}
+		jsonData, err := json.Marshal(item.Data)
+		if err != nil {
+			continue
+		}
+		var book bookstore2.Book
+		if err := json.Unmarshal(jsonData, &book); err != nil {
+			continue
+		}
+		if !book.ID.IsZero() {
+			books = append(books, &book)
+		}
+	}
+
+	return books, sr.Data.Total, nil
 }
 
 // GetSimilarBooks 获取相似书籍推荐

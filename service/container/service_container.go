@@ -48,6 +48,9 @@ import (
 	adminModel "Qingyu_backend/models/users"
 	adminInterface "Qingyu_backend/repository/interfaces/admin"
 
+	// Search repository
+	searchRepo "Qingyu_backend/repository/search"
+
 	// Infrastructure
 	"Qingyu_backend/config"
 	"Qingyu_backend/pkg/cache"

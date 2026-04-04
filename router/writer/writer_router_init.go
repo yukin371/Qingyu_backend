@@ -192,9 +192,13 @@ func RegisterWriterRoutes(r *gin.RouterGroup, searchSvc *searchservice.SearchSer
 	// 获取阅读统计服务（用于writer统计路由）
 	statsSvc, _ := serviceContainer.GetReadingStatsService()
 	bookRepo := repositoryFactory.CreateBookRepository()
+	var dashboardSvc *writerservice.DashboardService
+	if projectRepo != nil && publishSvc != nil {
+		dashboardSvc = writerservice.NewDashboardService(projectRepo, publishSvc)
+	}
 
 	// 调用InitWriterRouter初始化文档编辑相关路由
-	InitWriterRouter(r, projectSvc, documentSvc, versionSvc, searchSvc, exportSvc, publishSvc, lockSvc, commentSvc, templateSvc, statsSvc, bookRepo, characterSvc, locationSvc)
+	InitWriterRouter(r, projectSvc, documentSvc, versionSvc, searchSvc, exportSvc, publishSvc, lockSvc, commentSvc, templateSvc, statsSvc, bookRepo, characterSvc, locationSvc, dashboardSvc)
 
 	// 调用InitWriterRoutes初始化设定百科路由（角色、地点、时间线、大纲）
 	zap.L().Info("RegisterWriterRoutes: 调用InitWriterRoutes注册设定百科路由",

@@ -31,6 +31,7 @@ func InitWriterRouter(
 	bookRepo bookstoreRepo.BookRepository,
 	characterService interfaces.CharacterService,
 	locationService interfaces.LocationService,
+		dashboardService *writerservice.DashboardService,
 ) {
 	// 创建API实例
 	projectApi := writer.NewProjectApi(projectService)
@@ -41,12 +42,8 @@ func InitWriterRouter(
 	// 仪表板统计API
 	var dashboardApi *writer.DashboardApi
 	dashboardApi = nil
-	if projectService != nil && publishService != nil {
-		dashboardSvc := writerservice.NewDashboardService(
-			writerservice.NewDashboardProjectRepoAdapter(projectService),
-			publishService,
-		)
-		dashboardApi = writer.NewDashboardApi(dashboardSvc)
+	if dashboardService != nil {
+		dashboardApi = writer.NewDashboardApi(dashboardService)
 	}
 
 	// 锁定API（如果可用）

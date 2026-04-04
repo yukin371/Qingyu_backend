@@ -193,6 +193,12 @@ func RegisterRoutes(r *gin.Engine) {
 		logger.Warn("获取书店服务失败", zap.Error(err))
 		logger.Info("跳过书店路由注册")
 	} else {
+		// 注入 SearchService 到 BookstoreService
+		if searchSvc != nil {
+			bookstoreSvc.SetSearchService(searchSvc)
+			logger.Info("✓ SearchService 已注入到 BookstoreService")
+		}
+
 		// 初始化其他书店服务
 		bookDetailSvc, _ := serviceContainer.GetBookDetailService()
 		ratingSvc, _ := serviceContainer.GetBookRatingService()
@@ -626,7 +632,7 @@ func RegisterRoutes(r *gin.Engine) {
 		contextEngine := serviceContainer.GetStoryContextEngine()
 		docRepo := serviceContainer.GetRepositoryFactory().CreateDocumentRepository()
 		if contextEngine != nil && quotaService != nil && docRepo != nil && phase3Client != nil {
-			storyWriteApi = aiApi.NewStoryWriteApi(contextEngine, quotaService, docRepo, phase3Client)
+			storyWriteApi = aiApi.NewStoryWriteApi(contextEngine, quotaService, docRepo)
 		}
 
 		aiRouter.InitAIRouter(v1, aiSvc, chatService, quotaService, phase3Client, storyWriteApi)
