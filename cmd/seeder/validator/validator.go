@@ -263,39 +263,39 @@ func (v *DataValidator) ValidateLikeOrphans(ctx context.Context) (int64, error) 
 	// 聚合查询：查找孤儿记录
 	// Like 使用 string 类型的 user_id 和 target_id，需要先转换为 ObjectID 再关联
 	pipeline := mongo.Pipeline{
-		bson.D{{"$addFields", bson.D{
-			{"user_oid", bson.D{{"$convert", bson.D{
-				{"input", "$user_id"},
-				{"to", "objectId"},
-				{"onError", nil},
-				{"onNull", nil},
+		bson.D{{Key: "$addFields", Value: bson.D{
+			{"user_oid", bson.D{{Key: "$convert", Value: bson.D{
+				bson.E{Key: "input", Value: "$user_id"},
+				bson.E{Key: "to", Value: "objectId"},
+				bson.E{Key: "onError", Value: nil},
+				bson.E{Key: "onNull", Value: nil},
 			}}}},
-			{"target_oid", bson.D{{"$convert", bson.D{
-				{"input", "$target_id"},
-				{"to", "objectId"},
-				{"onError", nil},
-				{"onNull", nil},
+			{"target_oid", bson.D{{Key: "$convert", Value: bson.D{
+				bson.E{Key: "input", Value: "$target_id"},
+				bson.E{Key: "to", Value: "objectId"},
+				bson.E{Key: "onError", Value: nil},
+				bson.E{Key: "onNull", Value: nil},
 			}}}},
 		}}},
-		bson.D{{"$lookup", bson.D{
-			{"from", "users"},
-			{"localField", "user_oid"},
-			{"foreignField", "_id"},
-			{"as", "user"},
+		bson.D{{Key: "$lookup", Value: bson.D{
+			bson.E{Key: "from", Value: "users"},
+			bson.E{Key: "localField", Value: "user_oid"},
+			bson.E{Key: "foreignField", Value: "_id"},
+			bson.E{Key: "as", Value: "user"},
 		}}},
-		bson.D{{"$lookup", bson.D{
-			{"from", "books"},
-			{"localField", "target_oid"},
-			{"foreignField", "_id"},
-			{"as", "book"},
+		bson.D{{Key: "$lookup", Value: bson.D{
+			bson.E{Key: "from", Value: "books"},
+			bson.E{Key: "localField", Value: "target_oid"},
+			bson.E{Key: "foreignField", Value: "_id"},
+			bson.E{Key: "as", Value: "book"},
 		}}},
-		bson.D{{"$match", bson.D{
+		bson.D{{Key: "$match", Value: bson.D{
 			{"$or", bson.A{
-				bson.D{{"user", bson.D{{"$size", 0}}}},
-				bson.D{{"book", bson.D{{"$size", 0}}}},
+				bson.D{{Key: "user", Value: bson.D{{Key: "$size", Value: 0}}}},
+				bson.D{{Key: "book", Value: bson.D{{Key: "$size", Value: 0}}}},
 			}},
 		}}},
-		bson.D{{"$count", "orphan_count"}},
+		bson.D{{Key: "$count", Value: "orphan_count"}},
 	}
 
 	cursor, err := collection.Aggregate(ctx, pipeline)
@@ -328,16 +328,16 @@ func (v *DataValidator) ValidateNotificationOrphans(ctx context.Context) (int64,
 	// 聚合查询：查找孤儿记录
 	// Notification 使用 string 类型的 user_id
 	pipeline := mongo.Pipeline{
-		bson.D{{"$lookup", bson.D{
-			{"from", "users"},
-			{"localField", "user_id"},
-			{"foreignField", "_id"},
-			{"as", "user"},
+		bson.D{{Key: "$lookup", Value: bson.D{
+			bson.E{Key: "from", Value: "users"},
+			bson.E{Key: "localField", Value: "user_id"},
+			bson.E{Key: "foreignField", Value: "_id"},
+			bson.E{Key: "as", Value: "user"},
 		}}},
-		bson.D{{"$match", bson.D{
-			{"user", bson.D{{"$size", 0}}},
+		bson.D{{Key: "$match", Value: bson.D{
+			bson.E{Key: "user", Value: bson.D{{Key: "$size", Value: 0}}},
 		}}},
-		bson.D{{"$count", "orphan_count"}},
+		bson.D{{Key: "$count", Value: "orphan_count"}},
 	}
 
 	cursor, err := collection.Aggregate(ctx, pipeline)
@@ -407,21 +407,21 @@ func (v *DataValidator) validateOrphansByCollection(
 		targetColl := fieldPairs[i+1]
 		convertedField := fmt.Sprintf("__oid_%s", localField)
 
-		addFieldStage := bson.D{{"$addFields", bson.D{
-			{convertedField, bson.D{{"$convert", bson.D{
-				{"input", fmt.Sprintf("$%s", localField)},
-				{"to", "objectId"},
-				{"onError", nil},
-				{"onNull", nil},
+		addFieldStage := bson.D{{Key: "$addFields", Value: bson.D{
+			bson.E{Key: convertedField, Value: bson.D{{Key: "$convert", Value: bson.D{
+				bson.E{Key: "input", Value: fmt.Sprintf("$%s", localField)},
+				bson.E{Key: "to", Value: "objectId"},
+				bson.E{Key: "onError", Value: nil},
+				bson.E{Key: "onNull", Value: nil},
 			}}}},
 		}}}
 		pipeline = append(pipeline, addFieldStage)
 
-		lookupStage := bson.D{{"$lookup", bson.D{
-			{"from", targetColl},
-			{"localField", convertedField},
-			{"foreignField", "_id"},
-			{"as", fmt.Sprintf("ref_%s_%s", targetColl, localField)},
+		lookupStage := bson.D{{Key: "$lookup", Value: bson.D{
+			bson.E{Key: "from", Value: targetColl},
+			bson.E{Key: "localField", Value: convertedField},
+			bson.E{Key: "foreignField", Value: "_id"},
+			bson.E{Key: "as", Value: fmt.Sprintf("ref_%s_%s", targetColl, localField)},
 		}}}
 		pipeline = append(pipeline, lookupStage)
 	}
@@ -432,15 +432,15 @@ func (v *DataValidator) validateOrphansByCollection(
 		localField := fieldPairs[i]
 		targetColl := fieldPairs[i+1]
 		matchConditions = append(matchConditions, bson.D{
-			{fmt.Sprintf("ref_%s_%s", targetColl, localField), bson.D{{"$size", 0}}},
+			bson.E{Key: fmt.Sprintf("ref_%s_%s", targetColl, localField), Value: bson.D{{Key: "$size", Value: 0}}},
 		})
 	}
 
-	pipeline = append(pipeline, bson.D{{"$match", bson.D{
-		{"$or", matchConditions},
+	pipeline = append(pipeline, bson.D{{Key: "$match", Value: bson.D{
+		bson.E{Key: "$or", Value: matchConditions},
 	}}})
 
-	pipeline = append(pipeline, bson.D{{"$count", "orphan_count"}})
+	pipeline = append(pipeline, bson.D{{Key: "$count", Value: "orphan_count"}})
 
 	cursor, err := collection.Aggregate(ctx, pipeline)
 	if err != nil {

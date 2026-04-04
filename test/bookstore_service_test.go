@@ -11,7 +11,9 @@ import (
 	"github.com/stretchr/testify/mock"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	"Qingyu_backend/models/reader"
 	"Qingyu_backend/repository/interfaces/infrastructure"
+	ReaderRepo "Qingyu_backend/repository/interfaces/reader"
 	bookstoreService "Qingyu_backend/service/bookstore"
 )
 
@@ -549,6 +551,130 @@ func (m *MockRankingRepository) Transaction(ctx context.Context, fn func(ctx con
 	return args.Error(0)
 }
 
+// MockCollectionRepository 模拟收藏仓储
+type MockCollectionRepository struct {
+	mock.Mock
+}
+
+func (m *MockCollectionRepository) Create(ctx context.Context, collection *reader.Collection) error {
+	args := m.Called(ctx, collection)
+	return args.Error(0)
+}
+
+func (m *MockCollectionRepository) GetByID(ctx context.Context, id string) (*reader.Collection, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*reader.Collection), args.Error(1)
+}
+
+func (m *MockCollectionRepository) GetByUserAndBook(ctx context.Context, userID, bookID string) (*reader.Collection, error) {
+	args := m.Called(ctx, userID, bookID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*reader.Collection), args.Error(1)
+}
+
+func (m *MockCollectionRepository) GetCollectionsByUser(ctx context.Context, userID string, folderID string, page, size int) ([]*reader.Collection, int64, error) {
+	args := m.Called(ctx, userID, folderID, page, size)
+	if args.Get(0) == nil {
+		return nil, args.Get(1).(int64), args.Error(2)
+	}
+	return args.Get(0).([]*reader.Collection), args.Get(1).(int64), args.Error(2)
+}
+
+func (m *MockCollectionRepository) GetCollectionsByTag(ctx context.Context, userID string, tag string, page, size int) ([]*reader.Collection, int64, error) {
+	args := m.Called(ctx, userID, tag, page, size)
+	if args.Get(0) == nil {
+		return nil, args.Get(1).(int64), args.Error(2)
+	}
+	return args.Get(0).([]*reader.Collection), args.Get(1).(int64), args.Error(2)
+}
+
+func (m *MockCollectionRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
+	args := m.Called(ctx, id, updates)
+	return args.Error(0)
+}
+
+func (m *MockCollectionRepository) Delete(ctx context.Context, id string) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+func (m *MockCollectionRepository) CreateFolder(ctx context.Context, folder *reader.CollectionFolder) error {
+	args := m.Called(ctx, folder)
+	return args.Error(0)
+}
+
+func (m *MockCollectionRepository) GetFolderByID(ctx context.Context, id string) (*reader.CollectionFolder, error) {
+	args := m.Called(ctx, id)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*reader.CollectionFolder), args.Error(1)
+}
+
+func (m *MockCollectionRepository) GetFoldersByUser(ctx context.Context, userID string) ([]*reader.CollectionFolder, error) {
+	args := m.Called(ctx, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*reader.CollectionFolder), args.Error(1)
+}
+
+func (m *MockCollectionRepository) UpdateFolder(ctx context.Context, id string, updates map[string]interface{}) error {
+	args := m.Called(ctx, id, updates)
+	return args.Error(0)
+}
+
+func (m *MockCollectionRepository) DeleteFolder(ctx context.Context, id string) error {
+	args := m.Called(ctx, id)
+	return args.Error(0)
+}
+
+func (m *MockCollectionRepository) IncrementFolderBookCount(ctx context.Context, folderID string) error {
+	args := m.Called(ctx, folderID)
+	return args.Error(0)
+}
+
+func (m *MockCollectionRepository) DecrementFolderBookCount(ctx context.Context, folderID string) error {
+	args := m.Called(ctx, folderID)
+	return args.Error(0)
+}
+
+func (m *MockCollectionRepository) GetPublicCollections(ctx context.Context, page, size int) ([]*reader.Collection, int64, error) {
+	args := m.Called(ctx, page, size)
+	if args.Get(0) == nil {
+		return nil, args.Get(1).(int64), args.Error(2)
+	}
+	return args.Get(0).([]*reader.Collection), args.Get(1).(int64), args.Error(2)
+}
+
+func (m *MockCollectionRepository) GetPublicFolders(ctx context.Context, page, size int) ([]*reader.CollectionFolder, int64, error) {
+	args := m.Called(ctx, page, size)
+	if args.Get(0) == nil {
+		return nil, args.Get(1).(int64), args.Error(2)
+	}
+	return args.Get(0).([]*reader.CollectionFolder), args.Get(1).(int64), args.Error(2)
+}
+
+func (m *MockCollectionRepository) CountUserCollections(ctx context.Context, userID string) (int64, error) {
+	args := m.Called(ctx, userID)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *MockCollectionRepository) CountBookCollections(ctx context.Context, bookID string) (int64, error) {
+	args := m.Called(ctx, bookID)
+	return args.Get(0).(int64), args.Error(1)
+}
+
+func (m *MockCollectionRepository) Health(ctx context.Context) error {
+	args := m.Called(ctx)
+	return args.Error(0)
+}
+
 // 测试用例
 
 func TestBookstoreService_GetBookByID(t *testing.T) {
@@ -573,7 +699,7 @@ func TestBookstoreService_GetBookByID(t *testing.T) {
 	mockRankingRepo := new(MockRankingRepository)
 
 	// 创建服务
-	service := bookstoreService.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo)
+	service := bookstoreService.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo, new(MockCollectionRepository))
 
 	// 执行测试
 	result, err := service.GetBookByID(context.Background(), bookID.Hex())
@@ -600,7 +726,7 @@ func TestBookstoreService_GetBookByID_NotFound(t *testing.T) {
 	mockRankingRepo := new(MockRankingRepository)
 
 	// 创建服务
-	service := bookstoreService.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo)
+	service := bookstoreService.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo, new(MockCollectionRepository))
 
 	// 执行测试
 	result, err := service.GetBookByID(context.Background(), bookID.Hex())
@@ -625,7 +751,7 @@ func TestBookstoreService_GetBookByID_InvalidID(t *testing.T) {
 	mockRankingRepo := new(MockRankingRepository)
 
 	// 创建服务
-	service := bookstoreService.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo)
+	service := bookstoreService.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo, new(MockCollectionRepository))
 
 	// 执行测试 - 使用无效ID
 	result, err := service.GetBookByID(context.Background(), "invalid-id")
@@ -669,7 +795,7 @@ func TestBookstoreService_GetRecommendedBooks(t *testing.T) {
 	mockRankingRepo := new(MockRankingRepository)
 
 	// 创建服务
-	service := bookstoreService.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo)
+	service := bookstoreService.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo, new(MockCollectionRepository))
 
 	// 执行测试
 	result, total, err := service.GetRecommendedBooks(context.Background(), 1, 20)
@@ -703,7 +829,7 @@ func TestBookstoreService_IncrementBookView(t *testing.T) {
 	mockRankingRepo := new(MockRankingRepository)
 
 	// 创建服务
-	service := bookstoreService.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo)
+	service := bookstoreService.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo, new(MockCollectionRepository))
 
 	// 执行测试
 	err := service.IncrementBookView(context.Background(), bookID.Hex())
@@ -734,7 +860,7 @@ func TestBookstoreService_IncrementBookView_BookNotPublished(t *testing.T) {
 	mockRankingRepo := new(MockRankingRepository)
 
 	// 创建服务
-	service := bookstoreService.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo)
+	service := bookstoreService.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo, new(MockCollectionRepository))
 
 	// 执行测试
 	err := service.IncrementBookView(context.Background(), bookID.Hex())
@@ -766,7 +892,7 @@ func TestBookstoreService_GetCategoryByID(t *testing.T) {
 	mockRankingRepo := new(MockRankingRepository)
 
 	// 创建服务
-	service := bookstoreService.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo)
+	service := bookstoreService.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo, new(MockCollectionRepository))
 
 	// 执行测试
 	result, err := service.GetCategoryByID(context.Background(), categoryID.Hex())
@@ -798,7 +924,7 @@ func TestBookstoreService_GetCategoryByID_NotActive(t *testing.T) {
 	mockRankingRepo := new(MockRankingRepository)
 
 	// 创建服务
-	service := bookstoreService.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo)
+	service := bookstoreService.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo, new(MockCollectionRepository))
 
 	// 执行测试
 	result, err := service.GetCategoryByID(context.Background(), categoryID.Hex())
@@ -836,7 +962,7 @@ func TestBookstoreService_SearchBooks(t *testing.T) {
 	})).Return(int64(1), nil)
 
 	// 创建服务
-	service := bookstoreService.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo)
+	service := bookstoreService.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo, new(MockCollectionRepository))
 
 	// 执行测试
 	result, total, err := service.SearchBooks(context.Background(), keyword, 1, 10)
@@ -858,7 +984,7 @@ func TestBookstoreService_SearchBooks_EmptyKeywordAndFilter(t *testing.T) {
 	mockRankingRepo := new(MockRankingRepository)
 
 	// 创建服务
-	service := bookstoreService.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo)
+	service := bookstoreService.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo, new(MockCollectionRepository))
 
 	// 执行测试 - 空关键词
 	result, total, err := service.SearchBooks(context.Background(), "", 1, 10)
@@ -918,7 +1044,7 @@ func TestBookstoreService_GetHomepageData(t *testing.T) {
 	mockRankingRepo.On("GetByTypeWithBooks", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(([]*bookstore2.RankingItem)(nil), nil).Maybe()
 
 	// 创建服务
-	service := bookstoreService.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo)
+	service := bookstoreService.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo, new(MockCollectionRepository))
 
 	// 执行测试
 	result, err := service.GetHomepageData(context.Background())
@@ -959,7 +1085,7 @@ func TestBookstoreService_GetHomepageData_PartialFailure(t *testing.T) {
 	mockRankingRepo.On("GetByTypeWithBooks", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(([]*bookstore2.RankingItem)(nil), nil).Maybe()
 
 	// 创建服务
-	service := bookstoreService.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo)
+	service := bookstoreService.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo, new(MockCollectionRepository))
 
 	// 执行测试
 	result, err := service.GetHomepageData(context.Background())

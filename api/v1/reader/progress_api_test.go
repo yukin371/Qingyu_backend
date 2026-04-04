@@ -15,7 +15,9 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	progressAPI "Qingyu_backend/api/v1/reader"
+	"Qingyu_backend/models"
 	"Qingyu_backend/models/reader"
+	readerRepo "Qingyu_backend/repository/interfaces/reader"
 	"Qingyu_backend/service/interfaces"
 )
 
@@ -256,8 +258,31 @@ func (m *MockReaderService) UpdateBookStatus(ctx context.Context, userID, bookID
 	return args.Error(0)
 }
 
+// MockDeviceRepository 模拟设备仓储接口
+type MockDeviceRepository struct {
+	mock.Mock
+}
+
+func (m *MockDeviceRepository) UpsertDevice(ctx context.Context, device *models.Device) error {
+	args := m.Called(ctx, device)
+	return args.Error(0)
+}
+
+func (m *MockDeviceRepository) GetByUserID(ctx context.Context, userID string) ([]*models.Device, error) {
+	args := m.Called(ctx, userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*models.Device), args.Error(1)
+}
+
+func (m *MockDeviceRepository) DeleteByUserID(ctx context.Context, userID string) error {
+	args := m.Called(ctx, userID)
+	return args.Error(0)
+}
+
 // setupProgressTestRouter 设置测试路由
-func setupProgressTestRouter(readerService interfaces.ReaderService, userID string) *gin.Engine {
+func setupProgressTestRouter(readerService interfaces.ReaderService, deviceRepo readerRepo.DeviceRepository, userID string) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 
@@ -280,7 +305,7 @@ func setupProgressTestRouter(readerService interfaces.ReaderService, userID stri
 		c.Next()
 	})
 
-	api := progressAPI.NewProgressAPI(readerService)
+	api := progressAPI.NewProgressAPI(readerService, deviceRepo)
 
 	v1 := r.Group("/api/v1/reader/progress")
 	{
@@ -307,7 +332,7 @@ func TestProgressAPI_GetReadingProgress_Success(t *testing.T) {
 	mockService := new(MockReaderService)
 	userID := primitive.NewObjectID().Hex()
 	bookID := primitive.NewObjectID().Hex()
-	router := setupProgressTestRouter(mockService, userID)
+	router := setupProgressTestRouter(mockService, new(MockDeviceRepository), userID)
 
 	userIDObj, _ := primitive.ObjectIDFromHex(userID)
 	bookIDObj, _ := primitive.ObjectIDFromHex(bookID)
@@ -348,7 +373,7 @@ func TestProgressAPI_SaveReadingProgress_Success(t *testing.T) {
 	userID := primitive.NewObjectID().Hex()
 	bookID := primitive.NewObjectID().Hex()
 	chapterID := primitive.NewObjectID().Hex()
-	router := setupProgressTestRouter(mockService, userID)
+	router := setupProgressTestRouter(mockService, new(MockDeviceRepository), userID)
 
 	mockService.On("SaveReadingProgress", mock.Anything, userID, bookID, chapterID, 0.75).
 		Return(nil)
@@ -385,7 +410,7 @@ func TestProgressAPI_SaveReadingProgress_ZeroProgress(t *testing.T) {
 	userID := primitive.NewObjectID().Hex()
 	bookID := primitive.NewObjectID().Hex()
 	chapterID := primitive.NewObjectID().Hex()
-	router := setupProgressTestRouter(mockService, userID)
+	router := setupProgressTestRouter(mockService, new(MockDeviceRepository), userID)
 
 	mockService.On("SaveReadingProgress", mock.Anything, userID, bookID, chapterID, 0.0).
 		Return(nil)
@@ -420,7 +445,7 @@ func TestProgressAPI_SaveReadingProgress_MissingBookID(t *testing.T) {
 	// Given
 	mockService := new(MockReaderService)
 	userID := primitive.NewObjectID().Hex()
-	router := setupProgressTestRouter(mockService, userID)
+	router := setupProgressTestRouter(mockService, new(MockDeviceRepository), userID)
 
 	reqBody := map[string]interface{}{
 		"chapterId": primitive.NewObjectID().Hex(),
@@ -444,7 +469,7 @@ func TestProgressAPI_SaveReadingProgress_InvalidProgress(t *testing.T) {
 	// Given
 	mockService := new(MockReaderService)
 	userID := primitive.NewObjectID().Hex()
-	router := setupProgressTestRouter(mockService, userID)
+	router := setupProgressTestRouter(mockService, new(MockDeviceRepository), userID)
 
 	reqBody := map[string]interface{}{
 		"bookId":    primitive.NewObjectID().Hex(),
@@ -470,7 +495,7 @@ func TestProgressAPI_UpdateReadingTime_Success(t *testing.T) {
 	mockService := new(MockReaderService)
 	userID := primitive.NewObjectID().Hex()
 	bookID := primitive.NewObjectID().Hex()
-	router := setupProgressTestRouter(mockService, userID)
+	router := setupProgressTestRouter(mockService, new(MockDeviceRepository), userID)
 
 	mockService.On("UpdateReadingTime", mock.Anything, userID, bookID, int64(3600)).
 		Return(nil)
@@ -504,7 +529,7 @@ func TestProgressAPI_UpdateReadingTime_MissingBookID(t *testing.T) {
 	// Given
 	mockService := new(MockReaderService)
 	userID := primitive.NewObjectID().Hex()
-	router := setupProgressTestRouter(mockService, userID)
+	router := setupProgressTestRouter(mockService, new(MockDeviceRepository), userID)
 
 	reqBody := map[string]interface{}{
 		"duration": 3600,
@@ -527,7 +552,7 @@ func TestProgressAPI_GetRecentReading_Success(t *testing.T) {
 	// Given
 	mockService := new(MockReaderService)
 	userID := primitive.NewObjectID().Hex()
-	router := setupProgressTestRouter(mockService, userID)
+	router := setupProgressTestRouter(mockService, new(MockDeviceRepository), userID)
 
 	userIDObj, _ := primitive.ObjectIDFromHex(userID)
 
@@ -564,7 +589,7 @@ func TestProgressAPI_GetRecentReading_CustomLimit(t *testing.T) {
 	// Given
 	mockService := new(MockReaderService)
 	userID := primitive.NewObjectID().Hex()
-	router := setupProgressTestRouter(mockService, userID)
+	router := setupProgressTestRouter(mockService, new(MockDeviceRepository), userID)
 
 	mockService.On("GetRecentReading", mock.Anything, userID, 10).
 		Return([]*reader.ReadingProgress{}, nil)
@@ -586,7 +611,7 @@ func TestProgressAPI_GetReadingHistory_Success(t *testing.T) {
 	// Given
 	mockService := new(MockReaderService)
 	userID := primitive.NewObjectID().Hex()
-	router := setupProgressTestRouter(mockService, userID)
+	router := setupProgressTestRouter(mockService, new(MockDeviceRepository), userID)
 
 	userIDObj, _ := primitive.ObjectIDFromHex(userID)
 
@@ -623,7 +648,7 @@ func TestProgressAPI_GetReadingStats_Success(t *testing.T) {
 	// Given
 	mockService := new(MockReaderService)
 	userID := primitive.NewObjectID().Hex()
-	router := setupProgressTestRouter(mockService, userID)
+	router := setupProgressTestRouter(mockService, new(MockDeviceRepository), userID)
 
 	mockService.On("GetTotalReadingTime", mock.Anything, userID).
 		Return(int64(7200), nil)
@@ -655,7 +680,7 @@ func TestProgressAPI_GetUnfinishedBooks_Success(t *testing.T) {
 	// Given
 	mockService := new(MockReaderService)
 	userID := primitive.NewObjectID().Hex()
-	router := setupProgressTestRouter(mockService, userID)
+	router := setupProgressTestRouter(mockService, new(MockDeviceRepository), userID)
 
 	userIDObj, _ := primitive.ObjectIDFromHex(userID)
 
@@ -693,7 +718,7 @@ func TestProgressAPI_GetFinishedBooks_Success(t *testing.T) {
 	// Given
 	mockService := new(MockReaderService)
 	userID := primitive.NewObjectID().Hex()
-	router := setupProgressTestRouter(mockService, userID)
+	router := setupProgressTestRouter(mockService, new(MockDeviceRepository), userID)
 
 	userIDObj, _ := primitive.ObjectIDFromHex(userID)
 
@@ -730,7 +755,7 @@ func TestProgressAPI_GetFinishedBooks_Success(t *testing.T) {
 func TestProgressAPI_Unauthorized(t *testing.T) {
 	// Given
 	mockService := new(MockReaderService)
-	router := setupProgressTestRouter(mockService, "") // 不设置用户ID
+	router := setupProgressTestRouter(mockService, new(MockDeviceRepository), "") // 不设置用户ID
 
 	bookID := primitive.NewObjectID().Hex()
 	req, _ := http.NewRequest("GET", "/api/v1/reader/progress/"+bookID, nil)
