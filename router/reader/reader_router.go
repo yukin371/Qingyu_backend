@@ -4,6 +4,7 @@ import (
 	readerApi "Qingyu_backend/api/v1/reader"
 	socialApi "Qingyu_backend/api/v1/social"
 	"Qingyu_backend/internal/middleware/auth"
+	readerRepo "Qingyu_backend/repository/interfaces/reader"
 	syncService "Qingyu_backend/pkg/sync"
 	"Qingyu_backend/service/bookstore"
 	readerservice "Qingyu_backend/service/reader"
@@ -23,9 +24,10 @@ func InitReaderRouter(
 	readingHistoryService *readerservice.ReadingHistoryService,
 	progressSyncService *syncService.ProgressSyncService,
 	bookmarkService readerservice.BookmarkService,
+	deviceRepo readerRepo.DeviceRepository,
 ) {
 	// 创建API实例
-	progressApiHandler := readerApi.NewProgressAPI(readerService)
+	progressApiHandler := readerApi.NewProgressAPI(readerService, deviceRepo)
 	annotationsApiHandler := readerApi.NewAnnotationsAPI(readerService)
 	settingApiHandler := readerApi.NewSettingAPI(readerService)
 	booksApiHandler := readerApi.NewBooksAPI(readerService)

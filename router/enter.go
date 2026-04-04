@@ -32,8 +32,10 @@ import (
 	authRep "Qingyu_backend/repository/mongodb/auth"
 	bookstoreRepo "Qingyu_backend/repository/mongodb/bookstore"
 	recommendationRepo "Qingyu_backend/repository/mongodb/recommendation"
+	mongoReaderRepo "Qingyu_backend/repository/mongodb/reader"
 	mongoSocialRepo "Qingyu_backend/repository/mongodb/social"
 	mongoWriterRepo "Qingyu_backend/repository/mongodb/writer"
+	readerRepo "Qingyu_backend/repository/interfaces/reader"
 	"Qingyu_backend/service"
 	baseService "Qingyu_backend/service/base"
 	adminservice "Qingyu_backend/service/admin"
@@ -299,7 +301,14 @@ func RegisterRoutes(r *gin.Engine) {
 		// 进度同步服务当前未接入容器，保持 nil 以关闭相关同步路由。
 		var progressSyncSvc *syncService.ProgressSyncService
 
-		readerRouter.InitReaderRouter(v1, readerSvc, chapterSvc, commentSvc, likeSvc, collectionSvc, readingHistorySvc, progressSyncSvc, bookmarkSvc)
+		// 创建设备仓储（用于跨设备进度追踪）
+		mongoDB := serviceContainer.GetMongoDB()
+		var deviceRepo readerRepo.DeviceRepository
+		if mongoDB != nil {
+			deviceRepo = mongoReaderRepo.NewMongoDeviceRepository(mongoDB)
+		}
+
+		readerRouter.InitReaderRouter(v1, readerSvc, chapterSvc, commentSvc, likeSvc, collectionSvc, readingHistorySvc, progressSyncSvc, bookmarkSvc, deviceRepo)
 
 		logger.Info("✓ 阅读器路由已注册到: /api/v1/reader/")
 		logger.Info("  - /api/v1/reader/books/* (书架管理)")

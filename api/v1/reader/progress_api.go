@@ -1,15 +1,22 @@
 package reader
 
 import (
-	readerModels "Qingyu_backend/models/reader"
+	"context"
+	"fmt"
+	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
-	"github.com/gin-gonic/gin"
-
 	"Qingyu_backend/api/v1/shared"
+	"Qingyu_backend/models"
+	readerModels "Qingyu_backend/models/reader"
 	"Qingyu_backend/pkg/response"
+	readerRepo "Qingyu_backend/repository/interfaces/reader"
 	"Qingyu_backend/service/interfaces"
+
+	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 const (
@@ -20,12 +27,14 @@ const (
 // ProgressAPI 阅读进度API
 type ProgressAPI struct {
 	readerService interfaces.ReaderService
+	deviceRepo   readerRepo.DeviceRepository
 }
 
 // NewProgressAPI 创建阅读进度API实例
-func NewProgressAPI(readerService interfaces.ReaderService) *ProgressAPI {
+func NewProgressAPI(readerService interfaces.ReaderService, deviceRepo readerRepo.DeviceRepository) *ProgressAPI {
 	return &ProgressAPI{
 		readerService: readerService,
+		deviceRepo:   deviceRepo,
 	}
 }
 
@@ -93,6 +102,9 @@ func (api *ProgressAPI) SaveReadingProgress(c *gin.Context) {
 		c.Error(err)
 		return
 	}
+
+	// 异步追踪设备信息
+	go api.trackDevice(c, userID)
 
 	response.Success(c, nil)
 }
@@ -325,14 +337,114 @@ func (api *ProgressAPI) GetDevicesProgress(c *gin.Context) {
 		return
 	}
 
-	// TODO: 实现真实的跨设备阅读记录功能
-	// 目前返回空列表作为占位实现
-	// 后续可以从sync_service获取真实的设备同步数据
+	// 从 deviceRepo 查询用户设备列表
+	if api.deviceRepo == nil {
+		response.Success(c, DevicesProgressResponse{
+			Devices: []DeviceProgress{},
+			Count:   0,
+		})
+		return
+	}
 
-	_ = userID // 暂时避免未使用警告
+	ctx := c.Request.Context()
+	devices, err := api.deviceRepo.GetByUserID(ctx, userID)
+	if err != nil {
+		c.Error(err)
+		response.Success(c, DevicesProgressResponse{
+			Devices: []DeviceProgress{},
+			Count:   0,
+		})
+		return
+	}
+
+	result := make([]DeviceProgress, 0, len(devices))
+	for _, d := range devices {
+		result = append(result, DeviceProgress{
+			DeviceID:   d.ID.Hex(),
+			DeviceName: d.Name,
+			DeviceType: d.Type,
+			LastSyncAt: d.LastSeen,
+		})
+	}
 
 	response.Success(c, DevicesProgressResponse{
-		Devices: []DeviceProgress{},
-		Count:   0,
+		Devices: result,
+		Count:   len(result),
 	})
+}
+
+// trackDevice 异步追踪用户设备信息（通过 User-Agent 解析）
+func (api *ProgressAPI) trackDevice(c *gin.Context, userID string) {
+	if api.deviceRepo == nil {
+		return
+	}
+
+	ua := c.GetHeader("User-Agent")
+	if ua == "" {
+		return
+	}
+
+	name, deviceType := detectDevice(ua)
+	ip := c.ClientIP()
+
+	device := &models.Device{
+		UserID:    primitive.ObjectID{},
+		Name:      name,
+		Type:      deviceType,
+		UserAgent: ua,
+		IP:        ip,
+	}
+	if uid, err := primitive.ObjectIDFromHex(userID); err == nil {
+		device.UserID = uid
+	}
+
+	_ = api.deviceRepo.UpsertDevice(context.Background(), device)
+}
+
+// detectDevice 从 User-Agent 解析设备名称和类型
+func detectDevice(ua string) (name string, deviceType string) {
+	deviceType = "desktop"
+	name = "Unknown Device"
+
+	uaLower := strings.ToLower(ua)
+
+	if strings.Contains(uaLower, "mobile") || strings.Contains(uaLower, "android") && strings.Contains(uaLower, "mobile") {
+		deviceType = "mobile"
+	} else if strings.Contains(uaLower, "tablet") || strings.Contains(uaLower, "ipad") {
+		deviceType = "tablet"
+	}
+
+	// 检测浏览器
+	browser := ""
+	if strings.Contains(uaLower, "chrome") && !strings.Contains(uaLower, "edg") {
+		browser = "Chrome"
+	} else if strings.Contains(uaLower, "safari") && !strings.Contains(uaLower, "chrome") {
+		browser = "Safari"
+	} else if strings.Contains(uaLower, "firefox") {
+		browser = "Firefox"
+	} else if strings.Contains(uaLower, "edg") {
+		browser = "Edge"
+	}
+
+	// 检测操作系统
+	os := ""
+	if strings.Contains(uaLower, "windows") {
+		os = "Windows"
+	} else if strings.Contains(uaLower, "mac os") || strings.Contains(uaLower, "macos") {
+		os = "macOS"
+	} else if strings.Contains(uaLower, "linux") && !strings.Contains(uaLower, "android") {
+		os = "Linux"
+	} else if strings.Contains(uaLower, "android") {
+		os = "Android"
+	} else if strings.Contains(uaLower, "iphone") || strings.Contains(uaLower, "ipad") {
+		os = "iOS"
+	}
+
+	if browser != "" && os != "" {
+		name = browser + " on " + os
+	} else if os != "" {
+		name = os + " Device"
+	}
+
+	return name, deviceType
 }
