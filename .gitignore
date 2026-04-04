@@ -128,3 +128,4 @@ __pycache__/
 *.pyc
 *.pyo
 .worktrees
+qingyu-server
