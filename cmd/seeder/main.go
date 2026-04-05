@@ -307,7 +307,23 @@ func init() {
 
 // initConfig 初始化配置
 func initConfig() {
-	cfg = config.DefaultConfig
+	cfgCopy := *config.DefaultConfig
+	cfg = &cfgCopy
+
+	// Allow CI/test workflows to inject isolated MongoDB settings without
+	// requiring a seeder-specific config file.
+	if uri := strings.TrimSpace(os.Getenv("QINGYU_DATABASE_PRIMARY_MONGODB_URI")); uri != "" {
+		cfg.MongoDB.URI = uri
+	} else if uri := strings.TrimSpace(os.Getenv("MONGODB_URI")); uri != "" {
+		cfg.MongoDB.URI = uri
+	}
+
+	if database := strings.TrimSpace(os.Getenv("QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE")); database != "" {
+		cfg.MongoDB.Database = database
+	} else if database := strings.TrimSpace(os.Getenv("MONGODB_DATABASE")); database != "" {
+		cfg.MongoDB.Database = database
+	}
+
 	if scale != "" {
 		cfg.Scale = scale
 	}
