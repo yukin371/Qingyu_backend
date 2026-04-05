@@ -1,6 +1,7 @@
 ﻿#!/usr/bin/env python3
 import argparse
 import os
+import re
 import subprocess
 import sys
 import time
@@ -30,6 +31,26 @@ def run_checked(command: list[str], cwd: Path, env: dict[str, str]) -> None:
     completed = subprocess.run(command, cwd=cwd, env=env, check=False)
     if completed.returncode != 0:
         raise RuntimeError(f"command failed ({completed.returncode}): {' '.join(command)}")
+
+
+def run_checked_capture(command: list[str], cwd: Path, env: dict[str, str]) -> str:
+    completed = subprocess.run(
+        command,
+        cwd=cwd,
+        env=env,
+        check=False,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        errors="replace",
+    )
+    if completed.stdout:
+        print(completed.stdout, end="")
+    if completed.stderr:
+        print(completed.stderr, end="", file=sys.stderr)
+    if completed.returncode != 0:
+        raise RuntimeError(f"command failed ({completed.returncode}): {' '.join(command)}")
+    return completed.stdout
 
 
 def terminate_process(process: subprocess.Popen) -> None:
@@ -84,7 +105,16 @@ def main() -> int:
         print("[1/4] Seed test data")
         run_checked(["go", "run", "-tags", "auto", "./cmd/seeder", "--scale", "small", "users"], repo_root, env)
         run_checked(["go", "run", "-tags", "auto", "./cmd/seeder", "categories"], repo_root, env)
-        run_checked(["go", "run", "-tags", "auto", "./cmd/seeder", "publication-flow"], repo_root, env)
+        seed_output = run_checked_capture(["go", "run", "-tags", "auto", "./cmd/seeder", "publication-flow"], repo_root, env)
+        project_match = re.search(r"项目已创建:\s*([0-9a-f]{24})", seed_output)
+        document_match = re.search(r"文档\s+([0-9a-f]{24})\s+已创建", seed_output)
+        if not project_match or not document_match:
+            raise RuntimeError("failed to resolve seeded project/document ids from publication-flow output")
+        seeded_project_id = project_match.group(1)
+        seeded_document_id = document_match.group(1)
+    else:
+        seeded_project_id = None
+        seeded_document_id = None
 
     binary_name = "publication_smoke_server.exe" if os.name == "nt" else "publication_smoke_server"
     binary_path = repo_root / binary_name
@@ -116,12 +146,16 @@ def main() -> int:
                 "testadmin001",
                 "--admin-password",
                 "password",
-                "--project-title",
-                "天道录",
-                "--document-title",
-                "第1章 初入江湖",
             ]
         )
+        if seeded_project_id:
+            command.extend(["--project-id", seeded_project_id])
+        else:
+            command.extend(["--project-title", "天道录"])
+        if seeded_document_id:
+            command.extend(["--document-id", seeded_document_id])
+        else:
+            command.extend(["--document-title", "第1章 初入江湖"])
         if args.approve_document:
             command.append("--approve-document")
         if args.reject_project:
