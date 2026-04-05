@@ -82,6 +82,7 @@ def main() -> int:
 
     if not args.skip_seed:
         print("[1/4] Seed test data")
+        run_checked(["go", "run", "-tags", "auto", "./cmd/seeder", "--scale", "small", "users"], repo_root, env)
         run_checked(["go", "run", "-tags", "auto", "./cmd/seeder", "categories"], repo_root, env)
         run_checked(["go", "run", "-tags", "auto", "./cmd/seeder", "publication-flow"], repo_root, env)
 
@@ -105,6 +106,22 @@ def main() -> int:
         wait_for_http(args.base_url.rstrip("/") + args.server_health_path, args.health_timeout)
         print("[4/4] Run publication flow e2e")
         command = [sys.executable, str(script_path), "--base-url", args.base_url]
+        command.extend(
+            [
+                "--author-username",
+                "hot_author_01",
+                "--author-password",
+                "password",
+                "--admin-username",
+                "testadmin001",
+                "--admin-password",
+                "password",
+                "--project-title",
+                "天道录",
+                "--document-title",
+                "第1章 初入江湖",
+            ]
+        )
         if args.approve_document:
             command.append("--approve-document")
         if args.reject_project:
