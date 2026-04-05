@@ -220,7 +220,7 @@ func (h *PublicUserHandler) GetUserBooks(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			ids		query		string	true	"用户ID列表，用逗号分隔"
-//	@Success		200		{object}	response.APIResponse{data=dto.BatchUsersResponse}
+//	@Success		200		{object}	response.APIResponse{data=[]dto.PublicUserProfileResponse}
 //	@Failure		400		{object}	response.APIResponse
 //	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/user/users/batch [get]

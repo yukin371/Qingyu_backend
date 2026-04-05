@@ -25,7 +25,7 @@ func NewContextAPI(aggregator *internalService.ContextAggregator) *ContextAPI {
 // @Tags Internal-Context
 // @Produce json
 // @Param id path string true "项目ID"
-// @Success 200 {object} internalService.ProjectContext
+// @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]string
 // @Failure 404 {object} map[string]string
 // @Failure 500 {object} map[string]string
@@ -52,7 +52,7 @@ func (api *ContextAPI) GetProjectContext(c *gin.Context) {
 // @Tags Internal-Context
 // @Produce json
 // @Param id path string true "项目ID"
-// @Success 200 {object} map[string][]internalService.CharacterInfo
+// @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /api/v1/internal/projects/{id}/characters [get]
@@ -80,7 +80,7 @@ func (api *ContextAPI) GetCharacters(c *gin.Context) {
 // @Tags Internal-Context
 // @Produce json
 // @Param id path string true "项目ID"
-// @Success 200 {object} map[string][]internalService.OutlineNodeInfo
+// @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /api/v1/internal/projects/{id}/outline [get]
@@ -108,7 +108,7 @@ func (api *ContextAPI) GetOutline(c *gin.Context) {
 // @Tags Internal-Context
 // @Produce json
 // @Param id path string true "文档ID"
-// @Success 200 {object} internalService.DocumentContentInfo
+// @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /api/v1/internal/documents/{id}/content [get]
@@ -134,7 +134,7 @@ func (api *ContextAPI) GetDocumentContent(c *gin.Context) {
 // @Tags Internal-Context
 // @Produce json
 // @Param id path string true "项目ID"
-// @Success 200 {object} map[string][]internalService.RelationInfo
+// @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /api/v1/internal/projects/{id}/relations [get]

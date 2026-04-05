@@ -52,13 +52,13 @@ func TestDataValidator_ValidateNoOrphanedRecords_WithOrphanedReadingProgress(t *
 
 	// 创建一个引用不存在书籍的阅读进度（孤儿记录）
 	orphanProgress := bson.D{
-		{"_id", primitive.NewObjectID()},
-		{"user_id", userID},
+		bson.E{Key: "_id", Value: primitive.NewObjectID()},
+		bson.E{Key: "user_id", Value: userID},
 		{"book_id", primitive.NewObjectID()}, // 不存在的书籍ID
-		{"chapter_id", primitive.NewObjectID()},
-		{"progress", 0.5},
-		{"created_at", time.Now()},
-		{"updated_at", time.Now()},
+		bson.E{Key: "chapter_id", Value: primitive.NewObjectID()},
+		bson.E{Key: "progress", Value: 0.5},
+		bson.E{Key: "created_at", Value: time.Now()},
+		bson.E{Key: "updated_at", Value: time.Now()},
 	}
 	_, err := testDB.Database.Collection("reading_progress").InsertOne(context.Background(), orphanProgress)
 	require.NoError(t, err)
@@ -109,11 +109,11 @@ func TestDataValidator_ValidateIDFormatConsistency_DetectsObjectIDInStringField(
 	bookID := primitive.NewObjectID()
 
 	like := bson.D{
-		{"_id", primitive.NewObjectID()},
+		bson.E{Key: "_id", Value: primitive.NewObjectID()},
 		{"user_id", userID.Hex()}, // 正确：使用 string (ObjectID.Hex())
-		{"target_type", "book"},
+		bson.E{Key: "target_type", Value: "book"},
 		{"target_id", bookID.Hex()}, // 正确：使用 string
-		{"created_at", time.Now()},
+		bson.E{Key: "created_at", Value: time.Now()},
 	}
 	_, err := testDB.Database.Collection("likes").InsertOne(context.Background(), like)
 	require.NoError(t, err)
@@ -144,13 +144,13 @@ func TestDataValidator_ValidateRelationships_WhenValid(t *testing.T) {
 
 	// 创建有效的阅读进度
 	progress := bson.D{
-		{"_id", primitive.NewObjectID()},
-		{"user_id", userID},
-		{"book_id", bookID},
-		{"chapter_id", primitive.NewObjectID()},
-		{"progress", 0.5},
-		{"created_at", time.Now()},
-		{"updated_at", time.Now()},
+		bson.E{Key: "_id", Value: primitive.NewObjectID()},
+		bson.E{Key: "user_id", Value: userID},
+		bson.E{Key: "book_id", Value: bookID},
+		bson.E{Key: "chapter_id", Value: primitive.NewObjectID()},
+		bson.E{Key: "progress", Value: 0.5},
+		bson.E{Key: "created_at", Value: time.Now()},
+		bson.E{Key: "updated_at", Value: time.Now()},
 	}
 	_, err := testDB.Database.Collection("reading_progress").InsertOne(context.Background(), progress)
 	require.NoError(t, err)
@@ -178,13 +178,13 @@ func TestDataValidator_ValidateReadingProgressOrphans(t *testing.T) {
 
 	// 创建孤儿阅读进度
 	orphanProgress := bson.D{
-		{"_id", primitive.NewObjectID()},
-		{"user_id", userID},
+		bson.E{Key: "_id", Value: primitive.NewObjectID()},
+		bson.E{Key: "user_id", Value: userID},
 		{"book_id", primitive.NewObjectID()}, // 不存在的书籍
-		{"chapter_id", primitive.NewObjectID()},
-		{"progress", 0.5},
-		{"created_at", time.Now()},
-		{"updated_at", time.Now()},
+		bson.E{Key: "chapter_id", Value: primitive.NewObjectID()},
+		bson.E{Key: "progress", Value: 0.5},
+		bson.E{Key: "created_at", Value: time.Now()},
+		bson.E{Key: "updated_at", Value: time.Now()},
 	}
 	_, err := testDB.Database.Collection("reading_progress").InsertOne(context.Background(), orphanProgress)
 	require.NoError(t, err)
@@ -210,15 +210,15 @@ func TestDataValidator_ValidateReadingHistoryOrphans(t *testing.T) {
 
 	// 创建孤儿阅读历史
 	orphanHistory := bson.D{
-		{"_id", primitive.NewObjectID()},
-		{"user_id", userID},
+		bson.E{Key: "_id", Value: primitive.NewObjectID()},
+		bson.E{Key: "user_id", Value: userID},
 		{"book_id", primitive.NewObjectID()}, // 不存在的书籍
-		{"chapter_id", primitive.NewObjectID()},
-		{"read_duration", 100},
-		{"progress", 0.5},
-		{"start_time", time.Now()},
-		{"end_time", time.Now()},
-		{"created_at", time.Now()},
+		bson.E{Key: "chapter_id", Value: primitive.NewObjectID()},
+		bson.E{Key: "read_duration", Value: 100},
+		bson.E{Key: "progress", Value: 0.5},
+		bson.E{Key: "start_time", Value: time.Now()},
+		bson.E{Key: "end_time", Value: time.Now()},
+		bson.E{Key: "created_at", Value: time.Now()},
 	}
 	_, err := testDB.Database.Collection("reading_histories").InsertOne(context.Background(), orphanHistory)
 	require.NoError(t, err)
@@ -244,14 +244,14 @@ func TestDataValidator_ValidateBookmarkOrphans(t *testing.T) {
 
 	// 创建孤儿书签
 	orphanBookmark := bson.D{
-		{"_id", primitive.NewObjectID()},
-		{"user_id", userID},
+		bson.E{Key: "_id", Value: primitive.NewObjectID()},
+		bson.E{Key: "user_id", Value: userID},
 		{"book_id", primitive.NewObjectID()}, // 不存在的书籍
-		{"chapter_id", primitive.NewObjectID()},
-		{"position", 100},
-		{"color", "yellow"},
-		{"created_at", time.Now()},
-		{"updated_at", time.Now()},
+		bson.E{Key: "chapter_id", Value: primitive.NewObjectID()},
+		bson.E{Key: "position", Value: 100},
+		bson.E{Key: "color", Value: "yellow"},
+		bson.E{Key: "created_at", Value: time.Now()},
+		bson.E{Key: "updated_at", Value: time.Now()},
 	}
 	_, err := testDB.Database.Collection("bookmarks").InsertOne(context.Background(), orphanBookmark)
 	require.NoError(t, err)
@@ -277,11 +277,11 @@ func TestDataValidator_ValidateLikeOrphans(t *testing.T) {
 
 	// 创建孤儿点赞（引用不存在的书籍）
 	orphanLike := bson.D{
-		{"_id", primitive.NewObjectID()},
-		{"user_id", userID.Hex()},
-		{"target_type", "book"},
+		bson.E{Key: "_id", Value: primitive.NewObjectID()},
+		bson.E{Key: "user_id", Value: userID.Hex()},
+		bson.E{Key: "target_type", Value: "book"},
 		{"target_id", primitive.NewObjectID().Hex()}, // 不存在的书籍
-		{"created_at", time.Now()},
+		bson.E{Key: "created_at", Value: time.Now()},
 	}
 	_, err := testDB.Database.Collection("likes").InsertOne(context.Background(), orphanLike)
 	require.NoError(t, err)
@@ -304,14 +304,14 @@ func TestDataValidator_ValidateNotificationOrphans(t *testing.T) {
 
 	// 创建孤儿通知（引用不存在的用户）
 	orphanNotification := bson.D{
-		{"_id", primitive.NewObjectID().Hex()},
+		bson.E{Key: "_id", Value: primitive.NewObjectID().Hex()},
 		{"user_id", primitive.NewObjectID().Hex()}, // 不存在的用户
-		{"type", "system"},
-		{"priority", "normal"},
-		{"title", "Test"},
-		{"content", "Test content"},
-		{"read", false},
-		{"created_at", time.Now()},
+		bson.E{Key: "type", Value: "system"},
+		bson.E{Key: "priority", Value: "normal"},
+		bson.E{Key: "title", Value: "Test"},
+		bson.E{Key: "content", Value: "Test content"},
+		bson.E{Key: "read", Value: false},
+		bson.E{Key: "created_at", Value: time.Now()},
 	}
 	_, err := testDB.Database.Collection("notifications").InsertOne(context.Background(), orphanNotification)
 	require.NoError(t, err)
@@ -337,13 +337,13 @@ func TestDataValidator_GenerateReport(t *testing.T) {
 	insertUser(t, userID)
 
 	orphanProgress := bson.D{
-		{"_id", primitive.NewObjectID()},
-		{"user_id", userID},
-		{"book_id", primitive.NewObjectID()},
-		{"chapter_id", primitive.NewObjectID()},
-		{"progress", 0.5},
-		{"created_at", time.Now()},
-		{"updated_at", time.Now()},
+		bson.E{Key: "_id", Value: primitive.NewObjectID()},
+		bson.E{Key: "user_id", Value: userID},
+		bson.E{Key: "book_id", Value: primitive.NewObjectID()},
+		bson.E{Key: "chapter_id", Value: primitive.NewObjectID()},
+		bson.E{Key: "progress", Value: 0.5},
+		bson.E{Key: "created_at", Value: time.Now()},
+		bson.E{Key: "updated_at", Value: time.Now()},
 	}
 	_, err := testDB.Database.Collection("reading_progress").InsertOne(context.Background(), orphanProgress)
 	require.NoError(t, err)
@@ -397,13 +397,13 @@ func cleanupTestDatabase(t *testing.T) {
 // insertUser 插入测试用户
 func insertUser(t *testing.T, userID primitive.ObjectID) {
 	user := bson.D{
-		{"_id", userID},
-		{"username", "testuser"},
-		{"email", "test@example.com"},
-		{"password", "hashed_password"},
-		{"role", "reader"},
-		{"created_at", time.Now()},
-		{"updated_at", time.Now()},
+		bson.E{Key: "_id", Value: userID},
+		bson.E{Key: "username", Value: "testuser"},
+		bson.E{Key: "email", Value: "test@example.com"},
+		bson.E{Key: "password", Value: "hashed_password"},
+		bson.E{Key: "role", Value: "reader"},
+		bson.E{Key: "created_at", Value: time.Now()},
+		bson.E{Key: "updated_at", Value: time.Now()},
 	}
 	_, err := testDB.Database.Collection("users").InsertOne(context.Background(), user)
 	require.NoError(t, err)
@@ -412,12 +412,12 @@ func insertUser(t *testing.T, userID primitive.ObjectID) {
 // insertBook 插入测试书籍
 func insertBook(t *testing.T, bookID, authorID primitive.ObjectID) {
 	book := bson.D{
-		{"_id", bookID},
-		{"title", "Test Book"},
-		{"author_id", authorID},
-		{"status", "published"},
-		{"created_at", time.Now()},
-		{"updated_at", time.Now()},
+		bson.E{Key: "_id", Value: bookID},
+		bson.E{Key: "title", Value: "Test Book"},
+		bson.E{Key: "author_id", Value: authorID},
+		bson.E{Key: "status", Value: "published"},
+		bson.E{Key: "created_at", Value: time.Now()},
+		bson.E{Key: "updated_at", Value: time.Now()},
 	}
 	_, err := testDB.Database.Collection("books").InsertOne(context.Background(), book)
 	require.NoError(t, err)

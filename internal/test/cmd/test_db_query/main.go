@@ -116,7 +116,7 @@ func main() {
 
 			// 尝试使用 Aggregate 来检查
 			pipeline := mongo.Pipeline{
-				bson.D{{"$limit", 5}},
+				{{Key: "$limit", Value: 5}},
 			}
 			cursor2, err := booksCollection.Aggregate(ctx, pipeline)
 			if err != nil {

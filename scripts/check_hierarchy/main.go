@@ -65,9 +65,9 @@ func main() {
 
 	// 列出所有parent_id值
 	pipeline := mongo.Pipeline{
-		{{"$group", bson.D{
-			{"_id", "$parent_id"},
-			{"count", bson.D{{"$sum", 1}}},
+		bson.D{bson.E{Key: "$group", Value: bson.D{
+			bson.E{Key: "_id", Value: "$parent_id"},
+			bson.E{Key: "count", Value: bson.D{bson.E{Key: "$sum", Value: 1}}},
 		}}},
 	}
 	cursor, _ := collection.Aggregate(ctx, pipeline)

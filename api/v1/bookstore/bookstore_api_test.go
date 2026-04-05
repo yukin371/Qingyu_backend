@@ -255,6 +255,10 @@ func (m *MockBookstoreService) GetSimilarBooks(ctx context.Context, bookID strin
 	return args.Get(0).([]*bookstoreModel.Book), args.Error(1)
 }
 
+func (m *MockBookstoreService) SetSearchService(searchService interface{}) {
+	m.Called(searchService)
+}
+
 func setupBookstoreTestRouter(service *MockBookstoreService) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()

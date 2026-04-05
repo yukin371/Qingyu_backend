@@ -161,16 +161,16 @@ func countOrphanedWallets(ctx context.Context, db *mongo.Database) int64 {
 	collection := db.Collection("wallets")
 
 	pipeline := mongo.Pipeline{
-		bson.D{{"$lookup", bson.D{
-			{"from", "users"},
-			{"localField", "user_id"},
-			{"foreignField", "_id"},
-			{"as", "user"},
+		bson.D{{Key: "$lookup", Value: bson.D{
+			bson.E{Key: "from", Value: "users"},
+			bson.E{Key: "localField", Value: "user_id"},
+			bson.E{Key: "foreignField", Value: "_id"},
+			bson.E{Key: "as", Value: "user"},
 		}}},
-		bson.D{{"$match", bson.D{
-			{"user", bson.D{{"$size", 0}}},
+		bson.D{{Key: "$match", Value: bson.D{
+			bson.E{Key: "user", Value: bson.D{bson.E{Key: "$size", Value: 0}}},
 		}}},
-		bson.D{{"$count", "count"}},
+		bson.D{bson.E{Key: "$count", Value: "count"}},
 	}
 
 	cursor, err := collection.Aggregate(ctx, pipeline)
@@ -195,16 +195,16 @@ func countOrphanedWallets(ctx context.Context, db *mongo.Database) int64 {
 
 func countUsersWithoutWallets(ctx context.Context, db *mongo.Database) int64 {
 	pipeline := mongo.Pipeline{
-		bson.D{{"$lookup", bson.D{
-			{"from", "wallets"},
-			{"localField", "_id"},
-			{"foreignField", "user_id"},
-			{"as", "wallet"},
+		bson.D{{Key: "$lookup", Value: bson.D{
+			bson.E{Key: "from", Value: "wallets"},
+			bson.E{Key: "localField", Value: "_id"},
+			bson.E{Key: "foreignField", Value: "user_id"},
+			bson.E{Key: "as", Value: "wallet"},
 		}}},
-		bson.D{{"$match", bson.D{
-			{"wallet", bson.D{{"$size", 0}}},
+		bson.D{{Key: "$match", Value: bson.D{
+			bson.E{Key: "wallet", Value: bson.D{bson.E{Key: "$size", Value: 0}}},
 		}}},
-		bson.D{{"$count", "count"}},
+		bson.D{bson.E{Key: "$count", Value: "count"}},
 	}
 
 	cursor, err := db.Collection("users").Aggregate(ctx, pipeline)
@@ -229,16 +229,16 @@ func countUsersWithoutWallets(ctx context.Context, db *mongo.Database) int64 {
 
 func countOrphanedTransactions(ctx context.Context, db *mongo.Database) int64 {
 	pipeline := mongo.Pipeline{
-		bson.D{{"$lookup", bson.D{
-			{"from", "users"},
-			{"localField", "user_id"},
-			{"foreignField", "_id"},
-			{"as", "user"},
+		bson.D{{Key: "$lookup", Value: bson.D{
+			bson.E{Key: "from", Value: "users"},
+			bson.E{Key: "localField", Value: "user_id"},
+			bson.E{Key: "foreignField", Value: "_id"},
+			bson.E{Key: "as", Value: "user"},
 		}}},
-		bson.D{{"$match", bson.D{
-			{"user", bson.D{{"$size", 0}}},
+		bson.D{{Key: "$match", Value: bson.D{
+			bson.E{Key: "user", Value: bson.D{bson.E{Key: "$size", Value: 0}}},
 		}}},
-		bson.D{{"$count", "count"}},
+		bson.D{bson.E{Key: "$count", Value: "count"}},
 	}
 
 	cursor, err := db.Collection("transactions").Aggregate(ctx, pipeline)
@@ -290,16 +290,16 @@ func checkTransactionTypes(ctx context.Context, db *mongo.Database) []string {
 
 func countOrphanedMemberships(ctx context.Context, db *mongo.Database) int64 {
 	pipeline := mongo.Pipeline{
-		bson.D{{"$lookup", bson.D{
-			{"from", "users"},
-			{"localField", "user_id"},
-			{"foreignField", "_id"},
-			{"as", "user"},
+		bson.D{{Key: "$lookup", Value: bson.D{
+			bson.E{Key: "from", Value: "users"},
+			bson.E{Key: "localField", Value: "user_id"},
+			bson.E{Key: "foreignField", Value: "_id"},
+			bson.E{Key: "as", Value: "user"},
 		}}},
-		bson.D{{"$match", bson.D{
-			{"user", bson.D{{"$size", 0}}},
+		bson.D{{Key: "$match", Value: bson.D{
+			bson.E{Key: "user", Value: bson.D{bson.E{Key: "$size", Value: 0}}},
 		}}},
-		bson.D{{"$count", "count"}},
+		bson.D{bson.E{Key: "$count", Value: "count"}},
 	}
 
 	cursor, err := db.Collection("memberships").Aggregate(ctx, pipeline)
@@ -324,16 +324,16 @@ func countOrphanedMemberships(ctx context.Context, db *mongo.Database) int64 {
 
 func countOrphanedRevenue(ctx context.Context, db *mongo.Database) int64 {
 	pipeline := mongo.Pipeline{
-		bson.D{{"$lookup", bson.D{
-			{"from", "users"},
-			{"localField", "user_id"},
-			{"foreignField", "_id"},
-			{"as", "user"},
+		bson.D{{Key: "$lookup", Value: bson.D{
+			bson.E{Key: "from", Value: "users"},
+			bson.E{Key: "localField", Value: "user_id"},
+			bson.E{Key: "foreignField", Value: "_id"},
+			bson.E{Key: "as", Value: "user"},
 		}}},
-		bson.D{{"$match", bson.D{
-			{"user", bson.D{{"$size", 0}}},
+		bson.D{{Key: "$match", Value: bson.D{
+			bson.E{Key: "user", Value: bson.D{bson.E{Key: "$size", Value: 0}}},
 		}}},
-		bson.D{{"$count", "count"}},
+		bson.D{bson.E{Key: "$count", Value: "count"}},
 	}
 
 	cursor, err := db.Collection("author_revenue").Aggregate(ctx, pipeline)
@@ -358,16 +358,16 @@ func countOrphanedRevenue(ctx context.Context, db *mongo.Database) int64 {
 
 func countRevenueForNonAuthors(ctx context.Context, db *mongo.Database) int64 {
 	pipeline := mongo.Pipeline{
-		bson.D{{"$lookup", bson.D{
-			{"from", "users"},
-			{"localField", "user_id"},
-			{"foreignField", "_id"},
-			{"as", "user"},
+		bson.D{{Key: "$lookup", Value: bson.D{
+			bson.E{Key: "from", Value: "users"},
+			bson.E{Key: "localField", Value: "user_id"},
+			bson.E{Key: "foreignField", Value: "_id"},
+			bson.E{Key: "as", Value: "user"},
 		}}},
-		bson.D{{"$match", bson.D{
-			{"user.role", bson.D{{"$ne", "author"}}},
+		bson.D{{Key: "$match", Value: bson.D{
+			bson.E{Key: "user.role", Value: bson.D{bson.E{Key: "$ne", Value: "author"}}},
 		}}},
-		bson.D{{"$count", "count"}},
+		bson.D{bson.E{Key: "$count", Value: "count"}},
 	}
 
 	cursor, err := db.Collection("author_revenue").Aggregate(ctx, pipeline)
@@ -392,7 +392,7 @@ func countRevenueForNonAuthors(ctx context.Context, db *mongo.Database) int64 {
 
 func countNegativeBalanceWallets(ctx context.Context, db *mongo.Database) int64 {
 	count, err := db.Collection("wallets").CountDocuments(ctx, bson.D{
-		{"balance", bson.D{{"$lt", 0}}},
+		bson.E{Key: "balance", Value: bson.D{bson.E{Key: "$lt", Value: 0}}},
 	})
 	if err != nil {
 		log.Printf("查询负余额钱包失败: %v", err)
@@ -403,7 +403,7 @@ func countNegativeBalanceWallets(ctx context.Context, db *mongo.Database) int64 
 
 func countInvalidAmountTransactions(ctx context.Context, db *mongo.Database) int64 {
 	count, err := db.Collection("transactions").CountDocuments(ctx, bson.D{
-		{"amount", bson.D{{"$lte", 0}}},
+		bson.E{Key: "amount", Value: bson.D{bson.E{Key: "$lte", Value: 0}}},
 	})
 	if err != nil {
 		log.Printf("查询无效金额交易失败: %v", err)
@@ -416,25 +416,25 @@ func countInconsistentMemberships(ctx context.Context, db *mongo.Database) int64
 	now := primitive.NewDateTimeFromTime(time.Now())
 
 	pipeline := mongo.Pipeline{
-		bson.D{{"$project", bson.D{
-			{"_id", 1},
-			{"status", 1},
-			{"expire_at", 1},
-			{"is_expired", bson.D{{"$lt", bson.A{"$expire_at", now}}}},
+		bson.D{{Key: "$project", Value: bson.D{
+			bson.E{Key: "_id", Value: 1},
+			bson.E{Key: "status", Value: 1},
+			bson.E{Key: "expire_at", Value: 1},
+			bson.E{Key: "is_expired", Value: bson.D{{Key: "$lt", Value: bson.A{"$expire_at", now}}}},
 		}}},
-		bson.D{{"$match", bson.D{
-			{"$expr", bson.D{
-				{"$ne", bson.A{
+		bson.D{{Key: "$match", Value: bson.D{
+			bson.E{Key: "$expr", Value: bson.D{
+				bson.E{Key: "$ne", Value: bson.A{
 					"$status",
-					bson.D{{"$cond", bson.A{
-						bson.D{{"$lt", bson.A{"$expire_at", now}}},
+					bson.D{{Key: "$cond", Value: bson.A{
+						bson.D{{Key: "$lt", Value: bson.A{"$expire_at", now}}},
 						"expired",
 						"active",
 					}}},
 				}},
 			}},
 		}}},
-		bson.D{{"$count", "count"}},
+		bson.D{bson.E{Key: "$count", Value: "count"}},
 	}
 
 	cursor, err := db.Collection("memberships").Aggregate(ctx, pipeline)

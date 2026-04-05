@@ -193,7 +193,7 @@ func (s *RedisLockService) getKey(lockKey string) string {
 
 // generateLockID 生成唯一的锁标识
 func generateLockID() string {
-	return fmt.Sprintf("%d-%d", time.Now().UnixNano(), randomString(8))
+	return fmt.Sprintf("%d-%s", time.Now().UnixNano(), randomString(8))
 }
 
 // randomString 生成随机字符串

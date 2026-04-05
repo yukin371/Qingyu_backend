@@ -32,7 +32,8 @@ func setupOutlineRepo(t *testing.T) (writerInterfaces.OutlineRepository, *mongo.
 // createTestOutline 创建测试大纲节点
 func createTestOutline(projectID, title, parentID string, order int) *writer.OutlineNode {
 	outline := &writer.OutlineNode{}
-	outline.ProjectID = projectID
+	projectObjectID, _ := primitive.ObjectIDFromHex(projectID)
+	outline.ProjectID = projectObjectID
 	outline.Title = title
 	outline.ParentID = parentID
 	outline.Order = order
