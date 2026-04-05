@@ -82,6 +82,7 @@ def main() -> int:
 
     if not args.skip_seed:
         print("[1/4] Seed test data")
+        run_checked(["go", "run", "-tags", "auto", "./cmd/seeder", "categories"], repo_root, env)
         run_checked(["go", "run", "-tags", "auto", "./cmd/seeder", "publication-flow"], repo_root, env)
 
     binary_name = "publication_smoke_server.exe" if os.name == "nt" else "publication_smoke_server"
