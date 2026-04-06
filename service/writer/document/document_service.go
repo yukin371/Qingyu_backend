@@ -112,6 +112,8 @@ type DocumentService struct {
 	OnDocumentCreated func(ctx context.Context, projectID string, doc *writer.Document)
 	// OnDocumentTitleUpdated 文档标题更新后的回调（用于双向同步）
 	OnDocumentTitleUpdated func(ctx context.Context, documentID string, newTitle string)
+	// OnDocumentContentSaved 文档内容手动保存后的回调（用于异步索引）
+	OnDocumentContentSaved func(ctx context.Context, documentID string)
 }
 
 // SetOnDocumentCreated 设置创建文档后的回调
@@ -122,6 +124,11 @@ func (s *DocumentService) SetOnDocumentCreated(fn func(ctx context.Context, proj
 // SetOnDocumentTitleUpdated 设置文档标题更新后的回调
 func (s *DocumentService) SetOnDocumentTitleUpdated(fn func(ctx context.Context, documentID string, newTitle string)) {
 	s.OnDocumentTitleUpdated = fn
+}
+
+// SetOnDocumentContentSaved 设置内容手动保存后的回调
+func (s *DocumentService) SetOnDocumentContentSaved(fn func(ctx context.Context, documentID string)) {
+	s.OnDocumentContentSaved = fn
 }
 
 // NewDocumentService 创建文档服务
@@ -1105,6 +1112,10 @@ func (s *DocumentService) UpdateDocumentContent(ctx context.Context, req *dto.Up
 		})
 	}
 
+	if s.OnDocumentContentSaved != nil {
+		go s.OnDocumentContentSaved(context.Background(), req.DocumentID)
+	}
+
 	return nil
 }
 
@@ -1292,6 +1303,10 @@ func (s *DocumentService) ReplaceDocumentContents(ctx context.Context, req *dto.
 		})
 	}
 
+	if s.OnDocumentContentSaved != nil {
+		go s.OnDocumentContentSaved(context.Background(), req.DocumentID)
+	}
+
 	return &ReplaceDocumentContentsResponse{
 		DocumentID: req.DocumentID,
 		Total:      len(req.Contents),
@@ -1426,7 +1441,7 @@ func (s *DocumentService) DuplicateDocument(ctx context.Context, documentID stri
 
 	// 3. 将 dto.DuplicateRequest 转换为 DuplicateRequest
 	duplicateReq := &DuplicateRequest{
-		TargetParentID: nil, // 暂不支持复制到其他父文档
+		TargetParentID: nil,     // 暂不支持复制到其他父文档
 		Position:       "inner", // 默认添加为子文档
 		CopyContent:    req.CopyContent,
 	}
