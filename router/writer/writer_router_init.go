@@ -8,6 +8,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
+	"Qingyu_backend/internal/middleware/auth"
 	"Qingyu_backend/models/dto"
 	writerModel "Qingyu_backend/models/writer"
 	"Qingyu_backend/pkg/distlock"
@@ -224,7 +225,11 @@ func RegisterWriterRoutes(r *gin.RouterGroup, searchSvc *searchservice.SearchSer
 
 	// 注册 Story Harness 路由
 	if contextSvc != nil && indexerSvc != nil && crSvc != nil {
-		InitStoryHarnessRoutes(r, contextSvc, indexerSvc, crSvc)
+		// Story Harness 属于 writer 模块能力，路由必须挂在 /api/v1/writer/* 下，
+		// 否则会与前端约定路径和 swagger 注释不一致。
+		writerGroup := r.Group("/writer")
+		writerGroup.Use(auth.JWTAuth())
+		InitStoryHarnessRoutes(writerGroup, contextSvc, indexerSvc, crSvc)
 		zap.L().Info("RegisterWriterRoutes: Story Harness 路由注册完成")
 	}
 
