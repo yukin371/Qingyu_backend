@@ -261,7 +261,7 @@ err := msgService.Subscribe(ctx, "user.registered", func(ctx context.Context, ms
 
 ### 依赖的包
 - `Qingyu_backend/models/messaging`: 消息相关数据模型
-- `Qingyu_backend/repository/interfaces/shared`: 共享仓储接口
+- `Qingyu_backend/repository/interfaces/messaging`: 消息与通知仓储接口
 - `Qingyu_backend/repository/mongodb/messaging`: MongoDB消息仓储实现
 - `github.com/redis/go-redis/v9`: Redis客户端
 

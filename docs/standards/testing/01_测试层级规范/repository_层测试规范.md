@@ -15,7 +15,7 @@ func TestAuthRepository_CreateRole(t *testing.T) {
     db, cleanup := testutil.SetupTestDB(t)
     defer cleanup()
 
-    repo := shared.NewAuthRepository(db)
+    repo := auth.NewRoleRepository(db)
     ctx := context.Background()
 
     role := &authModel.Role{
@@ -67,7 +67,7 @@ repository/mongodb/{module}/{module}_repository_test.go
 
 示例：
 ```
-repository/mongodb/shared/auth_repository_test.go
+repository/mongodb/auth/role_repository_mongo_security_test.go
 repository/mongodb/bookstore/bookstore_repository_test.go
 repository/mongodb/reader/reading_progress_repository_test.go
 ```
@@ -77,11 +77,11 @@ repository/mongodb/reader/reading_progress_repository_test.go
 使用 `package xxx_test` 避免导入循环：
 
 ```go
-package shared_test
+package auth_test
 
 import (
     authModel "Qingyu_backend/models/auth"
-    shared "Qingyu_backend/repository/mongodb/shared"
+    auth "Qingyu_backend/repository/mongodb/auth"
     "Qingyu_backend/test/testutil"
 )
 ```
@@ -96,7 +96,7 @@ func TestExample(t *testing.T) {
     db, cleanup := testutil.SetupTestDB(t)
     defer cleanup()  // 测试结束后自动清理
 
-    repo := shared.NewAuthRepository(db)
+    repo := auth.NewRoleRepository(db)
     ctx := context.Background()
 
     // 测试逻辑...
@@ -126,7 +126,7 @@ func TestExample(t *testing.T) {
 db, cleanup := testutil.SetupTestDB(t)
 defer cleanup()
 
-repo := shared.NewAuthRepository(db)
+repo := auth.NewRoleRepository(db)
 ctx := context.Background()
 
 role := &authModel.Role{
@@ -170,7 +170,7 @@ func TestAuthRepository_CreateRole(t *testing.T) {
     db, cleanup := testutil.SetupTestDB(t)
     defer cleanup()
 
-    repo := shared.NewAuthRepository(db)
+    repo := auth.NewRoleRepository(db)
     ctx := context.Background()
 
     role := &authModel.Role{
@@ -199,7 +199,7 @@ func TestAuthRepository_GetRole(t *testing.T) {
     db, cleanup := testutil.SetupTestDB(t)
     defer cleanup()
 
-    repo := shared.NewAuthRepository(db)
+    repo := auth.NewRoleRepository(db)
     ctx := context.Background()
 
     // 先创建角色
@@ -231,7 +231,7 @@ func TestAuthRepository_UpdateRole(t *testing.T) {
     db, cleanup := testutil.SetupTestDB(t)
     defer cleanup()
 
-    repo := shared.NewAuthRepository(db)
+    repo := auth.NewRoleRepository(db)
     ctx := context.Background()
 
     role := &authModel.Role{
@@ -268,7 +268,7 @@ func TestAuthRepository_DeleteRole(t *testing.T) {
     db, cleanup := testutil.SetupTestDB(t)
     defer cleanup()
 
-    repo := shared.NewAuthRepository(db)
+    repo := auth.NewRoleRepository(db)
     ctx := context.Background()
 
     role := &authModel.Role{
@@ -301,7 +301,7 @@ func TestAuthRepository_GetRole_NotFound(t *testing.T) {
     db, cleanup := testutil.SetupTestDB(t)
     defer cleanup()
 
-    repo := shared.NewAuthRepository(db)
+    repo := auth.NewRoleRepository(db)
     ctx := context.Background()
 
     // 使用不存在的ObjectID
@@ -321,7 +321,7 @@ func TestAuthRepository_GetRole_InvalidID(t *testing.T) {
     db, cleanup := testutil.SetupTestDB(t)
     defer cleanup()
 
-    repo := shared.NewAuthRepository(db)
+    repo := auth.NewRoleRepository(db)
     ctx := context.Background()
 
     // Act
@@ -342,7 +342,7 @@ func TestAuthRepository_ListRoles(t *testing.T) {
     db, cleanup := testutil.SetupTestDB(t)
     defer cleanup()
 
-    repo := shared.NewAuthRepository(db)
+    repo := auth.NewRoleRepository(db)
     ctx := context.Background()
 
     // 创建多个角色
@@ -375,7 +375,7 @@ func TestAuthRepository_DeleteRole_SystemRole(t *testing.T) {
     db, cleanup := testutil.SetupTestDB(t)
     defer cleanup()
 
-    repo := shared.NewAuthRepository(db)
+    repo := auth.NewRoleRepository(db)
     ctx := context.Background()
 
     // 创建系统角色
@@ -407,7 +407,7 @@ func TestAuthRepository_GetRole_TableDriven(t *testing.T) {
     db, cleanup := testutil.SetupTestDB(t)
     defer cleanup()
 
-    repo := shared.NewAuthRepository(db)
+    repo := auth.NewRoleRepository(db)
     ctx := context.Background()
 
     // 创建测试角色
@@ -482,7 +482,7 @@ func TestAuthRepository_GetRole_TableDriven(t *testing.T) {
 
 ```bash
 # 生成覆盖率报告
-go test -coverprofile=coverage.out ./repository/mongodb/shared
+go test -coverprofile=coverage.out ./repository/mongodb/auth
 
 # 查看覆盖率
 go tool cover -func=coverage.out | grep "auth_repository.go"
@@ -500,7 +500,7 @@ func BenchmarkAuthRepository_CreateRole(b *testing.B) {
     db, cleanup := testutil.SetupTestDB(&testing.T{})
     defer cleanup()
 
-    repo := shared.NewAuthRepository(db)
+    repo := auth.NewRoleRepository(db)
     ctx := context.Background()
 
     b.ResetTimer()
@@ -519,7 +519,7 @@ func BenchmarkAuthRepository_GetRole(b *testing.B) {
     db, cleanup := testutil.SetupTestDB(&testing.T{})
     defer cleanup()
 
-    repo := shared.NewAuthRepository(db)
+    repo := auth.NewRoleRepository(db)
     ctx := context.Background()
 
     // 预创建测试数据
@@ -542,10 +542,10 @@ func BenchmarkAuthRepository_GetRole(b *testing.B) {
 
 ```bash
 # 运行Repository层的性能测试
-go test -bench=. -benchmem ./repository/mongodb/shared
+go test -bench=. -benchmem ./repository/mongodb/auth
 
 # 运行特定的benchmark测试
-go test -bench=BenchmarkAuthRepository -benchmem ./repository/mongodb/shared
+go test -bench=BenchmarkAuthRepository -benchmem ./repository/mongodb/auth
 ```
 
 ## 并发测试
@@ -558,7 +558,7 @@ func TestAuthRepository_CreateRole_Concurrent(t *testing.T) {
     db, cleanup := testutil.SetupTestDB(t)
     defer cleanup()
 
-    repo := shared.NewAuthRepository(db)
+    repo := auth.NewRoleRepository(db)
     ctx := context.Background()
 
     // Act - 并发创建角色
@@ -596,7 +596,7 @@ func TestAuthRepository_CreateRole_Concurrent(t *testing.T) {
 
 ```bash
 # 使用-race标志检测竞态条件
-go test -race ./repository/mongodb/shared
+go test -race ./repository/mongodb/auth
 ```
 
 ## 错误处理测试
@@ -609,7 +609,7 @@ func TestAuthRepository_CreateRole_DuplicateKey(t *testing.T) {
     db, cleanup := testutil.SetupTestDB(t)
     defer cleanup()
 
-    repo := shared.NewAuthRepository(db)
+    repo := auth.NewRoleRepository(db)
     ctx := context.Background()
 
     role := &authModel.Role{
@@ -641,7 +641,7 @@ func TestAuthRepository_Health(t *testing.T) {
     db, cleanup := testutil.SetupTestDB(t)
     defer cleanup()
 
-    repo := shared.NewAuthRepository(db)
+    repo := auth.NewRoleRepository(db)
     ctx := context.Background()
 
     // Act - 检查数据库健康状态
@@ -702,7 +702,7 @@ func TestAuthRepository_CreateRole_Validation(t *testing.T) {
             db, cleanup := testutil.SetupTestDB(t)
             defer cleanup()
 
-            repo := shared.NewAuthRepository(db)
+            repo := auth.NewRoleRepository(db)
             ctx := context.Background()
 
             // Act
@@ -730,7 +730,7 @@ func TestAuthRepository_ListRoles_Performance(t *testing.T) {
     db, cleanup := testutil.SetupTestDB(t)
     defer cleanup()
 
-    repo := shared.NewAuthRepository(db)
+    repo := auth.NewRoleRepository(db)
     ctx := context.Background()
 
     // 创建大量测试数据
@@ -792,7 +792,7 @@ func TestUserRepository_CreateUser(t *testing.T) {
         Permissions: []string{"user.read"},
         IsSystem:    false,
     }
-    roleRepo := shared.NewAuthRepository(db)
+    roleRepo := auth.NewRoleRepository(db)
     roleRepo.CreateRole(context.Background(), role)
 
     // 然后创建用户

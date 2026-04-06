@@ -127,7 +127,7 @@ repository/
 │   ├── notification/       # 通知推送接口
 │   ├── reader/             # 阅读相关接口
 │   ├── recommendation/     # 推荐系统接口
-│   ├── shared/             # 共享接口（兼容层）
+│   ├── shared/             # 遗留接口收尾（当前仅剩 TokenBlacklistRepository）
 │   ├── social/             # 社交功能接口
 │   ├── stats/              # 统计相关接口
 │   ├── storage/            # 存储相关接口

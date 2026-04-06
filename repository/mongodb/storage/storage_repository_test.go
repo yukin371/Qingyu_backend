@@ -10,13 +10,13 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	storageModel "Qingyu_backend/models/storage"
-	"Qingyu_backend/repository/interfaces/shared"
+	storageInterface "Qingyu_backend/repository/interfaces/storage"
 	storageRepo "Qingyu_backend/repository/mongodb/storage"
 	"Qingyu_backend/test/testutil"
 )
 
 // 测试辅助函数
-func setupStorageRepo(t *testing.T) (shared.StorageRepository, context.Context, func()) {
+func setupStorageRepo(t *testing.T) (storageInterface.StorageRepository, context.Context, func()) {
 	db, cleanup := testutil.SetupTestDB(t)
 	repo := storageRepo.NewMongoStorageRepository(db)
 	ctx := context.Background()
@@ -234,7 +234,7 @@ func TestStorageRepository_ListFiles(t *testing.T) {
 	}
 
 	// Act
-	filter := &shared.FileFilter{
+	filter := &storageInterface.FileFilter{
 		UserID:   userID,
 		Page:     1,
 		PageSize: 10,
@@ -271,7 +271,7 @@ func TestStorageRepository_ListFiles_Pagination(t *testing.T) {
 	}
 
 	// Act - 第一页
-	filter1 := &shared.FileFilter{
+	filter1 := &storageInterface.FileFilter{
 		UserID:   userID,
 		Page:     1,
 		PageSize: 10,
@@ -284,7 +284,7 @@ func TestStorageRepository_ListFiles_Pagination(t *testing.T) {
 	assert.Equal(t, int64(15), total1)
 
 	// Act - 第二页
-	filter2 := &shared.FileFilter{
+	filter2 := &storageInterface.FileFilter{
 		UserID:   userID,
 		Page:     2,
 		PageSize: 10,

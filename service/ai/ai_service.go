@@ -173,12 +173,6 @@ type Service struct {
 }
 
 // Deprecated: Use NewAIService instead
-func NewService() *Service {
-	logrus.Warn("NewService is deprecated. Use NewAIService with gRPC client instead.")
-	return &Service{}
-}
-
-// Deprecated: Use NewAIService instead
 func NewServiceWithDependencies(projectService interface{}) *Service {
 	logrus.Warn("NewServiceWithDependencies is deprecated. Use NewAIService with gRPC client instead.")
 	return &Service{}

@@ -24,13 +24,13 @@ graph TB
 
     subgraph "External Dependencies"
         UserRepository["UserRepository<br/>用户仓储接口"]
-        AuthRepository["AuthRepository<br/>认证仓储接口"]
+        RoleRepository["RoleRepository<br/>角色仓储接口"]
         EmailService["EmailService<br/>邮件服务"]
     end
 
     %% UserService 依赖
     UserService --> UserRepository
-    UserService --> AuthRepository
+    UserService --> RoleRepository
     UserService --> Converter
     UserService --> EmailTokenManager
     UserService --> PasswordResetManager
@@ -42,7 +42,7 @@ graph TB
 
     %% VerificationService 依赖
     VerificationService --> UserRepository
-    VerificationService --> AuthRepository
+    VerificationService --> RoleRepository
     VerificationService --> EmailService
     VerificationService --> EmailTokenManager
 
@@ -155,7 +155,7 @@ graph LR
 
     subgraph "Repository Layer"
         UserRepository["UserRepository"]
-        AuthRepository["AuthRepository"]
+        RoleRepository["RoleRepository"]
     end
 
     subgraph "External Services"
@@ -163,9 +163,10 @@ graph LR
     end
 
     UserService --> UserRepository
-    UserService --> AuthRepository
+    UserService --> RoleRepository
     PasswordService --> UserRepository
     VerificationService --> UserRepository
+    VerificationService --> RoleRepository
     VerificationService --> EmailService
 ```
 
@@ -174,10 +175,10 @@ graph LR
 | 服务 | Repository | 用途 |
 |------|------------|------|
 | UserServiceImpl | `UserRepository` | 用户CRUD、状态管理 |
-| UserServiceImpl | `AuthRepository` | 角色、权限管理 |
+| UserServiceImpl | `RoleRepository` | 角色、权限管理 |
 | PasswordService | `UserRepository` | 密码更新、用户查询 |
 | VerificationService | `UserRepository` | 用户信息查询、验证状态更新 |
-| VerificationService | `AuthRepository` | 认证相关操作 |
+| VerificationService | `RoleRepository` | 认证相关操作 |
 
 ## 核心流程说明
 

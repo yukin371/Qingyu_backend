@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"Qingyu_backend/models/shared/types"
-	sharedRepo "Qingyu_backend/repository/interfaces/shared"
+	financeRepo "Qingyu_backend/repository/interfaces/finance"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -121,7 +121,7 @@ func (m *MockWalletRepositoryV2) GetTransaction(ctx context.Context, transaction
 }
 
 // ListTransactions 列出交易
-func (m *MockWalletRepositoryV2) ListTransactions(ctx context.Context, filter *sharedRepo.TransactionFilter) ([]*financeModel.Transaction, error) {
+func (m *MockWalletRepositoryV2) ListTransactions(ctx context.Context, filter *financeRepo.TransactionFilter) ([]*financeModel.Transaction, error) {
 	var result []*financeModel.Transaction
 	for _, tx := range m.transactions {
 		if filter.UserID != "" && tx.UserID != filter.UserID {
@@ -156,7 +156,7 @@ func (m *MockWalletRepositoryV2) ListTransactions(ctx context.Context, filter *s
 }
 
 // CountTransactions 统计交易
-func (m *MockWalletRepositoryV2) CountTransactions(ctx context.Context, filter *sharedRepo.TransactionFilter) (int64, error) {
+func (m *MockWalletRepositoryV2) CountTransactions(ctx context.Context, filter *financeRepo.TransactionFilter) (int64, error) {
 	count := int64(0)
 	for _, tx := range m.transactions {
 		if filter.UserID != "" && tx.UserID != filter.UserID {
@@ -200,7 +200,7 @@ func (m *MockWalletRepositoryV2) UpdateWithdrawRequest(ctx context.Context, with
 }
 
 // ListWithdrawRequests 列出提现请求
-func (m *MockWalletRepositoryV2) ListWithdrawRequests(ctx context.Context, filter *sharedRepo.WithdrawFilter) ([]*financeModel.WithdrawRequest, error) {
+func (m *MockWalletRepositoryV2) ListWithdrawRequests(ctx context.Context, filter *financeRepo.WithdrawFilter) ([]*financeModel.WithdrawRequest, error) {
 	var result []*financeModel.WithdrawRequest
 	for _, req := range m.withdrawRequests {
 		if filter.UserID != "" && req.UserID != filter.UserID {
@@ -215,7 +215,7 @@ func (m *MockWalletRepositoryV2) ListWithdrawRequests(ctx context.Context, filte
 }
 
 // CountWithdrawRequests 统计提现请求
-func (m *MockWalletRepositoryV2) CountWithdrawRequests(ctx context.Context, filter *sharedRepo.WithdrawFilter) (int64, error) {
+func (m *MockWalletRepositoryV2) CountWithdrawRequests(ctx context.Context, filter *financeRepo.WithdrawFilter) (int64, error) {
 	count := int64(0)
 	for _, req := range m.withdrawRequests {
 		if filter.UserID != "" && req.UserID != filter.UserID {

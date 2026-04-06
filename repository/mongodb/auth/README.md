@@ -468,11 +468,9 @@ err := templateRepo.InitializeSystemTemplates(ctx)
 为了保持向后兼容性，模块提供了兼容别名：
 
 ```go
-// repository/mongodb/auth/auth_repository_compat.go
-type AuthRepository = authInterface.RoleRepository  // Deprecated
-
-func NewAuthRepository(db *mongo.Database) AuthRepository {
-    return NewRoleRepository(db)
+// repository/mongodb/auth/role_repository_mongo.go
+func NewRoleRepository(db *mongo.Database) authInterface.RoleRepository {
+    return &MongoRoleRepository{db: db}
 }
 ```
 

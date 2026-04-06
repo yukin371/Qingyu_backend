@@ -58,7 +58,7 @@ func (api *DocumentApi) CreateDocument(c *gin.Context) {
 
 	ctx := shared.AddUserIDToContext(c)
 
-	var req document.CreateDocumentRequest
+	var req dto.CreateDocumentRequest
 	if !shared.BindJSON(c, &req) {
 		return
 	}
@@ -133,7 +133,7 @@ func (api *DocumentApi) GetDocumentTree(c *gin.Context) {
 func (api *DocumentApi) UpdateDocument(c *gin.Context) {
 	documentID := c.Param("id")
 
-	var req document.UpdateDocumentRequest
+	var req dto.UpdateDocumentRequest
 	if !shared.BindJSON(c, &req) {
 		return
 	}
@@ -186,7 +186,7 @@ func (api *DocumentApi) ListDocuments(c *gin.Context) {
 
 	pagination := shared.GetPaginationParamsStandard(c)
 
-	req := &document.ListDocumentsRequest{
+	req := &dto.ListDocumentsRequest{
 		ProjectID: projectID,
 		Page:      pagination.Page,
 		PageSize:  pagination.PageSize,
@@ -216,7 +216,7 @@ func (api *DocumentApi) ListDocuments(c *gin.Context) {
 func (api *DocumentApi) MoveDocument(c *gin.Context) {
 	documentID := c.Param("id")
 
-	var req document.MoveDocumentRequest
+	var req dto.MoveDocumentRequest
 	if !shared.BindJSON(c, &req) {
 		return
 	}
@@ -246,7 +246,7 @@ func (api *DocumentApi) MoveDocument(c *gin.Context) {
 func (api *DocumentApi) ReorderDocuments(c *gin.Context) {
 	projectID := c.Param("projectId")
 
-	var req document.ReorderDocumentsRequest
+	var req dto.ReorderDocumentsRequest
 	if !shared.BindJSON(c, &req) {
 		return
 	}
@@ -360,7 +360,7 @@ func (api *DocumentApi) CreateDocumentByBody(c *gin.Context) {
 		parentIDPtr = &req.ParentID
 	}
 
-	createReq := &document.CreateDocumentRequest{
+	createReq := &dto.CreateDocumentRequest{
 		ProjectID:    req.ProjectID,
 		ParentID:     parentIDPtr,
 		Title:        req.Title,
@@ -381,7 +381,7 @@ func (api *DocumentApi) CreateDocumentByBody(c *gin.Context) {
 
 	// 如果提供了内容，保存文档内容
 	if req.Content != "" {
-		updateContentReq := &document.UpdateContentRequest{
+		updateContentReq := &dto.UpdateContentRequest{
 			DocumentID: resp.DocumentID,
 			Content:    req.Content,
 		}

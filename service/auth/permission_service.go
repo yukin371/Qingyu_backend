@@ -12,12 +12,12 @@ import (
 
 	middlewareAuth "Qingyu_backend/internal/middleware/auth"
 	authModel "Qingyu_backend/models/auth"
-	sharedRepo "Qingyu_backend/repository/interfaces/shared"
+	authRepo "Qingyu_backend/repository/interfaces/auth"
 )
 
 // PermissionServiceImpl 权限服务实现
 type PermissionServiceImpl struct {
-	authRepo    sharedRepo.AuthRepository
+	authRepo    authRepo.RoleRepository
 	cacheClient CacheClient // 缓存客户端（Redis）
 	cacheTTL    time.Duration
 	logger      *zap.Logger
@@ -43,7 +43,7 @@ type CacheClient interface {
 
 // NewPermissionService 创建权限服务
 // todo: 重构此服务
-func NewPermissionService(authRepo sharedRepo.AuthRepository, cacheClient CacheClient, logger *zap.Logger) PermissionService {
+func NewPermissionService(authRepo authRepo.RoleRepository, cacheClient CacheClient, logger *zap.Logger) PermissionService {
 	return &PermissionServiceImpl{
 		authRepo:    authRepo,
 		cacheClient: cacheClient,

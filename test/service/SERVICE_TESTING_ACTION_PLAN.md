@@ -121,14 +121,14 @@ Service层统计：
 
 ---
 
-### 4️⃣ AuthService 改进（共享认证）
+### 4️⃣ AuthService 改进（认证模块）
 
-**文件**：`service/shared/auth/auth_service.go`  
+**文件**：`service/auth/auth_service.go`  
 **现状**：✅ 有基础测试，需要扩展
 
 **改进任务**：
-- [ ] 扩展 `test/service/shared/auth_service_test.go`
-- [ ] 新增 `test/service/shared/auth/session_service_test.go`
+- [ ] 扩展 `service/auth/*_test.go`
+- [ ] 新增 `service/auth/session_service_test.go`
 - [ ] 加强 PermissionService 和 RoleService 测试
 
 **预期测试用例**（共18+）：
@@ -163,7 +163,7 @@ Service层统计：
 go test ./test/service/user/... -v -cover
 go test ./test/service/project/... -v -cover
 go test ./test/service/document/... -v -cover
-go test ./test/service/shared/auth/... -v -cover
+go test ./service/auth/... -v -cover
 ```
 
 ---
@@ -347,7 +347,7 @@ func Test[ServiceName]_[MethodName](t *testing.T) {
 mkdir -p test/service/user
 mkdir -p test/service/project/
 mkdir -p test/service/document/
-mkdir -p test/service/shared/auth/
+mkdir -p service/auth/
 
 # 查看现有测试
 ls -la test/service/*/
@@ -373,7 +373,7 @@ go test ./test/service/project/... -v -cover
 go test ./test/service/document/... -v -cover
 
 # AuthService
-go test ./test/service/shared/auth/... -v -cover
+go test ./service/auth/... -v -cover
 ```
 
 ---

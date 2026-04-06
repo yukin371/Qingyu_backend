@@ -6,12 +6,12 @@ import (
 	"fmt"
 
 	"Qingyu_backend/models/shared/types"
-	sharedRepo "Qingyu_backend/repository/interfaces/shared"
+	financeRepo "Qingyu_backend/repository/interfaces/finance"
 )
 
 // TransactionServiceImpl 交易服务实现
 type TransactionServiceImpl struct {
-	walletRepo sharedRepo.WalletRepository
+	walletRepo financeRepo.WalletRepository
 	txRunner   TransactionRunner
 }
 
@@ -25,12 +25,12 @@ type TransactionService interface {
 }
 
 // NewTransactionService 创建交易服务
-func NewTransactionService(walletRepo sharedRepo.WalletRepository) TransactionService {
+func NewTransactionService(walletRepo financeRepo.WalletRepository) TransactionService {
 	return NewTransactionServiceWithRunner(walletRepo, NewRepositoryTransactionRunner(walletRepo))
 }
 
 // NewTransactionServiceWithRunner 创建带显式事务入口的交易服务
-func NewTransactionServiceWithRunner(walletRepo sharedRepo.WalletRepository, txRunner TransactionRunner) TransactionService {
+func NewTransactionServiceWithRunner(walletRepo financeRepo.WalletRepository, txRunner TransactionRunner) TransactionService {
 	return &TransactionServiceImpl{
 		walletRepo: walletRepo,
 		txRunner:   txRunner,
@@ -208,7 +208,7 @@ func (s *TransactionServiceImpl) GetTransaction(ctx context.Context, transaction
 
 // ListTransactions 列出交易记录
 func (s *TransactionServiceImpl) ListTransactions(ctx context.Context, userID string, limit, offset int) ([]*Transaction, error) {
-	filter := &sharedRepo.TransactionFilter{
+	filter := &financeRepo.TransactionFilter{
 		UserID: userID,
 		Limit:  int64(limit),
 		Offset: int64(offset),

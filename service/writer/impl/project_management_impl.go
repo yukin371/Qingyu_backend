@@ -3,6 +3,7 @@ package impl
 import (
 	"context"
 
+	"Qingyu_backend/models/dto"
 	"Qingyu_backend/models/writer"
 	serviceWriter "Qingyu_backend/service/interfaces/writer"
 	writerproject "Qingyu_backend/service/writer/project"
@@ -55,7 +56,7 @@ func (p *ProjectManagementImpl) GetVersion() string {
 // CreateProject 创建新项目
 func (p *ProjectManagementImpl) CreateProject(ctx context.Context, req *serviceWriter.CreateProjectRequest) (*serviceWriter.CreateProjectResponse, error) {
 	// 转换请求类型
-	projectReq := &writerproject.CreateProjectRequest{
+	projectReq := &dto.CreateProjectRequest{
 		Title:    req.Title,
 		Summary:  req.Summary,
 		CoverURL: req.CoverURL,
@@ -93,7 +94,7 @@ func (p *ProjectManagementImpl) GetByIDWithoutAuth(ctx context.Context, projectI
 // ListMyProjects 获取我的项目列表
 func (p *ProjectManagementImpl) ListMyProjects(ctx context.Context, req *serviceWriter.ListProjectsRequest) (*serviceWriter.ListProjectsResponse, error) {
 	// 转换请求类型
-	projectReq := &writerproject.ListProjectsRequest{
+	projectReq := &dto.ListProjectsRequest{
 		Page:     req.Page,
 		PageSize: req.PageSize,
 		Status:   req.Status,
@@ -119,7 +120,7 @@ func (p *ProjectManagementImpl) GetProjectList(ctx context.Context, userID, stat
 // UpdateProject 更新项目
 func (p *ProjectManagementImpl) UpdateProject(ctx context.Context, projectID string, req *serviceWriter.UpdateProjectRequest) error {
 	// 转换请求类型
-	projectReq := &writerproject.UpdateProjectRequest{
+	projectReq := &dto.UpdateProjectRequest{
 		Title:    req.Title,
 		Summary:  req.Summary,
 		CoverURL: req.CoverURL,

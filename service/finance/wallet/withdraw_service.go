@@ -7,12 +7,12 @@ import (
 	"time"
 
 	"Qingyu_backend/models/shared/types"
-	sharedRepo "Qingyu_backend/repository/interfaces/shared"
+	financeRepo "Qingyu_backend/repository/interfaces/finance"
 )
 
 // WithdrawServiceImpl 提现服务实现
 type WithdrawServiceImpl struct {
-	walletRepo sharedRepo.WalletRepository
+	walletRepo financeRepo.WalletRepository
 	txRunner   TransactionRunner
 }
 
@@ -26,12 +26,12 @@ type WithdrawService interface {
 }
 
 // NewWithdrawService 创建提现服务
-func NewWithdrawService(walletRepo sharedRepo.WalletRepository) WithdrawService {
+func NewWithdrawService(walletRepo financeRepo.WalletRepository) WithdrawService {
 	return NewWithdrawServiceWithRunner(walletRepo, NewRepositoryTransactionRunner(walletRepo))
 }
 
 // NewWithdrawServiceWithRunner 创建带显式事务入口的提现服务
-func NewWithdrawServiceWithRunner(walletRepo sharedRepo.WalletRepository, txRunner TransactionRunner) WithdrawService {
+func NewWithdrawServiceWithRunner(walletRepo financeRepo.WalletRepository, txRunner TransactionRunner) WithdrawService {
 	return &WithdrawServiceImpl{
 		walletRepo: walletRepo,
 		txRunner:   txRunner,
@@ -187,7 +187,7 @@ func (s *WithdrawServiceImpl) GetWithdrawRequest(ctx context.Context, requestID 
 
 // ListWithdrawRequests 列出提现请求
 func (s *WithdrawServiceImpl) ListWithdrawRequests(ctx context.Context, userID, status string, limit, offset int) ([]*WithdrawRequest, error) {
-	filter := &sharedRepo.WithdrawFilter{
+	filter := &financeRepo.WithdrawFilter{
 		UserID: userID,
 		Status: status,
 		Limit:  int64(limit),

@@ -1,6 +1,7 @@
 package project
 
 import (
+	"Qingyu_backend/models/dto"
 	"Qingyu_backend/models/writer"
 	"context"
 	"fmt"
@@ -35,7 +36,7 @@ func NewProjectService(
 }
 
 // CreateProject 创建项目
-func (s *ProjectService) CreateProject(ctx context.Context, req *CreateProjectRequest) (*writer.Project, error) {
+func (s *ProjectService) CreateProject(ctx context.Context, req *dto.CreateProjectRequest) (*writer.Project, error) {
 	// 1. 参数验证
 	if err := s.validateCreateProjectRequest(req); err != nil {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "参数验证失败", err.Error(), err)
@@ -110,7 +111,7 @@ func (s *ProjectService) GetProject(ctx context.Context, projectID string) (*wri
 }
 
 // ListMyProjects 获取我的项目列表
-func (s *ProjectService) ListMyProjects(ctx context.Context, req *ListProjectsRequest) (*ListProjectsResponse, error) {
+func (s *ProjectService) ListMyProjects(ctx context.Context, req *dto.ListProjectsRequest) (*ListProjectsResponse, error) {
 	// 1. 获取用户ID
 	userID, ok := ctx.Value("userId").(string)
 	if !ok || userID == "" {
@@ -161,7 +162,7 @@ func (s *ProjectService) ListMyProjects(ctx context.Context, req *ListProjectsRe
 }
 
 // UpdateProject 更新项目
-func (s *ProjectService) UpdateProject(ctx context.Context, projectID string, req *UpdateProjectRequest) error {
+func (s *ProjectService) UpdateProject(ctx context.Context, projectID string, req *dto.UpdateProjectRequest) error {
 	// 1. 查询项目
 	project, err := s.projectRepo.GetByID(ctx, projectID)
 	if err != nil {
@@ -330,7 +331,7 @@ func (s *ProjectService) GetByIDWithoutAuth(ctx context.Context, projectID strin
 // GetProjectList 获取项目列表（兼容API层调用）
 func (s *ProjectService) GetProjectList(ctx context.Context, userID, status string, limit, offset int64) ([]*writer.Project, error) {
 	// 构建请求
-	req := &ListProjectsRequest{
+	req := &dto.ListProjectsRequest{
 		Page:     int(offset/limit) + 1,
 		PageSize: int(limit),
 		Status:   status,
@@ -358,7 +359,7 @@ func (s *ProjectService) UpdateProjectByID(ctx context.Context, projectID, userI
 	status := string(req.Status)
 	tags := req.Tags
 
-	updateReq := &UpdateProjectRequest{
+	updateReq := &dto.UpdateProjectRequest{
 		Title:    &title,
 		Summary:  &summary,
 		CoverURL: &coverURL,
@@ -485,7 +486,7 @@ func (s *ProjectService) SetProjectDefaults(project *writer.Project) {
 }
 
 // 私有方法
-func (s *ProjectService) validateCreateProjectRequest(req *CreateProjectRequest) error {
+func (s *ProjectService) validateCreateProjectRequest(req *dto.CreateProjectRequest) error {
 	if req.Title == "" {
 		return fmt.Errorf("项目标题不能为空")
 	}

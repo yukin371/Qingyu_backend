@@ -5,7 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"Qingyu_backend/service/shared/auth"
+	"Qingyu_backend/service/auth"
+	userService "Qingyu_backend/service/user"
 	"Qingyu_backend/service/writer/project"
 
 	"github.com/stretchr/testify/assert"
@@ -94,7 +95,7 @@ func TestMVP_MultiDeviceLoginIntegration(t *testing.T) {
 // 验证：各种密码强度 → 验证规则执行
 func TestMVP_PasswordValidationIntegration(t *testing.T) {
 	// 准备
-	validator := auth.NewPasswordValidator()
+	validator := userService.NewPasswordValidator()
 
 	// 测试用例
 	testCases := []struct {
@@ -162,7 +163,7 @@ func TestMVP_PasswordValidationIntegration(t *testing.T) {
 
 // TestMVP_PasswordStrengthScoring 测试密码强度评分（预留功能）
 func TestMVP_PasswordStrengthScoring(t *testing.T) {
-	validator := auth.NewPasswordValidator()
+	validator := userService.NewPasswordValidator()
 
 	testCases := []struct {
 		password string
@@ -194,7 +195,7 @@ func TestMVP_CoreFlowIntegration(t *testing.T) {
 	// Step 1: 注册（密码强度验证）
 	t.Log("Step 1: 测试用户注册...")
 	password := "TestPass123"
-	validator := auth.NewPasswordValidator()
+	validator := userService.NewPasswordValidator()
 	err := validator.ValidatePassword(password)
 	assert.NoError(t, err, "密码应该通过验证")
 

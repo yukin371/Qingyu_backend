@@ -4,7 +4,7 @@ import (
 	financeModel "Qingyu_backend/models/finance"
 	"context"
 
-	sharedRepo "Qingyu_backend/repository/interfaces/shared"
+	financeRepo "Qingyu_backend/repository/interfaces/finance"
 
 	"github.com/stretchr/testify/mock"
 )
@@ -57,7 +57,7 @@ func (m *MockWalletRepository) GetTransaction(ctx context.Context, transactionID
 }
 
 // ListTransactions 列出交易记录
-func (m *MockWalletRepository) ListTransactions(ctx context.Context, filter *sharedRepo.TransactionFilter) ([]*financeModel.Transaction, error) {
+func (m *MockWalletRepository) ListTransactions(ctx context.Context, filter *financeRepo.TransactionFilter) ([]*financeModel.Transaction, error) {
 	args := m.Called(ctx, filter)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -66,7 +66,7 @@ func (m *MockWalletRepository) ListTransactions(ctx context.Context, filter *sha
 }
 
 // CountTransactions 统计交易数量
-func (m *MockWalletRepository) CountTransactions(ctx context.Context, filter *sharedRepo.TransactionFilter) (int64, error) {
+func (m *MockWalletRepository) CountTransactions(ctx context.Context, filter *financeRepo.TransactionFilter) (int64, error) {
 	args := m.Called(ctx, filter)
 	return args.Get(0).(int64), args.Error(1)
 }
@@ -93,7 +93,7 @@ func (m *MockWalletRepository) UpdateWithdrawRequest(ctx context.Context, withdr
 }
 
 // ListWithdrawRequests 列出提现申请
-func (m *MockWalletRepository) ListWithdrawRequests(ctx context.Context, filter *sharedRepo.WithdrawFilter) ([]*financeModel.WithdrawRequest, error) {
+func (m *MockWalletRepository) ListWithdrawRequests(ctx context.Context, filter *financeRepo.WithdrawFilter) ([]*financeModel.WithdrawRequest, error) {
 	args := m.Called(ctx, filter)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -102,7 +102,7 @@ func (m *MockWalletRepository) ListWithdrawRequests(ctx context.Context, filter 
 }
 
 // CountWithdrawRequests 统计提现申请数量
-func (m *MockWalletRepository) CountWithdrawRequests(ctx context.Context, filter *sharedRepo.WithdrawFilter) (int64, error) {
+func (m *MockWalletRepository) CountWithdrawRequests(ctx context.Context, filter *financeRepo.WithdrawFilter) (int64, error) {
 	args := m.Called(ctx, filter)
 	return args.Get(0).(int64), args.Error(1)
 }

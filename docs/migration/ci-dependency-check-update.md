@@ -2,7 +2,7 @@
 
 ## 更新概述
 
-本次更新为依赖检查工具添加了对auth模块迁移的支持，包括废弃路径检测和迁移指南。
+本次更新为依赖检查工具添加了对 auth 模块迁移的支持，并将旧路径检查提升为错误级别。
 
 ## 更新时间
 
@@ -14,15 +14,13 @@
 
 ### 1. 新增功能
 
-#### 废弃路径检测
+#### 旧路径检测
 - 检测已废弃的`Qingyu_backend/service/shared/auth`导入
-- 区分生产代码（warning）和测试代码（deprecated/info）
+- 生产代码与测试代码统一按 `error` 处理
 - 新路径`Qingyu_backend/service/auth`不受影响
 
-#### 新的严重级别
+#### 严重级别
 - `error`: 阻塞CI的错误
-- `warning`: 警告但不阻塞CI
-- `deprecated`: 信息提示（主要用于测试文件）
 
 ### 2. 代码变更
 
@@ -39,14 +37,14 @@ type Violation struct {
     Line     int
     Import   string
     Rule     string
-    Severity string // "error", "warning", or "deprecated"
+    Severity string // "error"
 }
 
 // 新增检测逻辑
 func checkImport(...) {
-    // 规则0: 检查废弃路径
+    // 规则0: 检查旧路径
     if deprecationMsg, isDeprecated := deprecatedImports[importPath]; isDeprecated {
-        // 返回warning或deprecated
+        // 返回error
     }
     // ... 其他规则
 }
@@ -57,7 +55,7 @@ func checkImport(...) {
 // 新增测试用例
 func TestDeprecatedImports(t *testing.T) {
     // 测试废弃路径检测
-    // 测试测试文件的deprecated级别
+    // 测试测试文件同样触发error
     // 测试新路径不被标记
 }
 
@@ -101,8 +99,7 @@ $ go run ./scripts/check-dependencies
 ### CI集成验证
 - ✅ architecture-ci.yml已集成
 - ✅ 检查命令正确
-- ✅ 失败时不阻塞其他任务
-- ✅ deprecated不影响CI通过
+- ✅ 违规会阻塞CI
 
 ## 检查规则总结
 
@@ -110,7 +107,7 @@ $ go run ./scripts/check-dependencies
 
 | 规则 | 目标 | 严重级别 | 说明 |
 |------|------|----------|------|
-| 废弃auth路径 | `Qingyu_backend/service/shared/auth` | warning (生产)<br>deprecated (测试) | 建议迁移到新路径 |
+| 废弃auth路径 | `Qingyu_backend/service/shared/auth` | error | 必须迁移到新路径 |
 | 业务服务导入shared | `service/shared/*` | error | 应该使用Port接口 |
 
 ### 允许列表
@@ -143,7 +140,7 @@ $ go run ./scripts/check-dependencies
 ### CI/CD
 
 - **自动运行**：每次push和PR都会触发检查
-- **失败处理**：error和warning会失败，deprecated不影响
+- **失败处理**：发现旧 auth 路径即失败
 - **报告查看**：可在GitHub Actions中查看详细报告
 
 ## 后续计划
@@ -159,15 +156,15 @@ $ go run ./scripts/check-dependencies
 - 🔄 计划其他shared子模块的迁移
 
 ### 长期
-- 📋 移除兼容层（当所有迁移完成）
 - 📋 扩展检查规则到其他模块
 - 📋 添加循环依赖检测
 
-## 兼容性
+## 当前口径
 
-- **向后兼容**: ✅ 完全兼容
-- **CI不中断**: ✅ deprecated不影响通过
-- **兼容层保留**: ✅ 旧代码继续工作
+- `service/shared/auth` 已删除，不再提供运行时兼容
+- 认证服务使用 `service/auth`
+- 密码验证器使用 `service/user`
+- 鉴权/权限中间件使用 `internal/middleware/auth`
 
 ## 相关链接
 
@@ -180,7 +177,7 @@ $ go run ./scripts/check-dependencies
 
 ### v1.1.0 (2026-02-09)
 - ✅ 添加废弃路径检测功能
-- ✅ 新增deprecated严重级别
+- ✅ 统一为error严重级别
 - ✅ 更新测试用例
 - ✅ 完善文档
 

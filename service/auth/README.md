@@ -30,7 +30,7 @@ graph TB
     end
 
     subgraph "Repository Layer"
-        AuthRepo[AuthRepository<br/>角色仓储]
+        RoleRepo[RoleRepository<br/>角色仓储]
         OAuthRepo[OAuthRepository<br/>OAuth仓储]
         TemplateRepo[PermissionTemplateRepository<br/>模板仓储]
     end
@@ -57,13 +57,13 @@ graph TB
     PermissionService --> RedisAdapter
     PermissionService --> RBACChecker
 
-    AuthService --> AuthRepo
+    AuthService --> RoleRepo
     OAuthService --> OAuthRepo
     TemplateService --> TemplateRepo
-    RoleService --> AuthRepo
+    RoleService --> RoleRepo
 
     RedisAdapter --> Redis
-    AuthRepo --> MongoDB
+    RoleRepo --> MongoDB
     OAuthRepo --> MongoDB
     TemplateRepo --> MongoDB
 
@@ -216,7 +216,6 @@ RBAC权限检查和管理。
 |---------|------|
 | `service/interfaces/user` | 用户服务接口 |
 | `repository/interfaces/auth` | 认证仓储接口 |
-| `repository/interfaces/shared` | 共享仓储接口 |
 | `models/auth` | 认证数据模型 |
 | `models/users` | 用户数据模型 |
 | `internal/middleware/auth` | JWT管理器和RBAC检查器 |
