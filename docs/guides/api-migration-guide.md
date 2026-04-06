@@ -41,7 +41,7 @@
 - **迁移文件**: 11个Reader模块API
 - **响应调用**: 213次成功迁移
 - **测试覆盖**: 174/174测试通过（100%）
-- **参考文档**: [Block 7进展报告](../plans/2026-01-28-block7-api-standardization-progress.md)
+- **参考文档**: [Block 7进展报告](../../../docs/plans/submodules/backend/api-governance/2026-01-28-block7-api-standardization-progress.md)
 
 ---
 
@@ -704,7 +704,7 @@ response.Success(c, gin.H{
 
 ### Block 7参考文档
 
-- [Block 7 API规范化试点 - 进展报告](../plans/2026-01-28-block7-api-standardization-progress.md)
+- [Block 7 API规范化试点 - 进展报告](../../../docs/plans/submodules/backend/api-governance/2026-01-28-block7-api-standardization-progress.md)
 - [Block 7 全面回归测试报告](../reports/block7-p2-regression-test-report.md)
 
 ### 相关代码

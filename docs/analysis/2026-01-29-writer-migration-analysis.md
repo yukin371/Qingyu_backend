@@ -334,8 +334,8 @@ import (
 
 ## 🔗 相关文档
 
-- [Block 8准备工作规划](../plans/2026-01-29-block8-preparation-plan.md)
-- [Block 7 API规范化试点 - 进展报告](../plans/2026-01-28-block7-api-standardization-progress.md)
+- [Block 8准备工作规划](../../../docs/plans/submodules/backend/legacy-phases/2026-01-29-block8-preparation-plan.md)
+- [Block 7 API规范化试点 - 进展报告](../../../docs/plans/submodules/backend/api-governance/2026-01-28-block7-api-standardization-progress.md)
 - [Block 7 全面回归测试报告](../reports/block7-p2-regression-test-report.md)
 
 ---

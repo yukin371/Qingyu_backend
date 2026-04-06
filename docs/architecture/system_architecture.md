@@ -1,308 +1,179 @@
-# Qingyu Backend 系统架构
+# Qingyu Backend System Architecture
 
-## 1. 架构概览
+> Version: 2026-04-07 refresh  
+> Positioning: current architecture baseline for onboarding and AI context building
 
-Qingyu Backend 采用经典的分层架构设计，结合依赖注入和事件驱动模式，构建了一个模块化、可扩展的小说创作平台后端服务。
+## 1. What This Document Is
 
-### 1.1 技术栈
-- **语言**: Go 1.x
-- **Web框架**: Gin
-- **数据库**: MongoDB (主数据), Redis (缓存), Milvus (向量), MinIO (对象存储)
-- **外部服务**: AI Service (gRPC)
+这份文档描述当前代码库的真实架构，不是理想态蓝图。  
+重点回答四个问题：
 
-### 1.2 核心设计模式
-- **分层架构**: API → Service → Repository → Model
-- **依赖注入**: Service Container统一管理服务生命周期
-- **接口隔离**: Repository接口与实现分离
-- **事件驱动**: 内置事件总线实现模块解耦
+1. 主要层级和模块边界是什么
+2. 服务如何启动
+3. 请求如何进入业务层
+4. 哪些结构是当前主要风险点
 
-## 2. 分层结构
+## 2. Current Layered Boundaries
 
-### 2.1 API层 (`api/v1/`)
+后端主路径仍是：
 
-API层负责处理HTTP请求和响应，按业务领域划分为以下模块：
+`router -> api/v1 -> service -> repository -> data adapters`
 
-| 模块 | 职责 | 主要文件 |
-|------|------|----------|
-| `admin` | 后台管理功能 | admin_api.go, dashboard_api.go, analytics_api.go, audit_api.go, permission_template_api.go, content_export_api.go |
-| `ai` | AI服务集成 | ai_api.go, chat_api.go |
-| `bookstore` | 书店/小说管理 | bookstore_api.go, book_detail_api.go |
-| `reader` | 读者功能 | reading_history_api.go, bookshelf_api.go |
-| `social` | 社交功能 | comment_api.go, like_api.go, follow_api.go |
-| `writer` | 作者功能 | editor_api.go, publish_api.go, statistics_api.go, export_api.go, audit_api.go |
-| `notification` | 通知系统 | notification_api.go |
-| `finance` | 财务功能 | finance_api.go |
-| `compliance` | 合规审核 | compliance_api.go |
+但运行时编排并不只在 `core`，`router/enter.go` 与 `service/container` 都承担了系统级装配职责。
 
-### 2.2 Service层 (`service/`)
-
-Service层实现业务逻辑，包含以下核心组件：
-
-| 组件 | 职责 |
-|------|------|
-| `container/` | 依赖注入容器，管理所有服务生命周期 |
-| `events/` | 事件总线，支持发布-订阅模式 |
-| `bookstore/` | 书店业务服务 |
-| `reader/` | 读者业务服务 |
-| `social/` | 社交业务服务 |
-| `writer/` | 作者业务服务 |
-| `ai/` | AI服务集成 |
-| `admin/` | 管理员业务服务（统计分析、审计日志、导出服务、权限模板） |
-| `audit/` | 审核业务服务 |
-| `auth/` | 认证授权服务（权限模板服务） |
-| `shared/` | 共享服务（auth, cache, messaging等） |
-
-### 2.3 Repository层 (`repository/`)
-
-Repository层负责数据访问，采用接口与实现分离的设计：
-
-```
-repository/
-├── interfaces/      # 接口定义
-│   ├── bookstore/
-│   ├── reader/
-│   ├── social/
-│   └── writer/
-└── mongodb/         # MongoDB实现
-    ├── bookstore/
-    ├── reader/
-    ├── social/
-    └── writer/
-```
-
-### 2.4 Model层 (`models/`)
-
-数据模型定义，按业务领域组织：
-
-```
-models/
-├── admin/           # 管理相关模型
-│   └── export_history.go    # 导出历史记录
-├── auth/            # 认证授权相关模型
-│   └── permission_template.go  # 权限模板
-├── audit/           # 审核相关模型
-│   └── audit_record.go        # 审核记录
-├── bookstore/       # 书店相关模型
-├── reader/          # 读者相关模型
-├── social/          # 社交相关模型
-├── writer/          # 作者相关模型
-└── shared/          # 共享模型
-```
-
-## 3. 模块划分
-
-### 3.1 业务模块依赖关系
+### 2.1 Layer and module boundary diagram
 
 ```mermaid
-graph TB
-    subgraph "核心业务层"
-        Bookstore[Bookstore<br/>书店/小说]
-        Reader[Reader<br/>读者]
-        Writer[Writer<br/>作者]
-        Social[Social<br/>社交]
+graph TD
+    subgraph Entry
+        CMD[cmd/server/main.go]
+        CORE[core/init_db.go + core/server.go]
     end
 
-    subgraph "支撑服务层"
-        AI[AI Service<br/>AI服务]
-        Notification[Notification<br/>通知]
-        Finance[Finance<br/>财务]
-        Compliance[Compliance<br/>合规]
+    subgraph Gateway
+        GIN[Gin Engine]
+        MIDDLEWARE[internal/middleware + ratelimit + metrics]
+        ROUTER[router/* + router/enter.go]
     end
 
-    subgraph "管理服务层"
-        Admin[Admin<br/>管理后台]
-        Analytics[Analytics<br/>统计分析]
-        AuditLog[AuditLog<br/>审计日志]
-        Export[Export<br/>数据导出]
-        Permission[Permission<br/>权限管理]
+    subgraph Application
+        API[api/v1/*]
+        SERVICE[service/*]
+        CONTAINER[service/container]
+        EVENTS[service/events]
+        SHARED[service/shared]
     end
 
-    subgraph "基础设施层"
-        Auth[Auth<br/>认证]
-        Cache[Cache<br/>缓存]
-        Events[Events<br/>事件总线]
+    subgraph DataAndAdapters
+        REPO[repository/interfaces + repository/* impl]
+        MODELS[models/*]
+        MONGO[(MongoDB)]
+        REDIS[(Redis)]
+        AI[(AI gRPC service)]
+        MILVUS[(Milvus)]
     end
 
-    Reader --> Bookstore
-    Social --> Reader
-    Writer --> Bookstore
-    AI --> Events
-    Writer --> AI
-    Notification --> Events
-    Admin --> Analytics
-    Admin --> AuditLog
-    Admin --> Export
-    Admin --> Permission
-    Analytics --> Cache
-    AuditLog --> Events
-    Export --> Cache
-    Permission --> Auth
+    CMD --> CORE
+    CORE --> CONTAINER
+    CORE --> GIN
+    GIN --> MIDDLEWARE
+    MIDDLEWARE --> ROUTER
+    ROUTER --> API
+    API --> SERVICE
+    SERVICE --> REPO
+    REPO --> MODELS
+    REPO --> MONGO
+    REPO --> REDIS
+    SERVICE --> AI
+    SERVICE --> MILVUS
+    CONTAINER --> EVENTS
+    CONTAINER --> SHARED
+    CONTAINER --> SERVICE
 ```
 
-### 3.2 模块职责说明
+## 3. Startup Initialization Flow
 
-| 模块 | 核心职责 | 依赖模块 |
-|------|----------|----------|
-| **Bookstore** | 小说/书籍管理、章节管理、分类标签 | - |
-| **Reader** | 阅读历史、书架、阅读进度 | Bookstore |
-| **Writer** | 编辑器、发布管理、统计分析 | Bookstore, AI |
-| **Social** | 评论、点赞、关注 | Reader |
-| **AI** | AI对话、智能推荐 | Events |
-| **Notification** | 消息通知 | Events |
-| **Finance** | 财务结算、收益管理 | Writer |
-| **Compliance** | 内容审核 | Writer, Bookstore |
-| **Analytics** | 统计分析、数据报表 | Cache |
-| **AuditLog** | 审计日志、操作追踪 | Events |
-| **Export** | 数据导出、批量导出 | Cache |
-| **Permission** | 权限模板、动态权限 | Auth |
+真实启动入口在 `cmd/server/main.go`，顺序特征：
 
-## 4. 系统架构图
+- 先配配置与热重载
+- `InitDB` 保留但已 no-op
+- 通过 `InitServices` 初始化 `ServiceContainer`
+- `ServiceContainer` 完成基础设施与服务装配
+- 再创建 Gin、注册中间件、注册路由
+
+### 3.1 Startup mermaid
 
 ```mermaid
-graph TB
-    subgraph "Client Layer"
-        WebClient[Web Client]
-        MobileClient[Mobile Client]
-    end
-
-    subgraph "API Layer - api/v1/"
-        Router[Gin Router]
-        AdminAPI[Admin APIs<br/>analytics,audit,export<br/>permission_template]
-        BookstoreAPI[Bookstore APIs]
-        ReaderAPI[Reader APIs]
-        WriterAPI[Writer APIs<br/>export,audit]
-        SocialAPI[Social APIs]
-        AIAPI[AI APIs]
-    end
-
-    subgraph "Middleware - pkg/middleware/"
-        AuthMW[Auth Middleware]
-        QuotaMW[Quota Middleware]
-        LoggerMW[Logger Middleware]
-        RecoveryMW[Recovery Middleware]
-    end
-
-    subgraph "Service Layer - service/"
-        Container[Service Container]
-        BookstoreSvc[Bookstore Service]
-        ReaderSvc[Reader Service]
-        WriterSvc[Writer Service]
-        SocialSvc[Social Service]
-        AISvc[AI Service]
-        EventSvc[Event Bus]
-        AdminSvc[Admin Service<br/>analytics,audit_log<br/>export]
-        AuthSvc[Auth Service<br/>permission_template]
-    end
-
-    subgraph "Repository Layer - repository/"
-        BookstoreRepo[Bookstore Repository]
-        ReaderRepo[Reader Repository]
-        WriterRepo[Writer Repository]
-        SocialRepo[Social Repository]
-        AdminRepo[Admin Repository<br/>export_history]
-        AuthRepo[Auth Repository<br/>permission_template]
-    end
-
-    subgraph "Model Layer - models/"
-        BookstoreModels[Bookstore Models]
-        ReaderModels[Reader Models]
-        WriterModels[Writer Models]
-        SocialModels[Social Models]
-        AdminModels[Admin Models<br/>export_history]
-        AuthModels[Auth Models<br/>permission_template]
-        AuditModels[Audit Models<br/>audit_record]
-    end
-
-    subgraph "Data & External Services"
-        MongoDB[(MongoDB)]
-        Redis[(Redis)]
-        Milvus[(Milvus)]
-        MinIO[(MinIO)]
-        AIService[(AI Service<br/>gRPC)]
-    end
-
-    WebClient --> Router
-    MobileClient --> Router
-
-    Router --> AuthMW
-    Router --> QuotaMW
-    Router --> LoggerMW
-
-    AuthMW --> AdminAPI
-    AuthMW --> BookstoreAPI
-    AuthMW --> ReaderAPI
-    AuthMW --> WriterAPI
-    AuthMW --> SocialAPI
-    AuthMW --> AIAPI
-
-    AdminAPI --> Container
-    BookstoreAPI --> Container
-    ReaderAPI --> Container
-    WriterAPI --> Container
-    SocialAPI --> Container
-    AIAPI --> Container
-
-    Container --> BookstoreSvc
-    Container --> ReaderSvc
-    Container --> WriterSvc
-    Container --> SocialSvc
-    Container --> AISvc
-    Container --> EventSvc
-    Container --> AdminSvc
-    Container --> AuthSvc
-
-    BookstoreSvc --> BookstoreRepo
-    ReaderSvc --> ReaderRepo
-    WriterSvc --> WriterRepo
-    SocialSvc --> SocialRepo
-    AdminSvc --> AdminRepo
-    AuthSvc --> AuthRepo
-
-    BookstoreRepo --> BookstoreModels
-    ReaderRepo --> ReaderModels
-    WriterRepo --> WriterModels
-    SocialRepo --> SocialModels
-    AdminRepo --> AdminModels
-    AuthRepo --> AuthModels
-
-    BookstoreRepo --> MongoDB
-    ReaderRepo --> MongoDB
-    WriterRepo --> MongoDB
-    SocialRepo --> MongoDB
-    AdminRepo --> MongoDB
-    AuthRepo --> MongoDB
-
-    Container --> Redis
-    AISvc --> AIService
-    WriterSvc --> Milvus
-    BookstoreSvc --> MinIO
-
-    EventSvc -.-> ReaderSvc
-    EventSvc -.-> WriterSvc
-    EventSvc -.-> AdminSvc
+flowchart TD
+    A[main] --> B[config.LoadConfig]
+    B --> C[register reload handlers]
+    C --> D[EnableHotReload]
+    D --> E[core.InitDB compatibility no-op]
+    E --> F[core.InitServer]
+    F --> G[logger.Init]
+    G --> H[core.InitServices]
+    H --> I[service.InitializeServices]
+    I --> J[NewServiceContainer]
+    J --> K[ServiceContainer.Initialize]
+    K --> L[initMongoDB]
+    L --> M[create RepositoryFactory]
+    M --> N[initEventBus]
+    N --> O[initRedis best effort]
+    O --> P[repository health check]
+    P --> Q[warmUpCache best effort]
+    Q --> R[SetupDefaultServices]
+    R --> S[initialize registered services]
+    S --> T[register gin middlewares]
+    T --> U[router.RegisterRoutes]
+    U --> V[RunServer]
 ```
 
-## 5. 关键设计决策
+## 4. Request Handling Flow
 
-### 5.1 依赖注入容器
-使用 `service/container/service_container.go` 统一管理所有服务的初始化和生命周期，支持：
-- 延迟初始化
-- 可选服务（渐进式注册）
-- 服务间依赖管理
+请求路径中的关键事实：
 
-### 5.2 接口隔离
-Repository层定义接口契约，具体实现在 `repository/mongodb/` 中，便于：
-- 单元测试Mock
-- 未来切换存储实现
+- 中间件顺序固定且影响行为
+- 路由由 `router/enter.go` 统一编排
+- handler 从全局 `ServiceContainer` 获取服务实例
+- `router/enter.go` 内部包含搜索初始化、事件订阅、兼容路由保留逻辑
 
-### 5.3 事件驱动
-内置事件总线 (`service/events/`) 实现模块间解耦，典型事件：
-- 章节发布事件
-- 用户注册事件
-- 评论创建事件
+### 4.1 Request mermaid
 
----
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Gin as Gin Engine
+    participant MW as Middleware Chain
+    participant Router as router/enter.go + router/*
+    participant API as api/v1 handlers
+    participant Container as ServiceContainer
+    participant Service as service/*
+    participant Repo as repository/*
+    participant DB as MongoDB/Redis
+    participant Ext as AI/Milvus
 
-**文档版本**: v1.0
-**最后更新**: 2026-02-07
-**维护者**: yukin371
+    Client->>Gin: HTTP Request
+    Gin->>MW: pass through middlewares
+    MW->>Router: route dispatch
+    Router->>API: invoke handler
+    API->>Container: get service
+    Container->>Service: return instance
+    Service->>Repo: query/command
+    Repo->>DB: read/write
+    Service->>Ext: adapter calls (if needed)
+    API-->>Client: JSON response
+```
+
+## 5. Module Reality (not idealized)
+
+### 5.1 Well-aligned domains
+
+- `bookstore`
+- `social`
+- `ai`
+- `admin`
+- `finance`
+- `recommendation`
+
+### 5.2 Complex or drift-prone areas
+
+- `writer`: 复合子域（project/document/outline/story_harness/publish/stats）
+- `shared`: 高风险横切层（auth/cache/metrics/stats/storage 等聚合）
+- `search`: 初始化和接线位于 `router/enter.go`，不是纯 vertical slice
+- `stats`: `stats` 与 `reading-stats` 命名和分层拆分
+- `notification`: service 单数、router/api 复数
+- `user`: `models/users` vs `service/user` 命名漂移
+- `auth/audit`: 更偏横切能力，不是完整独立 router slice
+
+## 6. Architecture Risk Markers
+
+1. `router/enter.go` 过重，承担运行时编排职责，修改风险集中。
+2. `service/container` 角色叠加（DI + infra bootstrap + service locator），边界扩张风险高。
+3. 渐进式路由注册提高韧性，但也让“服务启动成功”与“功能完整可用”脱钩。
+4. `shared` 聚合能力持续增多，需防止职责坍缩。
+
+## 7. Companion Docs
+
+- Runtime chain details: [2026-04-07-backend-runtime-flow.md](./2026-04-07-backend-runtime-flow.md)
+- Module layering details: [2026-04-07-backend-module-map.md](./2026-04-07-backend-module-map.md)
+- Dependency constraints: [dependency-rules.md](./dependency-rules.md)

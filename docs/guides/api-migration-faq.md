@@ -487,7 +487,7 @@ gh pr create --title "[Block 8] API迁移 - xxx模块" --body "PR描述..."
 
 1. **查阅迁移指南**: [api-migration-guide.md](api-migration-guide.md)
 2. **查看检查清单**: [api-migration-checklist.md](api-migration-checklist.md)
-3. **参考Block 7**: [Block 7进展报告](../plans/2026-01-28-block7-api-standardization-progress.md)
+3. **参考Block 7**: [Block 7进展报告](../../../docs/plans/submodules/backend/api-governance/2026-01-28-block7-api-standardization-progress.md)
 4. **分析Writer模块**: [Writer模块预分析报告](../analysis/2026-01-29-writer-migration-analysis.md)
 
 ### 联系方式

@@ -3,7 +3,7 @@
 **文档版本**: v1.0
 **创建日期**: 2026-01-25
 **状态**: ✅ 完成并测试通过
-**参考文档**: `docs/plans/2026-01-25-p1-bookstore-core-features.md` 第11.1-11.2节
+**参考文档**: [P1 书城核心功能设计](../../../../docs/plans/submodules/backend/architecture/2026-01-25-p1-bookstore-core-features.md) 第11.1-11.2节
 
 ---
 
@@ -346,7 +346,7 @@ GET /api/v1/bookstore/books/search/author?author=刘慈欣&page=1&size=20
 - `api/v1/bookstore/bookstore_api_test.go` - 单元测试
 
 ### 参考文档
-- `docs/plans/2026-01-25-p1-bookstore-core-features.md` - 设计文档
+- [P1 书城核心功能设计](../../../../docs/plans/submodules/backend/architecture/2026-01-25-p1-bookstore-core-features.md) - 设计文档
 
 ---
 

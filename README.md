@@ -414,10 +414,12 @@ Qingyu_backend/
 ├── docker/                 # Docker配置
 │   ├── Dockerfile.dev      # 开发环境
 │   └── docker-compose.*.yml # 多环境编排
-├── doc/                    # 设计文档
+├── docs/                   # 项目文档
 │   ├── architecture/       # 架构文档
 │   ├── api/                # API文档
-│   └── design/             # 设计文档
+│   ├── guides/             # 快速指南
+│   ├── review/             # 审查报告
+│   └── standards/          # 开发标准
 ├── .github/                # GitHub配置
 │   └── workflows/          # CI/CD流程
 ├── Makefile                # 构建命令
@@ -495,7 +497,7 @@ POST /api/v1/ai/creative/outline     # 大纲生成
 GET  /api/v1/ai/context/:projectId   # 上下文获取
 ```
 
-**文档**：[AI模块设计文档](./doc/design/ai/README.md)
+**文档**：[AI模块设计文档](./docs/design/ai/README.md)
 </details>
 
 <details>
@@ -1341,12 +1343,12 @@ go tool pprof -list CreateBook /path/to/profile
 ## 相关文档
 
 ### 核心文档
-- [架构设计文档](./doc/architecture/项目概述.md)
-- [API接口文档](./doc/api/API接口总览.md)
-- [数据库设计](./doc/design/database/数据库设计说明书.md)
-- [部署运维手册](./docs/ops/部署运维手册.md)
-- [开发规范](./doc/architecture/项目开发规则.md)
-- [Viper配置管理详解](./doc/Viper配置管理机制详解.md)
+- [后端上下文快速指南](./docs/guides/backend-context-quickstart.md)
+- [后端架构文档索引](./docs/architecture/README.md)
+- [后端运行时架构](./docs/architecture/2026-04-07-backend-runtime-architecture.md)
+- [后端模块地图](./docs/architecture/2026-04-07-backend-module-map.md)
+- [后端架构与文档标准](./docs/standards/backend-architecture-documentation-standard.md)
+- [后端架构风险审查](./docs/review/2026-04-07-backend-architecture-risk-review.md)
 
 ### API 文档导出
 - 📘 [Swagger API 文档导出说明](./docs/api/SWAGGER_API_导出说明.md) - 如何将 API 文档导出到 Postman、Apifox 等工具
@@ -1356,7 +1358,7 @@ go tool pprof -list CreateBook /path/to/profile
   - `.\scripts\docs\generate_swagger.ps1` - Windows 下直接生成
   - `./scripts/docs/generate_swagger.sh` - Linux / macOS 下直接生成
   - `Swagger Artifact Sync` 工作流 - 仅在 `api/v1/**` 变更时校验产物是否已同步提交
-  - [Swagger 生成说明](./docs/swagger/README.md)
+  - [Swagger 生成说明](./docs/api/README.md)
 
 ## 致谢
 
