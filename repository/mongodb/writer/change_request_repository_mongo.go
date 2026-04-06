@@ -12,13 +12,14 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 // ChangeRequestRepositoryMongo 变更建议 MongoDB 仓储实现
 type ChangeRequestRepositoryMongo struct {
 	*mongoBase.BaseMongoRepository
-	db            *mongo.Database
-	batchCol      *mongo.Collection
+	db       *mongo.Database
+	batchCol *mongo.Collection
 }
 
 // NewChangeRequestRepository 创建 ChangeRequestRepository 实例
@@ -84,6 +85,10 @@ func (r *ChangeRequestRepositoryMongo) FindRequestsByBatchID(ctx context.Context
 }
 
 func (r *ChangeRequestRepositoryMongo) FindPendingByChapter(ctx context.Context, projectID, chapterID string) ([]*writer.ChangeRequest, error) {
+	return r.FindByChapterAndStatus(ctx, projectID, chapterID, writer.CRStatusPending)
+}
+
+func (r *ChangeRequestRepositoryMongo) FindByChapterAndStatus(ctx context.Context, projectID, chapterID string, status writer.ChangeRequestStatus) ([]*writer.ChangeRequest, error) {
 	projectOID, err := r.ParseID(projectID)
 	if err != nil {
 		return nil, errors.NewRepositoryError(errors.RepositoryErrorValidation, "invalid project ID", err)
@@ -94,20 +99,23 @@ func (r *ChangeRequestRepositoryMongo) FindPendingByChapter(ctx context.Context,
 	}
 
 	filter := bson.M{
-		"project_id":  projectOID,
-		"chapter_id":  chapterOID,
-		"status":      writer.CRStatusPending,
+		"project_id": projectOID,
+		"chapter_id": chapterOID,
+		"status":     status,
 	}
 
-	cursor, err := r.GetCollection().Find(ctx, filter)
+	cursor, err := r.GetCollection().Find(ctx, filter, options.Find().SetSort(bson.D{
+		{Key: "processed_at", Value: 1},
+		{Key: "created_at", Value: 1},
+	}))
 	if err != nil {
-		return nil, errors.NewRepositoryError(errors.RepositoryErrorInternal, "find pending requests failed", err)
+		return nil, errors.NewRepositoryError(errors.RepositoryErrorInternal, "find requests by chapter and status failed", err)
 	}
 	defer cursor.Close(ctx)
 
 	var results []*writer.ChangeRequest
 	if err = cursor.All(ctx, &results); err != nil {
-		return nil, errors.NewRepositoryError(errors.RepositoryErrorInternal, "decode pending requests failed", err)
+		return nil, errors.NewRepositoryError(errors.RepositoryErrorInternal, "decode requests by chapter and status failed", err)
 	}
 	return results, nil
 }

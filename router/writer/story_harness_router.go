@@ -8,9 +8,14 @@ import (
 )
 
 // InitStoryHarnessRoutes 注册 Story Harness 相关路由
-func InitStoryHarnessRoutes(router *gin.RouterGroup, contextSvc *storyharness.ContextService, crSvc *storyharness.ChangeRequestService) {
+func InitStoryHarnessRoutes(
+	router *gin.RouterGroup,
+	contextSvc *storyharness.ContextService,
+	indexerSvc *storyharness.IndexerService,
+	crSvc *storyharness.ChangeRequestService,
+) {
 	// 创建 API 处理器
-	storyHarnessAPI := apiWriter.NewStoryHarnessApi(contextSvc)
+	storyHarnessAPI := apiWriter.NewStoryHarnessApi(contextSvc, indexerSvc, crSvc)
 	crAPI := apiWriter.NewChangeRequestApi(crSvc)
 
 	// 项目级路由组
@@ -18,6 +23,12 @@ func InitStoryHarnessRoutes(router *gin.RouterGroup, contextSvc *storyharness.Co
 	{
 		// 章节上下文（Context Lens）
 		projectGroup.GET("/chapters/:chapterId/context", storyHarnessAPI.GetChapterContext)
+
+		// 手动触发章节索引
+		projectGroup.POST("/chapters/:chapterId/trigger-index", storyHarnessAPI.TriggerChapterIndex)
+
+		// 手动重建章节投影
+		projectGroup.POST("/chapters/:chapterId/rebuild-projection", storyHarnessAPI.RebuildChapterProjection)
 
 		// 章节建议列表
 		projectGroup.GET("/chapters/:chapterId/change-requests", crAPI.ListChangeRequests)

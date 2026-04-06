@@ -19,8 +19,8 @@ import (
 	searchservice "Qingyu_backend/service/search"
 	writerservice "Qingyu_backend/service/writer"
 	documentService "Qingyu_backend/service/writer/document"
-		storyharness "Qingyu_backend/service/writer/storyharness"
 	projectService "Qingyu_backend/service/writer/project"
+	storyharness "Qingyu_backend/service/writer/storyharness"
 )
 
 // RegisterWriterRoutes 注册所有写作相关路由到 /api/v1/writer
@@ -203,16 +203,28 @@ func RegisterWriterRoutes(r *gin.RouterGroup, searchSvc *searchservice.SearchSer
 
 	// 创建 Story Harness 服务
 	var contextSvc *storyharness.ContextService
+	var indexerSvc *storyharness.IndexerService
 	var crSvc *storyharness.ChangeRequestService
 	if mongoDB != nil {
 		crRepo := writerrepo.NewChangeRequestRepository(mongoDB)
-		contextSvc = storyharness.NewContextService(characterRepo, crRepo)
-		crSvc = storyharness.NewChangeRequestService(crRepo)
+		projectionRepo := writerrepo.NewProjectionRepository(mongoDB)
+		contextSvc = storyharness.NewContextService(characterRepo, crRepo, projectionRepo)
+		indexerSvc = storyharness.NewIndexerService(documentRepo, documentContentRepo, characterRepo, crRepo)
+		crSvc = storyharness.NewChangeRequestService(crRepo, projectionRepo, characterRepo)
+
+		documentSvc.SetOnDocumentContentSaved(func(ctx context.Context, documentID string) {
+			if _, err := indexerSvc.TriggerChapterIndexByDocument(ctx, documentID); err != nil {
+				zap.L().Warn("RegisterWriterRoutes: 章节索引触发失败",
+					zap.String("documentID", documentID),
+					zap.Error(err),
+				)
+			}
+		})
 	}
 
 	// 注册 Story Harness 路由
-	if contextSvc != nil && crSvc != nil {
-		InitStoryHarnessRoutes(r, contextSvc, crSvc)
+	if contextSvc != nil && indexerSvc != nil && crSvc != nil {
+		InitStoryHarnessRoutes(r, contextSvc, indexerSvc, crSvc)
 		zap.L().Info("RegisterWriterRoutes: Story Harness 路由注册完成")
 	}
 
