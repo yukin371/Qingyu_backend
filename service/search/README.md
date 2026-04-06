@@ -148,4 +148,4 @@ search:
 
 ## 参考
 
-- [统一搜索模块设计文档](../../../docs/plans/2026-01-25-unified-search-design.md)
+- [统一搜索模块设计文档](../../../docs/plans/submodules/backend/legacy-phases/2026-01-25-unified-search-design.md)

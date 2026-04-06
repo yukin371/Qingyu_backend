@@ -128,7 +128,7 @@ service/shared/
 - 测试覆盖率: 82.9%
 - 测试用例数: 60+
 - 测试框架: miniredis + testify
-- 详细测试报告: 参见 `docs/plans/shared-cache-tdd-plan.md`
+- 详细测试报告: 参见 `docs/plans/submodules/backend/shared-and-layering/shared-cache-tdd-plan.md`
 
 ---
 

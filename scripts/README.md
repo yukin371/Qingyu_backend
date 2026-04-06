@@ -328,6 +328,6 @@ db.reading_progress.dropIndexes()
 
 ## 相关文档
 
-- [索引设计文档](../../docs/plans/2026-01-26-block3-database-optimization-design.md)
+- [索引设计文档](../../docs/plans/submodules/backend/architecture/2026-01-26-block3-database-optimization-design.md)
 - [迁移执行器](../cmd/migrate/main.go)
 - [索引迁移文件](../migration/mongodb/)
