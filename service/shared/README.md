@@ -57,7 +57,6 @@ service/shared/
 │
 ├── config_service.go          # 动态配置管理服务
 ├── permission_service.go      # 权限服务（完整 RBAC）
-├── messaging_compat.go        # 消息模块兼容层
 │
 └── README.md                  # 本文档
 ```
@@ -93,7 +92,7 @@ service/shared/
 
 **新位置**: [`service/channels/`](../channels/)
 
-**兼容层**: 本目录的 `messaging_compat.go` 提供了向后兼容的别名和类型
+消息模块兼容层已删除，调用方应直接使用 [`service/channels/`](../channels/)
 
 ---
 
@@ -202,8 +201,10 @@ import (
 **注意**:
 - Auth模块已迁移至 `service/auth`
 - Messaging模块已迁移至 `service/channels`
+- 密码验证器请使用 `service/user`
+- 鉴权/权限中间件请使用 `internal/middleware/auth`
 - 旧的import路径 `service/shared/auth` 和 `service/shared/messaging` 不再可用
-- 可使用 `service/shared` 的兼容层作为过渡（`messaging_compat.go`）
+- 不再提供 `service/shared` 下的 messaging 兼容层
 
 ---
 

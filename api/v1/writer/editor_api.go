@@ -1,6 +1,7 @@
 package writer
 
 import (
+	"Qingyu_backend/models/dto"
 	documentModel "Qingyu_backend/models/writer"
 
 	"github.com/gin-gonic/gin"
@@ -40,7 +41,7 @@ func NewEditorApi(documentService *document.DocumentService) *EditorApi {
 func (api *EditorApi) AutoSaveDocument(c *gin.Context) {
 	documentID := c.Param("id")
 
-	var req document.AutoSaveRequest
+	var req dto.AutoSaveRequest
 	if !shared.BindJSON(c, &req) {
 		return
 	}
@@ -128,7 +129,7 @@ func (api *EditorApi) UpdateDocumentContent(c *gin.Context) {
 	c.Header("X-API-Deprecated", "true")
 	c.Header("X-API-Replacement", "/api/v1/writer/documents/{id}/contents")
 
-	var req document.UpdateContentRequest
+	var req dto.UpdateContentRequest
 	if !shared.BindJSON(c, &req) {
 		return
 	}
@@ -164,7 +165,7 @@ func (api *EditorApi) GetDocumentContents(c *gin.Context) {
 func (api *EditorApi) ReplaceDocumentContents(c *gin.Context) {
 	documentID := c.Param("id")
 
-	var req document.ReplaceDocumentContentsRequest
+	var req dto.ReplaceDocumentContentsRequest
 	if !shared.BindJSON(c, &req) {
 		return
 	}
@@ -343,4 +344,3 @@ type WordCountRequest struct {
 type UpdateShortcutsRequest struct {
 	Shortcuts map[string]documentModel.Shortcut `json:"shortcuts" validate:"required"`
 }
-

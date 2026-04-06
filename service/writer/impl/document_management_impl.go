@@ -74,7 +74,7 @@ func (d *DocumentManagementImpl) GetVersion() string {
 // CreateDocument 创建文档
 func (d *DocumentManagementImpl) CreateDocument(ctx context.Context, req *serviceWriter.CreateDocumentRequest) (*serviceWriter.CreateDocumentResponse, error) {
 	// 转换请求类型
-	documentReq := &writerdocument.CreateDocumentRequest{
+	documentReq := &dto.CreateDocumentRequest{
 		ProjectID:    req.ProjectID,
 		ParentID:     req.ParentID,
 		Title:        req.Title,
@@ -155,7 +155,7 @@ func (d *DocumentManagementImpl) convertToDTOItems(nodes []*writerdocument.Docum
 // ListDocuments 获取文档列表
 func (d *DocumentManagementImpl) ListDocuments(ctx context.Context, req *serviceWriter.ListDocumentsRequest) (*serviceWriter.ListDocumentsResponse, error) {
 	// 转换请求类型
-	documentReq := &writerdocument.ListDocumentsRequest{
+	documentReq := &dto.ListDocumentsRequest{
 		ProjectID: req.ProjectID,
 		Page:      req.Page,
 		PageSize:  req.PageSize,
@@ -176,7 +176,7 @@ func (d *DocumentManagementImpl) ListDocuments(ctx context.Context, req *service
 // UpdateDocument 更新文档
 func (d *DocumentManagementImpl) UpdateDocument(ctx context.Context, documentID string, req *serviceWriter.UpdateDocumentRequest) error {
 	// 转换请求类型
-	documentReq := &writerdocument.UpdateDocumentRequest{
+	documentReq := &dto.UpdateDocumentRequest{
 		Title:        req.Title,
 		Notes:        req.Notes,
 		Status:       req.Status,
@@ -196,7 +196,7 @@ func (d *DocumentManagementImpl) DeleteDocument(ctx context.Context, documentID 
 // MoveDocument 移动文档
 func (d *DocumentManagementImpl) MoveDocument(ctx context.Context, req *serviceWriter.MoveDocumentRequest) error {
 	// 转换请求类型 - DTO使用OrderKey而不是Order
-	documentReq := &writerdocument.MoveDocumentRequest{
+	documentReq := &dto.MoveDocumentRequest{
 		DocumentID:  req.DocumentID,
 		NewParentID: req.NewParentID,
 		OrderKey:    req.OrderKey, // 使用OrderKey字段
@@ -215,7 +215,7 @@ func (d *DocumentManagementImpl) ReorderDocuments(ctx context.Context, req *serv
 			OrderKey:   item.OrderKey,
 		})
 	}
-	documentReq := &writerdocument.ReorderDocumentsRequest{
+	documentReq := &dto.ReorderDocumentsRequest{
 		ProjectID: req.ProjectID,
 		ParentID:  req.ParentID,
 		Items:     items,
@@ -226,7 +226,7 @@ func (d *DocumentManagementImpl) ReorderDocuments(ctx context.Context, req *serv
 // AutoSaveDocument 自动保存文档
 func (d *DocumentManagementImpl) AutoSaveDocument(ctx context.Context, req *serviceWriter.AutoSaveRequest) (*serviceWriter.AutoSaveResponse, error) {
 	// 转换请求类型
-	documentReq := &writerdocument.AutoSaveRequest{
+	documentReq := &dto.AutoSaveRequest{
 		DocumentID:     req.DocumentID,
 		Content:        req.Content,
 		CurrentVersion: req.CurrentVersion,
@@ -281,7 +281,7 @@ func (d *DocumentManagementImpl) GetDocumentContent(ctx context.Context, documen
 // UpdateDocumentContent 更新文档内容
 func (d *DocumentManagementImpl) UpdateDocumentContent(ctx context.Context, req *serviceWriter.UpdateContentRequest) error {
 	// 转换请求类型
-	documentReq := &writerdocument.UpdateContentRequest{
+	documentReq := &dto.UpdateContentRequest{
 		DocumentID: req.DocumentID,
 		Content:    req.Content,
 		Version:    req.Version,

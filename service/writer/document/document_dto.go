@@ -8,8 +8,8 @@ package document
 // 为了保持向后兼容，这里重新导出新定义
 //
 // 迁移指南：
-// - 将 import "Qingyu_backend/service/writer/document" 改为 "Qingyu_backend/models/dto"
-// - 或者直接使用 document.CreateDocumentRequest（它会自动指向 dto.CreateDocumentRequest）
+// - 将请求 DTO 的 import 从 "Qingyu_backend/service/writer/document" 改为 "Qingyu_backend/models/dto"
+// - 本文件仅保留文档模块特定树结构响应与少量兼容别名
 //
 // 废弃时间：2026-02-26
 // 计划移除时间：2026-06-01
@@ -18,10 +18,6 @@ import (
 	"Qingyu_backend/models/dto"
 	"Qingyu_backend/models/writer"
 )
-
-// CreateDocumentRequest 创建文档请求
-// Deprecated: 使用 dto.CreateDocumentRequest 替代
-type CreateDocumentRequest = dto.CreateDocumentRequest
 
 // CreateDocumentResponse 创建文档响应
 // Deprecated: 使用 dto.CreateDocumentResponse 替代
@@ -41,22 +37,6 @@ type DocumentTreeResponse struct {
 	Documents []*DocumentTreeNode `json:"documents"`
 }
 
-// MoveDocumentRequest 移动文档请求
-// Deprecated: 使用 dto.MoveDocumentRequest 替代
-type MoveDocumentRequest = dto.MoveDocumentRequest
-
-// ReorderDocumentsRequest 重新排序请求
-// Deprecated: 使用 dto.ReorderDocumentsRequest 替代
-type ReorderDocumentsRequest = dto.ReorderDocumentsRequest
-
-// UpdateDocumentRequest 更新文档请求
-// Deprecated: 使用 dto.UpdateDocumentRequest 替代
-type UpdateDocumentRequest = dto.UpdateDocumentRequest
-
-// ListDocumentsRequest 文档列表请求
-// Deprecated: 使用 dto.ListDocumentsRequest 替代
-type ListDocumentsRequest = dto.ListDocumentsRequest
-
 // ListDocumentsResponse 文档列表响应
 // Deprecated: 保留文档模块特定响应类型
 type ListDocumentsResponse struct {
@@ -65,10 +45,6 @@ type ListDocumentsResponse struct {
 	Page      int                `json:"page"`
 	PageSize  int                `json:"pageSize"`
 }
-
-// AutoSaveRequest 自动保存请求
-// Deprecated: 使用 dto.AutoSaveRequest 替代
-type AutoSaveRequest = dto.AutoSaveRequest
 
 // AutoSaveResponse 自动保存响应
 // Deprecated: 使用 dto.AutoSaveResponse 替代
@@ -82,10 +58,6 @@ type SaveStatusResponse = dto.SaveStatusResponse
 // Deprecated: 使用 dto.DocumentContentResponse 替代
 type DocumentContentResponse = dto.DocumentContentResponse
 
-// UpdateContentRequest 更新内容请求
-// Deprecated: 使用 dto.UpdateContentRequest 替代
-type UpdateContentRequest = dto.UpdateContentRequest
-
 // ParagraphContent 段落内容
 // Deprecated: 使用 dto.ParagraphContent 替代
 type ParagraphContent = dto.ParagraphContent
@@ -93,10 +65,6 @@ type ParagraphContent = dto.ParagraphContent
 // DocumentContentsResponse 文档段落内容响应
 // Deprecated: 使用 dto.DocumentContentsResponse 替代
 type DocumentContentsResponse = dto.DocumentContentsResponse
-
-// ReplaceDocumentContentsRequest 替换文档段落请求
-// Deprecated: 使用 dto.ReplaceDocumentContentsRequest 替代
-type ReplaceDocumentContentsRequest = dto.ReplaceDocumentContentsRequest
 
 // ReplaceDocumentContentsResponse 替换文档段落响应
 // Deprecated: 使用 dto.ReplaceDocumentContentsResponse 替代

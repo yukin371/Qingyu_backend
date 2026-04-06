@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	"Qingyu_backend/models/dto"
 	"Qingyu_backend/models/writer"
 	writerBase "Qingyu_backend/models/writer/base"
 	base "Qingyu_backend/repository/interfaces/infrastructure"
@@ -189,7 +190,7 @@ func TestProjectService_CreateProject_Success(t *testing.T) {
 	userID := primitive.NewObjectID().Hex()
 	ctx = context.WithValue(ctx, "userId", userID)
 
-	req := &CreateProjectRequest{
+	req := &dto.CreateProjectRequest{
 		Title:    "测试项目",
 		Summary:  "这是一个测试项目",
 		CoverURL: "https://example.com/cover.jpg",
@@ -240,7 +241,7 @@ func TestProjectService_CreateProject_EmptyTitle_ReturnError(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			req := &CreateProjectRequest{
+			req := &dto.CreateProjectRequest{
 				Title: tt.title,
 			}
 
@@ -266,7 +267,7 @@ func TestProjectService_CreateProject_NoUserID_ReturnError(t *testing.T) {
 
 	projectService := NewProjectService(mockRepo, mockEventBus)
 
-	req := &CreateProjectRequest{
+	req := &dto.CreateProjectRequest{
 		Title: "测试项目",
 	}
 
@@ -362,7 +363,7 @@ func TestProjectService_UpdateProject_Success(t *testing.T) {
 	// Act
 	newTitle := "新标题"
 	newSummary := "新简介"
-	req := &UpdateProjectRequest{
+	req := &dto.UpdateProjectRequest{
 		Title:   &newTitle,
 		Summary: &newSummary,
 	}
@@ -429,7 +430,7 @@ func TestProjectService_ListMyProjects_Success(t *testing.T) {
 	mockRepo.On("CountByOwner", ctx, userID).Return(int64(2), nil).Once()
 
 	// Act
-	req := &ListProjectsRequest{
+	req := &dto.ListProjectsRequest{
 		Page:     1,
 		PageSize: 10,
 	}
@@ -468,7 +469,7 @@ func TestProjectService_ListMyProjects_WithStatus_Success(t *testing.T) {
 	mockRepo.On("CountByOwner", ctx, userID).Return(int64(1), nil).Once()
 
 	// Act
-	req := &ListProjectsRequest{
+	req := &dto.ListProjectsRequest{
 		Page:     1,
 		PageSize: 10,
 		Status:   "serializing",

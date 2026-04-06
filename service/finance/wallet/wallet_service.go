@@ -5,17 +5,17 @@ import (
 	"context"
 	"fmt"
 
-	sharedRepo "Qingyu_backend/repository/interfaces/shared"
+	financeRepo "Qingyu_backend/repository/interfaces/finance"
 )
 
 // WalletServiceImpl 钱包服务实现
 type WalletServiceImpl struct {
-	walletRepo sharedRepo.WalletRepository
+	walletRepo financeRepo.WalletRepository
 }
 
 // NewWalletService 创建钱包服务（内部使用）
 // 注意：对外应该使用NewUnifiedWalletService
-func NewWalletService(walletRepo sharedRepo.WalletRepository) *WalletServiceImpl {
+func NewWalletService(walletRepo financeRepo.WalletRepository) *WalletServiceImpl {
 	return &WalletServiceImpl{
 		walletRepo: walletRepo,
 	}

@@ -605,7 +605,7 @@ func (s *DocumentService) GetVersion() string {
 }
 
 // ListDocuments 获取文档列表
-func (s *DocumentService) ListDocuments(ctx context.Context, req *ListDocumentsRequest) (*dto.DocumentListResponse, error) {
+func (s *DocumentService) ListDocuments(ctx context.Context, req *dto.ListDocumentsRequest) (*dto.DocumentListResponse, error) {
 	// 1. 参数验证
 	if req.ProjectID == "" {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "项目ID不能为空", "", nil)

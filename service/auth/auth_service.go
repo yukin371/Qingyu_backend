@@ -12,7 +12,6 @@ import (
 	authModel "Qingyu_backend/models/auth"
 	usersModel "Qingyu_backend/models/users"
 	authRepo "Qingyu_backend/repository/interfaces/auth"
-	sharedRepo "Qingyu_backend/repository/interfaces/shared"
 
 	"go.uber.org/zap"
 )
@@ -22,7 +21,7 @@ type AuthServiceImpl struct {
 	jwtService        JWTService
 	roleService       RoleService
 	permissionService PermissionService
-	authRepo          sharedRepo.AuthRepository
+	authRepo          authRepo.RoleRepository
 	oauthRepo         authRepo.OAuthRepository         // OAuth仓储
 	userService       userServiceInterface.UserService // 依赖User服务
 	sessionService    SessionService                   // MVP: 会话管理（多端登录限制）
@@ -35,7 +34,7 @@ func NewAuthService(
 	jwtService JWTService,
 	roleService RoleService,
 	permissionService PermissionService,
-	authRepo sharedRepo.AuthRepository,
+	authRepo authRepo.RoleRepository,
 	oauthRepo authRepo.OAuthRepository,
 	userService userServiceInterface.UserService,
 	sessionService SessionService,

@@ -18,7 +18,6 @@ import (
 	messagingRepo "Qingyu_backend/repository/interfaces/messaging"
 	readerRepo "Qingyu_backend/repository/interfaces/reader"
 	recoRepo "Qingyu_backend/repository/interfaces/recommendation"
-	sharedRepo "Qingyu_backend/repository/interfaces/shared"
 	socialRepo "Qingyu_backend/repository/interfaces/social"
 	statsRepo "Qingyu_backend/repository/interfaces/stats"
 	storageRepo "Qingyu_backend/repository/interfaces/storage"
@@ -368,15 +367,13 @@ func (f *MongoRepositoryFactory) CreateStorageRepository() storageRepo.StorageRe
 // ========== 向后兼容的方法 ==========
 // Deprecated: 这些方法为了向后兼容而保留，新代码应使用上面的新接口
 
-// CreateAuthRepository 创建认证Repository (向后兼容，实际返回 RoleRepository)
-func (f *MongoRepositoryFactory) CreateAuthRepository() sharedRepo.AuthRepository {
-	// shared.AuthRepository 是 auth.RoleRepository 的别名
+// CreateAuthRepository 创建认证Repository
+func (f *MongoRepositoryFactory) CreateAuthRepository() authRepo.RoleRepository {
 	return mongoAuth.NewRoleRepository(f.database)
 }
 
-// CreateRecommendationRepository 创建推荐Repository (向后兼容)
-func (f *MongoRepositoryFactory) CreateRecommendationRepository() sharedRepo.RecommendationRepository {
-	// shared.RecommendationRepository 是 recommendation.RecommendationRepository 的别名
+// CreateRecommendationRepository 创建推荐Repository
+func (f *MongoRepositoryFactory) CreateRecommendationRepository() recoRepo.RecommendationRepository {
 	return mongoReco.NewRecommendationRepository(f.database)
 }
 

@@ -129,3 +129,4 @@ __pycache__/
 *.pyo
 .worktrees
 qingyu-server
+.gitnexus

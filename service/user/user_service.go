@@ -10,7 +10,7 @@ import (
 
 	"Qingyu_backend/internal/middleware/auth"
 	usersModel "Qingyu_backend/models/users"
-	sharedRepo "Qingyu_backend/repository/interfaces/shared"
+	authRepo "Qingyu_backend/repository/interfaces/auth"
 	repoInterfaces "Qingyu_backend/repository/interfaces/user"
 
 	"go.uber.org/zap"
@@ -55,14 +55,14 @@ func indexOf(s, substr string) int {
 // 详见：docs/reports/2026-03-22-user-auth-boundary-analysis.md
 type UserServiceImpl struct {
 	userRepo repoInterfaces.UserRepository
-	authRepo sharedRepo.AuthRepository // TECHDEBT: 应通过 AuthService 访问
+	authRepo authRepo.RoleRepository // TECHDEBT: 应通过 AuthService 访问
 	logger   *zap.Logger
 	name     string
 	version  string
 }
 
 // NewUserService 创建用户服务
-func NewUserService(userRepo repoInterfaces.UserRepository, authRepo sharedRepo.AuthRepository) user2.UserService {
+func NewUserService(userRepo repoInterfaces.UserRepository, authRepo authRepo.RoleRepository) user2.UserService {
 	return &UserServiceImpl{
 		userRepo: userRepo,
 		authRepo: authRepo,

@@ -5,16 +5,16 @@ import (
 	"context"
 	"fmt"
 
-	sharedRepo "Qingyu_backend/repository/interfaces/shared"
+	authRepo "Qingyu_backend/repository/interfaces/auth"
 )
 
 // RoleServiceImpl 角色服务实现
 type RoleServiceImpl struct {
-	authRepo sharedRepo.AuthRepository
+	authRepo authRepo.RoleRepository
 }
 
 // NewRoleService 创建角色服务
-func NewRoleService(authRepo sharedRepo.AuthRepository) RoleService {
+func NewRoleService(authRepo authRepo.RoleRepository) RoleService {
 	return &RoleServiceImpl{
 		authRepo: authRepo,
 	}

@@ -10,7 +10,6 @@ import (
 	pkgtransaction "Qingyu_backend/pkg/transaction"
 	"Qingyu_backend/repository"
 	"Qingyu_backend/repository/interfaces/finance"
-	sharedRepo "Qingyu_backend/repository/interfaces/shared"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -43,7 +42,7 @@ type MembershipService interface {
 // MembershipServiceImpl 会员服务实现
 type MembershipServiceImpl struct {
 	membershipRepo finance.MembershipRepository
-	walletRepo     sharedRepo.WalletRepository
+	walletRepo     finance.WalletRepository
 	txRunner       pkgtransaction.Runner
 }
 
@@ -53,7 +52,7 @@ func NewMembershipService(membershipRepo finance.MembershipRepository) Membershi
 }
 
 // NewMembershipServiceWithDependencies 创建带钱包与事务依赖的会员服务。
-func NewMembershipServiceWithDependencies(membershipRepo finance.MembershipRepository, walletRepo sharedRepo.WalletRepository, txRunner pkgtransaction.Runner) MembershipService {
+func NewMembershipServiceWithDependencies(membershipRepo finance.MembershipRepository, walletRepo finance.WalletRepository, txRunner pkgtransaction.Runner) MembershipService {
 	return &MembershipServiceImpl{
 		membershipRepo: membershipRepo,
 		walletRepo:     walletRepo,

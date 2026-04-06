@@ -12,7 +12,6 @@ import (
 	messagingInterfaces "Qingyu_backend/repository/interfaces/messaging"
 	ReadingInterfaces "Qingyu_backend/repository/interfaces/reader"
 	RecommendationInterfaces "Qingyu_backend/repository/interfaces/recommendation"
-	SharedInterfaces "Qingyu_backend/repository/interfaces/shared"
 	SocialInterfaces "Qingyu_backend/repository/interfaces/social"
 	StatsInterfaces "Qingyu_backend/repository/interfaces/stats"
 	storageInterfaces "Qingyu_backend/repository/interfaces/storage"
@@ -103,10 +102,10 @@ type RepositoryFactory interface {
 	// todo: 清理掉这些方法
 
 	// Auth相关Repository (向后兼容)
-	CreateAuthRepository() SharedInterfaces.AuthRepository
+	CreateAuthRepository() authInterface.RoleRepository
 
 	// Recommendation相关Repository (向后兼容)
-	CreateRecommendationRepository() SharedInterfaces.RecommendationRepository
+	CreateRecommendationRepository() RecommendationInterfaces.RecommendationRepository
 
 	// Social相关Repository
 	CreateBookListRepository() SocialInterfaces.BookListRepository

@@ -78,7 +78,7 @@ graph TB
 | `notification/` | 通知推送 | NotificationRepository |
 | `reader/` | 阅读功能 | ReadingProgressRepository, BookmarkRepository |
 | `recommendation/` | 推荐系统 | BehaviorRepository, ProfileRepository |
-| `shared/` | 共享接口 | AuthRepository, RecommendationRepository (兼容层) |
+| `shared/` | 遗留接口收尾 | TokenBlacklistRepository |
 | `social/` | 社交功能 | FollowRepository, LikeRepository, BookListRepository |
 | `stats/` | 统计分析 | ChapterStatsRepository, BookStatsRepository |
 | `storage/` | 文件存储 | StorageRepository |
@@ -266,13 +266,15 @@ type CacheConfig struct {
 
 ### 4. Redis 实现 (redis/)
 
-用于需要 Redis 特性的场景，如 Token 黑名单：
+用于需要 Redis 特性的场景，如 Token 黑名单。当前 `repository/interfaces/shared` 仅剩这一处遗留接口：
 
 ```go
 type TokenBlacklistRepository interface {
-    Add(ctx context.Context, tokenID string, expiration time.Duration) error
-    Exists(ctx context.Context, tokenID string) (bool, error)
-    Remove(ctx context.Context, tokenID string) error
+    AddToBlacklist(ctx context.Context, token string, expiration time.Duration) error
+    IsBlacklisted(ctx context.Context, token string) (bool, error)
+    RemoveFromBlacklist(ctx context.Context, token string) error
+    ClearExpiredTokens(ctx context.Context) error
+    Health(ctx context.Context) error
 }
 ```
 
