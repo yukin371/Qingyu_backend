@@ -19,6 +19,7 @@ import (
 	searchservice "Qingyu_backend/service/search"
 	writerservice "Qingyu_backend/service/writer"
 	documentService "Qingyu_backend/service/writer/document"
+		storyharness "Qingyu_backend/service/writer/storyharness"
 	projectService "Qingyu_backend/service/writer/project"
 )
 
@@ -199,6 +200,21 @@ func RegisterWriterRoutes(r *gin.RouterGroup, searchSvc *searchservice.SearchSer
 
 	// 调用InitWriterRouter初始化文档编辑相关路由
 	InitWriterRouter(r, projectSvc, documentSvc, versionSvc, searchSvc, exportSvc, publishSvc, lockSvc, commentSvc, templateSvc, statsSvc, bookRepo, characterSvc, locationSvc, dashboardSvc)
+
+	// 创建 Story Harness 服务
+	var contextSvc *storyharness.ContextService
+	var crSvc *storyharness.ChangeRequestService
+	if mongoDB != nil {
+		crRepo := writerrepo.NewChangeRequestRepository(mongoDB)
+		contextSvc = storyharness.NewContextService(characterRepo, crRepo)
+		crSvc = storyharness.NewChangeRequestService(crRepo)
+	}
+
+	// 注册 Story Harness 路由
+	if contextSvc != nil && crSvc != nil {
+		InitStoryHarnessRoutes(r, contextSvc, crSvc)
+		zap.L().Info("RegisterWriterRoutes: Story Harness 路由注册完成")
+	}
 
 	// 调用InitWriterRoutes初始化设定百科路由（角色、地点、时间线、大纲）
 	zap.L().Info("RegisterWriterRoutes: 调用InitWriterRoutes注册设定百科路由",
