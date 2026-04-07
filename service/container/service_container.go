@@ -108,10 +108,10 @@ type ServiceContainer struct {
 	projectService        *projectService.ProjectService
 
 	// AI 相关服务
-	quotaService  *aiService.QuotaService
-	chatService   *aiService.ChatService
-	phase3Client  *aiService.Phase3Client
-	unifiedClient *aiService.UnifiedClient
+	quotaService       *aiService.QuotaService
+	chatService        *aiService.ChatService
+	phase3Client       *aiService.Phase3Client
+	unifiedClient      *aiService.UnifiedClient
 	storyContextEngine *aiService.StoryContextEngine
 
 	// Shared services
@@ -140,6 +140,25 @@ type ServiceContainer struct {
 	// 存储相关服务端口（用于API层）
 	multipartService storage.MultipartUploadManager
 	imageProcessor   storage.ImageProcessorService
+}
+
+type userTokenLifecycleAdapter struct {
+	authService auth.AuthService
+}
+
+func (a *userTokenLifecycleAdapter) Logout(ctx context.Context, token string) error {
+	return a.authService.Logout(ctx, token)
+}
+
+func (a *userTokenLifecycleAdapter) ValidateTokenUserID(ctx context.Context, token string) (string, error) {
+	claims, err := a.authService.ValidateToken(ctx, token)
+	if err != nil {
+		return "", err
+	}
+	if claims == nil {
+		return "", nil
+	}
+	return claims.UserID, nil
 }
 
 // NewServiceContainer 创建服务容器
@@ -1078,6 +1097,11 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 		}
 	}
 
+	// UserService 复用 AuthService 的 token 生命周期能力，避免 user 侧继续保留假实现。
+	if userSvcImpl, ok := c.userService.(*userService.UserServiceImpl); ok {
+		userSvcImpl.SetTokenLifecycleService(&userTokenLifecycleAdapter{authService: c.authService})
+	}
+
 	// 5.2.1 创建 OAuthService（可选，需要配置）
 	// 初始化 OAuth 配置管理器
 	oauthConfigMgr := config.NewOAuthConfigManager()
@@ -1660,10 +1684,10 @@ type ServiceHealthStatus struct {
 
 // InfrastructureHealthResult 基础设施健康检查结果
 type InfrastructureHealthResult struct {
-	Status        string                       `json:"status"` // "healthy", "degraded", "unhealthy"
+	Status        string                          `json:"status"` // "healthy", "degraded", "unhealthy"
 	Services      map[string]*ServiceHealthStatus `json:"services"`
-	Version       string                       `json:"version"`
-	UptimeSeconds int64                        `json:"uptime_seconds"`
+	Version       string                          `json:"version"`
+	UptimeSeconds int64                           `json:"uptime_seconds"`
 }
 
 // startTime 记录服务启动时间
@@ -1673,8 +1697,8 @@ var startTime = time.Now()
 // 包括 MongoDB、Redis、Milvus、AI gRPC 服务
 func (c *ServiceContainer) GetInfrastructureHealth(ctx context.Context) *InfrastructureHealthResult {
 	result := &InfrastructureHealthResult{
-		Services: make(map[string]*ServiceHealthStatus),
-		Version:  "1.0.0",
+		Services:      make(map[string]*ServiceHealthStatus),
+		Version:       "1.0.0",
 		UptimeSeconds: int64(time.Since(startTime).Seconds()),
 	}
 

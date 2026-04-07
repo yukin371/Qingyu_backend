@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"strings"
 	"time"
 
 	"Qingyu_backend/internal/middleware/auth"
@@ -44,6 +45,13 @@ func indexOf(s, substr string) int {
 	return -1
 }
 
+// TokenLifecycleService 抽象当前可用的 token 生命周期能力。
+// UserService 通过这个最小接口复用 auth 的登出/验证逻辑，避免直接依赖具体实现。
+type TokenLifecycleService interface {
+	Logout(ctx context.Context, token string) error
+	ValidateTokenUserID(ctx context.Context, token string) (string, error)
+}
+
 // UserServiceImpl 用户服务实现
 //
 // TECHDEBT(#2026-03-22): 分层违规问题
@@ -54,11 +62,12 @@ func indexOf(s, substr string) int {
 // 解决方案：引入事件驱动或接口隔离，在后续迭代中重构。
 // 详见：docs/reports/2026-03-22-user-auth-boundary-analysis.md
 type UserServiceImpl struct {
-	userRepo repoInterfaces.UserRepository
-	authRepo authRepo.RoleRepository // TECHDEBT: 应通过 AuthService 访问
-	logger   *zap.Logger
-	name     string
-	version  string
+	userRepo               repoInterfaces.UserRepository
+	authRepo               authRepo.RoleRepository // TECHDEBT: 应通过 AuthService 访问
+	tokenLifecycleService  TokenLifecycleService
+	logger                 *zap.Logger
+	name                   string
+	version                string
 }
 
 // NewUserService 创建用户服务
@@ -70,6 +79,11 @@ func NewUserService(userRepo repoInterfaces.UserRepository, authRepo authRepo.Ro
 		name:     "UserService",
 		version:  "1.0.0",
 	}
+}
+
+// SetTokenLifecycleService 注入当前可用的 token 生命周期能力。
+func (s *UserServiceImpl) SetTokenLifecycleService(tokenLifecycleService TokenLifecycleService) {
+	s.tokenLifecycleService = tokenLifecycleService
 }
 
 // Initialize 初始化服务
@@ -501,17 +515,24 @@ func (s *UserServiceImpl) LoginUser(ctx context.Context, req *user2.LoginUserReq
 
 // LogoutUser 登出用户
 func (s *UserServiceImpl) LogoutUser(ctx context.Context, req *user2.LogoutUserRequest) (*user2.LogoutUserResponse, error) {
-	// 注意：完整的实现应该：
-	// 1. 将 JWT Token 加入黑名单（Redis）
-	// 2. 设置过期时间等于 Token 的剩余有效期
-	// 当前实现：简化处理，仅返回成功
-	// TODO(Production): 集成 TokenBlacklistRepository
-	// if s.tokenBlacklistRepo != nil {
-	// 	err := s.tokenBlacklistRepo.AddToBlacklist(ctx, req.Token, tokenExpiry)
-	// 	if err != nil {
-	// 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "加入黑名单失败", err)
-	// 	}
-	// }
+	if req == nil {
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "登出请求不能为空", nil)
+	}
+
+	if req.Token == "" {
+		return &user2.LogoutUserResponse{
+			Success: true,
+		}, nil
+	}
+
+	// 当前实现优先复用 auth 的吊销能力；
+	// 若运行时尚未注入该能力，则保持幂等成功，避免破坏旧调用方。
+	if s.tokenLifecycleService != nil {
+		if err := s.tokenLifecycleService.Logout(ctx, req.Token); err != nil {
+			return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "登出失败", err)
+		}
+	}
+
 	return &user2.LogoutUserResponse{
 		Success: true,
 	}, nil
@@ -519,20 +540,31 @@ func (s *UserServiceImpl) LogoutUser(ctx context.Context, req *user2.LogoutUserR
 
 // ValidateToken 验证令牌
 func (s *UserServiceImpl) ValidateToken(ctx context.Context, req *user2.ValidateTokenRequest) (*user2.ValidateTokenResponse, error) {
-	// 注意：完整的实现应该：
-	// 1. 验证 JWT Token 的签名和过期时间
-	// 2. 检查 Token 是否在黑名单中
-	// 3. 返回 Token 中的用户信息
-	// 当前实现：简化处理，JWT 验证在中间件中完成
-	// TODO(Production): 集成 JWT 验证库和黑名单检查
-	// if s.tokenBlacklistRepo != nil {
-	// 	isBlacklisted, _ := s.tokenBlacklistRepo.IsBlacklisted(ctx, req.Token)
-	// 	if isBlacklisted {
-	// 		return &user2.ValidateTokenResponse{Valid: false}, nil
-	// 	}
-	// }
+	if req == nil || strings.TrimSpace(req.Token) == "" {
+		return &user2.ValidateTokenResponse{Valid: false}, nil
+	}
+
+	// 若运行时尚未注入 live auth 能力，则保持兼容的保守返回。
+	if s.tokenLifecycleService == nil {
+		return &user2.ValidateTokenResponse{Valid: false}, nil
+	}
+
+	userID, err := s.tokenLifecycleService.ValidateTokenUserID(ctx, req.Token)
+	if err != nil || userID == "" {
+		return &user2.ValidateTokenResponse{Valid: false}, nil
+	}
+
+	user, err := s.userRepo.GetByID(ctx, userID)
+	if err != nil {
+		if repoInterfaces.IsNotFoundError(err) {
+			return &user2.ValidateTokenResponse{Valid: false}, nil
+		}
+		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "获取Token对应用户失败", err)
+	}
+
 	return &user2.ValidateTokenResponse{
-		Valid: false, // 暂时返回false，实际验证在 JWT 中间件中完成
+		User:  ToUserDTO(user),
+		Valid: true,
 	}, nil
 }
 

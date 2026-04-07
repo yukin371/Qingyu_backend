@@ -247,25 +247,32 @@ Conclusion:
 - the shared alias file is retired
 - the `repository/interfaces/shared` package is no longer a compatibility alias hub; it only remains as the current home of `TokenBlacklistRepository`
 
-### `TokenBlacklistRepository` migration status (evaluated, deferred)
+### `TokenBlacklistRepository` retirement status (updated in phase 2)
 
-Pre-edit blast radius:
+Fresh scan before phase-2 edit:
 
-- GitNexus `impact` on `TokenBlacklistRepository` returned `HIGH` with 21 direct upstream imports because the symbol still lives in the legacy `repository/interfaces/shared` package
-- GitNexus `impact` on `NewTokenBlacklistRepository` returned `LOW`
-- GitNexus `impact` on `NewTokenBlacklistRepositoryWithConfig` returned `LOW`
-- direct implementation references remain concentrated in `repository/redis/token_blacklist_repository_redis.go` and its tests, but relocating the interface would force a package-path migration across many existing `shared` imports
+- earlier GitNexus output had classified the symbol as `HIGH` risk while it still sat under the legacy `repository/interfaces/shared` package
+- current local reference scan over non-doc code showed no active runtime callers of:
+  - `repository/interfaces/shared.TokenBlacklistRepository`
+  - `repository/redis.NewTokenBlacklistRepository`
+  - `repository/redis.NewTokenBlacklistRepositoryWithConfig`
+- active auth runtime wiring already uses:
+  - `service/auth.RedisAdapter`
+  - `service/auth.InMemoryTokenBlacklist`
 
 Current state:
 
-- `repository/interfaces/shared/shared_repository.go` is already gone, so `token_blacklist_repository.go` is now the only production interface in that package
-- `repository/redis/token_blacklist_repository_redis.go` still returns `shared.TokenBlacklistRepository`
-- runtime token blacklist integration is still not wired into logout/session invalidation; `service/user/user_service.go` still carries a TODO for the production hookup
+- `repository/interfaces/shared/token_blacklist_repository.go` was deleted
+- `repository/redis/token_blacklist_repository_redis.go` and its self-referential tests were deleted
+- unused legacy mocks under `repository/interfaces/shared/mocks` were deleted
+- new targeted tests were added around the live auth blacklist path in `service/auth/jwt_service_test.go`
+- `service/user/user_service.go` now delegates both `LogoutUser` and `ValidateToken` to the live auth token lifecycle path via a narrow injected adapter instead of returning placeholder results
 
 Conclusion:
 
-- moving `TokenBlacklistRepository` out of `repository/interfaces/shared` is deferred for this cleanup branch
-- the safe next step is a dedicated follow-up PR that migrates the remaining package path intentionally, instead of bundling it into broad alias retirement
+- phase 2 does not migrate this interface; it retires the dead repository abstraction entirely
+- `repository/interfaces/shared` is no longer needed as a live production package after this cleanup
+- user-facing token lifecycle entry points now align with the active auth runtime path
 
 ### `service/writer/project` request DTO compatibility retirement status (updated)
 

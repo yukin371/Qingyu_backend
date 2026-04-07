@@ -89,13 +89,11 @@ Notes:
 
 ### `TokenBlacklistRepository`
 
-- GitNexus `impact` on `TokenBlacklistRepository` returned `HIGH`
-- the interface still lives under the legacy `repository/interfaces/shared` package, so a package-path move would fan out across many `shared` imports
-- this phase leaves `repository/interfaces/shared/token_blacklist_repository.go` in place and documents it as the only remaining production interface in that package
+- phase 1 deferred this item because the interface still lived under the legacy `repository/interfaces/shared` package
+- a fresh phase-2 scan later showed the repository-side blacklist path had no active runtime callers
+- phase 2 therefore retired the dead path instead of migrating it
 
 ## Recommended Next Directions
 
-1. isolate `TokenBlacklistRepository` migration into a dedicated PR, with explicit package-path updates and a smaller caller set
-2. audit and retire remaining legacy mocks under `repository/interfaces/shared/mocks`
-3. continue writer response-side DTO cleanup only after separating active module-specific types from true compatibility aliases
-4. re-evaluate the AI legacy service wrapper and `service/shared/stats` only after a fresh impact scan confirms a bounded blast radius
+1. continue writer response-side DTO cleanup only after separating active module-specific types from true compatibility aliases
+2. re-evaluate the AI legacy service wrapper and `service/shared/stats` only after a fresh impact scan confirms a bounded blast radius

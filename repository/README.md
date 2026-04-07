@@ -67,7 +67,6 @@ graph LR
         NOTIF[notification/]
         RECO[recommendation/]
         INFRA[infrastructure/]
-        SHARED[shared/]
     end
 
     subgraph mongodb[实现层 mongodb/]
@@ -127,7 +126,6 @@ repository/
 │   ├── notification/       # 通知推送接口
 │   ├── reader/             # 阅读相关接口
 │   ├── recommendation/     # 推荐系统接口
-│   ├── shared/             # 遗留接口收尾（当前仅剩 TokenBlacklistRepository）
 │   ├── social/             # 社交功能接口
 │   ├── stats/              # 统计相关接口
 │   ├── storage/            # 存储相关接口
@@ -155,8 +153,6 @@ repository/
 │   └── factory.go          # Repository 工厂
 ├── querybuilder/           # 查询构建器
 │   └── mongo_query_builder.go
-├── redis/                  # Redis 实现
-│   └── token_blacklist_repository_redis.go
 ├── errors.go               # 错误定义
 └── id_converter.go         # ID 转换工具
 ```

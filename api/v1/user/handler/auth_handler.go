@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -193,12 +194,19 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 		return
 	}
 
-	// TODO: 将Token加入黑名单或清除服务端会话
-	// 当前JWT是无状态的，主要依赖客户端删除token
-	// 如果需要服务端控制，可以实现token黑名单机制
+	token = strings.TrimSpace(strings.TrimPrefix(token, "Bearer "))
+
+	resp, err := h.userService.LogoutUser(c.Request.Context(), &userServiceInterface.LogoutUserRequest{
+		Token: token,
+	})
+	if err != nil {
+		response.InternalError(c, err)
+		return
+	}
 
 	// 返回成功响应
 	response.Success(c, gin.H{
 		"message": "Logged out successfully",
+		"success": resp.Success,
 	})
 }
