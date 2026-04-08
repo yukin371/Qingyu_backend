@@ -1,6 +1,9 @@
 package dto
 
-import "time"
+import (
+	"Qingyu_backend/models/writer"
+	"time"
+)
 
 // ============================================================================
 // 内容管理模块统一 DTO 定义
@@ -295,6 +298,8 @@ type CreateCharacterRequest struct {
 	PersonalityPrompt string   `json:"personalityPrompt,omitempty" validate:"max=1000"`
 	SpeechPattern     string   `json:"speechPattern,omitempty" validate:"max=500"`
 	CurrentState      string   `json:"currentState,omitempty" validate:"max=500"`
+	EntityType        *string                      `json:"entityType,omitempty"`
+	StateFields       map[string]writer.StateValue `json:"stateFields,omitempty"`
 }
 
 // UpdateCharacterRequest 更新角色请求
@@ -308,6 +313,8 @@ type UpdateCharacterRequest struct {
 	PersonalityPrompt *string   `json:"personalityPrompt,omitempty" validate:"omitempty,max=1000"`
 	SpeechPattern     *string   `json:"speechPattern,omitempty" validate:"omitempty,max=500"`
 	CurrentState      *string   `json:"currentState,omitempty" validate:"omitempty,max=500"`
+	EntityType        *string                       `json:"entityType,omitempty"`
+	StateFields       *map[string]writer.StateValue `json:"stateFields,omitempty"`
 }
 
 // CreateRelationRequest 创建关系请求
