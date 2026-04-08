@@ -18,10 +18,10 @@ import (
 
 var (
 	// 命令行标志
-	cfgFile string
-	scale   string
-	clean   bool
-	createDemo    bool
+	cfgFile        string
+	scale          string
+	clean          bool
+	createDemo     bool
 	forceCleanDemo bool
 
 	// 配置
@@ -257,6 +257,16 @@ var (
 适用于产品演示和功能测试。`,
 		Run: runDemo,
 	}
+
+	// harnessCmd Harness角色数据填充命令
+	harnessCmd = &cobra.Command{
+		Use:   "harness",
+		Short: "创建Harness测试数据（就业指南角色卡片）",
+		Long: `创建《就业指南：我在异世界当劝退专员》项目和三个角色卡片。
+包含：1个项目、3个角色（亚伯、诺艾尔、伊莎贝拉）。
+适用于Story Harness功能测试。`,
+		Run: runHarness,
+	}
 )
 
 // init 初始化命令
@@ -300,6 +310,7 @@ func init() {
 	rootCmd.AddCommand(publicationFlowCmd)
 	rootCmd.AddCommand(e2eCmd)
 	rootCmd.AddCommand(demoCmd)
+	rootCmd.AddCommand(harnessCmd)
 
 	// demoCmd 专属标志
 	demoCmd.Flags().BoolVar(&forceCleanDemo, "force-clean", false, "强制清空后重新创建演示数据")
@@ -1644,4 +1655,52 @@ func runDemo(cmd *cobra.Command, args []string) {
 	fmt.Println("   时间线: 3条")
 	fmt.Println("\n💡 使用方式:")
 	fmt.Println("   cd Qingyu_backend && go run cmd/seeder/main.go demo")
+}
+
+// runHarness Harness角色数据填充命令
+func runHarness(cmd *cobra.Command, args []string) {
+	fmt.Println("🚀 开始创建Harness测试数据...")
+	fmt.Println("=" + strings.Repeat("=", 50))
+	fmt.Println()
+	fmt.Println("📖 项目名称: 就业指南：我在异世界当劝退专员")
+	fmt.Println("🎭 类型: 奇幻小说")
+	fmt.Println("📊 规模: 小型（仅角色数据）")
+	fmt.Println()
+
+	db, err := getDatabase()
+	if err != nil {
+		fmt.Printf("❌ 数据库连接失败: %v\n", err)
+		os.Exit(1)
+	}
+	defer db.Disconnect()
+
+	seeder := NewHarnessDataSeeder(db)
+
+	// harness 使用全局 --clean 控制清理，避免和 demo 专属 flag 混淆
+	if clean {
+		fmt.Println("⚠️  强制清空模式，将删除已存在的Harness数据...")
+		if err := seeder.Clean(); err != nil {
+			fmt.Printf("❌ 清空数据失败: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Println()
+	}
+
+	// 创建Harness数据
+	if err := seeder.CreateHarnessData(); err != nil {
+		fmt.Printf("❌ 创建Harness数据失败: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("\n" + strings.Repeat("=", 52))
+	fmt.Println("✅ Harness测试数据创建完成!")
+	fmt.Println(strings.Repeat("=", 52))
+	fmt.Println("\n📝 登录信息:")
+	fmt.Println("   Harness作家: harness_writer / qingyu2024")
+	fmt.Println("\n📊 数据统计:")
+	fmt.Println("   项目: 1个（就业指南：我在异世界当劝退专员）")
+	fmt.Println("   角色: 3个（亚伯、诺艾尔、伊莎贝拉）")
+	fmt.Println("\n💡 使用方式:")
+	fmt.Println("   cd Qingyu_backend && go run ./cmd/seeder harness")
+	fmt.Println("   如需重建数据: go run ./cmd/seeder --clean harness")
 }
