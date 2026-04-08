@@ -3,6 +3,7 @@ package storyharness
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"Qingyu_backend/models/writer"
@@ -82,19 +83,7 @@ func (s *ChangeRequestService) Process(ctx context.Context, requestID string, ne
 		return nil
 	}
 
-	projection, err := s.ensureProjection(ctx, request.ProjectID.Hex(), request.ChapterID.Hex())
-	if err != nil {
-		return err
-	}
-
-	s.applyAcceptedChange(projection, request)
-	projection.Checkpoint = writer.ProjectionCheckpoint{
-		LastRequestID: request.ID.Hex(),
-		LastCategory:  request.Category,
-		RefreshedAt:   time.Now(),
-	}
-
-	if err := s.projectionRepo.UpsertByChapter(ctx, projection); err != nil {
+	if _, err := s.RebuildProjection(ctx, request.ProjectID.Hex(), request.ChapterID.Hex()); err != nil {
 		return errors.NewServiceError("ChangeRequestService", errors.ServiceErrorInternal,
 			"刷新章节投影失败", requestID, err)
 	}
@@ -125,9 +114,7 @@ func (s *ChangeRequestService) RebuildProjection(ctx context.Context, projectID,
 			"加载已接受建议失败", chapterID, err)
 	}
 
-	for _, request := range accepted {
-		s.applyAcceptedChange(projection, request)
-	}
+	s.replayAcceptedChanges(projection, accepted)
 
 	result := &RebuildProjectionResult{
 		ProjectID:     projectID,
@@ -238,6 +225,8 @@ func (s *ChangeRequestService) applyAcceptedChange(projection *writer.ChapterPro
 	}
 
 	switch request.Category {
+	case writer.CRCategoryScopeDrift:
+		s.applyScopeDriftChange(projection, request)
 	case writer.CRCategoryCharacterState:
 		s.applyCharacterStateChange(projection, request)
 	case writer.CRCategoryRelationChange:
@@ -245,15 +234,92 @@ func (s *ChangeRequestService) applyAcceptedChange(projection *writer.ChapterPro
 	}
 }
 
+func (s *ChangeRequestService) replayAcceptedChanges(projection *writer.ChapterProjection, requests []*writer.ChangeRequest) {
+	if projection == nil {
+		return
+	}
+
+	replayOrder := []writer.ChangeRequestCategory{
+		writer.CRCategoryScopeDrift,
+		writer.CRCategoryCharacterState,
+		writer.CRCategoryRelationChange,
+	}
+	for _, category := range replayOrder {
+		for _, request := range requests {
+			if request == nil || request.Category != category {
+				continue
+			}
+			s.applyAcceptedChange(projection, request)
+		}
+	}
+}
+
+func (s *ChangeRequestService) applyScopeDriftChange(projection *writer.ChapterProjection, request *writer.ChangeRequest) {
+	action := strings.ToLower(strings.TrimSpace(readStringField(request.SuggestedChange, "action")))
+	if action != "" && action != "create" {
+		return
+	}
+
+	name := readStringField(request.SuggestedChange, "name")
+	if name == "" {
+		return
+	}
+
+	entityID := readStringField(request.SuggestedChange, "entityId")
+	if entityID == "" {
+		entityID = findProjectionCharacterID(projection, name)
+	}
+	if entityID == "" {
+		entityID = request.ID.Hex()
+	}
+
+	snapshot := writer.CharacterSnapshot{
+		CharacterID:   entityID,
+		CharacterName: name,
+		EntityType:    normalizeProjectionEntityType(readStringField(request.SuggestedChange, "entityType")),
+		Summary:       readStringField(request.SuggestedChange, "description"),
+	}
+
+	idx := findProjectionCharacterIndexByID(projection, entityID)
+	if idx < 0 {
+		idx = findProjectionCharacterIndexByName(projection, name)
+	}
+	if idx < 0 {
+		projection.Characters = append(projection.Characters, snapshot)
+		return
+	}
+
+	existing := projection.Characters[idx]
+	if snapshot.CharacterID == "" {
+		snapshot.CharacterID = existing.CharacterID
+	}
+	if snapshot.CharacterName == "" {
+		snapshot.CharacterName = existing.CharacterName
+	}
+	if snapshot.EntityType == "" {
+		snapshot.EntityType = existing.EntityType
+	}
+	if snapshot.Summary == "" {
+		snapshot.Summary = existing.Summary
+	}
+	snapshot.CurrentState = existing.CurrentState
+	snapshot.StateFields = existing.StateFields
+	projection.Characters[idx] = snapshot
+}
+
 func (s *ChangeRequestService) applyCharacterStateChange(projection *writer.ChapterProjection, request *writer.ChangeRequest) {
 	characterID := readStringField(request.SuggestedChange, "characterId")
+	characterName := readStringField(request.SuggestedChange, "characterName")
+	if characterID == "" {
+		characterID = findProjectionCharacterID(projection, characterName)
+	}
 	if characterID == "" {
 		return
 	}
 
 	snapshot := writer.CharacterSnapshot{
 		CharacterID:   characterID,
-		CharacterName: readStringField(request.SuggestedChange, "characterName"),
+		CharacterName: characterName,
 		CurrentState:  readStringField(request.SuggestedChange, "stateSummary"),
 	}
 
@@ -285,6 +351,14 @@ func (s *ChangeRequestService) applyCharacterStateChange(projection *writer.Chap
 func (s *ChangeRequestService) applyRelationChange(projection *writer.ChapterProjection, request *writer.ChangeRequest) {
 	fromID := readStringField(request.SuggestedChange, "fromId")
 	toID := readStringField(request.SuggestedChange, "toId")
+	fromName := readStringField(request.SuggestedChange, "fromName")
+	toName := readStringField(request.SuggestedChange, "toName")
+	if fromID == "" {
+		fromID = findProjectionCharacterID(projection, fromName)
+	}
+	if toID == "" {
+		toID = findProjectionCharacterID(projection, toName)
+	}
 	if fromID == "" || toID == "" {
 		return
 	}
@@ -292,10 +366,16 @@ func (s *ChangeRequestService) applyRelationChange(projection *writer.ChapterPro
 	snapshot := writer.RelationSnapshot{
 		FromID:   fromID,
 		ToID:     toID,
-		FromName: readStringField(request.SuggestedChange, "fromName"),
-		ToName:   readStringField(request.SuggestedChange, "toName"),
+		FromName: fromName,
+		ToName:   toName,
 		Relation: readStringField(request.SuggestedChange, "relation"),
 		Strength: readIntField(request.SuggestedChange, "strength"),
+	}
+	if snapshot.FromName == "" {
+		snapshot.FromName = findProjectionCharacterName(projection, fromID)
+	}
+	if snapshot.ToName == "" {
+		snapshot.ToName = findProjectionCharacterName(projection, toID)
 	}
 
 	for idx := range projection.Relations {
@@ -319,6 +399,70 @@ func (s *ChangeRequestService) applyRelationChange(projection *writer.ChapterPro
 	}
 
 	projection.Relations = append(projection.Relations, snapshot)
+}
+
+func normalizeProjectionEntityType(value string) writer.EntityType {
+	normalized := strings.ToLower(strings.TrimSpace(value))
+	switch normalized {
+	case "":
+		return writer.EntityTypeCharacter
+	case string(writer.EntityTypeCharacter):
+		return writer.EntityTypeCharacter
+	case string(writer.EntityTypeItem):
+		return writer.EntityTypeItem
+	case string(writer.EntityTypeLocation):
+		return writer.EntityTypeLocation
+	case string(writer.EntityTypeOrganization):
+		return writer.EntityTypeOrganization
+	case string(writer.EntityTypeForeshadowing):
+		return writer.EntityTypeForeshadowing
+	default:
+		return writer.EntityType(normalized)
+	}
+}
+
+func findProjectionCharacterID(projection *writer.ChapterProjection, name string) string {
+	idx := findProjectionCharacterIndexByName(projection, name)
+	if idx < 0 {
+		return ""
+	}
+	return projection.Characters[idx].CharacterID
+}
+
+func findProjectionCharacterName(projection *writer.ChapterProjection, characterID string) string {
+	idx := findProjectionCharacterIndexByID(projection, characterID)
+	if idx < 0 {
+		return ""
+	}
+	return projection.Characters[idx].CharacterName
+}
+
+func findProjectionCharacterIndexByID(projection *writer.ChapterProjection, characterID string) int {
+	if projection == nil || characterID == "" {
+		return -1
+	}
+	for idx := range projection.Characters {
+		if projection.Characters[idx].CharacterID == characterID {
+			return idx
+		}
+	}
+	return -1
+}
+
+func findProjectionCharacterIndexByName(projection *writer.ChapterProjection, name string) int {
+	if projection == nil {
+		return -1
+	}
+	normalized := strings.TrimSpace(name)
+	if normalized == "" {
+		return -1
+	}
+	for idx := range projection.Characters {
+		if strings.EqualFold(strings.TrimSpace(projection.Characters[idx].CharacterName), normalized) {
+			return idx
+		}
+	}
+	return -1
 }
 
 func readStringField(payload map[string]interface{}, key string) string {

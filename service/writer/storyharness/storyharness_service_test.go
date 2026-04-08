@@ -256,6 +256,132 @@ func TestChangeRequestServiceRebuildProjectionReplaysAcceptedRequests(t *testing
 	}
 }
 
+func TestChangeRequestServiceRebuildProjectionAppliesAcceptedScopeDrift(t *testing.T) {
+	projectID := primitive.NewObjectID()
+	chapterID := primitive.NewObjectID()
+	requestID := primitive.NewObjectID()
+
+	crRepo := &stubChangeRequestRepository{
+		requestsByStatus: map[writer.ChangeRequestStatus][]*writer.ChangeRequest{
+			writer.CRStatusAccepted: {
+				{
+					IdentifiedEntity:    writerBase.IdentifiedEntity{ID: requestID},
+					ProjectScopedEntity: writerBase.ProjectScopedEntity{ProjectID: projectID},
+					ChapterID:           chapterID,
+					Category:            writer.CRCategoryScopeDrift,
+					SuggestedChange: map[string]interface{}{
+						"action":      "create",
+						"entityType":  string(writer.EntityTypeCharacter),
+						"name":        "奶茶店老板",
+						"description": "在街角经营奶茶店的新角色",
+					},
+				},
+			},
+		},
+	}
+	projectionRepo := &stubProjectionRepository{}
+
+	svc := NewChangeRequestService(crRepo, projectionRepo, &stubCharacterRepository{})
+
+	result, err := svc.RebuildProjection(context.Background(), projectID.Hex(), chapterID.Hex())
+	if err != nil {
+		t.Fatalf("RebuildProjection returned error: %v", err)
+	}
+
+	if result.ReplayedCount != 1 {
+		t.Fatalf("expected replayed count 1, got %d", result.ReplayedCount)
+	}
+	if projectionRepo.saved == nil {
+		t.Fatal("expected projection to be saved")
+	}
+	if got := len(projectionRepo.saved.Characters); got != 1 {
+		t.Fatalf("expected 1 projected character, got %d", got)
+	}
+	if got := projectionRepo.saved.Characters[0].CharacterName; got != "奶茶店老板" {
+		t.Fatalf("expected projected entity name %q, got %q", "奶茶店老板", got)
+	}
+	if got := projectionRepo.saved.Characters[0].CharacterID; got != requestID.Hex() {
+		t.Fatalf("expected projected entity id %s, got %s", requestID.Hex(), got)
+	}
+	if got := projectionRepo.saved.Characters[0].EntityType; got != writer.EntityTypeCharacter {
+		t.Fatalf("expected projected entity type %q, got %q", writer.EntityTypeCharacter, got)
+	}
+}
+
+func TestChangeRequestServiceProcessAcceptedScopeDriftBackfillsAcceptedRelation(t *testing.T) {
+	projectID := primitive.NewObjectID()
+	chapterID := primitive.NewObjectID()
+	existingCharacterID := primitive.NewObjectID()
+	relationRequestID := primitive.NewObjectID()
+	scopeRequestID := primitive.NewObjectID()
+
+	relationRequest := &writer.ChangeRequest{
+		IdentifiedEntity:    writerBase.IdentifiedEntity{ID: relationRequestID},
+		ProjectScopedEntity: writerBase.ProjectScopedEntity{ProjectID: projectID},
+		ChapterID:           chapterID,
+		Category:            writer.CRCategoryRelationChange,
+		Status:              writer.CRStatusAccepted,
+		SuggestedChange: map[string]interface{}{
+			"fromId":   existingCharacterID.Hex(),
+			"fromName": "诺艾尔",
+			"toName":   "奶茶店老板",
+			"relation": "债务往来",
+			"strength": 65,
+		},
+	}
+	scopeRequest := &writer.ChangeRequest{
+		IdentifiedEntity:    writerBase.IdentifiedEntity{ID: scopeRequestID},
+		ProjectScopedEntity: writerBase.ProjectScopedEntity{ProjectID: projectID},
+		ChapterID:           chapterID,
+		Category:            writer.CRCategoryScopeDrift,
+		Status:              writer.CRStatusPending,
+		SuggestedChange: map[string]interface{}{
+			"action":      "create",
+			"entityType":  string(writer.EntityTypeCharacter),
+			"name":        "奶茶店老板",
+			"description": "新登场的店主",
+		},
+	}
+
+	crRepo := &stubChangeRequestRepository{
+		requestByID: map[string]*writer.ChangeRequest{
+			relationRequestID.Hex(): relationRequest,
+			scopeRequestID.Hex():    scopeRequest,
+		},
+		requestsByStatus: map[writer.ChangeRequestStatus][]*writer.ChangeRequest{
+			writer.CRStatusAccepted: {relationRequest},
+		},
+	}
+	characterRepo := &stubCharacterRepository{
+		characters: []*writer.Character{
+			newTestCharacter(projectID, existingCharacterID, "诺艾尔", "正在整理账本"),
+		},
+	}
+	projectionRepo := &stubProjectionRepository{}
+
+	svc := NewChangeRequestService(crRepo, projectionRepo, characterRepo)
+
+	if err := svc.Process(context.Background(), scopeRequestID.Hex(), writer.CRStatusAccepted, "user-1"); err != nil {
+		t.Fatalf("Process returned error: %v", err)
+	}
+
+	if projectionRepo.saved == nil {
+		t.Fatal("expected projection to be saved")
+	}
+	if got := len(projectionRepo.saved.Characters); got != 2 {
+		t.Fatalf("expected 2 projected characters, got %d", got)
+	}
+	if got := len(projectionRepo.saved.Relations); got != 1 {
+		t.Fatalf("expected 1 projected relation, got %d", got)
+	}
+	if got := projectionRepo.saved.Relations[0].ToID; got != scopeRequestID.Hex() {
+		t.Fatalf("expected relation target id %s, got %s", scopeRequestID.Hex(), got)
+	}
+	if got := projectionRepo.saved.Relations[0].ToName; got != "奶茶店老板" {
+		t.Fatalf("expected relation target name %q, got %q", "奶茶店老板", got)
+	}
+}
+
 func newTestCharacter(projectID, characterID primitive.ObjectID, name, currentState string) *writer.Character {
 	character := &writer.Character{
 		IdentifiedEntity:    writerBase.IdentifiedEntity{ID: characterID},
@@ -311,6 +437,28 @@ func (s *stubChangeRequestRepository) CountPendingByChapter(ctx context.Context,
 func (s *stubChangeRequestRepository) UpdateRequestStatus(ctx context.Context, id string, status writer.ChangeRequestStatus, processedBy string) error {
 	s.updatedStatus = status
 	s.updatedBy = processedBy
+	if s.requestByID == nil {
+		return nil
+	}
+	request := s.requestByID[id]
+	if request == nil {
+		return nil
+	}
+	request.Status = status
+	if s.requestsByStatus == nil {
+		s.requestsByStatus = make(map[writer.ChangeRequestStatus][]*writer.ChangeRequest)
+	}
+	for currentStatus, items := range s.requestsByStatus {
+		filtered := items[:0]
+		for _, item := range items {
+			if item == nil || item.ID.Hex() == id {
+				continue
+			}
+			filtered = append(filtered, item)
+		}
+		s.requestsByStatus[currentStatus] = filtered
+	}
+	s.requestsByStatus[status] = append(s.requestsByStatus[status], request)
 	return nil
 }
 

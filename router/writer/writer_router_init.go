@@ -210,7 +210,7 @@ func RegisterWriterRoutes(r *gin.RouterGroup, searchSvc *searchservice.SearchSer
 		crRepo := writerrepo.NewChangeRequestRepository(mongoDB)
 		projectionRepo := writerrepo.NewProjectionRepository(mongoDB)
 		contextSvc = storyharness.NewContextService(characterRepo, crRepo, projectionRepo)
-		indexerSvc = storyharness.NewIndexerService(documentRepo, documentContentRepo, characterRepo, crRepo)
+		indexerSvc = storyharness.NewIndexerService(documentRepo, documentContentRepo, characterRepo, crRepo, nil)
 		crSvc = storyharness.NewChangeRequestService(crRepo, projectionRepo, characterRepo)
 
 		documentSvc.SetOnDocumentContentSaved(func(ctx context.Context, documentID string) {

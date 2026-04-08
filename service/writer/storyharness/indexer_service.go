@@ -23,13 +23,14 @@ type TriggerIndexResult struct {
 	Source       string `json:"source"`
 }
 
-// IndexerService 章节索引与规则引擎服务
-// 第一版仅做低成本规则扫描，并生成 ChangeRequestBatch + ChangeRequest。
+// IndexerService 章节索引服务。
+// 当前实现会优先调用 AI 章节分析接口，失败时回退规则扫描，再统一写入 ChangeRequestBatch + ChangeRequest。
 type IndexerService struct {
 	documentRepo        writerRepo.DocumentRepository
 	documentContentRepo writerRepo.DocumentContentRepository
 	characterRepo       writerRepo.CharacterRepository
 	changeRequestRepo   writerRepo.ChangeRequestRepository
+	aiClient            ChapterAnalysisClient
 }
 
 // NewIndexerService 创建 IndexerService 实例
@@ -38,16 +39,22 @@ func NewIndexerService(
 	documentContentRepo writerRepo.DocumentContentRepository,
 	characterRepo writerRepo.CharacterRepository,
 	changeRequestRepo writerRepo.ChangeRequestRepository,
+	aiClient ChapterAnalysisClient,
 ) *IndexerService {
+	if aiClient == nil {
+		aiClient = NewConfiguredChapterAnalysisClient()
+	}
+
 	return &IndexerService{
 		documentRepo:        documentRepo,
 		documentContentRepo: documentContentRepo,
 		characterRepo:       characterRepo,
 		changeRequestRepo:   changeRequestRepo,
+		aiClient:            aiClient,
 	}
 }
 
-// TriggerChapterIndex 触发章节索引，生成最小规则建议。
+// TriggerChapterIndex 触发章节索引，优先生成 AI 结构化建议，失败时回退规则建议。
 func (s *IndexerService) TriggerChapterIndex(ctx context.Context, projectID, chapterID string) (*TriggerIndexResult, error) {
 	projectOID, err := primitive.ObjectIDFromHex(projectID)
 	if err != nil {
@@ -85,10 +92,12 @@ func (s *IndexerService) TriggerChapterIndex(ctx context.Context, projectID, cha
 		return nil, errors.NewServiceError("IndexerService", errors.ServiceErrorInternal, "获取待处理建议失败", chapterID, err)
 	}
 
+	suggestions, source := s.buildSuggestions(ctx, projectID, chapterID, projectOID, chapterOID, text, characters)
+
 	batch := &writer.ChangeRequestBatch{
 		ProjectScopedEntity: writerBase.ProjectScopedEntity{ProjectID: projectOID},
 		ChapterID:           chapterOID,
-		Source:              "rule",
+		Source:              source,
 		SaveTriggerID:       stringPtr(chapterID),
 	}
 	batch.TouchForCreate()
@@ -97,7 +106,6 @@ func (s *IndexerService) TriggerChapterIndex(ctx context.Context, projectID, cha
 		return nil, errors.NewServiceError("IndexerService", errors.ServiceErrorInternal, "创建建议批次失败", chapterID, err)
 	}
 
-	suggestions := s.buildRuleSuggestions(text, projectOID, chapterOID, characters)
 	pendingKeys := make(map[string]struct{}, len(existingPending))
 	for _, item := range existingPending {
 		pendingKeys[s.changeRequestKey(item)] = struct{}{}
@@ -173,6 +181,48 @@ func (s *IndexerService) loadDocumentText(ctx context.Context, chapterID string)
 	}
 
 	return content.Content, nil
+}
+
+func (s *IndexerService) buildSuggestions(
+	ctx context.Context,
+	projectID string,
+	chapterID string,
+	projectOID primitive.ObjectID,
+	chapterOID primitive.ObjectID,
+	text string,
+	characters []*writer.Character,
+) ([]*writer.ChangeRequest, string) {
+	if suggestions, err := s.buildAISuggestions(ctx, projectID, chapterID, projectOID, chapterOID, text, characters); err == nil && len(suggestions) > 0 {
+		return suggestions, "ai"
+	}
+
+	return s.buildRuleSuggestions(text, projectOID, chapterOID, characters), "rule"
+}
+
+func (s *IndexerService) buildAISuggestions(
+	ctx context.Context,
+	projectID string,
+	chapterID string,
+	projectOID primitive.ObjectID,
+	chapterOID primitive.ObjectID,
+	text string,
+	characters []*writer.Character,
+) ([]*writer.ChangeRequest, error) {
+	if s.aiClient == nil || strings.TrimSpace(text) == "" {
+		return nil, nil
+	}
+
+	response, err := s.aiClient.AnalyzeChapter(ctx, &ChapterAnalysisRequest{
+		ProjectID:        projectID,
+		ChapterID:        chapterID,
+		Text:             text,
+		ExistingEntities: buildKnownEntities(characters),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return buildAIChangeRequests(projectOID, chapterOID, characters, response), nil
 }
 
 func (s *IndexerService) buildRuleSuggestions(
@@ -293,6 +343,291 @@ func findMentionedCharacters(sentence string, characters []*writer.Character) []
 		}
 	}
 	return matches
+}
+
+func buildKnownEntities(characters []*writer.Character) []ChapterKnownEntity {
+	results := make([]ChapterKnownEntity, 0, len(characters))
+	for _, character := range characters {
+		if character == nil || strings.TrimSpace(character.Name) == "" {
+			continue
+		}
+
+		entityType := string(character.EntityType)
+		if entityType == "" {
+			entityType = string(writer.EntityTypeCharacter)
+		}
+
+		results = append(results, ChapterKnownEntity{
+			EntityID:     character.ID.Hex(),
+			EntityType:   entityType,
+			Name:         character.Name,
+			Aliases:      character.Alias,
+			Summary:      character.Summary,
+			CurrentState: character.CurrentState,
+		})
+	}
+	return results
+}
+
+func buildAIChangeRequests(
+	projectID primitive.ObjectID,
+	chapterID primitive.ObjectID,
+	characters []*writer.Character,
+	response *ChapterAnalysisResponse,
+) []*writer.ChangeRequest {
+	if response == nil {
+		return nil
+	}
+
+	lookup := buildCharacterLookup(characters)
+	results := make([]*writer.ChangeRequest, 0, len(response.StateChanges)+len(response.RelationChanges)+len(response.NewEntities))
+
+	for _, change := range response.StateChanges {
+		entityName := strings.TrimSpace(change.EntityName)
+		fieldKey := strings.TrimSpace(change.FieldKey)
+		if entityName == "" || fieldKey == "" {
+			continue
+		}
+
+		matchedCharacter := lookup[normalizeEntityLookupKey(entityName)]
+		displayName := entityName
+		if matchedCharacter != nil && strings.TrimSpace(matchedCharacter.Name) != "" {
+			displayName = matchedCharacter.Name
+		}
+
+		suggestedChange := map[string]interface{}{
+			"characterName": displayName,
+			"fieldKey":      fieldKey,
+			"oldValue":      change.OldValue,
+			"newValue":      change.NewValue,
+			"stateSummary":  buildStateSummary(fieldKey, change.OldValue, change.NewValue),
+		}
+		if matchedCharacter != nil {
+			suggestedChange["characterId"] = matchedCharacter.ID.Hex()
+		}
+
+		results = append(results, &writer.ChangeRequest{
+			ProjectScopedEntity: writerBase.ProjectScopedEntity{ProjectID: projectID},
+			ChapterID:           chapterID,
+			Category:            writer.CRCategoryCharacterState,
+			Priority:            writer.CRPriorityMedium,
+			Status:              writer.CRStatusPending,
+			Title:               fmt.Sprintf("建议更新角色状态：%s", displayName),
+			Description:         fmt.Sprintf("AI 检测到 %s 的 %s 可能发生变化。", displayName, fieldKey),
+			SuggestedChange:     suggestedChange,
+			Evidence:            buildEvidenceRefs(chapterID.Hex(), change.Evidence),
+			Source:              "ai",
+		})
+	}
+
+	for _, change := range response.RelationChanges {
+		fromName := strings.TrimSpace(change.FromEntity)
+		toName := strings.TrimSpace(change.ToEntity)
+		if fromName == "" || toName == "" {
+			continue
+		}
+
+		fromCharacter := lookup[normalizeEntityLookupKey(fromName)]
+		toCharacter := lookup[normalizeEntityLookupKey(toName)]
+		displayFrom := fromName
+		displayTo := toName
+		if fromCharacter != nil && strings.TrimSpace(fromCharacter.Name) != "" {
+			displayFrom = fromCharacter.Name
+		}
+		if toCharacter != nil && strings.TrimSpace(toCharacter.Name) != "" {
+			displayTo = toCharacter.Name
+		}
+
+		relationLabel := buildRelationLabel(change.RelationType, change.ChangeType)
+		suggestedChange := map[string]interface{}{
+			"fromName":     displayFrom,
+			"toName":       displayTo,
+			"relation":     relationLabel,
+			"relationType": strings.TrimSpace(change.RelationType),
+			"changeType":   normalizeRelationChangeType(change.ChangeType),
+			"strength":     inferRelationStrength(change.ChangeType),
+		}
+		if fromCharacter != nil {
+			suggestedChange["fromId"] = fromCharacter.ID.Hex()
+		}
+		if toCharacter != nil {
+			suggestedChange["toId"] = toCharacter.ID.Hex()
+		}
+
+		results = append(results, &writer.ChangeRequest{
+			ProjectScopedEntity: writerBase.ProjectScopedEntity{ProjectID: projectID},
+			ChapterID:           chapterID,
+			Category:            writer.CRCategoryRelationChange,
+			Priority:            writer.CRPriorityHigh,
+			Status:              writer.CRStatusPending,
+			Title:               fmt.Sprintf("建议更新关系：%s / %s", displayFrom, displayTo),
+			Description:         fmt.Sprintf("AI 检测到 %s 与 %s 的关系可能发生变化：%s。", displayFrom, displayTo, relationLabel),
+			SuggestedChange:     suggestedChange,
+			Evidence:            buildEvidenceRefs(chapterID.Hex(), change.Evidence),
+			Source:              "ai",
+		})
+	}
+
+	for _, entity := range response.NewEntities {
+		name := strings.TrimSpace(entity.Name)
+		if name == "" {
+			continue
+		}
+
+		entityType := normalizeAIEntityType(entity.EntityType)
+		results = append(results, &writer.ChangeRequest{
+			ProjectScopedEntity: writerBase.ProjectScopedEntity{ProjectID: projectID},
+			ChapterID:           chapterID,
+			Category:            writer.CRCategoryScopeDrift,
+			Priority:            writer.CRPriorityMedium,
+			Status:              writer.CRStatusPending,
+			Title:               fmt.Sprintf("建议补充新实体：%s", name),
+			Description:         fmt.Sprintf("AI 检测到新实体出场：%s（%s）。", name, renderEntityTypeLabel(entityType)),
+			SuggestedChange: map[string]interface{}{
+				"action":       "create",
+				"entityType":   entityType,
+				"name":         name,
+				"description":  strings.TrimSpace(entity.Description),
+				"firstMention": strings.TrimSpace(entity.FirstMention),
+			},
+			Evidence: buildEvidenceRefs(chapterID.Hex(), entity.FirstMention),
+			Source:   "ai",
+		})
+	}
+
+	return results
+}
+
+func buildCharacterLookup(characters []*writer.Character) map[string]*writer.Character {
+	lookup := make(map[string]*writer.Character, len(characters)*2)
+	for _, character := range characters {
+		if character == nil {
+			continue
+		}
+
+		if key := normalizeEntityLookupKey(character.Name); key != "" {
+			lookup[key] = character
+		}
+		for _, alias := range character.Alias {
+			if key := normalizeEntityLookupKey(alias); key != "" {
+				lookup[key] = character
+			}
+		}
+	}
+	return lookup
+}
+
+func normalizeEntityLookupKey(value string) string {
+	return strings.ToLower(strings.TrimSpace(value))
+}
+
+func buildStateSummary(fieldKey string, oldValue, newValue interface{}) string {
+	field := strings.TrimSpace(fieldKey)
+	newValueText := formatChangeValue(newValue)
+	oldValueText := formatChangeValue(oldValue)
+	if oldValueText == "" {
+		if field == "" {
+			return newValueText
+		}
+		return fmt.Sprintf("%s：%s", field, newValueText)
+	}
+	if field == "" {
+		return fmt.Sprintf("%s → %s", oldValueText, newValueText)
+	}
+	return fmt.Sprintf("%s：%s → %s", field, oldValueText, newValueText)
+}
+
+func formatChangeValue(value interface{}) string {
+	if value == nil {
+		return ""
+	}
+	return strings.TrimSpace(fmt.Sprint(value))
+}
+
+func buildEvidenceRefs(documentID, quote string) []writer.EvidenceRef {
+	if strings.TrimSpace(quote) == "" {
+		return nil
+	}
+	return []writer.EvidenceRef{buildEvidenceRef(documentID, quote)}
+}
+
+func buildRelationLabel(relationType, changeType string) string {
+	relation := strings.TrimSpace(relationType)
+	switch normalizeRelationChangeType(changeType) {
+	case "removed":
+		if relation == "" {
+			return "关系移除"
+		}
+		return fmt.Sprintf("%s（关系移除）", relation)
+	case "new":
+		if relation == "" {
+			return "新增关系"
+		}
+		return fmt.Sprintf("%s（新增）", relation)
+	default:
+		if relation == "" {
+			return "关系变化"
+		}
+		return relation
+	}
+}
+
+func normalizeRelationChangeType(value string) string {
+	switch strings.ToLower(strings.TrimSpace(value)) {
+	case "new", "removed", "changed":
+		return strings.ToLower(strings.TrimSpace(value))
+	default:
+		return "changed"
+	}
+}
+
+func inferRelationStrength(changeType string) int {
+	switch normalizeRelationChangeType(changeType) {
+	case "removed":
+		return 20
+	case "new":
+		return 75
+	default:
+		return 60
+	}
+}
+
+func normalizeAIEntityType(value string) string {
+	switch strings.ToLower(strings.TrimSpace(value)) {
+	case string(writer.EntityTypeCharacter):
+		return string(writer.EntityTypeCharacter)
+	case string(writer.EntityTypeItem):
+		return string(writer.EntityTypeItem)
+	case string(writer.EntityTypeLocation):
+		return string(writer.EntityTypeLocation)
+	case string(writer.EntityTypeOrganization):
+		return string(writer.EntityTypeOrganization)
+	case string(writer.EntityTypeForeshadowing):
+		return string(writer.EntityTypeForeshadowing)
+	default:
+		normalized := strings.ToLower(strings.TrimSpace(value))
+		if normalized == "" {
+			return "unknown"
+		}
+		return normalized
+	}
+}
+
+func renderEntityTypeLabel(entityType string) string {
+	switch entityType {
+	case string(writer.EntityTypeCharacter):
+		return "角色"
+	case string(writer.EntityTypeItem):
+		return "物品"
+	case string(writer.EntityTypeLocation):
+		return "地点"
+	case string(writer.EntityTypeOrganization):
+		return "组织"
+	case string(writer.EntityTypeForeshadowing):
+		return "伏笔"
+	default:
+		return entityType
+	}
 }
 
 func detectCharacterState(sentence string) (string, bool) {

@@ -47,15 +47,39 @@ func (s *HarnessDataSeeder) CreateHarnessData() error {
 	}
 	fmt.Printf("✓ 创建项目: %s\n", projectID)
 
-	// 4. 创建角色
+	// 4. 创建文档树（卷 -> 章）
+	docIDMap, err := s.createDocuments(projectID)
+	if err != nil {
+		return fmt.Errorf("创建Harness文档失败: %w", err)
+	}
+	fmt.Printf("✓ 创建文档: %d个\n", len(docIDMap))
+
+	// 5. 创建章节内容
+	if err := s.createChapterContents(docIDMap); err != nil {
+		return fmt.Errorf("创建Harness正文失败: %w", err)
+	}
+	fmt.Println("✓ 创建章节正文: 1章")
+
+	// 6. 创建角色
 	characterIDs, err := s.createCharacters(projectID)
 	if err != nil {
 		return fmt.Errorf("创建角色失败: %w", err)
 	}
 	fmt.Printf("✓ 创建角色: %d个\n", len(characterIDs))
 
-	// 5. 验证数据完整性
-	if err := s.validateHarnessData(projectID); err != nil {
+	// 7. 创建最小时间线
+	if err := s.createTimelines(projectID, docIDMap, characterIDs); err != nil {
+		return fmt.Errorf("创建Harness时间线失败: %w", err)
+	}
+	fmt.Println("✓ 创建时间线: 1条")
+
+	// 8. 更新项目统计
+	if err := s.updateProjectStatistics(projectID, len(docIDMap)); err != nil {
+		return fmt.Errorf("更新项目统计失败: %w", err)
+	}
+
+	// 9. 验证数据完整性
+	if err := s.validateHarnessData(projectID, docIDMap); err != nil {
 		return fmt.Errorf("数据验证失败: %w", err)
 	}
 
@@ -80,17 +104,51 @@ func (s *HarnessDataSeeder) Clean() error {
 		return nil
 	}
 
+	projectID := project.ID
+	documentCursor, err := s.db.Collection("documents").Find(ctx, bson.M{"project_id": projectID})
+	if err != nil {
+		return fmt.Errorf("查询Harness文档失败: %w", err)
+	}
+	defer documentCursor.Close(ctx)
+
+	documentIDs := make([]primitive.ObjectID, 0)
+	for documentCursor.Next(ctx) {
+		var item struct {
+			ID primitive.ObjectID `bson:"_id"`
+		}
+		if err := documentCursor.Decode(&item); err != nil {
+			return fmt.Errorf("解析Harness文档失败: %w", err)
+		}
+		documentIDs = append(documentIDs, item.ID)
+	}
+	if err := documentCursor.Err(); err != nil {
+		return fmt.Errorf("遍历Harness文档失败: %w", err)
+	}
+
 	// 按依赖顺序删除
 	collections := []string{
+		"story_harness_projections",
+		"change_requests",
+		"change_request_batches",
+		"timeline_events",
+		"timelines",
+		"document_contents",
+		"documents",
 		"character_relations",
 		"characters",
 		"projects",
 	}
 
 	for _, colName := range collections {
-		filter := bson.M{"project_id": project.ID}
+		filter := bson.M{"project_id": projectID}
+		if colName == "document_contents" {
+			if len(documentIDs) == 0 {
+				continue
+			}
+			filter = bson.M{"document_id": bson.M{"$in": documentIDs}}
+		}
 		if colName == "projects" {
-			filter = bson.M{"_id": project.ID}
+			filter = bson.M{"_id": projectID}
 		}
 		result, err := s.db.Collection(colName).DeleteMany(ctx, filter)
 		if err != nil {
@@ -236,6 +294,7 @@ func (s *HarnessDataSeeder) createCharacters(projectID string) (map[string]strin
 			"personality_prompt": char.PersonalityPrompt,
 			"speech_pattern":     char.SpeechPattern,
 			"current_state":      "",
+			"entity_type":        "character",
 			"created_at":         now,
 			"updated_at":         now,
 		}
@@ -249,21 +308,195 @@ func (s *HarnessDataSeeder) createCharacters(projectID string) (map[string]strin
 	return characterIDs, nil
 }
 
-// validateHarnessData 验证数据完整性
-func (s *HarnessDataSeeder) validateHarnessData(projectID string) error {
+func (s *HarnessDataSeeder) createDocuments(projectID string) (map[string]string, error) {
 	ctx := context.Background()
+	collection := s.db.Collection("documents")
+	now := time.Now()
+	projectOID, _ := primitive.ObjectIDFromHex(projectID)
+	docIDs := make(map[string]string, len(story.EmploymentGuideDocuments))
+
+	for _, item := range story.EmploymentGuideDocuments {
+		docID := primitive.NewObjectID()
+		parentID := primitive.NilObjectID
+		if item.ParentKey != "" {
+			parentHex, ok := docIDs[item.ParentKey]
+			if !ok {
+				return nil, fmt.Errorf("父文档未创建: %s -> %s", item.Key, item.ParentKey)
+			}
+			parentID, _ = primitive.ObjectIDFromHex(parentHex)
+		}
+		document := bson.M{
+			"_id":          docID,
+			"project_id":   projectOID,
+			"title":        item.Title,
+			"type":         item.Type,
+			"level":        item.Level,
+			"order":        item.Order,
+			"parent_id":    parentID,
+			"status":       item.Status,
+			"word_count":   0,
+			"stable_ref":   primitive.NewObjectID().Hex(),
+			"order_key":    item.OrderKey,
+			"plot_threads": item.PlotThreads,
+			"key_points":   item.KeyPoints,
+			"notes":        item.Summary,
+			"scene_goal":   item.SceneGoal,
+			"created_at":   now,
+			"updated_at":   now,
+		}
+		_, err := collection.InsertOne(ctx, document)
+		if err != nil {
+			return nil, err
+		}
+		docIDs[item.Key] = docID.Hex()
+	}
+
+	return docIDs, nil
+}
+
+func (s *HarnessDataSeeder) createChapterContents(docIDMap map[string]string) error {
+	ctx := context.Background()
+	collection := s.db.Collection("document_contents")
+	chapterIDHex, ok := docIDMap[story.EmploymentGuideChapterOneKey]
+	if !ok {
+		return fmt.Errorf("缺少章节文档ID: %s", story.EmploymentGuideChapterOneKey)
+	}
+	chapterID, err := primitive.ObjectIDFromHex(chapterIDHex)
+	if err != nil {
+		return err
+	}
+
+	content := story.EmploymentGuideChapterOneContent
+	now := time.Now()
+	documentContent := bson.M{
+		"_id":             primitive.NewObjectID(),
+		"document_id":     chapterID,
+		"content":         content,
+		"content_type":    "markdown",
+		"word_count":      len([]rune(content)),
+		"char_count":      len(content),
+		"paragraph_order": 0,
+		"version":         1,
+		"last_saved_at":   now,
+		"last_edited_by":  "harness_writer",
+		"created_at":      now,
+		"updated_at":      now,
+	}
+
+	_, err = collection.InsertOne(ctx, documentContent)
+	return err
+}
+
+func (s *HarnessDataSeeder) createTimelines(projectID string, docIDMap map[string]string, characterIDs map[string]string) error {
+	ctx := context.Background()
+	timelineCol := s.db.Collection("timelines")
+	eventCol := s.db.Collection("timeline_events")
+	now := time.Now()
+	projectOID, _ := primitive.ObjectIDFromHex(projectID)
+
+	for _, timeline := range story.EmploymentGuideTimelines {
+		timelineID := primitive.NewObjectID()
+		timelineDoc := bson.M{
+			"_id":         timelineID,
+			"project_id":  projectOID,
+			"name":        timeline.Name,
+			"description": timeline.Description,
+			"start_time":  nil,
+			"end_time":    nil,
+			"created_at":  now,
+			"updated_at":  now,
+		}
+		if _, err := timelineCol.InsertOne(ctx, timelineDoc); err != nil {
+			return err
+		}
+
+		for _, event := range timeline.Events {
+			participants := make([]string, 0, len(event.ParticipantKeys))
+			for _, key := range event.ParticipantKeys {
+				if id, ok := characterIDs[key]; ok {
+					participants = append(participants, id)
+				}
+			}
+			chapterIDs := make([]string, 0, 1)
+			if event.ChapterKey != "" {
+				if chapterID, ok := docIDMap[event.ChapterKey]; ok {
+					chapterIDs = append(chapterIDs, chapterID)
+				}
+			}
+
+			eventDoc := bson.M{
+				"_id":          primitive.NewObjectID(),
+				"project_id":   projectOID,
+				"timeline_id":  timelineID.Hex(),
+				"title":        event.Title,
+				"description":  event.Description,
+				"story_time":   bson.M{"description": event.TimeLabel},
+				"participants": participants,
+				"chapter_ids":  chapterIDs,
+				"event_type":   event.EventType,
+				"importance":   event.Importance,
+				"created_at":   now,
+				"updated_at":   now,
+			}
+			if _, err := eventCol.InsertOne(ctx, eventDoc); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+func (s *HarnessDataSeeder) updateProjectStatistics(projectID string, documentCount int) error {
+	ctx := context.Background()
+	projectOID, err := primitive.ObjectIDFromHex(projectID)
+	if err != nil {
+		return err
+	}
+	_, err = s.db.Collection("projects").UpdateByID(ctx, projectOID, bson.M{
+		"$set": bson.M{
+			"statistics.chapter_count":  1,
+			"statistics.document_count": documentCount,
+			"statistics.last_update_at": time.Now(),
+			"updated_at":                time.Now(),
+		},
+	})
+	return err
+}
+
+// validateHarnessData 验证数据完整性
+func (s *HarnessDataSeeder) validateHarnessData(projectID string, docIDMap map[string]string) error {
+	ctx := context.Background()
+	projectOID, err := primitive.ObjectIDFromHex(projectID)
+	if err != nil {
+		return err
+	}
+
+	chapterIDHex, ok := docIDMap[story.EmploymentGuideChapterOneKey]
+	if !ok {
+		return fmt.Errorf("缺少章节文档ID: %s", story.EmploymentGuideChapterOneKey)
+	}
+	chapterOID, err := primitive.ObjectIDFromHex(chapterIDHex)
+	if err != nil {
+		return err
+	}
 
 	// 检查各集合数量
 	collections := []struct {
 		name     string
 		expected int64
+		filter   bson.M
 	}{
-		{"characters", 3},
+		{"characters", 3, bson.M{"project_id": projectOID}},
+		{"documents", 2, bson.M{"project_id": projectOID}},
+		{"document_contents", 1, bson.M{"document_id": chapterOID}},
+		{"timelines", 1, bson.M{"project_id": projectOID}},
+		{"timeline_events", 2, bson.M{"project_id": projectOID}},
 	}
 
 	fmt.Println("\n📊 数据完整性验证:")
 	for _, col := range collections {
-		count, err := s.db.Collection(col.name).CountDocuments(ctx, bson.M{"project_id": projectID})
+		count, err := s.db.Collection(col.name).CountDocuments(ctx, col.filter)
 		if err != nil {
 			return err
 		}

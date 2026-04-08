@@ -89,6 +89,8 @@ func snapshotCharactersToModels(items []writer.CharacterSnapshot, projectID stri
 			Summary:             item.Summary,
 			CurrentState:        item.CurrentState,
 			ShortDescription:    item.Summary,
+			EntityType:          item.EntityType,
+			StateFields:         item.StateFields,
 		}
 		character.Name = item.CharacterName
 		if oid, err := primitive.ObjectIDFromHex(item.CharacterID); err == nil {

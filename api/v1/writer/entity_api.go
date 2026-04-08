@@ -14,6 +14,13 @@ type EntityApi struct {
 	entityService interfaces.EntityService
 }
 
+func getEntityProjectID(c *gin.Context) string {
+	if projectID := c.Param("projectId"); projectID != "" {
+		return projectID
+	}
+	return c.Param("id")
+}
+
 // NewEntityApi 创建EntityApi实例
 func NewEntityApi(entityService interfaces.EntityService) *EntityApi {
 	return &EntityApi{
@@ -33,7 +40,7 @@ func NewEntityApi(entityService interfaces.EntityService) *EntityApi {
 // @Failure 400 {object} response.APIResponse
 // @Router /api/v1/writer/projects/{projectId}/entities [get]
 func (api *EntityApi) ListEntities(c *gin.Context) {
-	projectID := c.Param("projectId")
+	projectID := getEntityProjectID(c)
 	if projectID == "" {
 		response.BadRequest(c, "项目ID不能为空", "")
 		return
@@ -70,7 +77,7 @@ func (api *EntityApi) ListEntities(c *gin.Context) {
 // @Failure 400 {object} response.APIResponse
 // @Router /api/v1/writer/projects/{projectId}/entities/graph [get]
 func (api *EntityApi) GetEntityGraph(c *gin.Context) {
-	projectID := c.Param("projectId")
+	projectID := getEntityProjectID(c)
 	if projectID == "" {
 		response.BadRequest(c, "项目ID不能为空", "")
 		return
