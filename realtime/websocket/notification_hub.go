@@ -16,15 +16,7 @@ import (
 )
 
 // WebSocket升级器配置
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-	CheckOrigin: func(r *http.Request) bool {
-		return true // 生产环境应该检查Origin
-	},
-	// 使用子协议传递token，避免在URL中暴露敏感信息
-	Subprotocols: []string{"Bearer-Token"},
-}
+var upgrader = NewUpgrader([]string{"Bearer-Token"})
 
 // WSHub WebSocket连接中心
 type WSHub struct {

@@ -433,11 +433,11 @@ func setDefaults() {
 	v.SetDefault("log.redact_keys", []string{"authorization", "password", "token", "cookie"})
 
 	// JWT默认配置
-	v.SetDefault("jwt.secret", "qingyu_secret_key")
+	v.SetDefault("jwt.secret", "")
 	v.SetDefault("jwt.expiration_hours", 24)
 
 	// AI默认配置
-	v.SetDefault("ai.api_key", "default_api_key")
+	v.SetDefault("ai.api_key", "")
 	v.SetDefault("ai.base_url", "https://api.openai.com/v1")
 	v.SetDefault("ai.max_tokens", 2000)
 	v.SetDefault("ai.temperature", 7)

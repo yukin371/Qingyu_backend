@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"Qingyu_backend/config"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
@@ -74,13 +75,13 @@ type JWTConfig struct {
 // DefaultJWTConfig 返回默认JWT配置
 func DefaultJWTConfig() *JWTConfig {
 	return &JWTConfig{
-		Enabled:          true,
-		Secret:           "",
-		AccessExpiration: DefaultAccessExpiration,
+		Enabled:           true,
+		Secret:            "",
+		AccessExpiration:  DefaultAccessExpiration,
 		RefreshExpiration: DefaultRefreshExpiration,
-		Issuer:           DefaultIssuer,
-		TokenHeader:      DefaultTokenHeader,
-		TokenPrefix:      DefaultTokenPrefix,
+		Issuer:            DefaultIssuer,
+		TokenHeader:       DefaultTokenHeader,
+		TokenPrefix:       DefaultTokenPrefix,
 		SkipPaths: []string{
 			"/health",
 			"/metrics",
@@ -117,6 +118,8 @@ func (m *JWTAuthMiddleware) Priority() int {
 // Handler 返回Gin处理函数
 func (m *JWTAuthMiddleware) Handler() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		m.refreshJWTManagerFromConfig()
+
 		// 如果认证被禁用，直接跳过
 		if !m.config.Enabled {
 			c.Next()
@@ -151,7 +154,6 @@ func (m *JWTAuthMiddleware) Handler() gin.HandlerFunc {
 			isBlacklisted, err := m.blacklist.IsBlacklisted(ctx, token)
 			if err != nil {
 				m.logger.Error("Failed to check blacklist", // codeql[go/log-injection]
-					zap.String("token", token),
 					zap.Error(err),
 				)
 			}
@@ -170,6 +172,31 @@ func (m *JWTAuthMiddleware) Handler() gin.HandlerFunc {
 
 		c.Next()
 	}
+}
+
+func (m *JWTAuthMiddleware) refreshJWTManagerFromConfig() {
+	if config.GlobalConfig == nil || config.GlobalConfig.JWT == nil || config.GlobalConfig.JWT.Secret == "" {
+		return
+	}
+
+	jwtConfig := config.GetJWTConfigEnhanced()
+	if jwtConfig == nil || jwtConfig.SecretKey == "" {
+		return
+	}
+
+	if m.config.Secret == jwtConfig.SecretKey && m.jwtManager != nil {
+		return
+	}
+
+	manager, err := NewJWTManager(jwtConfig.SecretKey, jwtConfig.Expiration, jwtConfig.RefreshDuration)
+	if err != nil {
+		m.logger.Warn("Failed to refresh JWT manager from config", zap.Error(err))
+		return
+	}
+	m.config.Secret = jwtConfig.SecretKey
+	m.config.AccessExpiration = jwtConfig.Expiration
+	m.config.RefreshExpiration = jwtConfig.RefreshDuration
+	m.jwtManager = manager
 }
 
 // extractToken 从请求中提取Token

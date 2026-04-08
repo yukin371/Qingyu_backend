@@ -114,7 +114,6 @@ func (s *OAuthService) GetAuthURL(ctx context.Context, provider authModel.OAuthP
 	// 保存会话
 	s.stateStore[session.State] = session
 	s.logger.Debug("OAuth session created",
-		zap.String("session_state", session.State),
 		zap.String("provider", string(provider)),
 		zap.Bool("link_mode", session.LinkMode),
 	)
@@ -142,7 +141,7 @@ func (s *OAuthService) ExchangeCode(ctx context.Context, provider authModel.OAut
 	}
 
 	if session == nil {
-		return nil, nil, fmt.Errorf("invalid OAuth state: %s", state)
+		return nil, nil, fmt.Errorf("invalid OAuth state")
 	}
 
 	if time.Now().After(session.ExpiresAt) {
@@ -297,7 +296,16 @@ func (s *OAuthService) getQQUserInfo(ctx context.Context, token *oauth2.Token) (
 	client := oauth2.NewClient(ctx, oauth2.StaticTokenSource(token))
 
 	// 获取OpenID
-	resp, err := client.Get("https://graph.qq.com/oauth2.0/me?access_token=" + url.QueryEscape(token.AccessToken) + "&fmt=json")
+	openIDQuery := url.Values{}
+	openIDQuery.Set("access_token", token.AccessToken)
+	openIDQuery.Set("fmt", "json")
+	openIDURL := url.URL{
+		Scheme:   "https",
+		Host:     "graph.qq.com",
+		Path:     "/oauth2.0/me",
+		RawQuery: openIDQuery.Encode(),
+	}
+	resp, err := client.Get(openIDURL.String())
 	if err != nil {
 		return nil, fmt.Errorf("failed to get QQ OpenID: %w", err)
 	}
@@ -333,9 +341,18 @@ func (s *OAuthService) getQQUserInfo(ctx context.Context, token *oauth2.Token) (
 	}
 
 	// 获取用户信息
-	userInfoResp, err := client.Get("https://graph.qq.com/user/get_user_info?access_token=" +
-		url.QueryEscape(token.AccessToken) + "&oauth_consumer_key=" + s.config[authModel.OAuthProviderQQ].ClientID +
-		"&openid=" + qqOpenIDResp.OpenID + "&format=json")
+	userInfoQuery := url.Values{}
+	userInfoQuery.Set("access_token", token.AccessToken)
+	userInfoQuery.Set("oauth_consumer_key", s.config[authModel.OAuthProviderQQ].ClientID)
+	userInfoQuery.Set("openid", qqOpenIDResp.OpenID)
+	userInfoQuery.Set("format", "json")
+	userInfoURL := url.URL{
+		Scheme:   "https",
+		Host:     "graph.qq.com",
+		Path:     "/user/get_user_info",
+		RawQuery: userInfoQuery.Encode(),
+	}
+	userInfoResp, err := client.Get(userInfoURL.String())
 	if err != nil {
 		return nil, fmt.Errorf("failed to get QQ user info: %w", err)
 	}

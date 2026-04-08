@@ -44,12 +44,12 @@ log:
 
 # JWT配置
 jwt:
-  secret: "qingyu_secret_key"  # 生产环境请修改为强密钥
+  secret: ""  # 必须通过 QINGYU_JWT_SECRET 注入，禁止提交默认弱密钥
   expiration_hours: 24
 
 # AI配置（测试）
 ai:
-  api_key: "${OPENAI_API_KEY}"  # 开发环境测试密钥，支持环境变量
+  api_key: ${OPENAI_API_KEY}  # 开发环境测试密钥，支持环境变量
   base_url: "https://api.openai.com/v1"  # 与Python一致
   model: "gpt-4-turbo-preview"
   max_tokens: 2000
@@ -70,7 +70,7 @@ ai:
     endpoint: "localhost:50052"
     enable_fallback: false
     timeout: 30
-    internal_api_key: "${AI_SERVICE_KEY}"
+    internal_api_key: ${AI_SERVICE_KEY}
     allowed_ips:
       - "127.0.0.1"
       - "::1"
@@ -90,7 +90,7 @@ external_api:
   providers:
     glm:
       name: "glm"
-      api_key: "${ZHIPU_API_KEY}"  # 智谱AI API Key（从环境变量读取）
+      api_key: ${ZHIPU_API_KEY}  # 智谱AI API Key（从环境变量读取）
       base_url: "https://open.bigmodel.cn/api/paas/v4"
       enabled: true
       priority: 1
@@ -103,7 +103,7 @@ external_api:
         - "glm-3-turbo"      # Turbo版
     deepseek:
       name: "deepseek"
-      api_key: "${DEEPSEEK_API_KEY}"  # DeepSeek（从环境变量读取）
+      api_key: ${DEEPSEEK_API_KEY}  # DeepSeek（从环境变量读取）
       base_url: "https://api.deepseek.com"
       enabled: false
       priority: 2
@@ -112,7 +112,7 @@ external_api:
         - "deepseek-reasoner"    # DeepSeek-V3 思考模式
     openai:
       name: "openai"
-      api_key: "${OPENAI_API_KEY}"  # OpenAI API密钥（从环境变量读取）
+      api_key: ${OPENAI_API_KEY}  # OpenAI API密钥（从环境变量读取）
       base_url: "https://api.openai.com/v1"
       enabled: false
       priority: 3
@@ -144,7 +144,7 @@ email:
   smtp_host: "smtp.qq.com"
   smtp_port: 587
   username: "yukin370@qq.com"      # 例如: 12345678@qq.com
-  password: "${SMTP_PASSWORD}"      # SMTP授权码（从环境变量读取）
+  password: ${SMTP_PASSWORD}      # SMTP授权码（从环境变量读取）
   from_address: "yukin370@qq.com"
   from_name: "青羽阅读"
   use_tls: true

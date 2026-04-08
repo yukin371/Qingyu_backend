@@ -142,7 +142,7 @@ func (m *ViperConfigManager) setViperDefaults() {
 	m.viper.SetDefault("server.mode", "debug")
 
 	// JWT配置
-	m.viper.SetDefault("jwt.secret", "qingyu_secret_key")
+	m.viper.SetDefault("jwt.secret", "")
 	m.viper.SetDefault("jwt.expiration_hours", 24)
 
 	// AI配置

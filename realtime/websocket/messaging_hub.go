@@ -49,35 +49,7 @@ type MessageWSMessage struct {
 	Timestamp int64       `json:"timestamp"`
 }
 
-// allowedOrigins 从配置或环境变量加载
-var allowedOrigins = map[string]bool{
-	"http://localhost:5173": true,
-	"http://localhost:3000": true,
-	"http://localhost:80":   true,
-	"http://localhost":      true,
-}
-
-// SetAllowedOrigins 设置允许的 WebSocket origin 列表（由初始化代码调用）
-func SetAllowedOrigins(origins []string) {
-	for _, o := range origins {
-		allowedOrigins[o] = true
-	}
-}
-
-var messagingUpgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-	CheckOrigin: func(r *http.Request) bool {
-		origin := r.Header.Get("Origin")
-		if origin == "" {
-			// 非浏览器请求（如 curl），允许通过
-			return true
-		}
-		return allowedOrigins[origin]
-	},
-	// 允许客户端通过子协议安全传递 token
-	Subprotocols: []string{"Bearer-Token"},
-}
+var messagingUpgrader = NewUpgrader([]string{"Bearer-Token"})
 
 // NewMessagingWSHub 创建消息WebSocket Hub
 func NewMessagingWSHub(jwtService auth.JWTService) *MessagingWSHub {

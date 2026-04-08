@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/go-playground/validator/v10"
 )
@@ -78,8 +79,15 @@ func validateJWTConfig(cfg *JWTConfig) error {
 		return fmt.Errorf("JWT config is required")
 	}
 
-	if cfg.Secret == "" {
+	secret := strings.TrimSpace(cfg.Secret)
+	if secret == "" {
 		return fmt.Errorf("JWT secret is required")
+	}
+	if isInsecureJWTSecret(secret) {
+		return fmt.Errorf("JWT secret uses an insecure default or placeholder value")
+	}
+	if len(secret) < 16 {
+		return fmt.Errorf("JWT secret must be at least 16 characters")
 	}
 
 	if cfg.ExpirationHours <= 0 {
@@ -87,6 +95,15 @@ func validateJWTConfig(cfg *JWTConfig) error {
 	}
 
 	return nil
+}
+
+func isInsecureJWTSecret(secret string) bool {
+	switch secret {
+	case "qingyu_secret_key", "qingyu-secret-key-change-in-production":
+		return true
+	}
+
+	return strings.HasPrefix(secret, "${") && strings.HasSuffix(secret, "}")
 }
 
 // validateAIConfig 验证AI配置
