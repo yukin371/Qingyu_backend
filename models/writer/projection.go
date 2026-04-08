@@ -10,10 +10,12 @@ import (
 
 // CharacterSnapshot 章节级角色投影快照。
 type CharacterSnapshot struct {
-	CharacterID   string `bson:"character_id" json:"characterId"`
-	CharacterName string `bson:"character_name" json:"characterName"`
-	Summary       string `bson:"summary,omitempty" json:"summary,omitempty"`
-	CurrentState  string `bson:"current_state,omitempty" json:"currentState,omitempty"`
+	CharacterID   string                `bson:"character_id" json:"characterId"`
+	CharacterName string                `bson:"character_name" json:"characterName"`
+	EntityType    EntityType            `bson:"entity_type" json:"entityType"`
+	Summary       string                `bson:"summary,omitempty" json:"summary,omitempty"`
+	CurrentState  string                `bson:"current_state,omitempty" json:"currentState,omitempty"`
+	StateFields   map[string]StateValue `bson:"state_fields,omitempty" json:"stateFields,omitempty"`
 }
 
 // RelationSnapshot 章节级关系投影快照。
