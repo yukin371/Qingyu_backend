@@ -233,6 +233,13 @@ func RegisterWriterRoutes(r *gin.RouterGroup, searchSvc *searchservice.SearchSer
 		zap.L().Info("RegisterWriterRoutes: Story Harness 路由注册完成")
 	}
 
+	// 创建EntityService（统一实体服务）
+	var entitySvc interfaces.EntityService
+	if mongoDB != nil {
+		entitySvc = writerservice.NewEntityService(characterSvc, locationSvc, mongoDB)
+		zap.L().Info("RegisterWriterRoutes: EntityService创建成功")
+	}
+
 	// 调用InitWriterRoutes初始化设定百科路由（角色、地点、时间线、大纲）
 	zap.L().Info("RegisterWriterRoutes: 调用InitWriterRoutes注册设定百科路由",
 		zap.Bool("characterSvc", characterSvc != nil),
@@ -240,7 +247,7 @@ func RegisterWriterRoutes(r *gin.RouterGroup, searchSvc *searchservice.SearchSer
 		zap.Bool("timelineSvc", timelineSvc != nil),
 		zap.Bool("outlineSvc", outlineSvc != nil),
 	)
-	InitWriterRoutes(r, characterSvc, locationSvc, timelineSvc, outlineSvc)
+	InitWriterRoutes(r, characterSvc, locationSvc, timelineSvc, outlineSvc, entitySvc)
 	zap.L().Info("RegisterWriterRoutes: 设定百科路由注册完成")
 }
 

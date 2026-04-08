@@ -204,8 +204,10 @@ func (s *ChangeRequestService) buildBaseProjection(ctx context.Context, projectI
 		projection.Characters = append(projection.Characters, writer.CharacterSnapshot{
 			CharacterID:   item.ID.Hex(),
 			CharacterName: item.Name,
+			EntityType:    item.EntityType,
 			Summary:       item.Summary,
 			CurrentState:  item.CurrentState,
+			StateFields:   item.StateFields,
 		})
 	}
 
@@ -267,6 +269,11 @@ func (s *ChangeRequestService) applyCharacterStateChange(projection *writer.Chap
 		}
 		if projection.Characters[idx].Summary != "" {
 			snapshot.Summary = projection.Characters[idx].Summary
+		}
+		// 保留基线中的 EntityType 和 StateFields
+		snapshot.EntityType = projection.Characters[idx].EntityType
+		if len(projection.Characters[idx].StateFields) > 0 {
+			snapshot.StateFields = projection.Characters[idx].StateFields
 		}
 		projection.Characters[idx] = snapshot
 		return

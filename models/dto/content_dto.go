@@ -1,6 +1,9 @@
 package dto
 
-import "time"
+import (
+	"Qingyu_backend/models/writer"
+	"time"
+)
 
 // ============================================================================
 // 内容管理模块统一 DTO 定义
@@ -295,6 +298,8 @@ type CreateCharacterRequest struct {
 	PersonalityPrompt string   `json:"personalityPrompt,omitempty" validate:"max=1000"`
 	SpeechPattern     string   `json:"speechPattern,omitempty" validate:"max=500"`
 	CurrentState      string   `json:"currentState,omitempty" validate:"max=500"`
+	EntityType        *string                      `json:"entityType,omitempty"`
+	StateFields       map[string]writer.StateValue `json:"stateFields,omitempty"`
 }
 
 // UpdateCharacterRequest 更新角色请求
@@ -308,12 +313,16 @@ type UpdateCharacterRequest struct {
 	PersonalityPrompt *string   `json:"personalityPrompt,omitempty" validate:"omitempty,max=1000"`
 	SpeechPattern     *string   `json:"speechPattern,omitempty" validate:"omitempty,max=500"`
 	CurrentState      *string   `json:"currentState,omitempty" validate:"omitempty,max=500"`
+	EntityType        *string                       `json:"entityType,omitempty"`
+	StateFields       *map[string]writer.StateValue `json:"stateFields,omitempty"`
 }
 
 // CreateRelationRequest 创建关系请求
 type CreateRelationRequest struct {
 	FromID   string `json:"fromId" validate:"required"`
 	ToID     string `json:"toId" validate:"required"`
+	FromType string `json:"fromType,omitempty"`
+	ToType   string `json:"toType,omitempty"`
 	Type     string `json:"type" validate:"required,max=50"`
 	Strength int    `json:"strength" validate:"min=0,max=100"` // 关系强度 0-100，与模型层和前端保持一致
 	Notes    string `json:"notes,omitempty" validate:"max=500"`

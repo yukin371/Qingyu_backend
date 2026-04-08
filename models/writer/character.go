@@ -27,6 +27,11 @@ type Character struct {
 	// 可选：汇总的登场信息（用于快速查询，非核心字段）
 	AppearanceCount    int     `bson:"appearance_count,omitempty" json:"appearanceCount,omitempty"`         // 登场次数
 	FirstAppearanceID  *string `bson:"first_appearance_id,omitempty" json:"firstAppearanceId,omitempty"`   // 首次登场的大纲节点ID
+
+	// 实体类型扩展
+	EntityType    EntityType            `bson:"entity_type" json:"entityType"`
+	StateFields   map[string]StateValue `bson:"state_fields,omitempty" json:"stateFields,omitempty"`
+	EquippedItems []string              `bson:"equipped_items,omitempty" json:"equippedItems,omitempty"`
 }
 
 // TouchForCreate 创建时设置默认值
@@ -70,6 +75,8 @@ type CharacterRelation struct {
 
 	FromID   string       `bson:"from_id" json:"fromId" validate:"required"`
 	ToID     string       `bson:"to_id" json:"toId" validate:"required"`
+	FromType EntityType   `bson:"from_type" json:"fromType"`
+	ToType   EntityType   `bson:"to_type" json:"toType"`
 	Type     RelationType `bson:"type" json:"type" validate:"required"`
 	Strength int          `bson:"strength" json:"strength" validate:"min=0,max=100"`
 	Notes    string       `bson:"notes,omitempty" json:"notes,omitempty" validate:"max=500"`
