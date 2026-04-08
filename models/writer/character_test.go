@@ -140,3 +140,18 @@ func TestCharacterEntityTypeField(t *testing.T) {
 }
 
 func ptrFloat64(v float64) *float64 { return &v }
+
+func TestCharacterRelationCrossType(t *testing.T) {
+	r := CharacterRelation{
+		FromID:   "char-1",
+		ToID:     "item-1",
+		FromType: EntityTypeCharacter,
+		ToType:   EntityTypeItem,
+	}
+	if r.FromType != EntityTypeCharacter {
+		t.Errorf("expected character, got %s", r.FromType)
+	}
+	if r.ToType != EntityTypeItem {
+		t.Errorf("expected item, got %s", r.ToType)
+	}
+}

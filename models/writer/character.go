@@ -75,6 +75,8 @@ type CharacterRelation struct {
 
 	FromID   string       `bson:"from_id" json:"fromId" validate:"required"`
 	ToID     string       `bson:"to_id" json:"toId" validate:"required"`
+	FromType EntityType   `bson:"from_type" json:"fromType"`
+	ToType   EntityType   `bson:"to_type" json:"toType"`
 	Type     RelationType `bson:"type" json:"type" validate:"required"`
 	Strength int          `bson:"strength" json:"strength" validate:"min=0,max=100"`
 	Notes    string       `bson:"notes,omitempty" json:"notes,omitempty" validate:"max=500"`

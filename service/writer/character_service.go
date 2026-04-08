@@ -292,6 +292,15 @@ func (s *CharacterService) GetCharacterGraph(
 	}
 
 	// 构建关系图
+	// 为已有关系填充默认 FromType/ToType（character-to-character 兼容旧数据）
+	for _, rel := range relations {
+		if rel.FromType == "" {
+			rel.FromType = writer.EntityTypeCharacter
+		}
+		if rel.ToType == "" {
+			rel.ToType = writer.EntityTypeCharacter
+		}
+	}
 	graph := &serviceInterfaces.CharacterGraph{
 		Nodes: characters,
 		Edges: relations,
