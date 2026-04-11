@@ -172,6 +172,40 @@ func TestUserService_ValidateToken_EmptyToken(t *testing.T) {
 	assert.False(t, resp.Valid)
 }
 
+// TestUserService_LogoutUser_NoLifecycleService 测试登出-未注入tokenLifecycleService时优雅降级
+func TestUserService_LogoutUser_NoLifecycleService(t *testing.T) {
+	service, _, _ := setupUserService()
+	ctx := context.Background()
+
+	req := &user2.LogoutUserRequest{
+		Token: "valid_jwt_token",
+	}
+
+	// 不设置 tokenLifecycleService，应返回幂等成功
+	resp, err := service.LogoutUser(ctx, req)
+
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	assert.True(t, resp.Success)
+}
+
+// TestUserService_ValidateToken_NoLifecycleService 测试验证Token-未注入tokenLifecycleService时保守返回
+func TestUserService_ValidateToken_NoLifecycleService(t *testing.T) {
+	service, _, _ := setupUserService()
+	ctx := context.Background()
+
+	req := &user2.ValidateTokenRequest{
+		Token: "valid_jwt_token",
+	}
+
+	// 不设置 tokenLifecycleService，应返回 Valid: false 而非报错
+	resp, err := service.ValidateToken(ctx, req)
+
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	assert.False(t, resp.Valid)
+}
+
 // TestUserService_ValidateToken_InvalidToken 测试验证Token-无效Token
 func TestUserService_ValidateToken_InvalidToken(t *testing.T) {
 	// Arrange
