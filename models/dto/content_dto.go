@@ -255,6 +255,7 @@ type CreateOutlineRequest struct {
 	Summary    string   `json:"summary,omitempty" validate:"max=1000"`
 	Type       string   `json:"type,omitempty" validate:"omitempty,oneof=volume arc chapter scene"`
 	Tension    int      `json:"tension,omitempty" validate:"min=0,max=10"`
+	Status     string   `json:"status,omitempty" validate:"omitempty,max=20"`
 	DocumentID string   `json:"documentId,omitempty"`
 	Characters []string `json:"characters,omitempty" validate:"max=50"`
 	Items      []string `json:"items,omitempty" validate:"max=100"`
@@ -268,6 +269,7 @@ type UpdateOutlineRequest struct {
 	Summary    *string   `json:"summary,omitempty" validate:"omitempty,max=1000"`
 	Type       *string   `json:"type,omitempty" validate:"omitempty,oneof=volume arc chapter scene"`
 	Tension    *int      `json:"tension,omitempty" validate:"omitempty,min=0,max=10"`
+	Status     *string   `json:"status,omitempty" validate:"omitempty,max=20"`
 	DocumentID *string   `json:"documentId,omitempty"`
 	Characters *[]string `json:"characters,omitempty" validate:"omitempty,max=50"`
 	Items      *[]string `json:"items,omitempty" validate:"omitempty,max=100"`

@@ -21,12 +21,13 @@ type OutlineNode struct {
 	Summary string `bson:"summary,omitempty" json:"summary,omitempty" validate:"max=1000"` // 本节摘要
 	Type    string `bson:"type,omitempty" json:"type,omitempty" validate:"max=50"`         // 结构类型（如：英雄之旅阶段、起承转合）
 	Tension int    `bson:"tension" json:"tension" validate:"min=0,max=10"`                 // 紧张度/情绪值，用于生成情绪曲线
+	Status  string `bson:"status,omitempty" json:"status,omitempty" validate:"omitempty,max=20"` // 状态（draft, outlined, writing, completed）
 
 	// 关联实体
 	DocumentID string   `bson:"document_id,omitempty" json:"documentId,omitempty"`              // 关联的文档ID（写作端Document）
 	Characters []string `bson:"characters,omitempty" json:"characters,omitempty" validate:"max=20"` // 本节登场人物ID列表
 	Items      []string `bson:"items,omitempty" json:"items,omitempty" validate:"max=20"`           // 涉及道具ID列表
-	Tags       []string `bson:"tags,omitempty" json:"tags,omitempty" validate:"max=20"`             // 标签列表（用于存储章节绑定等元数据，格式如：chapter-binding:{chapterId}）
+	Tags       []string `bson:"tags,omitempty" json:"tags,omitempty" validate:"max=20"`             // 标签列表（用户自定义标签）
 }
 
 // TouchForCreate 创建时设置默认值
