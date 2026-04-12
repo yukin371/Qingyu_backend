@@ -71,6 +71,10 @@ func (s *OutlineService) Create(
 	outline.Summary = req.Summary
 	outline.Type = req.Type
 	outline.Tension = req.Tension
+	outline.Status = req.Status
+	if outline.Status == "" {
+		outline.Status = "draft"
+	}
 	outline.DocumentID = req.DocumentID
 	outline.Characters = req.Characters
 	outline.Items = req.Items
@@ -195,6 +199,9 @@ func (s *OutlineService) Update(
 	}
 	if req.Tension != nil {
 		outline.Tension = *req.Tension
+	}
+	if req.Status != nil {
+		outline.Status = *req.Status
 	}
 	if req.DocumentID != nil {
 		outline.DocumentID = *req.DocumentID
@@ -321,12 +328,6 @@ func (s *OutlineService) buildTree(
 	node *writer.OutlineNode,
 	projectID string,
 ) *serviceInterfaces.OutlineTreeNode {
-	// 自动填充 tags 字段（向后兼容旧数据）
-	// 如果节点有 documentId 但没有 tags，自动添加 chapter-binding 标签
-	if node.DocumentID != "" && len(node.Tags) == 0 {
-		node.Tags = []string{fmt.Sprintf("chapter-binding:%s", node.DocumentID)}
-	}
-
 	treeNode := &serviceInterfaces.OutlineTreeNode{
 		OutlineNode: node,
 	}
