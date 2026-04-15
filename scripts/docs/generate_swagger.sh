@@ -5,7 +5,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 cd "$REPO_ROOT"
 
-SWAGGER_DIRS="api/v1,pkg/response,models,models/dto,service/interfaces,service/ai/dto,service/shared/storage,service/shared/stats"
+SWAGGER_DIRS="api/v1,pkg/response,models,models/dto,service/interfaces,service/ai/dto,service/shared/storage"
 
 echo "Generating Swagger artifacts..."
 swag init \

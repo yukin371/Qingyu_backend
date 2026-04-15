@@ -21,7 +21,7 @@ import (
 // TestUserService_CreateUser_Concurrent 测试并发创建用户
 func TestUserService_CreateUser_Concurrent(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	req := &user2.CreateUserRequest{
@@ -62,7 +62,7 @@ func (e *mockDuplicateKeyError) Error() string {
 // TestUserService_UpdateUser_PartialUpdate 测试部分更新
 func TestUserService_UpdateUser_PartialUpdate(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	testUser := &usersModel.User{
@@ -97,7 +97,7 @@ func TestUserService_UpdateUser_PartialUpdate(t *testing.T) {
 // TestUserService_UpdateUser_InvalidField 测试更新无效字段
 func TestUserService_UpdateUser_InvalidField(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	testUser := &usersModel.User{
@@ -134,7 +134,7 @@ func TestUserService_UpdateUser_InvalidField(t *testing.T) {
 // TestUserService_UpdatePassword_SamePassword 测试新密码与旧密码相同
 func TestUserService_UpdatePassword_SamePassword(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	userID := primitive.NewObjectID().Hex()
@@ -170,7 +170,7 @@ func TestUserService_UpdatePassword_SamePassword(t *testing.T) {
 // TestUserService_UpdatePassword_WeakPassword 测试弱密码
 func TestUserService_UpdatePassword_WeakPassword(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	userID := primitive.NewObjectID().Hex()
@@ -207,7 +207,7 @@ func TestUserService_UpdatePassword_WeakPassword(t *testing.T) {
 // TestUserService_CreateUser_RepositoryError 测试创建用户-仓库错误
 func TestUserService_CreateUser_RepositoryError(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	req := &user2.CreateUserRequest{
@@ -234,7 +234,7 @@ func TestUserService_CreateUser_RepositoryError(t *testing.T) {
 // TestUserService_GetUser_RepositoryError 测试获取用户-仓库错误
 func TestUserService_GetUser_RepositoryError(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	userID := primitive.NewObjectID().Hex()
@@ -256,7 +256,7 @@ func TestUserService_GetUser_RepositoryError(t *testing.T) {
 // TestUserService_DeleteUser_RepositoryError 测试删除用户-仓库错误
 func TestUserService_DeleteUser_RepositoryError(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	userID := primitive.NewObjectID().Hex()
@@ -279,7 +279,7 @@ func TestUserService_DeleteUser_RepositoryError(t *testing.T) {
 // TestUserService_LoginUser_AccountDeleted 测试用户登录-账号已删除
 func TestUserService_LoginUser_AccountDeleted(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	req := &user2.LoginUserRequest{
@@ -311,7 +311,7 @@ func TestUserService_LoginUser_AccountDeleted(t *testing.T) {
 // TestUserService_UpdateLastLogin_Success 测试更新最后登录时间成功
 func TestUserService_UpdateLastLogin_Success(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	userID := primitive.NewObjectID().Hex()
@@ -336,7 +336,7 @@ func TestUserService_UpdateLastLogin_Success(t *testing.T) {
 // TestUserService_UpdateLastLogin_EmptyID 测试更新最后登录时间-ID为空
 func TestUserService_UpdateLastLogin_EmptyID(t *testing.T) {
 	// Arrange
-	service, _, _ := setupUserService()
+	service, _ := setupUserService()
 	ctx := context.Background()
 
 	req := &user2.UpdateLastLoginRequest{
@@ -355,7 +355,7 @@ func TestUserService_UpdateLastLogin_EmptyID(t *testing.T) {
 // TestUserService_EmailExists_True 测试检查邮箱是否存在-存在
 func TestUserService_EmailExists_True(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	testEmail := "test@example.com"
@@ -375,7 +375,7 @@ func TestUserService_EmailExists_True(t *testing.T) {
 // TestUserService_EmailExists_False 测试检查邮箱是否存在-不存在
 func TestUserService_EmailExists_False(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	testEmail := "test@example.com"
@@ -395,7 +395,7 @@ func TestUserService_EmailExists_False(t *testing.T) {
 // TestUserService_UnbindEmail_Success 测试解绑邮箱成功
 func TestUserService_UnbindEmail_Success(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	testUserID := primitive.NewObjectID().Hex()
@@ -421,7 +421,7 @@ func TestUserService_UnbindEmail_Success(t *testing.T) {
 // TestUserService_UnbindEmail_NoEmail 测试解绑邮箱-用户没有邮箱
 func TestUserService_UnbindEmail_NoEmail(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	testUserID := primitive.NewObjectID().Hex()
@@ -447,7 +447,7 @@ func TestUserService_UnbindEmail_NoEmail(t *testing.T) {
 // TestUserService_UnbindPhone_Success 测试解绑手机成功
 func TestUserService_UnbindPhone_Success(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	testUserID := primitive.NewObjectID().Hex()
@@ -473,7 +473,7 @@ func TestUserService_UnbindPhone_Success(t *testing.T) {
 // TestUserService_VerifyPassword_Success 测试验证密码成功
 func TestUserService_VerifyPassword_Success(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	userID := primitive.NewObjectID().Hex()
@@ -497,7 +497,7 @@ func TestUserService_VerifyPassword_Success(t *testing.T) {
 // TestUserService_VerifyPassword_WrongPassword 测试验证密码-密码错误
 func TestUserService_VerifyPassword_WrongPassword(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	userID := primitive.NewObjectID().Hex()
@@ -523,7 +523,7 @@ func TestUserService_VerifyPassword_WrongPassword(t *testing.T) {
 // TestUserService_DeleteDevice_NotImplemented 测试删除设备-功能未实现
 func TestUserService_DeleteDevice_NotImplemented(t *testing.T) {
 	// Arrange
-	service, _, _ := setupUserService()
+	service, _ := setupUserService()
 	ctx := context.Background()
 
 	userID := primitive.NewObjectID().Hex()
@@ -540,7 +540,7 @@ func TestUserService_DeleteDevice_NotImplemented(t *testing.T) {
 // TestUserService_DowngradeRole_Success 测试角色降级成功
 func TestUserService_DowngradeRole_Success(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	userID := primitive.NewObjectID().Hex()
@@ -576,7 +576,7 @@ func TestUserService_DowngradeRole_Success(t *testing.T) {
 // TestUserService_DowngradeRole_EmptyUserID 测试角色降级-用户ID为空
 func TestUserService_DowngradeRole_EmptyUserID(t *testing.T) {
 	// Arrange
-	service, _, _ := setupUserService()
+	service, _ := setupUserService()
 	ctx := context.Background()
 
 	req := &user2.DowngradeRoleRequest{
@@ -597,7 +597,7 @@ func TestUserService_DowngradeRole_EmptyUserID(t *testing.T) {
 // TestUserService_DowngradeRole_NotConfirmed 测试角色降级-未确认
 func TestUserService_DowngradeRole_NotConfirmed(t *testing.T) {
 	// Arrange
-	service, _, _ := setupUserService()
+	service, _ := setupUserService()
 	ctx := context.Background()
 
 	req := &user2.DowngradeRoleRequest{
@@ -618,7 +618,7 @@ func TestUserService_DowngradeRole_NotConfirmed(t *testing.T) {
 // TestUserService_DowngradeRole_InvalidTargetRole 测试角色降级-无效目标角色
 func TestUserService_DowngradeRole_InvalidTargetRole(t *testing.T) {
 	// Arrange
-	service, _, _ := setupUserService()
+	service, _ := setupUserService()
 	ctx := context.Background()
 
 	req := &user2.DowngradeRoleRequest{
@@ -639,7 +639,7 @@ func TestUserService_DowngradeRole_InvalidTargetRole(t *testing.T) {
 // TestUserService_ListUsers_ZeroPageSize 测试列出用户-页面大小为0
 func TestUserService_ListUsers_ZeroPageSize(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	expectedUsers := []*usersModel.User{}
@@ -666,7 +666,7 @@ func TestUserService_ListUsers_ZeroPageSize(t *testing.T) {
 // TestUserService_DeleteUser_DeletedAt 测试删除用户-检查删除时间
 func TestUserService_DeleteUser_DeletedAt(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	userID := primitive.NewObjectID().Hex()

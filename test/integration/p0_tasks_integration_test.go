@@ -24,7 +24,6 @@ import (
 	repoWriter "Qingyu_backend/repository/mongodb/writer"
 	authService "Qingyu_backend/service/auth"
 	documentService "Qingyu_backend/service/writer/document"
-	"Qingyu_backend/service/shared/stats"
 )
 
 // ============ 集成测试说明 ============
@@ -1043,7 +1042,8 @@ func TestDocumentService_Integration_AutoSave(t *testing.T) {
 
 // ============ StatsService集成测试 ============
 
-func TestStatsService_Integration_RealData(t *testing.T) {
+// TODO(Phase3-SliceE): shared/stats 已删除，需更新测试
+// func TestStatsService_Integration_RealData(t *testing.T) {
 	skipIfShort(t)
 
 	setupTestDB(t)
@@ -1418,7 +1418,8 @@ func TestStatsService_Integration_RealData(t *testing.T) {
 
 // ============ 端到端场景测试 ============
 
-func TestE2E_UserJourney(t *testing.T) {
+// TODO(Phase3-SliceE): shared/stats 已删除，需更新测试
+// func TestE2E_UserJourney(t *testing.T) {
 	skipIfShort(t)
 
 	setupTestDB(t)
@@ -2180,7 +2181,8 @@ func BenchmarkAutoSave(b *testing.B) {
 	b.Skip("TODO: 待实现")
 }
 
-func BenchmarkStatsQuery(b *testing.B) {
+// TODO(Phase3-SliceE): shared/stats 已删除，需更新测试
+// func BenchmarkStatsQuery(b *testing.B) {
 	// TODO: 统计查询性能基准
 	b.Skip("TODO: 待实现")
 }

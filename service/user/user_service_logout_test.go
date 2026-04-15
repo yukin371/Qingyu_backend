@@ -5,14 +5,12 @@ import (
 	"errors"
 	"testing"
 
-	usersModel "Qingyu_backend/models/users"
 	serviceInterfaces "Qingyu_backend/service/interfaces/base"
 	user2 "Qingyu_backend/service/interfaces/user"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type MockTokenLifecycleService struct {
@@ -36,7 +34,7 @@ func (m *MockTokenLifecycleService) ValidateTokenUserID(ctx context.Context, tok
 // TestUserService_LogoutUser_Success 测试用户登出成功
 func TestUserService_LogoutUser_Success(t *testing.T) {
 	// Arrange
-	service, _, _ := setupUserService()
+	service, _ := setupUserService()
 	ctx := context.Background()
 	tokenService := new(MockTokenLifecycleService)
 	service.SetTokenLifecycleService(tokenService)
@@ -60,7 +58,7 @@ func TestUserService_LogoutUser_Success(t *testing.T) {
 // TestUserService_LogoutUser_EmptyToken 测试用户登出-Token为空
 func TestUserService_LogoutUser_EmptyToken(t *testing.T) {
 	// Arrange
-	service, _, _ := setupUserService()
+	service, _ := setupUserService()
 	ctx := context.Background()
 
 	req := &user2.LogoutUserRequest{
@@ -79,7 +77,7 @@ func TestUserService_LogoutUser_EmptyToken(t *testing.T) {
 }
 
 func TestUserService_LogoutUser_LogoutServiceError(t *testing.T) {
-	service, _, _ := setupUserService()
+	service, _ := setupUserService()
 	ctx := context.Background()
 	tokenService := new(MockTokenLifecycleService)
 	service.SetTokenLifecycleService(tokenService)
@@ -102,7 +100,7 @@ func TestUserService_LogoutUser_LogoutServiceError(t *testing.T) {
 }
 
 func TestUserService_LogoutUser_NilRequest(t *testing.T) {
-	service, _, _ := setupUserService()
+	service, _ := setupUserService()
 	ctx := context.Background()
 
 	resp, err := service.LogoutUser(ctx, nil)
@@ -114,118 +112,3 @@ func TestUserService_LogoutUser_NilRequest(t *testing.T) {
 	assert.Equal(t, serviceInterfaces.ErrorTypeValidation, serviceErr.Type)
 }
 
-// =========================
-// Token验证相关测试
-// =========================
-
-// TestUserService_ValidateToken_ValidToken 测试验证Token-有效Token
-func TestUserService_ValidateToken_ValidToken(t *testing.T) {
-	// Arrange
-	service, mockUserRepo, _ := setupUserService()
-	ctx := context.Background()
-	tokenService := new(MockTokenLifecycleService)
-	service.SetTokenLifecycleService(tokenService)
-
-	req := &user2.ValidateTokenRequest{
-		Token: "valid_jwt_token",
-	}
-
-	expectedUser := &usersModel.User{
-		Username: "valid-user",
-		Email:    "valid@example.com",
-	}
-	expectedUser.ID = primitive.NewObjectID()
-	userID := expectedUser.ID.Hex()
-
-	tokenService.On("ValidateTokenUserID", ctx, req.Token).Return(userID, nil).Once()
-	mockUserRepo.On("GetByID", ctx, userID).Return(expectedUser, nil).Once()
-
-	// Act
-	resp, err := service.ValidateToken(ctx, req)
-
-	// Assert
-	require.NoError(t, err)
-	assert.NotNil(t, resp)
-	assert.True(t, resp.Valid)
-	require.NotNil(t, resp.User)
-	assert.Equal(t, userID, resp.User.ID)
-	tokenService.AssertExpectations(t)
-	mockUserRepo.AssertExpectations(t)
-}
-
-// TestUserService_ValidateToken_EmptyToken 测试验证Token-Token为空
-func TestUserService_ValidateToken_EmptyToken(t *testing.T) {
-	// Arrange
-	service, _, _ := setupUserService()
-	ctx := context.Background()
-
-	req := &user2.ValidateTokenRequest{
-		Token: "",
-	}
-
-	// Act
-	resp, err := service.ValidateToken(ctx, req)
-
-	// Assert
-	require.NoError(t, err)
-	assert.NotNil(t, resp)
-	assert.False(t, resp.Valid)
-}
-
-// TestUserService_LogoutUser_NoLifecycleService 测试登出-未注入tokenLifecycleService时优雅降级
-func TestUserService_LogoutUser_NoLifecycleService(t *testing.T) {
-	service, _, _ := setupUserService()
-	ctx := context.Background()
-
-	req := &user2.LogoutUserRequest{
-		Token: "valid_jwt_token",
-	}
-
-	// 不设置 tokenLifecycleService，应返回幂等成功
-	resp, err := service.LogoutUser(ctx, req)
-
-	require.NoError(t, err)
-	require.NotNil(t, resp)
-	assert.True(t, resp.Success)
-}
-
-// TestUserService_ValidateToken_NoLifecycleService 测试验证Token-未注入tokenLifecycleService时保守返回
-func TestUserService_ValidateToken_NoLifecycleService(t *testing.T) {
-	service, _, _ := setupUserService()
-	ctx := context.Background()
-
-	req := &user2.ValidateTokenRequest{
-		Token: "valid_jwt_token",
-	}
-
-	// 不设置 tokenLifecycleService，应返回 Valid: false 而非报错
-	resp, err := service.ValidateToken(ctx, req)
-
-	require.NoError(t, err)
-	require.NotNil(t, resp)
-	assert.False(t, resp.Valid)
-}
-
-// TestUserService_ValidateToken_InvalidToken 测试验证Token-无效Token
-func TestUserService_ValidateToken_InvalidToken(t *testing.T) {
-	// Arrange
-	service, _, _ := setupUserService()
-	ctx := context.Background()
-	tokenService := new(MockTokenLifecycleService)
-	service.SetTokenLifecycleService(tokenService)
-
-	req := &user2.ValidateTokenRequest{
-		Token: "invalid_token_format",
-	}
-
-	tokenService.On("ValidateTokenUserID", ctx, req.Token).Return("", errors.New("invalid token")).Once()
-
-	// Act
-	resp, err := service.ValidateToken(ctx, req)
-
-	// Assert
-	require.NoError(t, err)
-	assert.NotNil(t, resp)
-	assert.False(t, resp.Valid)
-	tokenService.AssertExpectations(t)
-}

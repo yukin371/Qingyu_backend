@@ -206,8 +206,8 @@ func TestVerifyDocumentEdit_Success(t *testing.T) {
 	if err != nil {
 		t.Errorf("期望无错误，实际得到: %v", err)
 	}
-	if userID != "user123" {
-		t.Errorf("期望 userID=user123，实际得到: %s", userID)
+	if userID != userIDStr {
+		t.Errorf("期望 userID=%s，实际得到: %s", userIDStr, userID)
 	}
 	if doc == nil {
 		t.Error("期望返回文档，实际为 nil")

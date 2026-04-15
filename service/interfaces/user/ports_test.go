@@ -60,11 +60,6 @@ func (m *MockUserPortForTest) LogoutUser(ctx context.Context, req *user.LogoutUs
 	return &user.LogoutUserResponse{}, nil
 }
 
-// ValidateToken Mock实现
-func (m *MockUserPortForTest) ValidateToken(ctx context.Context, req *user.ValidateTokenRequest) (*user.ValidateTokenResponse, error) {
-	return &user.ValidateTokenResponse{}, nil
-}
-
 // UpdateLastLogin Mock实现
 func (m *MockUserPortForTest) UpdateLastLogin(ctx context.Context, req *user.UpdateLastLoginRequest) (*user.UpdateLastLoginResponse, error) {
 	return &user.UpdateLastLoginResponse{}, nil
@@ -123,26 +118,6 @@ func (m *MockUserPortForTest) RequestPasswordReset(ctx context.Context, req *use
 // ConfirmPasswordReset Mock实现
 func (m *MockUserPortForTest) ConfirmPasswordReset(ctx context.Context, req *user.ConfirmPasswordResetRequest) (*user.ConfirmPasswordResetResponse, error) {
 	return &user.ConfirmPasswordResetResponse{}, nil
-}
-
-// AssignRole Mock实现
-func (m *MockUserPortForTest) AssignRole(ctx context.Context, req *user.AssignRoleRequest) (*user.AssignRoleResponse, error) {
-	return &user.AssignRoleResponse{}, nil
-}
-
-// RemoveRole Mock实现
-func (m *MockUserPortForTest) RemoveRole(ctx context.Context, req *user.RemoveRoleRequest) (*user.RemoveRoleResponse, error) {
-	return &user.RemoveRoleResponse{}, nil
-}
-
-// GetUserRoles Mock实现
-func (m *MockUserPortForTest) GetUserRoles(ctx context.Context, req *user.GetUserRolesRequest) (*user.GetUserRolesResponse, error) {
-	return &user.GetUserRolesResponse{}, nil
-}
-
-// GetUserPermissions Mock实现
-func (m *MockUserPortForTest) GetUserPermissions(ctx context.Context, req *user.GetUserPermissionsRequest) (*user.GetUserPermissionsResponse, error) {
-	return &user.GetUserPermissionsResponse{}, nil
 }
 
 // DowngradeRole Mock实现

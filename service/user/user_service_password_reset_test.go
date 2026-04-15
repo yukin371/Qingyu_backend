@@ -21,7 +21,7 @@ import (
 // TestUserService_ResetPassword_Success 测试重置密码成功
 func TestUserService_ResetPassword_Success(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	testEmail := "test@example.com"
@@ -52,7 +52,7 @@ func TestUserService_ResetPassword_Success(t *testing.T) {
 // TestUserService_ResetPassword_UserNotFound 测试重置密码-用户不存在（为了安全应返回成功）
 func TestUserService_ResetPassword_UserNotFound(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	testEmail := "nonexistent@example.com"
@@ -78,7 +78,7 @@ func TestUserService_ResetPassword_UserNotFound(t *testing.T) {
 // TestUserService_ResetPassword_EmptyEmail 测试重置密码-邮箱为空
 func TestUserService_ResetPassword_EmptyEmail(t *testing.T) {
 	// Arrange
-	service, _, _ := setupUserService()
+	service, _ := setupUserService()
 	ctx := context.Background()
 
 	req := &user2.ResetPasswordRequest{
@@ -97,7 +97,7 @@ func TestUserService_ResetPassword_EmptyEmail(t *testing.T) {
 // TestUserService_ResetPassword_RepositoryError 测试重置密码-仓库错误
 func TestUserService_ResetPassword_RepositoryError(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	testEmail := "test@example.com"
@@ -126,7 +126,7 @@ func TestUserService_ResetPassword_RepositoryError(t *testing.T) {
 // TestUserService_RequestPasswordReset_Success 测试请求密码重置成功
 func TestUserService_RequestPasswordReset_Success(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	testEmail := "test@example.com"
@@ -159,7 +159,7 @@ func TestUserService_RequestPasswordReset_Success(t *testing.T) {
 // TestUserService_RequestPasswordReset_UserNotFound 测试请求密码重置-用户不存在（为了安全应返回成功）
 func TestUserService_RequestPasswordReset_UserNotFound(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	testEmail := "nonexistent@example.com"
@@ -186,7 +186,7 @@ func TestUserService_RequestPasswordReset_UserNotFound(t *testing.T) {
 // TestUserService_RequestPasswordReset_EmptyEmail 测试请求密码重置-邮箱为空
 func TestUserService_RequestPasswordReset_EmptyEmail(t *testing.T) {
 	// Arrange
-	service, _, _ := setupUserService()
+	service, _ := setupUserService()
 	ctx := context.Background()
 
 	req := &user2.RequestPasswordResetRequest{
@@ -209,7 +209,7 @@ func TestUserService_RequestPasswordReset_EmptyEmail(t *testing.T) {
 // TestUserService_ConfirmPasswordReset_Success 测试确认密码重置成功
 func TestUserService_ConfirmPasswordReset_Success(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	testEmail := "test@example.com"
@@ -250,7 +250,7 @@ func TestUserService_ConfirmPasswordReset_Success(t *testing.T) {
 // TestUserService_ConfirmPasswordReset_EmptyEmail 测试确认密码重置-邮箱为空
 func TestUserService_ConfirmPasswordReset_EmptyEmail(t *testing.T) {
 	// Arrange
-	service, _, _ := setupUserService()
+	service, _ := setupUserService()
 	ctx := context.Background()
 
 	req := &user2.ConfirmPasswordResetRequest{
@@ -271,7 +271,7 @@ func TestUserService_ConfirmPasswordReset_EmptyEmail(t *testing.T) {
 // TestUserService_ConfirmPasswordReset_EmptyToken 测试确认密码重置-Token为空
 func TestUserService_ConfirmPasswordReset_EmptyToken(t *testing.T) {
 	// Arrange
-	service, _, _ := setupUserService()
+	service, _ := setupUserService()
 	ctx := context.Background()
 
 	req := &user2.ConfirmPasswordResetRequest{
@@ -292,7 +292,7 @@ func TestUserService_ConfirmPasswordReset_EmptyToken(t *testing.T) {
 // TestUserService_ConfirmPasswordReset_EmptyPassword 测试确认密码重置-密码为空
 func TestUserService_ConfirmPasswordReset_EmptyPassword(t *testing.T) {
 	// Arrange
-	service, _, _ := setupUserService()
+	service, _ := setupUserService()
 	ctx := context.Background()
 
 	req := &user2.ConfirmPasswordResetRequest{
@@ -313,7 +313,7 @@ func TestUserService_ConfirmPasswordReset_EmptyPassword(t *testing.T) {
 // TestUserService_ConfirmPasswordReset_UserNotFound 测试确认密码重置-用户不存在
 func TestUserService_ConfirmPasswordReset_UserNotFound(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	testEmail := "nonexistent@example.com"
@@ -340,7 +340,7 @@ func TestUserService_ConfirmPasswordReset_UserNotFound(t *testing.T) {
 // TestUserService_ConfirmPasswordReset_InvalidToken 测试确认密码重置-Token无效
 func TestUserService_ConfirmPasswordReset_InvalidToken(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	testEmail := "test@example.com"
@@ -373,7 +373,7 @@ func TestUserService_ConfirmPasswordReset_InvalidToken(t *testing.T) {
 // TestUserService_ConfirmPasswordReset_TokenExpired 测试确认密码重置-Token过期
 func TestUserService_ConfirmPasswordReset_TokenExpired(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	testEmail := "test@example.com"

@@ -124,14 +124,6 @@ func (m *MockUserService) LogoutUser(ctx context.Context, req *userServiceInterf
 	return args.Get(0).(*userServiceInterface.LogoutUserResponse), args.Error(1)
 }
 
-func (m *MockUserService) ValidateToken(ctx context.Context, req *userServiceInterface.ValidateTokenRequest) (*userServiceInterface.ValidateTokenResponse, error) {
-	args := m.Called(ctx, req)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*userServiceInterface.ValidateTokenResponse), args.Error(1)
-}
-
 func (m *MockUserService) UpdateLastLogin(ctx context.Context, req *userServiceInterface.UpdateLastLoginRequest) (*userServiceInterface.UpdateLastLoginResponse, error) {
 	args := m.Called(ctx, req)
 	if args.Get(0) == nil {
@@ -213,37 +205,6 @@ func (m *MockUserService) ConfirmPasswordReset(ctx context.Context, req *userSer
 	return args.Get(0).(*userServiceInterface.ConfirmPasswordResetResponse), args.Error(1)
 }
 
-func (m *MockUserService) AssignRole(ctx context.Context, req *userServiceInterface.AssignRoleRequest) (*userServiceInterface.AssignRoleResponse, error) {
-	args := m.Called(ctx, req)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*userServiceInterface.AssignRoleResponse), args.Error(1)
-}
-
-func (m *MockUserService) RemoveRole(ctx context.Context, req *userServiceInterface.RemoveRoleRequest) (*userServiceInterface.RemoveRoleResponse, error) {
-	args := m.Called(ctx, req)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*userServiceInterface.RemoveRoleResponse), args.Error(1)
-}
-
-func (m *MockUserService) GetUserRoles(ctx context.Context, req *userServiceInterface.GetUserRolesRequest) (*userServiceInterface.GetUserRolesResponse, error) {
-	args := m.Called(ctx, req)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*userServiceInterface.GetUserRolesResponse), args.Error(1)
-}
-
-func (m *MockUserService) GetUserPermissions(ctx context.Context, req *userServiceInterface.GetUserPermissionsRequest) (*userServiceInterface.GetUserPermissionsResponse, error) {
-	args := m.Called(ctx, req)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*userServiceInterface.GetUserPermissionsResponse), args.Error(1)
-}
 
 // setupTestRouter 设置测试路由
 func setupTestRouter(userService userServiceInterface.UserService) *gin.Engine {

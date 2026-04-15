@@ -766,7 +766,7 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 		fmt.Println("缓存配置已启用，但Redis客户端未初始化")
 	}
 
-	c.userService = userService.NewUserService(userRepo, authRepo)
+	c.userService = userService.NewUserService(userRepo)
 	// 用户服务实现了BaseService接口，可以注册
 	if err := c.RegisterService("UserService", c.userService); err != nil {
 		return fmt.Errorf("注册用户服务失败: %w", err)

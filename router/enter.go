@@ -7,11 +7,11 @@ import (
 	"strings"
 	"time"
 
+	aiApi "Qingyu_backend/api/v1/ai"
 	internalAPI "Qingyu_backend/api/v1/internalapi/ai"
 	searchRouter "Qingyu_backend/api/v1/search"
 	adminRouter "Qingyu_backend/router/admin"
 	aiRouter "Qingyu_backend/router/ai"
-	aiApi "Qingyu_backend/api/v1/ai"
 	announcementsRouter "Qingyu_backend/router/announcements"
 	bookstoreRouter "Qingyu_backend/router/bookstore"
 	financeRouter "Qingyu_backend/router/finance"
@@ -26,31 +26,31 @@ import (
 	userRouter "Qingyu_backend/router/user"
 	writerRouter "Qingyu_backend/router/writer"
 
+	readerRepo "Qingyu_backend/repository/interfaces/reader"
 	socialRepo "Qingyu_backend/repository/interfaces/social"
 	userRepo "Qingyu_backend/repository/interfaces/user"
 	adminrep "Qingyu_backend/repository/mongodb/admin"
 	authRep "Qingyu_backend/repository/mongodb/auth"
 	bookstoreRepo "Qingyu_backend/repository/mongodb/bookstore"
-	recommendationRepo "Qingyu_backend/repository/mongodb/recommendation"
 	mongoReaderRepo "Qingyu_backend/repository/mongodb/reader"
+	recommendationRepo "Qingyu_backend/repository/mongodb/recommendation"
 	mongoSocialRepo "Qingyu_backend/repository/mongodb/social"
 	mongoWriterRepo "Qingyu_backend/repository/mongodb/writer"
-	readerRepo "Qingyu_backend/repository/interfaces/reader"
 	"Qingyu_backend/service"
-	baseService "Qingyu_backend/service/base"
 	adminservice "Qingyu_backend/service/admin"
+	baseService "Qingyu_backend/service/base"
 	bookstore "Qingyu_backend/service/bookstore"
-	serviceInterfaces "Qingyu_backend/service/interfaces"
-	eventservice "Qingyu_backend/service/events"
 	"Qingyu_backend/service/container"
+	eventservice "Qingyu_backend/service/events"
+	serviceInterfaces "Qingyu_backend/service/interfaces"
 	internalAPIService "Qingyu_backend/service/internalapi"
 	recommendationService "Qingyu_backend/service/recommendation"
 	searchService "Qingyu_backend/service/search"
 	searchengine "Qingyu_backend/service/search/engine"
 	searchprovider "Qingyu_backend/service/search/provider"
 	sharedService "Qingyu_backend/service/shared"
-	statsService "Qingyu_backend/service/shared/stats"
 	sharedStorage "Qingyu_backend/service/shared/storage"
+	userDomainService "Qingyu_backend/service/user"
 	writerservice "Qingyu_backend/service/writer"
 
 	versionAPI "Qingyu_backend/api/v1"
@@ -553,10 +553,10 @@ func RegisterRoutes(r *gin.Engine) {
 			recommendationApi.WithTableService(tableSvc)
 
 			// 注入书籍仓储用于获取书籍详情
-		if mongoClient := serviceContainer.GetMongoClient(); mongoClient != nil {
-			bookRepo := bookstoreRepo.NewMongoBookRepository(mongoClient, mongoDB.Name())
-			recommendationApi.WithBookRepository(bookRepo)
-		}
+			if mongoClient := serviceContainer.GetMongoClient(); mongoClient != nil {
+				bookRepo := bookstoreRepo.NewMongoBookRepository(mongoClient, mongoDB.Name())
+				recommendationApi.WithBookRepository(bookRepo)
+			}
 		}
 		recommendationRouter.RegisterRecommendationRoutes(v1, recommendationApi)
 
@@ -837,22 +837,22 @@ func RegisterRoutes(r *gin.Engine) {
 	}
 
 	// 获取统计服务（用于用户统计功能）
-	var statsSvc statsService.StatsPort
+	var userStatsSvc userDomainService.UserStatsService
+	var contentStatsSvc writerservice.ContentStatsService
 	var userRepoForUM userRepo.UserRepository // 用于用户路由
 	if repositoryFactory != nil {
 		// 创建统计服务所需的 Repository
 		userRepoForUM = repositoryFactory.CreateUserRepository()
-		bookRepo := repositoryFactory.CreateBookRepository()
 		projectRepo := repositoryFactory.CreateProjectRepository()
-		chapterRepo := repositoryFactory.CreateBookstoreChapterRepository()
 
-		if userRepoForUM != nil && bookRepo != nil && projectRepo != nil && chapterRepo != nil {
-			statsSvc = statsService.NewPlatformStatsService(userRepoForUM, bookRepo, projectRepo, chapterRepo)
+		if userRepoForUM != nil && projectRepo != nil {
+			userStatsSvc = userDomainService.NewUserStatsService(userRepoForUM, projectRepo)
+			contentStatsSvc = writerservice.NewContentStatsService(userRepoForUM, projectRepo)
 		}
 	}
 
 	// 注册新的 user 路由
-	userRouter.RegisterUserRoutes(v1, userSvc, userRepoForUM, bookstoreSvcForUM, storageSvcForUM, statsSvc)
+	userRouter.RegisterUserRoutes(v1, userSvc, userRepoForUM, bookstoreSvcForUM, storageSvcForUM, userStatsSvc, contentStatsSvc)
 
 	logger.Info("✓ 用户路由已注册到: /api/v1/user/")
 	logger.Info("  - /api/v1/user/auth/register (用户注册)")

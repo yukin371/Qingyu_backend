@@ -23,7 +23,6 @@ type UserService interface {
 	RegisterUser(ctx context.Context, req *RegisterUserRequest) (*RegisterUserResponse, error)
 	LoginUser(ctx context.Context, req *LoginUserRequest) (*LoginUserResponse, error)
 	LogoutUser(ctx context.Context, req *LogoutUserRequest) (*LogoutUserResponse, error)
-	ValidateToken(ctx context.Context, req *ValidateTokenRequest) (*ValidateTokenResponse, error)
 
 	// 用户状态管理
 	UpdateLastLogin(ctx context.Context, req *UpdateLastLoginRequest) (*UpdateLastLoginResponse, error)
@@ -48,12 +47,6 @@ type UserService interface {
 	// 完整密码重置流程
 	RequestPasswordReset(ctx context.Context, req *RequestPasswordResetRequest) (*RequestPasswordResetResponse, error)
 	ConfirmPasswordReset(ctx context.Context, req *ConfirmPasswordResetRequest) (*ConfirmPasswordResetResponse, error)
-
-	// 用户权限管理
-	AssignRole(ctx context.Context, req *AssignRoleRequest) (*AssignRoleResponse, error)
-	RemoveRole(ctx context.Context, req *RemoveRoleRequest) (*RemoveRoleResponse, error)
-	GetUserRoles(ctx context.Context, req *GetUserRolesRequest) (*GetUserRolesResponse, error)
-	GetUserPermissions(ctx context.Context, req *GetUserPermissionsRequest) (*GetUserPermissionsResponse, error)
 
 	// 角色降级
 	DowngradeRole(ctx context.Context, req *DowngradeRoleRequest) (*DowngradeRoleResponse, error)
@@ -162,17 +155,6 @@ type LogoutUserResponse struct {
 	Success bool `json:"success"`
 }
 
-// ValidateTokenRequest 验证令牌请求
-type ValidateTokenRequest struct {
-	Token string `json:"token" validate:"required"`
-}
-
-// ValidateTokenResponse 验证令牌响应
-type ValidateTokenResponse struct {
-	User  *dto.UserDTO `json:"user,omitempty"`
-	Valid bool         `json:"valid"`
-}
-
 // UpdateLastLoginRequest 更新最后登录时间请求
 type UpdateLastLoginRequest struct {
 	ID string `json:"id" validate:"required"`
@@ -203,48 +185,6 @@ type ResetPasswordRequest struct {
 // ResetPasswordResponse 重置密码响应
 type ResetPasswordResponse struct {
 	Success bool `json:"success"`
-}
-
-// AssignRoleRequest 分配角色请求
-type AssignRoleRequest struct {
-	UserID string `json:"user_id" validate:"required"`
-	RoleID string `json:"role_id" validate:"required"`
-}
-
-// AssignRoleResponse 分配角色响应
-type AssignRoleResponse struct {
-	Assigned bool `json:"assigned"`
-}
-
-// RemoveRoleRequest 移除角色请求
-type RemoveRoleRequest struct {
-	UserID string `json:"user_id" validate:"required"`
-	RoleID string `json:"role_id" validate:"required"`
-}
-
-// RemoveRoleResponse 移除角色响应
-type RemoveRoleResponse struct {
-	Removed bool `json:"removed"`
-}
-
-// GetUserRolesRequest 获取用户角色请求
-type GetUserRolesRequest struct {
-	UserID string `json:"user_id" validate:"required"`
-}
-
-// GetUserRolesResponse 获取用户角色响应
-type GetUserRolesResponse struct {
-	Roles []string `json:"roles"`
-}
-
-// GetUserPermissionsRequest 获取用户权限请求
-type GetUserPermissionsRequest struct {
-	UserID string `json:"user_id" validate:"required"`
-}
-
-// GetUserPermissionsResponse 获取用户权限响应
-type GetUserPermissionsResponse struct {
-	Permissions []string `json:"permissions"`
 }
 
 // 邮箱验证相关请求/响应

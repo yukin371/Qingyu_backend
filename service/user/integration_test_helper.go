@@ -13,15 +13,12 @@ import (
 
 	"Qingyu_backend/config"
 	usersModel "Qingyu_backend/models/users"
-	authInterface "Qingyu_backend/repository/interfaces/auth"
-	roleRepo "Qingyu_backend/repository/mongodb/auth"
 	repoUser "Qingyu_backend/repository/mongodb/user"
 )
 
 // IntegrationTestEnvironment 集成测试环境
 type IntegrationTestEnvironment struct {
 	UserService    *UserServiceImpl
-	AuthRepository authInterface.RoleRepository
 	DB             *mongo.Database
 	DBName         string
 	CleanupFunc    func()
@@ -105,11 +102,8 @@ func SetupIntegrationTestEnvironment(t *testing.T) *IntegrationTestEnvironment {
 	// 创建UserRepository
 	userRepo := repoUser.NewMongoUserRepository(db)
 
-	// 创建AuthRepository (使用RoleRepository)
-	authRepository := roleRepo.NewRoleRepository(db)
-
 	// 创建UserService
-	userService := NewUserService(userRepo, authRepository)
+	userService := NewUserService(userRepo)
 	userServiceImpl, ok := userService.(*UserServiceImpl)
 	require.True(t, ok, "UserService类型转换失败")
 
@@ -139,13 +133,12 @@ func SetupIntegrationTestEnvironment(t *testing.T) *IntegrationTestEnvironment {
 	}
 
 	return &IntegrationTestEnvironment{
-		UserService:    userServiceImpl,
-		AuthRepository: authRepository,
-		DB:             db,
-		DBName:         testCfg.DatabaseName,
-		CleanupFunc:    cleanup,
-		TestConfig:     testCfg,
-		JWTTestHelper:  jwtHelper,
+		UserService: userServiceImpl,
+		DB:          db,
+		DBName:      testCfg.DatabaseName,
+		CleanupFunc: cleanup,
+		TestConfig:  testCfg,
+		JWTTestHelper: jwtHelper,
 	}
 }
 

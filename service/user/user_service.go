@@ -6,12 +6,10 @@ import (
 	"context"
 	"fmt"
 	"regexp"
-	"strings"
 	"time"
 
 	"Qingyu_backend/internal/middleware/auth"
 	usersModel "Qingyu_backend/models/users"
-	authRepo "Qingyu_backend/repository/interfaces/auth"
 	repoInterfaces "Qingyu_backend/repository/interfaces/user"
 
 	"go.uber.org/zap"
@@ -63,7 +61,6 @@ type TokenLifecycleService interface {
 // 详见：docs/reports/2026-03-22-user-auth-boundary-analysis.md
 type UserServiceImpl struct {
 	userRepo               repoInterfaces.UserRepository
-	authRepo               authRepo.RoleRepository // TECHDEBT: 应通过 AuthService 访问
 	tokenLifecycleService  TokenLifecycleService
 	logger                 *zap.Logger
 	name                   string
@@ -71,10 +68,9 @@ type UserServiceImpl struct {
 }
 
 // NewUserService 创建用户服务
-func NewUserService(userRepo repoInterfaces.UserRepository, authRepo authRepo.RoleRepository) user2.UserService {
+func NewUserService(userRepo repoInterfaces.UserRepository) user2.UserService {
 	return &UserServiceImpl{
 		userRepo: userRepo,
-		authRepo: authRepo,
 		logger:   zap.L(),
 		name:     "UserService",
 		version:  "1.0.0",
@@ -538,36 +534,6 @@ func (s *UserServiceImpl) LogoutUser(ctx context.Context, req *user2.LogoutUserR
 	}, nil
 }
 
-// ValidateToken 验证令牌
-func (s *UserServiceImpl) ValidateToken(ctx context.Context, req *user2.ValidateTokenRequest) (*user2.ValidateTokenResponse, error) {
-	if req == nil || strings.TrimSpace(req.Token) == "" {
-		return &user2.ValidateTokenResponse{Valid: false}, nil
-	}
-
-	// 若运行时尚未注入 live auth 能力，则保持兼容的保守返回。
-	if s.tokenLifecycleService == nil {
-		return &user2.ValidateTokenResponse{Valid: false}, nil
-	}
-
-	userID, err := s.tokenLifecycleService.ValidateTokenUserID(ctx, req.Token)
-	if err != nil || userID == "" {
-		return &user2.ValidateTokenResponse{Valid: false}, nil
-	}
-
-	user, err := s.userRepo.GetByID(ctx, userID)
-	if err != nil {
-		if repoInterfaces.IsNotFoundError(err) {
-			return &user2.ValidateTokenResponse{Valid: false}, nil
-		}
-		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "获取Token对应用户失败", err)
-	}
-
-	return &user2.ValidateTokenResponse{
-		User:  ToUserDTO(user),
-		Valid: true,
-	}, nil
-}
-
 // UpdateLastLogin 更新最后登录时间
 func (s *UserServiceImpl) UpdateLastLogin(ctx context.Context, req *user2.UpdateLastLoginRequest) (*user2.UpdateLastLoginResponse, error) {
 	// 1. 验证请求数据
@@ -690,129 +656,6 @@ func (s *UserServiceImpl) ResetPassword(ctx context.Context, req *user2.ResetPas
 
 	return &user2.ResetPasswordResponse{
 		Success: true,
-	}, nil
-}
-
-// AssignRole 分配角色
-//
-// TECHDEBT(#2026-03-22): 职责边界问题
-// 角色管理应由 AuthService 统一处理，此方法应委托给 AuthService。
-// 当前保留在 UserService 是为了向后兼容，后续迭代应迁移到 AuthService。
-// 建议使用：authService.AssignRole() 代替
-func (s *UserServiceImpl) AssignRole(ctx context.Context, req *user2.AssignRoleRequest) (*user2.AssignRoleResponse, error) {
-	// 1. 验证请求数据
-	if req.UserID == "" {
-		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "用户ID不能为空", nil)
-	}
-	if req.RoleID == "" {
-		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "角色ID不能为空", nil)
-	}
-
-	// 2. 检查用户是否存在
-	_, err := s.userRepo.GetByID(ctx, req.UserID)
-	if err != nil {
-		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeNotFound, "用户不存在", err)
-	}
-
-	// 3. 检查角色是否存在
-	_, err = s.authRepo.GetRole(ctx, req.RoleID)
-	if err != nil {
-		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeNotFound, "角色不存在", err)
-	}
-
-	// 4. 分配角色
-	if err := s.authRepo.AssignUserRole(ctx, req.UserID, req.RoleID); err != nil {
-		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "分配角色失败", err)
-	}
-
-	return &user2.AssignRoleResponse{
-		Assigned: true,
-	}, nil
-}
-
-// RemoveRole 移除角色
-//
-// TECHDEBT(#2026-03-22): 职责边界问题 - 建议使用 authService.RemoveRole()
-func (s *UserServiceImpl) RemoveRole(ctx context.Context, req *user2.RemoveRoleRequest) (*user2.RemoveRoleResponse, error) {
-	// 1. 验证请求数据
-	if req.UserID == "" {
-		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "用户ID不能为空", nil)
-	}
-	if req.RoleID == "" {
-		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "角色ID不能为空", nil)
-	}
-
-	// 2. 检查用户是否存在
-	_, err := s.userRepo.GetByID(ctx, req.UserID)
-	if err != nil {
-		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeNotFound, "用户不存在", err)
-	}
-
-	// 3. 移除角色
-	if err := s.authRepo.RemoveUserRole(ctx, req.UserID, req.RoleID); err != nil {
-		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "移除角色失败", err)
-	}
-
-	return &user2.RemoveRoleResponse{
-		Removed: true,
-	}, nil
-}
-
-// GetUserRoles 获取用户角色
-//
-// TECHDEBT(#2026-03-22): 职责边界问题 - 建议使用 authService.GetUserRoles()
-func (s *UserServiceImpl) GetUserRoles(ctx context.Context, req *user2.GetUserRolesRequest) (*user2.GetUserRolesResponse, error) {
-	// 1. 验证请求数据
-	if req.UserID == "" {
-		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "用户ID不能为空", nil)
-	}
-
-	// 2. 检查用户是否存在
-	_, err := s.userRepo.GetByID(ctx, req.UserID)
-	if err != nil {
-		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeNotFound, "用户不存在", err)
-	}
-
-	// 3. 获取用户角色
-	roles, err := s.authRepo.GetUserRoles(ctx, req.UserID)
-	if err != nil {
-		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "获取用户角色失败", err)
-	}
-
-	// 4. 转换为角色名称列表
-	roleNames := make([]string, len(roles))
-	for i, role := range roles {
-		roleNames[i] = role.Name
-	}
-
-	return &user2.GetUserRolesResponse{
-		Roles: roleNames,
-	}, nil
-}
-
-// GetUserPermissions 获取用户权限
-//
-// TECHDEBT(#2026-03-22): 职责边界问题 - 建议使用 authService.GetUserPermissions()
-func (s *UserServiceImpl) GetUserPermissions(ctx context.Context, req *user2.GetUserPermissionsRequest) (*user2.GetUserPermissionsResponse, error) {
-	// 1. 验证请求数据
-	if req.UserID == "" {
-		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "用户ID不能为空", nil)
-	}
-
-	// 2. 检查用户是否存在
-	_, err := s.userRepo.GetByID(ctx, req.UserID)
-	if err != nil {
-		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeNotFound, "用户不存在", err)
-	}
-
-	// 3. 获取用户权限（通过角色获取）
-	permissions, err := s.authRepo.GetUserPermissions(ctx, req.UserID)
-	if err != nil {
-		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "获取用户权限失败", err)
-	}
-
-	return &user2.GetUserPermissionsResponse{
-		Permissions: permissions,
 	}, nil
 }
 

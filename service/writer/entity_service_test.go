@@ -153,7 +153,7 @@ func TestListEntities_InvalidFilter(t *testing.T) {
 
 	ctx := context.Background()
 	projectID := "test-project-id"
-	entityType := "organization"
+	entityType := "unknown"
 
 	result, err := svc.ListEntities(ctx, projectID, &entityType)
 
@@ -191,6 +191,22 @@ func TestListEntities_WithItems(t *testing.T) {
 	ctx := context.Background()
 	projectID := "test-project-id"
 	entityType := string(writer.EntityTypeItem)
+
+	result, err := svc.ListEntities(ctx, projectID, &entityType)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+	mockCharSvc.AssertNotCalled(t, "List")
+}
+
+// TestListEntities_WithOrganizations 测试仅查询组织类型
+func TestListEntities_WithOrganizations(t *testing.T) {
+	mockCharSvc := new(mockCharacterServiceForEntity)
+	svc := NewEntityService(mockCharSvc, nil, nil)
+
+	ctx := context.Background()
+	projectID := "test-project-id"
+	entityType := string(writer.EntityTypeOrganization)
 
 	result, err := svc.ListEntities(ctx, projectID, &entityType)
 

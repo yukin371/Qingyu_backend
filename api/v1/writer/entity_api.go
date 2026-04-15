@@ -35,7 +35,7 @@ func NewEntityApi(entityService interfaces.EntityService) *EntityApi {
 // @Accept json
 // @Produce json
 // @Param projectId path string true "项目ID"
-// @Param type query string false "实体类型筛选（character/item/location）"
+// @Param type query string false "实体类型筛选（character/item/location/organization/foreshadowing）"
 // @Success 200 {object} response.APIResponse
 // @Failure 400 {object} response.APIResponse
 // @Router /api/v1/writer/projects/{projectId}/entities [get]

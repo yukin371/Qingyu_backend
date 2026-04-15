@@ -41,6 +41,7 @@ func (s *entityService) ListEntities(ctx context.Context, projectID string, enti
 	shouldQueryCharacter := entityType == nil || *entityType == string(writer.EntityTypeCharacter)
 	shouldQueryItem := entityType == nil || *entityType == string(writer.EntityTypeItem)
 	shouldQueryLocation := entityType == nil || *entityType == string(writer.EntityTypeLocation)
+	shouldQueryOrganization := entityType == nil || *entityType == string(writer.EntityTypeOrganization)
 
 	// 查询 characters
 	if shouldQueryCharacter {
@@ -70,6 +71,16 @@ func (s *entityService) ListEntities(ctx context.Context, projectID string, enti
 			log.Printf("[EntityService] 查询地点失败: %v", err)
 		} else {
 			summaries = append(summaries, locationSummaries...)
+		}
+	}
+
+	// 查询 organizations
+	if shouldQueryOrganization {
+		organizationSummaries, err := s.listOrganizations(ctx, projectID)
+		if err != nil {
+			log.Printf("[EntityService] 查询组织失败: %v", err)
+		} else {
+			summaries = append(summaries, organizationSummaries...)
 		}
 	}
 
@@ -223,6 +234,40 @@ func (s *entityService) listLocations(ctx context.Context, projectID string) ([]
 			Name:       loc.Name,
 			EntityType: writer.EntityTypeLocation,
 			Summary:    loc.Description,
+		}
+		summaries = append(summaries, summary)
+	}
+
+	return summaries, nil
+}
+
+// listOrganizations 查询组织并转为 EntitySummary（直接 MongoDB 查询）
+func (s *entityService) listOrganizations(ctx context.Context, projectID string) ([]interfaces.EntitySummary, error) {
+	if s.db == nil {
+		return nil, nil
+	}
+
+	collection := s.db.Collection("organizations")
+	filter := bson.M{"project_id": projectID}
+
+	cursor, err := collection.Find(ctx, filter)
+	if err != nil {
+		return nil, fmt.Errorf("查询组织失败: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	var organizations []writer.Organization
+	if err := cursor.All(ctx, &organizations); err != nil {
+		return nil, fmt.Errorf("解码组织数据失败: %w", err)
+	}
+
+	summaries := make([]interfaces.EntitySummary, 0, len(organizations))
+	for _, organization := range organizations {
+		summary := interfaces.EntitySummary{
+			ID:         organization.ID,
+			Name:       organization.Name,
+			EntityType: writer.EntityTypeOrganization,
+			Summary:    organization.Description,
 		}
 		summaries = append(summaries, summary)
 	}

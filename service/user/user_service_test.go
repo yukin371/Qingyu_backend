@@ -313,13 +313,12 @@ func (m *MockAuthRepository) GetUserPermissions(ctx context.Context, userID stri
 // =========================
 
 // setupUserService 创建测试用的UserService实例
-func setupUserService() (*UserServiceImpl, *MockUserRepository, *MockAuthRepository) {
+func setupUserService() (*UserServiceImpl, *MockUserRepository) {
 	mockUserRepo := new(MockUserRepository)
-	mockAuthRepo := new(MockAuthRepository)
 
-	service := NewUserService(mockUserRepo, mockAuthRepo)
+	service := NewUserService(mockUserRepo)
 
-	return service.(*UserServiceImpl), mockUserRepo, mockAuthRepo
+	return service.(*UserServiceImpl), mockUserRepo
 }
 
 // =========================
@@ -329,7 +328,7 @@ func setupUserService() (*UserServiceImpl, *MockUserRepository, *MockAuthReposit
 // TestUserService_CreateUser_Success 测试创建用户成功
 func TestUserService_CreateUser_Success(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	req := &user2.CreateUserRequest{
@@ -359,7 +358,7 @@ func TestUserService_CreateUser_Success(t *testing.T) {
 // TestUserService_CreateUser_DuplicateUsername 测试创建用户-用户名已存在
 func TestUserService_CreateUser_DuplicateUsername(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	req := &user2.CreateUserRequest{
@@ -384,7 +383,7 @@ func TestUserService_CreateUser_DuplicateUsername(t *testing.T) {
 // TestUserService_CreateUser_DuplicateEmail 测试创建用户-邮箱已存在
 func TestUserService_CreateUser_DuplicateEmail(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	req := &user2.CreateUserRequest{
@@ -410,7 +409,7 @@ func TestUserService_CreateUser_DuplicateEmail(t *testing.T) {
 // TestUserService_CreateUser_ValidationFailed 测试创建用户-验证失败
 func TestUserService_CreateUser_ValidationFailed(t *testing.T) {
 	// Arrange
-	service, _, _ := setupUserService()
+	service, _ := setupUserService()
 	ctx := context.Background()
 
 	tests := []struct {
@@ -467,7 +466,7 @@ func TestUserService_CreateUser_ValidationFailed(t *testing.T) {
 // TestUserService_GetUser_Success 测试获取用户成功
 func TestUserService_GetUser_Success(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	expectedUser := &usersModel.User{
@@ -495,7 +494,7 @@ func TestUserService_GetUser_Success(t *testing.T) {
 // TestUserService_GetUser_NotFound 测试获取用户-不存在
 func TestUserService_GetUser_NotFound(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	userID := primitive.NewObjectID().Hex()
@@ -517,7 +516,7 @@ func TestUserService_GetUser_NotFound(t *testing.T) {
 // TestUserService_GetUser_EmptyID 测试获取用户-空ID
 func TestUserService_GetUser_EmptyID(t *testing.T) {
 	// Arrange
-	service, _, _ := setupUserService()
+	service, _ := setupUserService()
 	ctx := context.Background()
 
 	// Act
@@ -537,7 +536,7 @@ func TestUserService_GetUser_EmptyID(t *testing.T) {
 // TestUserService_UpdateUser_Success 测试更新用户成功
 func TestUserService_UpdateUser_Success(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	updatedUser := &usersModel.User{
@@ -574,12 +573,14 @@ func TestUserService_UpdateUser_Success(t *testing.T) {
 // TestUserService_UpdateUser_NotFound 测试更新用户-不存在
 func TestUserService_UpdateUser_NotFound(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	userID := primitive.NewObjectID().Hex()
 
 	mockUserRepo.On("Exists", ctx, userID).Return(false, nil)
+	// UpdateUser 在 Exists=false 分支会触发一次调试性 GetByID 调用；设为可选以避免约束实现细节。
+	mockUserRepo.On("GetByID", ctx, userID).Return((*usersModel.User)(nil), assert.AnError).Maybe()
 
 	// Act
 	req := &user2.UpdateUserRequest{
@@ -599,7 +600,7 @@ func TestUserService_UpdateUser_NotFound(t *testing.T) {
 // TestUserService_UpdateUser_EmptyUpdates 测试更新用户-空更新数据
 func TestUserService_UpdateUser_EmptyUpdates(t *testing.T) {
 	// Arrange
-	service, _, _ := setupUserService()
+	service, _ := setupUserService()
 	ctx := context.Background()
 
 	// Act
@@ -622,7 +623,7 @@ func TestUserService_UpdateUser_EmptyUpdates(t *testing.T) {
 // TestUserService_DeleteUser_Success 测试删除用户成功
 func TestUserService_DeleteUser_Success(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	userID := primitive.NewObjectID().Hex()
@@ -645,7 +646,7 @@ func TestUserService_DeleteUser_Success(t *testing.T) {
 // TestUserService_DeleteUser_NotFound 测试删除用户-不存在
 func TestUserService_DeleteUser_NotFound(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	userID := primitive.NewObjectID().Hex()
@@ -671,7 +672,7 @@ func TestUserService_DeleteUser_NotFound(t *testing.T) {
 // TestUserService_ListUsers_Success 测试列出用户成功
 func TestUserService_ListUsers_Success(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	expectedUsers := []*usersModel.User{
@@ -718,7 +719,7 @@ func TestUserService_RegisterUser_Success(t *testing.T) {
 	t.Skip("需要JWT配置，集成测试中运行")
 
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	req := &user2.RegisterUserRequest{
@@ -748,7 +749,7 @@ func TestUserService_RegisterUser_Success(t *testing.T) {
 // TestUserService_RegisterUser_DuplicateUsername 测试用户注册-用户名已存在
 func TestUserService_RegisterUser_DuplicateUsername(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	req := &user2.RegisterUserRequest{
@@ -779,7 +780,7 @@ func TestUserService_LoginUser_Success(t *testing.T) {
 	t.Skip("需要JWT配置，集成测试中运行")
 
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	req := &user2.LoginUserRequest{
@@ -817,7 +818,7 @@ func TestUserService_LoginUser_Success(t *testing.T) {
 // TestUserService_LoginUser_UserNotFound 测试用户登录-用户不存在
 func TestUserService_LoginUser_UserNotFound(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	req := &user2.LoginUserRequest{
@@ -841,7 +842,7 @@ func TestUserService_LoginUser_UserNotFound(t *testing.T) {
 // TestUserService_LoginUser_WrongPassword 测试用户登录-密码错误
 func TestUserService_LoginUser_WrongPassword(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	req := &user2.LoginUserRequest{
@@ -875,7 +876,7 @@ func TestUserService_LoginUser_WrongPassword(t *testing.T) {
 // TestUserService_LoginUser_AccountInactive 测试用户登录-账号未激活
 func TestUserService_LoginUser_AccountInactive(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	req := &user2.LoginUserRequest{
@@ -907,7 +908,7 @@ func TestUserService_LoginUser_AccountInactive(t *testing.T) {
 // TestUserService_LoginUser_AccountBanned 测试用户登录-账号被封禁
 func TestUserService_LoginUser_AccountBanned(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	req := &user2.LoginUserRequest{
@@ -943,7 +944,7 @@ func TestUserService_LoginUser_AccountBanned(t *testing.T) {
 // TestUserService_UpdatePassword_Success 测试更新密码成功
 func TestUserService_UpdatePassword_Success(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	userID := primitive.NewObjectID().Hex()
@@ -979,7 +980,7 @@ func TestUserService_UpdatePassword_Success(t *testing.T) {
 // TestUserService_UpdatePassword_WrongOldPassword 测试更新密码-旧密码错误
 func TestUserService_UpdatePassword_WrongOldPassword(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	userID := primitive.NewObjectID().Hex()
@@ -1011,7 +1012,7 @@ func TestUserService_UpdatePassword_WrongOldPassword(t *testing.T) {
 // TestUserService_UpdatePassword_UserNotFound 测试更新密码-用户不存在
 func TestUserService_UpdatePassword_UserNotFound(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	userID := primitive.NewObjectID().Hex()
@@ -1039,89 +1040,6 @@ func TestUserService_UpdatePassword_UserNotFound(t *testing.T) {
 // 角色分配相关测试
 // =========================
 
-// TestUserService_AssignRole_Success 测试分配角色成功
-func TestUserService_AssignRole_Success(t *testing.T) {
-	// Arrange
-	service, mockUserRepo, mockAuthRepo := setupUserService()
-	ctx := context.Background()
-
-	req := &user2.AssignRoleRequest{
-		UserID: "user123",
-		RoleID: "role123",
-	}
-
-	user := &usersModel.User{}
-	user.ID, _ = primitive.ObjectIDFromHex(req.UserID)
-	role := &authModel.Role{ID: primitive.NewObjectID()}
-
-	mockUserRepo.On("GetByID", ctx, req.UserID).Return(user, nil)
-	mockAuthRepo.On("GetRole", ctx, req.RoleID).Return(role, nil)
-	mockAuthRepo.On("AssignUserRole", ctx, req.UserID, req.RoleID).Return(nil)
-
-	// Act
-	resp, err := service.AssignRole(ctx, req)
-
-	// Assert
-	require.NoError(t, err)
-	assert.True(t, resp.Assigned)
-
-	mockUserRepo.AssertExpectations(t)
-	mockAuthRepo.AssertExpectations(t)
-}
-
-// TestUserService_AssignRole_UserNotFound 测试分配角色-用户不存在
-func TestUserService_AssignRole_UserNotFound(t *testing.T) {
-	// Arrange
-	service, mockUserRepo, _ := setupUserService()
-	ctx := context.Background()
-
-	req := &user2.AssignRoleRequest{
-		UserID: "nonexistent",
-		RoleID: "role123",
-	}
-
-	mockUserRepo.On("GetByID", ctx, req.UserID).Return(nil, repoInterfaces.NewUserRepositoryError(repoInterfaces.ErrorTypeNotFound, "user not found", nil))
-
-	// Act
-	resp, err := service.AssignRole(ctx, req)
-
-	// Assert
-	require.Error(t, err)
-	assert.Nil(t, resp)
-	assert.Contains(t, err.Error(), "用户不存在")
-
-	mockUserRepo.AssertExpectations(t)
-}
-
-// TestUserService_AssignRole_RoleNotFound 测试分配角色-角色不存在
-func TestUserService_AssignRole_RoleNotFound(t *testing.T) {
-	// Arrange
-	service, mockUserRepo, mockAuthRepo := setupUserService()
-	ctx := context.Background()
-
-	req := &user2.AssignRoleRequest{
-		UserID: "user123",
-		RoleID: "nonexistent",
-	}
-
-	user := &usersModel.User{}
-	user.ID, _ = primitive.ObjectIDFromHex(req.UserID)
-
-	mockUserRepo.On("GetByID", ctx, req.UserID).Return(user, nil)
-	mockAuthRepo.On("GetRole", ctx, req.RoleID).Return(nil, assert.AnError)
-
-	// Act
-	resp, err := service.AssignRole(ctx, req)
-
-	// Assert
-	require.Error(t, err)
-	assert.Nil(t, resp)
-	assert.Contains(t, err.Error(), "角色不存在")
-
-	mockUserRepo.AssertExpectations(t)
-	mockAuthRepo.AssertExpectations(t)
-}
-
 // =========================
 // BaseService接口测试
 // =========================
@@ -1129,7 +1047,7 @@ func TestUserService_AssignRole_RoleNotFound(t *testing.T) {
 // TestUserService_Health_Success 测试健康检查成功
 func TestUserService_Health_Success(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	mockUserRepo.On("Health", ctx).Return(nil)
@@ -1146,7 +1064,7 @@ func TestUserService_Health_Success(t *testing.T) {
 // TestUserService_GetServiceName 测试获取服务名称
 func TestUserService_GetServiceName(t *testing.T) {
 	// Arrange
-	service, _, _ := setupUserService()
+	service, _ := setupUserService()
 
 	// Act
 	name := service.GetServiceName()
@@ -1158,7 +1076,7 @@ func TestUserService_GetServiceName(t *testing.T) {
 // TestUserService_GetVersion 测试获取服务版本
 func TestUserService_GetVersion(t *testing.T) {
 	// Arrange
-	service, _, _ := setupUserService()
+	service, _ := setupUserService()
 
 	// Act
 	version := service.GetVersion()
@@ -1170,7 +1088,7 @@ func TestUserService_GetVersion(t *testing.T) {
 // TestUserService_Initialize_Success 测试初始化成功
 func TestUserService_Initialize_Success(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	mockUserRepo.On("Health", ctx).Return(nil)
@@ -1187,7 +1105,7 @@ func TestUserService_Initialize_Success(t *testing.T) {
 // TestUserService_Close_Success 测试关闭成功
 func TestUserService_Close_Success(t *testing.T) {
 	// Arrange
-	service, _, _ := setupUserService()
+	service, _ := setupUserService()
 	ctx := context.Background()
 
 	// Act

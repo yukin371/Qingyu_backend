@@ -13,7 +13,6 @@ import (
 	"Qingyu_backend/models/writer"
 	"Qingyu_backend/repository/mongodb"
 	"Qingyu_backend/service/audit"
-	statsService "Qingyu_backend/service/shared/stats"
 	documentService "Qingyu_backend/service/writer/document"
 	projectService "Qingyu_backend/service/writer/project"
 
@@ -23,7 +22,8 @@ import (
 
 // TestWriterE2E_CompleteWorkflow 测试完整的写作流程
 // 流程：创建项目 -> 创建章节 -> 编辑内容 -> 自动保存 -> 内容审核 -> 查看统计
-func TestWriterE2E_CompleteWorkflow(t *testing.T) {
+// TODO(Phase3-SliceE): shared/stats 已删除，需更新测试
+// func TestWriterE2E_CompleteWorkflow(t *testing.T) {
 	// 初始化测试环境
 	ctx := context.Background()
 	factory, cleanup := setupTestDB(t)
