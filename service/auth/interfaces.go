@@ -130,6 +130,7 @@ type RegisterResponse struct {
 type LoginRequest struct {
 	Username string `json:"username" binding:"required"`
 	Password string `json:"password" binding:"required"`
+	ClientIP string `json:"client_ip,omitempty"`
 }
 
 // OAuthLoginRequest OAuth登录请求
@@ -197,4 +198,5 @@ type UserInfo struct {
 	Username string   `json:"username"`
 	Email    string   `json:"email"`
 	Roles    []string `json:"roles"`
+	Status   string   `json:"status,omitempty"`
 }

@@ -1086,7 +1086,7 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 		permissionService,
 		authRepo,
 		oauthRepo,
-		c.userService,
+		userRepo,
 		sessionService,
 	)
 

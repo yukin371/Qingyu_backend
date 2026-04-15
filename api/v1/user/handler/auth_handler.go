@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"net/http"
 	"strings"
 	"time"
@@ -11,19 +12,25 @@ import (
 	"Qingyu_backend/api/v1/user/dto"
 	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/pkg/utils"
+	authsvc "Qingyu_backend/service/auth"
 	serviceInterfaces "Qingyu_backend/service/interfaces/base"
-	userServiceInterface "Qingyu_backend/service/interfaces/user"
 )
 
 // AuthHandler 认证处理器
+type authHandlerService interface {
+	Register(ctx context.Context, req *authsvc.RegisterRequest) (*authsvc.RegisterResponse, error)
+	Login(ctx context.Context, req *authsvc.LoginRequest) (*authsvc.LoginResponse, error)
+	Logout(ctx context.Context, token string) error
+}
+
 type AuthHandler struct {
-	userService userServiceInterface.UserService
+	authService authHandlerService
 }
 
 // NewAuthHandler 创建认证处理器实例
-func NewAuthHandler(userService userServiceInterface.UserService) *AuthHandler {
+func NewAuthHandler(authService authHandlerService) *AuthHandler {
 	return &AuthHandler{
-		userService: userService,
+		authService: authService,
 	}
 }
 
@@ -46,13 +53,13 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	}
 
 	// 调用Service层
-	serviceReq := &userServiceInterface.RegisterUserRequest{
+	serviceReq := &authsvc.RegisterRequest{
 		Username: req.Username,
 		Email:    req.Email,
 		Password: req.Password,
 	}
 
-	resp, err := h.userService.RegisterUser(c.Request.Context(), serviceReq)
+	resp, err := h.authService.Register(c.Request.Context(), serviceReq)
 	if err != nil {
 		// 根据错误类型返回不同的HTTP状态码
 		if serviceErr, ok := err.(*serviceInterfaces.ServiceError); ok {
@@ -126,13 +133,13 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	clientIP := utils.GetClientIP(c)
 
 	// 调用Service层
-	serviceReq := &userServiceInterface.LoginUserRequest{
+	serviceReq := &authsvc.LoginRequest{
 		Username: req.Username,
 		Password: req.Password,
 		ClientIP: clientIP,
 	}
 
-	resp, err := h.userService.LoginUser(c.Request.Context(), serviceReq)
+	resp, err := h.authService.Login(c.Request.Context(), serviceReq)
 	if err != nil {
 		if serviceErr, ok := err.(*serviceInterfaces.ServiceError); ok {
 			switch serviceErr.Type {
@@ -196,10 +203,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 
 	token = strings.TrimSpace(strings.TrimPrefix(token, "Bearer "))
 
-	resp, err := h.userService.LogoutUser(c.Request.Context(), &userServiceInterface.LogoutUserRequest{
-		Token: token,
-	})
-	if err != nil {
+	if err := h.authService.Logout(c.Request.Context(), token); err != nil {
 		response.InternalError(c, err)
 		return
 	}
@@ -207,6 +211,6 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 	// 返回成功响应
 	response.Success(c, gin.H{
 		"message": "Logged out successfully",
-		"success": resp.Success,
+		"success": true,
 	})
 }
