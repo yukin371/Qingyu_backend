@@ -18,12 +18,8 @@ import (
 	"Qingyu_backend/models/users"
 	"Qingyu_backend/models/writer"
 	"Qingyu_backend/service"
-	writerBase "Qingyu_backend/models/writer/base"
 	"Qingyu_backend/pkg/cache"
-	repository "Qingyu_backend/repository/mongodb/user"
-	repoWriter "Qingyu_backend/repository/mongodb/writer"
 	authService "Qingyu_backend/service/auth"
-	documentService "Qingyu_backend/service/writer/document"
 )
 
 // ============ 集成测试说明 ============
