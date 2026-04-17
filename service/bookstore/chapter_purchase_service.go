@@ -8,6 +8,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -131,6 +132,57 @@ func (s *ChapterPurchaseServiceImpl) recordAuthorEarning(
 	}
 
 	return nil
+}
+
+func allocateBookPurchaseAmounts(chapters []*bookstore.Chapter, totalPaidCents int64) map[string]int64 {
+	allocated := make(map[string]int64, len(chapters))
+	if len(chapters) == 0 || totalPaidCents <= 0 {
+		return allocated
+	}
+
+	var originalTotal int64
+	for _, chapter := range chapters {
+		originalTotal += int64(chapter.Price)
+	}
+	if originalTotal <= 0 {
+		return allocated
+	}
+
+	type remainderItem struct {
+		chapterID  string
+		remainder  int64
+		chapterNum int
+	}
+
+	remainders := make([]remainderItem, 0, len(chapters))
+	var allocatedTotal int64
+	for _, chapter := range chapters {
+		chapterPrice := int64(chapter.Price)
+		share := chapterPrice * totalPaidCents / originalTotal
+		remainder := chapterPrice * totalPaidCents % originalTotal
+		allocated[chapter.ID.Hex()] = share
+		allocatedTotal += share
+		remainders = append(remainders, remainderItem{
+			chapterID:  chapter.ID.Hex(),
+			remainder:  remainder,
+			chapterNum: chapter.ChapterNum,
+		})
+	}
+
+	leftover := totalPaidCents - allocatedTotal
+	sort.SliceStable(remainders, func(i, j int) bool {
+		if remainders[i].remainder == remainders[j].remainder {
+			return remainders[i].chapterNum < remainders[j].chapterNum
+		}
+		return remainders[i].remainder > remainders[j].remainder
+	})
+
+	for i := int64(0); i < leftover && i < int64(len(remainders)); i++ {
+		chapterID := remainders[i].chapterID
+		allocated[chapterID]++
+	}
+
+	return allocated
 }
 
 // GetChapterCatalog 获取章节目录
@@ -552,6 +604,7 @@ func (s *ChapterPurchaseServiceImpl) PurchaseBook(ctx context.Context, userID, b
 	// 使用事务处理购买
 	var purchase *bookstore.BookPurchase
 	chapterIDs := make([]string, 0, len(chapters))
+	chapterAllocations := allocateBookPurchaseAmounts(chapters, discountedPrice)
 
 	err = s.purchaseRepo.Transaction(ctx, func(txCtx context.Context) error {
 		// 扣除用户余额
@@ -582,11 +635,12 @@ func (s *ChapterPurchaseServiceImpl) PurchaseBook(ctx context.Context, userID, b
 		// 为每个付费章节创建购买记录
 		for _, chapter := range chapters {
 			chapterOID := chapter.ID
+			allocatedPrice := float64(chapterAllocations[chapter.ID.Hex()])
 			chapterPurchase := &bookstore.ChapterPurchase{
 				UserID:       userOID,
 				ChapterID:    chapterOID,
 				BookID:       bookOID,
-				Price:        0, // 全书购买后，章节单价为0
+				Price:        allocatedPrice,
 				PurchaseTime: time.Now(),
 				ChapterTitle: chapter.Title,
 				ChapterNum:   chapter.ChapterNum,
@@ -598,11 +652,10 @@ func (s *ChapterPurchaseServiceImpl) PurchaseBook(ctx context.Context, userID, b
 			if err := s.purchaseRepo.Create(txCtx, chapterPurchase); err != nil {
 				return fmt.Errorf("failed to create chapter purchase record: %w", err)
 			}
+			if err := s.recordAuthorEarning(txCtx, userID, book, chapter, allocatedPrice); err != nil {
+				return err
+			}
 			chapterIDs = append(chapterIDs, chapter.ID.Hex())
-		}
-
-		if err := s.recordAuthorEarning(txCtx, userID, book, nil, float64(discountedPrice)); err != nil {
-			return err
 		}
 
 		return nil
