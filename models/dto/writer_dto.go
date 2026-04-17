@@ -53,6 +53,10 @@ type ProjectResponse struct {
 	Status    string    `json:"status"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
+	// 新增统计字段
+	TotalWords     int       `json:"totalWords"`
+	ChapterCount   int       `json:"chapterCount"`
+	LastUpdateTime time.Time `json:"lastUpdateTime"`
 }
 
 // ListProjectsRequest 查询参数用于列出项目

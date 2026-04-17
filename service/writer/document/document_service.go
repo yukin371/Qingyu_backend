@@ -878,6 +878,14 @@ func (s *DocumentService) AutoSaveDocument(ctx context.Context, req *dto.AutoSav
 		fmt.Printf("警告：更新文档元数据失败: %v\n", err)
 	}
 
+	// 更新项目统计（异步）
+	go func() {
+		doc, err := s.documentRepo.GetByID(context.Background(), req.DocumentID)
+		if err == nil && doc != nil {
+			s.updateProjectStatistics(context.Background(), doc.ProjectID.Hex())
+		}
+	}()
+
 	// 7. 发布事件
 	if s.eventBus != nil {
 		s.eventBus.PublishAsync(ctx, &serviceBase.BaseEvent{
@@ -1032,7 +1040,7 @@ func (s *DocumentService) UpdateDocumentContent(ctx context.Context, req *dto.Up
 	}
 
 	// 4. 验证文档编辑权限
-	_, _, _, err := s.authHelper.VerifyDocumentEdit(ctx, req.DocumentID)
+	_, doc, _, err := s.authHelper.VerifyDocumentEdit(ctx, req.DocumentID)
 	if err != nil {
 		return err
 	}
@@ -1098,6 +1106,9 @@ func (s *DocumentService) UpdateDocumentContent(ctx context.Context, req *dto.Up
 		// 内容已保存，但元数据更新失败，记录错误但不返回失败
 		fmt.Printf("警告：更新文档元数据失败: %v\n", err)
 	}
+
+	// 更新项目统计（异步）
+	go s.updateProjectStatistics(context.Background(), doc.ProjectID.Hex())
 
 	// 8. 发布事件
 	if s.eventBus != nil {
