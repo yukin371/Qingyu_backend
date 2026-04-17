@@ -31,14 +31,28 @@ func RegisterAdminRoutes(
 	categorySvc adminservice.CategoryAdminService,
 	publicationSvc publishService.PublishService,
 	bannerSvc bookstoreService.BannerService,
+	quotaAdminSvc *aiService.QuotaAdminService,
+	quotaDashboardSvc *aiService.QuotaDashboardService,
+	quotaPolicySvc *aiService.QuotaPolicyService,
+	quotaAlertSvc *aiService.QuotaAlertService,
 ) {
 	// 创建admin API实例
-	quotaAdminAPI := admin.NewQuotaAdminAPI(quotaSvc)
 	auditAdminAPI := admin.NewAuditAdminAPI(auditSvc)
 	systemAdminAPI := admin.NewSystemAdminAPI(adminSvc)
 	configAdminAPI := admin.NewConfigAPI(configSvc)
 	announcementAdminAPI := admin.NewAnnouncementAPI(announcementSvc)
 	publicationAdminAPI := admin.NewPublicationAdminAPI(publicationSvc)
+
+	var quotaAdminAPI *admin.QuotaAdminAPI
+	var quotaDashboardAPI *admin.QuotaDashboardAPI
+	var quotaPolicyAPI *admin.QuotaPolicyAPI
+	var quotaAlertAPI *admin.QuotaAlertAPI
+	if quotaSvc != nil && quotaAdminSvc != nil && quotaDashboardSvc != nil && quotaPolicySvc != nil && quotaAlertSvc != nil {
+		quotaAdminAPI = admin.NewQuotaAdminAPI(quotaSvc, quotaAdminSvc)
+		quotaDashboardAPI = admin.NewQuotaDashboardAPI(quotaDashboardSvc)
+		quotaPolicyAPI = admin.NewQuotaPolicyAPI(quotaPolicySvc)
+		quotaAlertAPI = admin.NewQuotaAlertAPI(quotaAlertSvc)
+	}
 
 	// 分类管理API
 	var categoryAdminAPI *admin.CategoryAdminAPI
@@ -95,13 +109,43 @@ func RegisterAdminRoutes(
 		// ===========================
 		// AI配额管理
 		// ===========================
-		if quotaSvc != nil {
+		if quotaSvc != nil && quotaAdminAPI != nil && quotaDashboardAPI != nil && quotaPolicyAPI != nil && quotaAlertAPI != nil {
 			quotaGroup := adminGroup.Group("/quota")
 			{
-				quotaGroup.GET("/:userId", quotaAdminAPI.GetUserQuotaDetails)         // 获取用户配额详情
-				quotaGroup.PUT("/:userId", quotaAdminAPI.UpdateUserQuota)             // 更新用户配额
-				quotaGroup.POST("/:userId/suspend", quotaAdminAPI.SuspendUserQuota)   // 暂停用户配额
-				quotaGroup.POST("/:userId/activate", quotaAdminAPI.ActivateUserQuota) // 激活用户配额
+				// 仪表盘
+				quotaGroup.GET("/dashboard", quotaDashboardAPI.GetDashboard)
+				quotaGroup.GET("/statistics/global", quotaDashboardAPI.GetStatistics)
+				quotaGroup.GET("/statistics/trend", quotaDashboardAPI.GetTrend)
+				quotaGroup.POST("/dashboard/refresh", quotaDashboardAPI.RefreshCache)
+
+				// 用户配额管理
+				quotaGroup.GET("/users", quotaAdminAPI.ListUserQuotas)
+				quotaGroup.GET("/users/:userId", quotaAdminAPI.GetUserQuotaDetails)
+				quotaGroup.PUT("/users/:userId", quotaAdminAPI.UpdateUserQuota)
+				quotaGroup.POST("/users/:userId/recharge", quotaAdminAPI.RechargeUserQuota)
+				quotaGroup.POST("/users/:userId/suspend", quotaAdminAPI.SuspendUserQuota)
+				quotaGroup.POST("/users/:userId/activate", quotaAdminAPI.ActivateUserQuota)
+
+				// 批量操作
+				quotaGroup.POST("/batch-recharge", quotaAdminAPI.BatchRecharge)
+				quotaGroup.POST("/batch-update", quotaAdminAPI.BatchUpdateQuota)
+				quotaGroup.POST("/batch-suspend", quotaAdminAPI.BatchSuspend)
+				quotaGroup.POST("/batch-activate", quotaAdminAPI.BatchActivate)
+
+				// 策略管理
+				quotaGroup.GET("/policies", quotaPolicyAPI.ListPolicies)
+				quotaGroup.GET("/policies/:id", quotaPolicyAPI.GetPolicy)
+				quotaGroup.POST("/policies", quotaPolicyAPI.CreatePolicy)
+				quotaGroup.PUT("/policies/:id", quotaPolicyAPI.UpdatePolicy)
+				quotaGroup.DELETE("/policies/:id", quotaPolicyAPI.DeletePolicy)
+				quotaGroup.POST("/policies/initialize", quotaPolicyAPI.InitializeDefaultPolicies)
+
+				// 告警管理
+				quotaGroup.GET("/alerts", quotaAlertAPI.ListAlerts)
+				quotaGroup.GET("/alerts/:id", quotaAlertAPI.GetAlert)
+				quotaGroup.PUT("/alerts/:id/acknowledge", quotaAlertAPI.AcknowledgeAlert)
+				quotaGroup.PUT("/alerts/:id/resolve", quotaAlertAPI.ResolveAlert)
+				quotaGroup.PUT("/alerts/:id/ignore", quotaAlertAPI.IgnoreAlert)
 			}
 		}
 
@@ -246,8 +290,6 @@ func RegisterAdminRoutes(
 				categoriesGroup.DELETE("/:id", categoryAdminAPI.DeleteCategory)
 				categoriesGroup.PUT("/:id/move", categoryAdminAPI.MoveCategory)
 				categoriesGroup.PUT("/:id/sort", categoryAdminAPI.SortCategory)
-				// TODO: 拖拽排序（后续实现）
-				// categoriesGroup.PUT("/batch-sort", categoryAdminAPI.BatchSortCategories)
 			}
 		}
 

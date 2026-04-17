@@ -19,10 +19,11 @@ import (
 
 // QuotaService 配额服务（增强版，支持Redis缓存和预警）
 type QuotaService struct {
-	quotaRepo   aiRepo.QuotaRepository
-	redisClient cache.RedisClient // Redis客户端用于缓存
-	eventBus    base.EventBus     // 事件总线用于预警通知
-	cacheTTL    time.Duration     // 缓存过期时间（默认5分钟）
+	quotaRepo    aiRepo.QuotaRepository
+	redisClient  cache.RedisClient // Redis客户端用于缓存
+	eventBus     base.EventBus     // 事件总线用于预警通知
+	cacheTTL     time.Duration     // 缓存过期时间（默认5分钟）
+	policyService *QuotaPolicyService // 策略服务（可选）
 
 	// 预警阈值配置
 	warningThreshold  float64 // 预警阈值（默认20%）
@@ -63,13 +64,23 @@ func (s *QuotaService) InitializeUserQuota(ctx context.Context, userID, userRole
 		return nil // 已存在，不需要初始化
 	}
 
-	// 优先从配置文件获取默认配额
+	// 如果策略服务已加载，从策略获取配额
 	var defaultQuota int
-	if config.GlobalConfig != nil && config.GlobalConfig.AIQuota != nil {
-		defaultQuota = config.GlobalConfig.AIQuota.GetDefaultQuota(userRole, membershipLevel)
-	} else {
-		// 配置不存在时使用模型中的默认值
-		defaultQuota = ai.GetDefaultQuota(userRole, membershipLevel)
+	if s.policyService != nil {
+		policyQuota, err := s.policyService.GetEffectiveDailyQuota(ctx, userRole, membershipLevel)
+		if err == nil {
+			defaultQuota = policyQuota
+		}
+	}
+
+	// 如果策略服务不可用或获取失败，使用配置或默认值
+	if defaultQuota == 0 {
+		if config.GlobalConfig != nil && config.GlobalConfig.AIQuota != nil {
+			defaultQuota = config.GlobalConfig.AIQuota.GetDefaultQuota(userRole, membershipLevel)
+		} else {
+			// 配置不存在时使用模型中的默认值
+			defaultQuota = ai.GetDefaultQuota(userRole, membershipLevel)
+		}
 	}
 
 	// 创建日配额
@@ -537,4 +548,9 @@ func (e *QuotaWarningEvent) GetTimestamp() time.Time {
 // GetSource 实现Event接口
 func (e *QuotaWarningEvent) GetSource() string {
 	return "QuotaService"
+}
+
+// SetPolicyService 设置策略服务
+func (s *QuotaService) SetPolicyService(ps *QuotaPolicyService) {
+	s.policyService = ps
 }

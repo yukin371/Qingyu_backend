@@ -7,6 +7,7 @@ import (
 	aiModels "Qingyu_backend/models/ai"
 )
 
+
 // QuotaRepository 配额Repository接口
 type QuotaRepository interface {
 	// 配额管理
@@ -27,6 +28,13 @@ type QuotaRepository interface {
 	// 统计查询
 	GetQuotaStatistics(ctx context.Context, userID string) (*QuotaStatistics, error)
 	GetTotalConsumption(ctx context.Context, userID string, quotaType aiModels.QuotaType, startTime, endTime time.Time) (int, error)
+
+	// 仪表盘查询
+	GetDashboardSummary(ctx context.Context) (*aiModels.DashboardSummary, error)
+	GetQuotaDistribution(ctx context.Context) (*aiModels.QuotaDistribution, error)
+	GetTopConsumers(ctx context.Context, limit int) ([]aiModels.UserQuotaRanking, error)
+	GetConsumptionTrend(ctx context.Context, days int) ([]aiModels.TrendPoint, error)
+	ListUserQuotas(ctx context.Context, role, status, search string, page, limit int) ([]*aiModels.UserQuotaListItem, int64, error)
 
 	// Health 健康检查
 	Health(ctx context.Context) error

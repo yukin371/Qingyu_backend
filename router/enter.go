@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	aiApi "Qingyu_backend/api/v1/ai"
@@ -30,6 +31,7 @@ import (
 	socialRepo "Qingyu_backend/repository/interfaces/social"
 	userRepo "Qingyu_backend/repository/interfaces/user"
 	adminrep "Qingyu_backend/repository/mongodb/admin"
+	mongoAIRepo "Qingyu_backend/repository/mongodb/ai"
 	authRep "Qingyu_backend/repository/mongodb/auth"
 	bookstoreRepo "Qingyu_backend/repository/mongodb/bookstore"
 	mongoReaderRepo "Qingyu_backend/repository/mongodb/reader"
@@ -38,6 +40,7 @@ import (
 	mongoWriterRepo "Qingyu_backend/repository/mongodb/writer"
 	"Qingyu_backend/service"
 	adminservice "Qingyu_backend/service/admin"
+	aiService "Qingyu_backend/service/ai"
 	baseService "Qingyu_backend/service/base"
 	bookstore "Qingyu_backend/service/bookstore"
 	"Qingyu_backend/service/container"
@@ -74,6 +77,8 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
+
+var quotaSchedulerOnce sync.Once
 
 // RegisterRoutes 注册所有路由
 func RegisterRoutes(r *gin.Engine) {
@@ -768,6 +773,11 @@ func RegisterRoutes(r *gin.Engine) {
 
 	// 获取 MongoDB 数据库
 	mongoDB := serviceContainer.GetMongoDB()
+	quotaRedisClient := serviceContainer.GetRedisClient()
+	quotaPhase3Client, quotaPhase3Err := serviceContainer.GetPhase3Client()
+	if quotaPhase3Err != nil {
+		quotaPhase3Client = nil
+	}
 
 	var publicationSvc serviceInterfaces.PublishService
 	repositoryFactory := serviceContainer.GetRepositoryFactory()
@@ -782,6 +792,44 @@ func RegisterRoutes(r *gin.Engine) {
 			writerservice.NewLocalBookstoreClient(mongoDB),
 			writerservice.NewPublishEventBusAdapter(serviceContainer.GetEventBus()),
 		)
+	}
+
+	var quotaAdminSvc *aiService.QuotaAdminService
+	var quotaDashboardSvc *aiService.QuotaDashboardService
+	var quotaPolicySvc *aiService.QuotaPolicyService
+	var quotaAlertSvc *aiService.QuotaAlertService
+
+	if mongoDB != nil && repositoryFactory != nil && quotaService != nil {
+		quotaRepo := repositoryFactory.CreateQuotaRepository()
+		quotaPolicyRepo := mongoAIRepo.NewMongoQuotaPolicyRepository(mongoDB)
+		quotaAlertRepo := mongoAIRepo.NewMongoQuotaAlertRepository(mongoDB)
+
+		quotaAdminSvc = aiService.NewQuotaAdminService(quotaRepo, quotaAlertRepo)
+		quotaDashboardSvc = aiService.NewQuotaDashboardService(quotaRepo, quotaAlertRepo, quotaRedisClient)
+		quotaPolicySvc = aiService.NewQuotaPolicyService(quotaPolicyRepo)
+		quotaAlertSvc = aiService.NewQuotaAlertService(quotaAlertRepo)
+		quotaService.SetPolicyService(quotaPolicySvc)
+
+		var rawRedisClient interface{}
+		if quotaRedisClient != nil {
+			rawRedisClient = quotaRedisClient.GetClient()
+		}
+		quotaAnomalyDetector := aiService.NewQuotaAnomalyDetector(quotaRepo, quotaAlertSvc, rawRedisClient)
+		quotaScheduler := aiService.NewQuotaScheduler(
+			quotaAnomalyDetector,
+			quotaDashboardSvc,
+			quotaAlertSvc,
+			quotaPhase3Client,
+			log.New(os.Stdout, "[quota-scheduler] ", log.LstdFlags),
+		)
+
+		quotaSchedulerOnce.Do(func() {
+			if err := quotaScheduler.Start(); err != nil {
+				logger.Warn("启动 quota scheduler 失败", zap.Error(err))
+				return
+			}
+			logger.Info("✓ Quota scheduler 已启动")
+		})
 	}
 
 	// 创建用户管理服务（UserAdminService - 管理员专用）
@@ -811,10 +859,10 @@ func RegisterRoutes(r *gin.Engine) {
 		}
 
 		// 注册管理员路由（包含用户管理和权限管理）
-		adminRouter.RegisterAdminRoutes(v1, userSvc, quotaService, auditSvc, adminSvc, configSvc, announcementSvc, userAdminSvc, permissionSvc, serviceContainer.GetPersistedEventBus(), categorySvc, publicationSvc, bannerSvc)
+		adminRouter.RegisterAdminRoutes(v1, userSvc, quotaService, auditSvc, adminSvc, configSvc, announcementSvc, userAdminSvc, permissionSvc, serviceContainer.GetPersistedEventBus(), categorySvc, publicationSvc, bannerSvc, quotaAdminSvc, quotaDashboardSvc, quotaPolicySvc, quotaAlertSvc)
 	} else {
 		// 如果 MongoDB 不可用，不注册用户管理和权限管理路由
-		adminRouter.RegisterAdminRoutes(v1, userSvc, quotaService, auditSvc, adminSvc, configSvc, announcementSvc, nil, nil, serviceContainer.GetPersistedEventBus(), nil, publicationSvc, nil)
+		adminRouter.RegisterAdminRoutes(v1, userSvc, quotaService, auditSvc, adminSvc, configSvc, announcementSvc, nil, nil, serviceContainer.GetPersistedEventBus(), nil, publicationSvc, nil, quotaAdminSvc, quotaDashboardSvc, quotaPolicySvc, quotaAlertSvc)
 	}
 
 	logger.Info("✓ 管理员路由已注册到: /api/v1/admin/")
