@@ -267,6 +267,11 @@ func (f *MongoRepositoryFactory) CreateBookstoreChapterRepository() bookstoreRep
 	return mongoBookstore.NewMongoChapterRepository(f.client, f.database.Name())
 }
 
+// CreateChapterPurchaseRepository 创建章节购买Repository
+func (f *MongoRepositoryFactory) CreateChapterPurchaseRepository() bookstoreRepo.ChapterPurchaseRepository {
+	return mongoBookstore.NewMongoChapterPurchaseRepository(f.client, f.database.Name())
+}
+
 // CreateChapterContentRepository 创建章节内容Repository
 func (f *MongoRepositoryFactory) CreateChapterContentRepository() bookstoreRepo.ChapterContentRepository {
 	return mongoBookstore.NewMongoChapterContentRepository(f.database)

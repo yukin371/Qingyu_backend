@@ -224,8 +224,11 @@ func RegisterRoutes(r *gin.Engine) {
 			chapterSvc = svc
 		}
 
-		// 获取章节购买服务（当前容器未提供 Getter，保持 nil）
+		// 获取章节购买服务
 		var chapterPurchaseSvc bookstore.ChapterPurchaseService
+		if svc, err := serviceContainer.GetChapterPurchaseService(); err == nil {
+			chapterPurchaseSvc = svc
+		}
 
 		// 注册书店路由，传入搜索服务
 		bookstoreRouter.InitBookstoreRouter(v1, bookstoreSvc, bookDetailSvc, ratingSvc, statisticsSvc, chapterSvc, chapterPurchaseSvc, searchSvc, logger)

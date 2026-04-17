@@ -90,22 +90,23 @@ type ServiceContainer struct {
 	serviceMetrics map[string]*metrics.ServiceMetrics
 
 	// 业务服务
-	userService           userInterface.UserService
-	aiService             *aiService.Service
-	bookstoreService      bookstoreService.BookstoreService
-	chapterService        bookstoreService.ChapterService
-	bookDetailService     bookstoreService.BookDetailService
-	bookRatingService     bookstoreService.BookRatingService
-	bookStatisticsService bookstoreService.BookStatisticsService
-	readerService         *readingService.ReaderService
-	readingStatsService   *readingStatsService.ReadingStatsService
-	commentService        *socialService.CommentService
-	likeService           *socialService.LikeService
-	collectionService     *socialService.CollectionService
-	followService         *socialService.FollowService
-	readingHistoryService *readingService.ReadingHistoryService
-	bookmarkService       readingService.BookmarkService
-	projectService        *projectService.ProjectService
+	userService            userInterface.UserService
+	aiService              *aiService.Service
+	bookstoreService       bookstoreService.BookstoreService
+	chapterService         bookstoreService.ChapterService
+	chapterPurchaseService bookstoreService.ChapterPurchaseService
+	bookDetailService      bookstoreService.BookDetailService
+	bookRatingService      bookstoreService.BookRatingService
+	bookStatisticsService  bookstoreService.BookStatisticsService
+	readerService          *readingService.ReaderService
+	readingStatsService    *readingStatsService.ReadingStatsService
+	commentService         *socialService.CommentService
+	likeService            *socialService.LikeService
+	collectionService      *socialService.CollectionService
+	followService          *socialService.FollowService
+	readingHistoryService  *readingService.ReadingHistoryService
+	bookmarkService        readingService.BookmarkService
+	projectService         *projectService.ProjectService
 
 	// AI 相关服务
 	quotaService       *aiService.QuotaService
@@ -270,6 +271,14 @@ func (c *ServiceContainer) GetChapterService() (bookstoreService.ChapterService,
 		return nil, fmt.Errorf("ChapterService未初始化")
 	}
 	return c.chapterService, nil
+}
+
+// GetChapterPurchaseService 获取章节购买服务
+func (c *ServiceContainer) GetChapterPurchaseService() (bookstoreService.ChapterPurchaseService, error) {
+	if c.chapterPurchaseService == nil {
+		return nil, fmt.Errorf("ChapterPurchaseService未初始化")
+	}
+	return c.chapterPurchaseService, nil
 }
 
 // getChapterService 内部方法：获取章节服务（简化版，用于依赖注入）
@@ -1301,6 +1310,15 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 
 	authorRevenueRepo = c.repositoryFactory.CreateAuthorRevenueRepository()
 	c.authorRevenueService = financeService.NewAuthorRevenueServiceWithDependencies(authorRevenueRepo, walletRepo, mongoTxRunner)
+	chapterPurchaseRepo := c.repositoryFactory.CreateChapterPurchaseRepository()
+	c.chapterPurchaseService = bookstoreService.NewChapterPurchaseServiceWithRevenue(
+		chapterRepo,
+		chapterPurchaseRepo,
+		bookRepo,
+		c.walletService,
+		c.authorRevenueService,
+		bookstoreCacheService,
+	)
 
 	fmt.Println("  ✓ Finance服务初始化完成")
 
