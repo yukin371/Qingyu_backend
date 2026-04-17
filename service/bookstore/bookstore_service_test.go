@@ -7,6 +7,7 @@ import (
 	"time"
 
 	bookstoreModel "Qingyu_backend/models/bookstore"
+	searchModels "Qingyu_backend/models/search"
 	"Qingyu_backend/models/shared"
 	"Qingyu_backend/repository/interfaces/infrastructure"
 
@@ -1648,4 +1649,40 @@ func TestBookstoreService_GetHomepageData(t *testing.T) {
 // stringPtr 返回字符串指针
 func stringPtr(s string) *string {
 	return &s
+}
+
+func TestConvertSearchResponseToBooks_UsesSearchItemID(t *testing.T) {
+	bookID := primitive.NewObjectID()
+	items := []searchModels.SearchItem{
+		{
+			ID: bookID.Hex(),
+			Data: map[string]interface{}{
+				"title":         "搜索命中文本",
+				"author":        "测试作者",
+				"author_id":     "author-1",
+				"introduction":  "简介",
+				"cover":         "https://example.com/cover.jpg",
+				"view_count":    int32(12),
+				"rating":        4.5,
+				"word_count":    int64(3456),
+				"chapter_count": int32(7),
+				"status":        "published",
+			},
+		},
+	}
+
+	books := ConvertSearchResponseToBooks(items)
+
+	require.Len(t, books, 1)
+	assert.Equal(t, bookID, books[0].ID)
+	assert.Equal(t, "搜索命中文本", books[0].Title)
+	assert.Equal(t, "测试作者", books[0].Author)
+	assert.Equal(t, "author-1", books[0].AuthorID)
+	assert.Equal(t, "简介", books[0].Introduction)
+	assert.Equal(t, "https://example.com/cover.jpg", books[0].Cover)
+	assert.Equal(t, int64(12), books[0].ViewCount)
+	assert.Equal(t, int64(3456), books[0].WordCount)
+	assert.Equal(t, 7, books[0].ChapterCount)
+	assert.Equal(t, bookstoreModel.BookStatusOngoing, books[0].Status)
+	assert.Equal(t, float64(4.5), float64(books[0].Rating))
 }
