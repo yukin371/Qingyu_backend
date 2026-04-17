@@ -17,6 +17,13 @@ type ChapterCatalogAPI struct {
 	purchaseService bookstore.ChapterPurchaseService
 }
 
+func readChapterRouteID(c *gin.Context) string {
+	if chapterID := c.Param("chapterId"); chapterID != "" {
+		return chapterID
+	}
+	return c.Param("id")
+}
+
 // NewChapterCatalogAPI 创建章节目录API实例
 func NewChapterCatalogAPI(
 	chapterService bookstore.ChapterService,
@@ -211,7 +218,7 @@ func (api *ChapterCatalogAPI) GetVIPChapters(c *gin.Context) {
 //	@Failure		500			{object}	APIResponse
 //	@Router			/api/v1/bookstore/chapters/{id}/price [get]
 func (api *ChapterCatalogAPI) GetChapterPrice(c *gin.Context) {
-	chapterIdStr := c.Param("chapterId")
+	chapterIdStr := readChapterRouteID(c)
 	if chapterIdStr == "" {
 		response.BadRequest(c, "参数错误", "章节ID不能为空")
 		return
@@ -253,7 +260,7 @@ func (api *ChapterCatalogAPI) GetChapterPrice(c *gin.Context) {
 //	@Failure		500			{object}	APIResponse
 //	@Router			/api/v1/reader/chapters/{id}/purchase [post]
 func (api *ChapterCatalogAPI) PurchaseChapter(c *gin.Context) {
-	chapterIdStr := c.Param("chapterId")
+	chapterIdStr := readChapterRouteID(c)
 	if chapterIdStr == "" {
 		response.BadRequest(c, "参数错误", "章节ID不能为空")
 		return
@@ -498,7 +505,7 @@ func (api *ChapterCatalogAPI) GetBookPurchases(c *gin.Context) {
 //	@Failure		500			{object}	APIResponse
 //	@Router			/api/v1/bookstore/chapters/{id}/access [get]
 func (api *ChapterCatalogAPI) CheckChapterAccess(c *gin.Context) {
-	chapterIdStr := c.Param("chapterId")
+	chapterIdStr := readChapterRouteID(c)
 	if chapterIdStr == "" {
 		response.BadRequest(c, "参数错误", "章节ID不能为空")
 		return
