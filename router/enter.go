@@ -15,6 +15,7 @@ import (
 	aiRouter "Qingyu_backend/router/ai"
 	announcementsRouter "Qingyu_backend/router/announcements"
 	bookstoreRouter "Qingyu_backend/router/bookstore"
+	communityRouter "Qingyu_backend/router/community"
 	financeRouter "Qingyu_backend/router/finance"
 	internalAPIRouter "Qingyu_backend/router/internalapi"
 	notificationsRouter "Qingyu_backend/router/notifications"
@@ -62,6 +63,7 @@ import (
 	notificationsAPI "Qingyu_backend/api/v1/notifications"
 	recommendationAPI "Qingyu_backend/api/v1/recommendation"
 	socialApi "Qingyu_backend/api/v1/social"
+	communityApi "Qingyu_backend/api/v1/community"
 	"Qingyu_backend/config"
 	modelsMessaging "Qingyu_backend/models/messaging"
 	"Qingyu_backend/pkg/cache"
@@ -79,9 +81,9 @@ import (
 )
 
 var quotaSchedulerOnce sync.Once
+var rankingSchedulerOnce sync.Once
 
 // RegisterRoutes 注册所有路由
-var rankingSchedulerOnce sync.Once
 func RegisterRoutes(r *gin.Engine) {
 	// 初始化zap日志器
 	logger := initRouterLogger()
@@ -219,8 +221,6 @@ func RegisterRoutes(r *gin.Engine) {
 			logger.Info("✓ SearchService 已注入到 BookstoreService")
 		}
 
-		// 初始化其他书店服务
-		bookDetailSvc, _ := serviceContainer.GetBookDetailService()
 		rankingScheduler := bookstore.NewRankingScheduler(
 			bookstoreSvc,
 			log.New(os.Stdout, "[ranking-scheduler] ", log.LstdFlags),
@@ -233,6 +233,8 @@ func RegisterRoutes(r *gin.Engine) {
 			logger.Info("✓ Ranking scheduler 已启动")
 		})
 
+		// 初始化其他书店服务
+		bookDetailSvc, _ := serviceContainer.GetBookDetailService()
 		ratingSvc, _ := serviceContainer.GetBookRatingService()
 		statisticsSvc, _ := serviceContainer.GetBookStatisticsService()
 
@@ -512,6 +514,45 @@ func RegisterRoutes(r *gin.Engine) {
 		logger.Info("✓ 书单公开路由已注册到: /api/v1/booklists/")
 	}
 
+	// ============ 注册社区动态路由 (/api/v1/community) ============
+	// 获取 MongoDB 数据库
+	mongoDB := serviceContainer.GetMongoDB()
+	if mongoDB != nil {
+		// 创建 Post Repository
+		postRepo := mongoSocialRepo.NewMongoPostRepository(mongoDB)
+
+		// 创建 EventBus
+		var eventBus baseService.EventBus
+		if rawEventBus := serviceContainer.GetEventBus(); rawEventBus != nil {
+			if typedEventBus, ok := rawEventBus.(baseService.EventBus); ok {
+				eventBus = typedEventBus
+			}
+		}
+		if eventBus == nil {
+			eventBus = baseService.NewSimpleEventBus()
+		}
+
+		// 创建 Post Service
+		postSvc := socialService.NewPostService(postRepo, eventBus)
+
+		// 创建 Post API
+		postAPI := communityApi.NewPostAPI(postSvc)
+
+		// 注册社区路由
+		communityRouter.RegisterCommunityRoutes(v1, postAPI)
+
+		logger.Info("✓ 社区动态路由已注册到: /api/v1/community/")
+		logger.Info("  - GET /api/v1/community/posts (获取动态列表-公开)")
+		logger.Info("  - GET /api/v1/community/posts/:id (获取动态详情-公开)")
+		logger.Info("  - POST /api/v1/community/posts (创建动态-需认证)")
+		logger.Info("  - PUT /api/v1/community/posts/:id (更新动态-需认证)")
+		logger.Info("  - DELETE /api/v1/community/posts/:id (删除动态-需认证)")
+		logger.Info("  - POST /api/v1/community/posts/:id/like (点赞-需认证)")
+		logger.Info("  - DELETE /api/v1/community/posts/:id/like (取消点赞-需认证)")
+	} else {
+		logger.Warn("⚠ MongoDB未配置，跳过社区动态路由注册")
+	}
+
 	// ============ 注册评分路由 ============
 	// 获取Redis客户端
 	var redisClient cache.RedisClient
@@ -784,8 +825,8 @@ func RegisterRoutes(r *gin.Engine) {
 		logger.Fatal("获取用户服务失败", zap.Error(err))
 	}
 
-	// 获取 MongoDB 数据库
-	mongoDB := serviceContainer.GetMongoDB()
+	// 获取 MongoDB 数据库（已在社区路由部分初始化）
+	mongoDB = serviceContainer.GetMongoDB()
 	quotaRedisClient := serviceContainer.GetRedisClient()
 	quotaPhase3Client, quotaPhase3Err := serviceContainer.GetPhase3Client()
 	if quotaPhase3Err != nil {
