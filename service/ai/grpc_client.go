@@ -129,6 +129,99 @@ func (c *GRPCClient) HealthCheck(ctx context.Context) error {
 	return nil
 }
 
+// StoryWriteRequest 故事写作请求
+type StoryWriteRequest struct {
+	ProjectID     string
+	DocumentID    string
+	Mode          string
+	Instruction   string
+	SelectedText  string
+	AssembledPrompt string
+	Options       *GenerateOptions
+}
+
+// StoryWriteResponse 故事写作响应
+type StoryWriteResponse struct {
+	Content       string
+	TokensUsed    int32
+	Model         string
+	GeneratedAt   int64
+	ContextStats  *StoryContextStats
+}
+
+// StoryContextStats 故事上下文统计
+type StoryContextStats struct {
+	StageTokens   int32
+	OutlineTokens int32
+	RAGTokens     int32
+	TotalTokens   int32
+}
+
+// GenerateOptions 生成选项
+type GenerateOptions struct {
+	Model       string
+	MaxTokens   int32
+	Temperature float32
+	Stop        []string
+	Stream      bool
+}
+
+// StoryWrite 故事上下文写作
+func (c *GRPCClient) StoryWrite(ctx context.Context, req *StoryWriteRequest) (*StoryWriteResponse, error) {
+	// 构建请求
+	grpcReq := &pb.StoryContextRequest{
+		ProjectId:      req.ProjectID,
+		DocumentId:     req.DocumentID,
+		Mode:           req.Mode,
+		Instruction:    req.Instruction,
+		SelectedText:   req.SelectedText,
+		AssembledPrompt: req.AssembledPrompt,
+	}
+
+	// 设置生成选项
+	if req.Options != nil {
+		grpcReq.Options = &pb.GenerateOptions{
+			Model:       req.Options.Model,
+			MaxTokens:   req.Options.MaxTokens,
+			Temperature: req.Options.Temperature,
+			Stop:        req.Options.Stop,
+			Stream:      req.Options.Stream,
+		}
+	}
+
+	// 设置超时
+	if c.timeout > 0 {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, c.timeout)
+		defer cancel()
+	}
+
+	// 调用 gRPC
+	resp, err := c.client.StoryWrite(ctx, grpcReq)
+	if err != nil {
+		return nil, fmt.Errorf("gRPC StoryWrite failed: %w", err)
+	}
+
+	// 转换响应
+	response := &StoryWriteResponse{
+		Content:     resp.Content,
+		TokensUsed:  resp.TokensUsed,
+		Model:       resp.Model,
+		GeneratedAt: resp.GeneratedAt,
+	}
+
+	if resp.ContextStats != nil {
+		response.ContextStats = &StoryContextStats{
+			StageTokens:   resp.ContextStats.StageTokens,
+			OutlineTokens: resp.ContextStats.OutlineTokens,
+			RAGTokens:     resp.ContextStats.RagTokens,
+			TotalTokens:   resp.ContextStats.TotalTokens,
+		}
+	}
+
+	return response, nil
+}
+
 // Close 关闭连接
 func (c *GRPCClient) Close() error {
 	if c.conn != nil {

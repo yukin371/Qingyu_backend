@@ -79,11 +79,49 @@ func (api *StoryWriteApi) Generate(c *gin.Context) {
 	// 构建 prompt（包级函数）
 	prompt := aiService.BuildPrompt(sc)
 
-	// TODO: Phase 2 - 通过 gRPC 发送给 AI Service
-	// 目前返回上下文预览，用于调试验证
-	response.SuccessWithMessage(c, "上下文组装成功", gin.H{
-		"prompt":       prompt,
-		"contextStats": sc,
+	// 通过 gRPC 发送给 AI Service
+	grpcClient, exists := c.Get("grpcClient")
+	if !exists {
+		response.InternalError(c, fmt.Errorf("gRPC 客户端未初始化"))
+		return
+	}
+
+	aiClient, ok := grpcClient.(*aiService.GRPCClient)
+	if !ok {
+		response.InternalError(c, fmt.Errorf("gRPC 客户端类型错误"))
+		return
+	}
+
+	// 构建 gRPC 请求
+	grpcReq := &aiService.StoryWriteRequest{
+		ProjectID:      req.ProjectID,
+		DocumentID:     req.DocumentID,
+		Mode:           req.Mode,
+		Instruction:    req.Instruction,
+		SelectedText:   req.SelectedText,
+		AssembledPrompt: prompt,
+		Options: &aiService.GenerateOptions{
+			Model:       "glm-4-flash",
+			MaxTokens:   2000,
+			Temperature: 0.7,
+			Stream:      false,
+		},
+	}
+
+	// 调用 gRPC
+	grpcResp, err := aiClient.StoryWrite(c.Request.Context(), grpcReq)
+	if err != nil {
+		response.InternalError(c, fmt.Errorf("AI 生成失败: %w", err))
+		return
+	}
+
+	// 返回生成结果
+	response.SuccessWithMessage(c, "AI 生成成功", gin.H{
+		"content":       grpcResp.Content,
+		"tokensUsed":    grpcResp.TokensUsed,
+		"model":         grpcResp.Model,
+		"generatedAt":   grpcResp.GeneratedAt,
+		"contextStats":  grpcResp.ContextStats,
 	})
 }
 
