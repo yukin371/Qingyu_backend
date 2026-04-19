@@ -780,8 +780,23 @@ func (s *BookstoreServiceImpl) GetRealtimeRanking(ctx context.Context, limit int
 		return []*bookstore2.RankingItem{}, nil
 	}
 
-	period := bookstore2.GetPeriodString(bookstore2.RankingTypeRealtime, time.Now())
-	return s.rankingRepo.GetByTypeWithBooks(ctx, bookstore2.RankingTypeRealtime, period, limit, 0)
+	// 实时榜按天分桶；如果当天数据尚未生成，则向前回看最近 7 天的最近一期可用数据，
+	// 避免首页和排行榜页面直接出现空榜。
+	const fallbackDays = 7
+	now := time.Now()
+
+	for dayOffset := 0; dayOffset <= fallbackDays; dayOffset++ {
+		period := bookstore2.GetPeriodString(bookstore2.RankingTypeRealtime, now.AddDate(0, 0, -dayOffset))
+		items, err := s.rankingRepo.GetByTypeWithBooks(ctx, bookstore2.RankingTypeRealtime, period, limit, 0)
+		if err != nil {
+			return nil, err
+		}
+		if len(items) > 0 {
+			return items, nil
+		}
+	}
+
+	return []*bookstore2.RankingItem{}, nil
 }
 
 // GetWeeklyRanking 获取周榜

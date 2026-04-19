@@ -60,6 +60,9 @@ func (s *RankingScheduler) Start() error {
 
 	s.cron.Start()
 	s.logger.Println("Ranking scheduler started")
+
+	// 启动后立即补一次当天实时榜，避免首次启动后必须等待下一次 cron 周期。
+	go s.updateRealtimeRanking()
 	return nil
 }
 

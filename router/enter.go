@@ -81,6 +81,7 @@ import (
 var quotaSchedulerOnce sync.Once
 
 // RegisterRoutes 注册所有路由
+var rankingSchedulerOnce sync.Once
 func RegisterRoutes(r *gin.Engine) {
 	// 初始化zap日志器
 	logger := initRouterLogger()
@@ -220,6 +221,18 @@ func RegisterRoutes(r *gin.Engine) {
 
 		// 初始化其他书店服务
 		bookDetailSvc, _ := serviceContainer.GetBookDetailService()
+		rankingScheduler := bookstore.NewRankingScheduler(
+			bookstoreSvc,
+			log.New(os.Stdout, "[ranking-scheduler] ", log.LstdFlags),
+		)
+		rankingSchedulerOnce.Do(func() {
+			if err := rankingScheduler.Start(); err != nil {
+				logger.Warn("启动 ranking scheduler 失败", zap.Error(err))
+				return
+			}
+			logger.Info("✓ Ranking scheduler 已启动")
+		})
+
 		ratingSvc, _ := serviceContainer.GetBookRatingService()
 		statisticsSvc, _ := serviceContainer.GetBookStatisticsService()
 

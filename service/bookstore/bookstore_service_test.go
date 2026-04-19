@@ -1436,6 +1436,33 @@ func TestBookstoreService_GetRealtimeRanking(t *testing.T) {
 	mockRankingRepo.AssertExpectations(t)
 }
 
+// TestBookstoreService_GetRealtimeRanking_FallbackToLatestAvailable 测试实时榜为空时回退到最近可用周期
+func TestBookstoreService_GetRealtimeRanking_FallbackToLatestAvailable(t *testing.T) {
+	// Arrange
+	service, _, _, _, mockRankingRepo := setupBookstoreServiceForTest()
+	ctx := context.Background()
+
+	todayPeriod := bookstoreModel.GetPeriodString(bookstoreModel.RankingTypeRealtime, time.Now())
+	yesterdayPeriod := bookstoreModel.GetPeriodString(bookstoreModel.RankingTypeRealtime, time.Now().AddDate(0, 0, -1))
+	fallbackRankings := []*bookstoreModel.RankingItem{
+		{BookID: primitive.NewObjectID(), Rank: 1, Period: yesterdayPeriod},
+	}
+
+	mockRankingRepo.On("GetByTypeWithBooks", ctx, bookstoreModel.RankingTypeRealtime, todayPeriod, 10, 0).
+		Return([]*bookstoreModel.RankingItem{}, nil).Once()
+	mockRankingRepo.On("GetByTypeWithBooks", ctx, bookstoreModel.RankingTypeRealtime, yesterdayPeriod, 10, 0).
+		Return(fallbackRankings, nil).Once()
+
+	// Act
+	result, err := service.GetRealtimeRanking(ctx, 10)
+
+	// Assert
+	require.NoError(t, err)
+	assert.Len(t, result, 1)
+	assert.Equal(t, yesterdayPeriod, result[0].Period)
+	mockRankingRepo.AssertExpectations(t)
+}
+
 // TestBookstoreService_GetWeeklyRanking 测试获取周榜
 func TestBookstoreService_GetWeeklyRanking(t *testing.T) {
 	// Arrange
