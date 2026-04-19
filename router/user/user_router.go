@@ -32,7 +32,6 @@ func RegisterUserRoutes(
 	// 创建验证服务
 	verificationService := userService.NewVerificationService(
 		userRepo,
-		nil, // authRepo
 		nil, // emailService (暂时为nil，使用模拟发送)
 	)
 
