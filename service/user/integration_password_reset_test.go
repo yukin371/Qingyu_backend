@@ -23,17 +23,11 @@ func TestUserService_PasswordResetFlow_Integration(t *testing.T) {
 	ctx := context.Background()
 
 	// Arrange - 创建一个用户
-	_, username, email, originalPassword := env.CreateDefaultTestUser(t)
+	userID, _, email, originalPassword := env.CreateDefaultTestUser(t)
 
-	// 确保用户可以登录
-	loginReq1 := &user2.LoginUserRequest{
-		Username: username,
-		Password: originalPassword,
-	}
-
-	loginResp1, err := env.UserService.LoginUser(ctx, loginReq1)
-	require.NoError(t, err, "原始密码登录应该成功")
-	require.NotEmpty(t, loginResp1.Token, "Token不应该为空")
+	// 确保初始密码正确写入
+	originalUser := env.AssertUserExists(t, userID)
+	require.True(t, originalUser.ValidatePassword(originalPassword), "原始密码应该可用")
 
 	// Act 1 - 请求密码重置
 	requestReq := &user2.RequestPasswordResetRequest{
@@ -66,31 +60,10 @@ func TestUserService_PasswordResetFlow_Integration(t *testing.T) {
 	require.NotNil(t, confirmResp, "响应不应该为空")
 	assert.True(t, confirmResp.Success, "密码重置应该成功")
 
-	// Act 3 - 使用新密码登录
-	loginReq2 := &user2.LoginUserRequest{
-		Username: username,
-		Password: newPassword,
-	}
-
-	loginResp2, err := env.UserService.LoginUser(ctx, loginReq2)
-
-	// Assert 3 - 新密码登录应该成功
-	require.NoError(t, err, "新密码登录应该成功")
-	require.NotNil(t, loginResp2, "登录响应不应该为空")
-	assert.NotEmpty(t, loginResp2.Token, "Token不应该为空")
-
-	// Act 4 - 尝试使用旧密码登录
-	loginReq3 := &user2.LoginUserRequest{
-		Username: username,
-		Password: originalPassword,
-	}
-
-	loginResp3, err := env.UserService.LoginUser(ctx, loginReq3)
-
-	// Assert 4 - 旧密码登录应该失败
-	assert.Error(t, err, "旧密码登录应该失败")
-	assert.Nil(t, loginResp3, "响应应该为空")
-	assert.Contains(t, err.Error(), "密码错误", "错误信息应该包含'密码错误'")
+	// Assert 3 - 数据库中的密码应该已更新
+	updatedUser := env.AssertUserExists(t, userID)
+	assert.True(t, updatedUser.ValidatePassword(newPassword), "新密码应该生效")
+	assert.False(t, updatedUser.ValidatePassword(originalPassword), "旧密码应该失效")
 }
 
 // TestUserService_ResetPassword_NonExistentEmail 不存在邮箱测试
@@ -189,7 +162,7 @@ func TestUserService_PasswordReset_ViaEmail_Integration(t *testing.T) {
 	ctx := context.Background()
 
 	// Arrange - 创建一个用户
-	_, username, email, originalPassword := env.CreateDefaultTestUser(t)
+	userID, _, email, originalPassword := env.CreateDefaultTestUser(t)
 
 	// Act 1 - 请求密码重置
 	requestReq := &user2.RequestPasswordResetRequest{
@@ -216,24 +189,10 @@ func TestUserService_PasswordReset_ViaEmail_Integration(t *testing.T) {
 	require.NoError(t, err, "确认密码重置应该成功")
 	require.True(t, confirmResp.Success, "密码重置应该成功")
 
-	// Assert - 使用新密码登录成功
-	loginReq := &user2.LoginUserRequest{
-		Username: username,
-		Password: newPassword,
-	}
-
-	loginResp, err := env.UserService.LoginUser(ctx, loginReq)
-	require.NoError(t, err, "新密码登录应该成功")
-	assert.NotEmpty(t, loginResp.Token, "Token不应该为空")
-
-	// 验证旧密码无效
-	oldLoginReq := &user2.LoginUserRequest{
-		Username: username,
-		Password: originalPassword,
-	}
-
-	_, err = env.UserService.LoginUser(ctx, oldLoginReq)
-	assert.Error(t, err, "旧密码应该无效")
+	// Assert - 用户密码已被更新，旧密码失效
+	updatedUser := env.AssertUserExists(t, userID)
+	assert.True(t, updatedUser.ValidatePassword(newPassword), "新密码应该生效")
+	assert.False(t, updatedUser.ValidatePassword(originalPassword), "旧密码应该失效")
 }
 
 // TestUserService_MultiplePasswordUpdates 多次密码更新测试
@@ -249,7 +208,7 @@ func TestUserService_MultiplePasswordUpdates_Integration(t *testing.T) {
 	ctx := context.Background()
 
 	// Arrange - 创建一个用户
-	userID, username, _, originalPassword := env.CreateDefaultTestUser(t)
+	userID, _, _, originalPassword := env.CreateDefaultTestUser(t)
 
 	// Act - 多次更新密码
 	passwords := []string{
@@ -277,15 +236,9 @@ func TestUserService_MultiplePasswordUpdates_Integration(t *testing.T) {
 		assert.True(t, updateResp.Updated, "第%d次密码更新应该成功", i)
 	}
 
-	// Assert - 使用最新的密码登录成功
-	loginReq := &user2.LoginUserRequest{
-		Username: username,
-		Password: passwords[len(passwords)-1],
-	}
-
-	loginResp, err := env.UserService.LoginUser(ctx, loginReq)
-	require.NoError(t, err, "最新密码登录应该成功")
-	assert.NotEmpty(t, loginResp.Token, "Token不应该为空")
+	// Assert - 数据库中的密码已更新为最新值
+	updatedUser := env.AssertUserExists(t, userID)
+	assert.True(t, updatedUser.ValidatePassword(passwords[len(passwords)-1]), "最新密码应该生效")
 }
 
 // TestUserService_PasswordReset_SamePassword 设置相同密码测试
@@ -331,7 +284,7 @@ func TestUserService_VerificationCode_PasswordReset_Integration(t *testing.T) {
 	ctx := context.Background()
 
 	// Arrange - 创建一个用户
-	_, username, email, _ := env.CreateDefaultTestUser(t)
+	userID, _, email, _ := env.CreateDefaultTestUser(t)
 
 	// Act 1 - 请求密码重置
 	requestReq := &user2.RequestPasswordResetRequest{
@@ -368,15 +321,9 @@ func TestUserService_VerificationCode_PasswordReset_Integration(t *testing.T) {
 	require.NotNil(t, confirmResp, "响应不应该为空")
 	assert.True(t, confirmResp.Success, "密码重置应该成功")
 
-	// Act 4 - 使用新密码登录
-	loginReq := &user2.LoginUserRequest{
-		Username: username,
-		Password: "NewPassword456!",
-	}
-
-	loginResp, err := env.UserService.LoginUser(ctx, loginReq)
-	require.NoError(t, err, "新密码登录应该成功")
-	assert.NotEmpty(t, loginResp.Token, "Token不应该为空")
+	// Act 4 - 验证数据库中的密码已更新
+	updatedUser := env.AssertUserExists(t, userID)
+	assert.True(t, updatedUser.ValidatePassword("NewPassword456!"), "重置后的密码应该生效")
 }
 
 // TestUserService_UpdatePassword_EmptyUserID 测试空用户ID

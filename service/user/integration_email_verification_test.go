@@ -205,7 +205,7 @@ func TestUserService_EmailVerification_CompleteFlow_Integration(t *testing.T) {
 	ctx := context.Background()
 
 	// Arrange - 创建一个未验证的用户
-	userID, username, email, password := env.CreateDefaultTestUser(t)
+	userID, _, email, password := env.CreateDefaultTestUser(t)
 
 	// 验证初始状态
 	user := env.AssertUserExists(t, userID)
@@ -238,18 +238,9 @@ func TestUserService_EmailVerification_CompleteFlow_Integration(t *testing.T) {
 	// Assert - 验证邮箱验证状态已更新
 	env.AssertUserEmailVerified(t, userID, true)
 
-	// Act 3 - 使用验证后的账号登录
-	loginReq := &user2.LoginUserRequest{
-		Username: username,
-		Password: password,
-	}
-
-	loginResp, err := env.UserService.LoginUser(ctx, loginReq)
-
-	// Assert - 登录应该成功
-	require.NoError(t, err, "验证后登录应该成功")
-	require.NotNil(t, loginResp, "登录响应不应该为空")
-	assert.NotEmpty(t, loginResp.Token, "Token不应该为空")
+	// Assert - 验证流程不应影响用户已有密码
+	verifiedUser := env.AssertUserExists(t, userID)
+	assert.True(t, verifiedUser.ValidatePassword(password), "邮箱验证不应破坏密码")
 }
 
 // TestUserService_MultipleEmailVerifications 多次邮箱验证测试

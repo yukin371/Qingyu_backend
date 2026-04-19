@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -14,7 +15,21 @@ import (
 	"github.com/stretchr/testify/require"
 
 	sharedAPI "Qingyu_backend/api/v1/shared"
+	"Qingyu_backend/config"
 	"Qingyu_backend/service/auth"
+	serviceInterfaces "Qingyu_backend/service/interfaces/base"
+)
+
+var (
+	testAuthPassword         = "password123"
+	testAuthWrongPassword    = "wrongpassword"
+	testAuthToken            = "test_token_123"
+	testAuthBearerToken      = "Bearer " + testAuthToken
+	testAuthOldRefreshToken  = "old_token_123"
+	testAuthBearerOldToken   = "Bearer " + testAuthOldRefreshToken
+	testAuthNewRefreshToken  = "new_token_456"
+	testAuthInvalidToken     = "invalid_token"
+	testAuthBearerBadToken   = "Bearer " + testAuthInvalidToken
 )
 
 // === Mock AuthService ===
@@ -179,6 +194,22 @@ func setupAuthTestRouter(authService auth.AuthService, userID string) *gin.Engin
 	return r
 }
 
+func enableRegisterVerificationCodeForTest(t *testing.T) {
+	t.Helper()
+
+	prev := config.GlobalConfig
+	config.GlobalConfig = &config.Config{
+		Email: &config.EmailConfig{
+			Enabled:   true,
+			FixedCode: "123456",
+		},
+	}
+
+	t.Cleanup(func() {
+		config.GlobalConfig = prev
+	})
+}
+
 // === 测试用例 ===
 
 func TestAuthAPI_Register(t *testing.T) {
@@ -194,7 +225,7 @@ func TestAuthAPI_Register(t *testing.T) {
 			requestBody: auth.RegisterRequest{
 				Username: "testuser",
 				Email:    "test@example.com",
-				Password: "password123",
+				Password: testAuthPassword,
 			},
 			setupMock: func(service *MockAuthService) {
 				resp := &auth.RegisterResponse{
@@ -204,7 +235,7 @@ func TestAuthAPI_Register(t *testing.T) {
 						Email:    "test@example.com",
 						Roles:    []string{"reader"},
 					},
-					Token: "test_token_123",
+					Token: testAuthToken,
 				}
 				service.On("Register", mock.Anything, mock.AnythingOfType("*auth.RegisterRequest")).Return(resp, nil)
 			},
@@ -224,7 +255,7 @@ func TestAuthAPI_Register(t *testing.T) {
 			requestBody: auth.RegisterRequest{
 				Username: "testuser",
 				Email:    "test@example.com",
-				Password: "password123",
+				Password: testAuthPassword,
 			},
 			setupMock: func(service *MockAuthService) {
 				service.On("Register", mock.Anything, mock.AnythingOfType("*auth.RegisterRequest")).Return(nil, assert.AnError)
@@ -233,6 +264,40 @@ func TestAuthAPI_Register(t *testing.T) {
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
 				assert.Equal(t, float64(5000), resp["code"])
 				assert.Equal(t, "服务器内部错误", resp["message"])
+			},
+		},
+		{
+			name: "注册失败-用户名重复返回冲突",
+			requestBody: auth.RegisterRequest{
+				Username: "testuser",
+				Email:    "test@example.com",
+				Password: testAuthPassword,
+			},
+			setupMock: func(service *MockAuthService) {
+				service.On("Register", mock.Anything, mock.AnythingOfType("*auth.RegisterRequest")).
+					Return(nil, serviceInterfaces.NewServiceError("AuthService", serviceInterfaces.ErrorTypeBusiness, "用户名已存在", nil))
+			},
+			expectedStatus: http.StatusConflict,
+			checkResponse: func(t *testing.T, resp map[string]interface{}) {
+				assert.Equal(t, float64(2003), resp["code"])
+				assert.Equal(t, "用户名已被注册", resp["message"])
+			},
+		},
+		{
+			name: "注册失败-邮箱重复返回冲突",
+			requestBody: auth.RegisterRequest{
+				Username: "testuser",
+				Email:    "test@example.com",
+				Password: testAuthPassword,
+			},
+			setupMock: func(service *MockAuthService) {
+				service.On("Register", mock.Anything, mock.AnythingOfType("*auth.RegisterRequest")).
+					Return(nil, serviceInterfaces.NewServiceError("AuthService", serviceInterfaces.ErrorTypeBusiness, "邮箱已存在", nil))
+			},
+			expectedStatus: http.StatusConflict,
+			checkResponse: func(t *testing.T, resp map[string]interface{}) {
+				assert.Equal(t, float64(2004), resp["code"])
+				assert.Equal(t, "邮箱已被注册", resp["message"])
 			},
 		},
 	}
@@ -263,6 +328,34 @@ func TestAuthAPI_Register(t *testing.T) {
 	}
 }
 
+func TestAuthAPI_Register_RequiresVerificationCodeWhenEmailEnabled(t *testing.T) {
+	enableRegisterVerificationCodeForTest(t)
+
+	mockService := new(MockAuthService)
+	router := setupAuthTestRouter(mockService, "")
+
+	body, err := json.Marshal(auth.RegisterRequest{
+		Username: "testuser",
+		Email:    "test@example.com",
+		Password: testAuthPassword,
+	})
+	require.NoError(t, err)
+
+	req := httptest.NewRequest("POST", "/api/v1/shared/auth/register", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusBadRequest, w.Code)
+
+	var resp map[string]interface{}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, float64(1001), resp["code"])
+	assert.Equal(t, "请先填写邮箱验证码", resp["message"])
+	mockService.AssertNotCalled(t, "Register", mock.Anything, mock.Anything)
+}
+
 func TestAuthAPI_Login(t *testing.T) {
 	tests := []struct {
 		name           string
@@ -275,7 +368,7 @@ func TestAuthAPI_Login(t *testing.T) {
 			name: "成功登录",
 			requestBody: auth.LoginRequest{
 				Username: "testuser",
-				Password: "password123",
+				Password: testAuthPassword,
 			},
 			setupMock: func(service *MockAuthService) {
 				resp := &auth.LoginResponse{
@@ -285,7 +378,7 @@ func TestAuthAPI_Login(t *testing.T) {
 						Email:    "test@example.com",
 						Roles:    []string{"reader"},
 					},
-					Token: "test_token_123",
+					Token: testAuthToken,
 				}
 				service.On("Login", mock.Anything, mock.AnythingOfType("*auth.LoginRequest")).Return(resp, nil)
 			},
@@ -294,7 +387,7 @@ func TestAuthAPI_Login(t *testing.T) {
 				assert.Equal(t, float64(0), resp["code"])
 				assert.Equal(t, "登录成功", resp["message"])
 				data := resp["data"].(map[string]interface{})
-				assert.Equal(t, "test_token_123", data["token"])
+				assert.Equal(t, testAuthToken, data["token"])
 				user := data["user"].(map[string]interface{})
 				assert.Equal(t, "user123", user["id"])
 			},
@@ -303,7 +396,7 @@ func TestAuthAPI_Login(t *testing.T) {
 			name: "登录失败-密码错误",
 			requestBody: auth.LoginRequest{
 				Username: "testuser",
-				Password: "wrongpassword",
+				Password: testAuthWrongPassword,
 			},
 			setupMock: func(service *MockAuthService) {
 				service.On("Login", mock.Anything, mock.AnythingOfType("*auth.LoginRequest")).Return(nil, assert.AnError)
@@ -312,6 +405,37 @@ func TestAuthAPI_Login(t *testing.T) {
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
 				assert.Equal(t, float64(1002), resp["code"])
 				assert.Contains(t, resp["message"], "登录失败")
+			},
+		},
+		{
+			name: "登录失败-用户不存在保持标准错误包装",
+			requestBody: auth.LoginRequest{
+				Username: "missing-user",
+				Password: testAuthPassword,
+			},
+			setupMock: func(service *MockAuthService) {
+				service.On("Login", mock.Anything, mock.AnythingOfType("*auth.LoginRequest")).
+					Return(nil, errors.New("用户不存在"))
+			},
+			expectedStatus: http.StatusUnauthorized,
+			checkResponse: func(t *testing.T, resp map[string]interface{}) {
+				assert.Equal(t, float64(1002), resp["code"])
+				assert.Equal(t, "登录失败: 用户不存在", resp["message"])
+			},
+		},
+		{
+			name: "登录失败-请求校验错误先于service执行",
+			requestBody: auth.LoginRequest{
+				Username: "",
+				Password: testAuthPassword,
+			},
+			setupMock: func(service *MockAuthService) {
+				// BindJSONWithMessage 会在进入 service 前直接返回 400。
+			},
+			expectedStatus: http.StatusBadRequest,
+			checkResponse: func(t *testing.T, resp map[string]interface{}) {
+				assert.Equal(t, float64(1001), resp["code"])
+				assert.Contains(t, resp["message"], "请求参数错误:")
 			},
 		},
 	}
@@ -352,9 +476,9 @@ func TestAuthAPI_Logout(t *testing.T) {
 	}{
 		{
 			name:  "成功登出",
-			token: "Bearer test_token_123",
+			token: testAuthBearerToken,
 			setupMock: func(service *MockAuthService) {
-				service.On("Logout", mock.Anything, "test_token_123").Return(nil)
+				service.On("Logout", mock.Anything, testAuthToken).Return(nil)
 			},
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
@@ -413,23 +537,23 @@ func TestAuthAPI_RefreshToken(t *testing.T) {
 	}{
 		{
 			name:  "成功刷新Token",
-			token: "Bearer old_token_123",
+			token: testAuthBearerOldToken,
 			setupMock: func(service *MockAuthService) {
-				service.On("RefreshToken", mock.Anything, "old_token_123").Return("new_token_456", nil)
+				service.On("RefreshToken", mock.Anything, testAuthOldRefreshToken).Return(testAuthNewRefreshToken, nil)
 			},
 			expectedStatus: http.StatusOK,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {
 				assert.Equal(t, float64(0), resp["code"])
 				assert.Equal(t, "Token刷新成功", resp["message"])
 				data := resp["data"].(map[string]interface{})
-				assert.Equal(t, "new_token_456", data["token"])
+				assert.Equal(t, testAuthNewRefreshToken, data["token"])
 			},
 		},
 		{
 			name:  "Token无效",
-			token: "Bearer invalid_token",
+			token: testAuthBearerBadToken,
 			setupMock: func(service *MockAuthService) {
-				service.On("RefreshToken", mock.Anything, "invalid_token").Return("", assert.AnError)
+				service.On("RefreshToken", mock.Anything, testAuthInvalidToken).Return("", assert.AnError)
 			},
 			expectedStatus: http.StatusUnauthorized,
 			checkResponse: func(t *testing.T, resp map[string]interface{}) {

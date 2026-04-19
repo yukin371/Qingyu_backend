@@ -36,7 +36,7 @@ graph TB
     end
 
     subgraph "External Services"
-        UserService[UserService<br/>用户服务]
+        UserRepository[UserRepository<br/>用户仓储接口]
         Redis[(Redis)]
         MongoDB[(MongoDB)]
         OAuthProviders[OAuth Providers<br/>Google/GitHub/QQ]
@@ -68,7 +68,7 @@ graph TB
     TemplateRepo --> MongoDB
 
     OAuthService --> OAuthProviders
-    AuthService --> UserService
+    AuthService --> UserRepository
 ```
 
 ## 核心服务列表
@@ -214,7 +214,7 @@ RBAC权限检查和管理。
 
 | 依赖模块 | 用途 |
 |---------|------|
-| `service/interfaces/user` | 用户服务接口 |
+| `repository/interfaces/user` | 用户仓储接口 |
 | `repository/interfaces/auth` | 认证仓储接口 |
 | `models/auth` | 认证数据模型 |
 | `models/users` | 用户数据模型 |
@@ -244,7 +244,7 @@ sequenceDiagram
     participant Client
     participant AuthAPI
     participant AuthService
-    participant UserService
+    participant UserRepository
     participant JWTService
     participant SessionService
     participant Redis
@@ -252,10 +252,10 @@ sequenceDiagram
 
     Client->>AuthAPI: POST /auth/login
     AuthAPI->>AuthService: Login(username, password)
-    AuthService->>UserService: LoginUser(username, password)
-    UserService->>MongoDB: 验证用户凭证
-    MongoDB-->>UserService: 用户信息
-    UserService-->>AuthService: 用户信息
+    AuthService->>UserRepository: GetByUsername(username)
+    UserRepository->>MongoDB: 查询用户并返回状态
+    MongoDB-->>UserRepository: 用户信息
+    UserRepository-->>AuthService: 用户信息
 
     AuthService->>MongoDB: 获取用户角色
     MongoDB-->>AuthService: 角色列表

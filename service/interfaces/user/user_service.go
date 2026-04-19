@@ -19,11 +19,6 @@ type UserService interface {
 	DeleteUser(ctx context.Context, req *DeleteUserRequest) (*DeleteUserResponse, error)
 	ListUsers(ctx context.Context, req *ListUsersRequest) (*ListUsersResponse, error)
 
-	// 用户认证
-	RegisterUser(ctx context.Context, req *RegisterUserRequest) (*RegisterUserResponse, error)
-	LoginUser(ctx context.Context, req *LoginUserRequest) (*LoginUserResponse, error)
-	LogoutUser(ctx context.Context, req *LogoutUserRequest) (*LogoutUserResponse, error)
-
 	// 用户状态管理
 	UpdateLastLogin(ctx context.Context, req *UpdateLastLoginRequest) (*UpdateLastLoginResponse, error)
 	UpdatePassword(ctx context.Context, req *UpdatePasswordRequest) (*UpdatePasswordResponse, error)
@@ -117,42 +112,6 @@ type ListUsersResponse struct {
 	Page       int            `json:"page"`
 	PageSize   int            `json:"page_size"`
 	TotalPages int            `json:"total_pages"`
-}
-
-// RegisterUserRequest 注册用户请求
-type RegisterUserRequest struct {
-	Username string `json:"username" validate:"required,min=3,max=50"`
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required,min=6"`
-}
-
-// RegisterUserResponse 注册用户响应
-type RegisterUserResponse struct {
-	User  *dto.UserDTO `json:"user"`
-	Token string       `json:"token,omitempty"`
-}
-
-// LoginUserRequest 登录用户请求
-type LoginUserRequest struct {
-	Username string `json:"username" validate:"required"`
-	Password string `json:"password" validate:"required"`
-	ClientIP string `json:"client_ip,omitempty"` // 客户端IP地址
-}
-
-// LoginUserResponse 登录用户响应
-type LoginUserResponse struct {
-	User  *dto.UserDTO `json:"user"`
-	Token string       `json:"token"`
-}
-
-// LogoutUserRequest 登出用户请求
-type LogoutUserRequest struct {
-	Token string `json:"token" validate:"required"`
-}
-
-// LogoutUserResponse 登出用户响应
-type LogoutUserResponse struct {
-	Success bool `json:"success"`
 }
 
 // UpdateLastLoginRequest 更新最后登录时间请求

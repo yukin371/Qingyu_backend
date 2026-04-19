@@ -131,30 +131,6 @@ func (m *MockVerificationUserService) ListUsers(ctx context.Context, req *userSe
 	return args.Get(0).(*userServiceInterface.ListUsersResponse), args.Error(1)
 }
 
-func (m *MockVerificationUserService) RegisterUser(ctx context.Context, req *userServiceInterface.RegisterUserRequest) (*userServiceInterface.RegisterUserResponse, error) {
-	args := m.Called(ctx, req)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*userServiceInterface.RegisterUserResponse), args.Error(1)
-}
-
-func (m *MockVerificationUserService) LoginUser(ctx context.Context, req *userServiceInterface.LoginUserRequest) (*userServiceInterface.LoginUserResponse, error) {
-	args := m.Called(ctx, req)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*userServiceInterface.LoginUserResponse), args.Error(1)
-}
-
-func (m *MockVerificationUserService) LogoutUser(ctx context.Context, req *userServiceInterface.LogoutUserRequest) (*userServiceInterface.LogoutUserResponse, error) {
-	args := m.Called(ctx, req)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*userServiceInterface.LogoutUserResponse), args.Error(1)
-}
-
 func (m *MockVerificationUserService) UpdatePassword(ctx context.Context, req *userServiceInterface.UpdatePasswordRequest) (*userServiceInterface.UpdatePasswordResponse, error) {
 	args := m.Called(ctx, req)
 	if args.Get(0) == nil {

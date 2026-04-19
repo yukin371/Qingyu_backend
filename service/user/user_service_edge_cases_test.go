@@ -276,38 +276,6 @@ func TestUserService_DeleteUser_RepositoryError(t *testing.T) {
 	mockUserRepo.AssertExpectations(t)
 }
 
-// TestUserService_LoginUser_AccountDeleted 测试用户登录-账号已删除
-func TestUserService_LoginUser_AccountDeleted(t *testing.T) {
-	// Arrange
-	service, mockUserRepo := setupUserService()
-	ctx := context.Background()
-
-	req := &user2.LoginUserRequest{
-		Username: "testuser",
-		Password: "password123",
-	}
-
-	user := &usersModel.User{
-		Username: "testuser",
-		Status:   usersModel.UserStatusDeleted,
-	}
-	user.ID, _ = primitive.ObjectIDFromHex("507f1f77bcf86cd799439011")
-
-	user.SetPassword(req.Password)
-
-	mockUserRepo.On("GetByUsername", ctx, req.Username).Return(user, nil)
-
-	// Act
-	resp, err := service.LoginUser(ctx, req)
-
-	// Assert
-	require.Error(t, err)
-	assert.Nil(t, resp)
-	assert.Contains(t, err.Error(), "账号已删除")
-
-	mockUserRepo.AssertExpectations(t)
-}
-
 // TestUserService_UpdateLastLogin_Success 测试更新最后登录时间成功
 func TestUserService_UpdateLastLogin_Success(t *testing.T) {
 	// Arrange

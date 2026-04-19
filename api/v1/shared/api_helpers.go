@@ -5,6 +5,7 @@ import (
 	"context"
 	"io"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -16,9 +17,15 @@ import (
 // GetUserID 从上下文获取用户ID，如果不存在或类型错误则返回未授权响应
 // 返回: (userID, ok) - ok为false表示已发送错误响应
 func GetUserID(c *gin.Context) (string, bool) {
+	return GetUserIDWithMessage(c, "请先登录")
+}
+
+// GetUserIDWithMessage 从上下文获取用户ID，并允许自定义缺失时的错误文案
+// 返回: (userID, ok) - ok 为 false 表示已发送错误响应
+func GetUserIDWithMessage(c *gin.Context, missingMessage string) (string, bool) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		response.Unauthorized(c, "请先登录")
+		response.Unauthorized(c, missingMessage)
 		return "", false
 	}
 
@@ -43,6 +50,30 @@ func GetUserIDOptional(c *gin.Context) string {
 		return uid
 	}
 	return ""
+}
+
+// GetBearerToken 从 Authorization 头获取 Bearer Token
+// 返回: (token, ok) - ok 为 false 表示已发送错误响应
+func GetBearerToken(c *gin.Context) (string, bool) {
+	token := strings.TrimSpace(c.GetHeader("Authorization"))
+	if token == "" {
+		response.Unauthorized(c, "未提供Token")
+		return "", false
+	}
+
+	token = strings.TrimSpace(strings.TrimPrefix(token, "Bearer "))
+	return token, true
+}
+
+// GetBearerTokenOptional 从 Authorization 头获取 Bearer Token。
+// 未提供时返回空字符串，不写响应。
+func GetBearerTokenOptional(c *gin.Context) string {
+	token := strings.TrimSpace(c.GetHeader("Authorization"))
+	if token == "" {
+		return ""
+	}
+
+	return strings.TrimSpace(strings.TrimPrefix(token, "Bearer "))
 }
 
 // ============ 路径参数辅助函数 ============
@@ -182,6 +213,15 @@ func BindAndValidate(c *gin.Context, req interface{}) bool {
 func BindJSON(c *gin.Context, req interface{}) bool {
 	if err := c.ShouldBindJSON(req); err != nil {
 		response.BadRequest(c, "参数错误", err.Error())
+		return false
+	}
+	return true
+}
+
+// BindJSONWithMessage 绑定 JSON 请求体，并使用调用方指定的错误文案前缀。
+func BindJSONWithMessage(c *gin.Context, req interface{}, messagePrefix string) bool {
+	if err := c.ShouldBindJSON(req); err != nil {
+		response.BadRequest(c, messagePrefix+err.Error(), nil)
 		return false
 	}
 	return true

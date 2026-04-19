@@ -3,6 +3,7 @@ package shared
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -100,6 +101,163 @@ func TestGetUserIDOptional(t *testing.T) {
 			assert.Equal(t, tt.expectedUserID, userID)
 		})
 	}
+}
+
+func TestGetUserIDWithMessage(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	t.Run("用户ID不存在时使用自定义文案", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+
+		userID, ok := GetUserIDWithMessage(c, "未认证")
+
+		assert.False(t, ok)
+		assert.Equal(t, "", userID)
+		assert.Equal(t, http.StatusUnauthorized, w.Code)
+		assert.Contains(t, w.Body.String(), "未认证")
+	})
+
+	t.Run("用户ID类型错误时保持统一错误", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Set("user_id", 123)
+
+		userID, ok := GetUserIDWithMessage(c, "未认证")
+
+		assert.False(t, ok)
+		assert.Equal(t, "", userID)
+		assert.Equal(t, http.StatusUnauthorized, w.Code)
+		assert.Contains(t, w.Body.String(), "用户信息格式错误")
+	})
+}
+
+func TestGetBearerToken(t *testing.T) {
+	tests := []struct {
+		name          string
+		headerValue   string
+		expectedToken string
+		expectedOk    bool
+		expectedCode  int
+	}{
+		{
+			name:          "Bearer token",
+			headerValue:   "Bearer token-123",
+			expectedToken: "token-123",
+			expectedOk:    true,
+		},
+		{
+			name:          "plain token",
+			headerValue:   "token-123",
+			expectedToken: "token-123",
+			expectedOk:    true,
+		},
+		{
+			name:          "missing token",
+			headerValue:   "",
+			expectedToken: "",
+			expectedOk:    false,
+			expectedCode:  http.StatusUnauthorized,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gin.SetMode(gin.TestMode)
+			w := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(w)
+			c.Request = httptest.NewRequest(http.MethodPost, "/", nil)
+			if tt.headerValue != "" {
+				c.Request.Header.Set("Authorization", tt.headerValue)
+			}
+
+			token, ok := GetBearerToken(c)
+
+			assert.Equal(t, tt.expectedToken, token)
+			assert.Equal(t, tt.expectedOk, ok)
+			if !tt.expectedOk {
+				assert.Equal(t, tt.expectedCode, w.Code)
+			}
+		})
+	}
+}
+
+func TestGetBearerTokenOptional(t *testing.T) {
+	tests := []struct {
+		name          string
+		headerValue   string
+		expectedToken string
+	}{
+		{
+			name:          "Bearer token",
+			headerValue:   "Bearer token-123",
+			expectedToken: "token-123",
+		},
+		{
+			name:          "plain token",
+			headerValue:   "token-123",
+			expectedToken: "token-123",
+		},
+		{
+			name:          "missing token",
+			headerValue:   "",
+			expectedToken: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gin.SetMode(gin.TestMode)
+			w := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(w)
+			c.Request = httptest.NewRequest(http.MethodPost, "/", nil)
+			if tt.headerValue != "" {
+				c.Request.Header.Set("Authorization", tt.headerValue)
+			}
+
+			token := GetBearerTokenOptional(c)
+
+			assert.Equal(t, tt.expectedToken, token)
+			assert.Equal(t, http.StatusOK, w.Code)
+		})
+	}
+}
+
+func TestBindJSONWithMessage(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	t.Run("bind success", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Request = httptest.NewRequest(http.MethodPost, "/", strings.NewReader(`{"name":"tester"}`))
+		c.Request.Header.Set("Content-Type", "application/json")
+
+		var req struct {
+			Name string `json:"name"`
+		}
+
+		ok := BindJSONWithMessage(c, &req, "请求参数错误: ")
+
+		assert.True(t, ok)
+		assert.Equal(t, "tester", req.Name)
+	})
+
+	t.Run("bind failed", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Request = httptest.NewRequest(http.MethodPost, "/", strings.NewReader(`{"name":`))
+		c.Request.Header.Set("Content-Type", "application/json")
+
+		var req struct {
+			Name string `json:"name"`
+		}
+
+		ok := BindJSONWithMessage(c, &req, "请求参数错误: ")
+
+		assert.False(t, ok)
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.Contains(t, w.Body.String(), "请求参数错误")
+	})
 }
 
 func TestGetRequiredParam(t *testing.T) {

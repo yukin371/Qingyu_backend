@@ -3,7 +3,6 @@ package handler
 import (
 	"context"
 	"net/http"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -191,8 +190,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 //	@Failure		500	{object}	response.APIResponse
 //	@Router			/api/v1/user/auth/logout [post]
 func (h *AuthHandler) Logout(c *gin.Context) {
-	// 获取Token（从Authorization header中）
-	token := c.GetHeader("Authorization")
+	token := shared.GetBearerTokenOptional(c)
 	if token == "" {
 		// 即使没有token也返回成功，因为登出应该是幂等的
 		response.Success(c, gin.H{
@@ -200,8 +198,6 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 		})
 		return
 	}
-
-	token = strings.TrimSpace(strings.TrimPrefix(token, "Bearer "))
 
 	if err := h.authService.Logout(c.Request.Context(), token); err != nil {
 		response.InternalError(c, err)

@@ -59,7 +59,6 @@ var allowedSharedImporters = map[string]bool{
 	`service/container`:         true,
 	`service/interfaces/shared`: true,
 	`router/shared`:             true,
-	`api/v1/auth`:               true,
 	`api/v1/shared`:             true,
 	`realtime/websocket`:        true,
 	`middleware`:                true,
@@ -68,17 +67,6 @@ var allowedSharedImporters = map[string]bool{
 // 已移除兼容层的旧导入路径（必须迁移）
 var deprecatedImports = map[string]string{
 	`Qingyu_backend/service/shared/auth`: `auth兼容包已删除，必须改为service/auth`,
-}
-
-// 允许使用新auth路径的模块（用于向后兼容检查）
-var newAuthAllowedImporters = map[string]bool{
-	`service/container`:         true,
-	`service/interfaces/shared`: true,
-	`service/auth`:              true,
-	`api/v1/auth`:               true,
-	`api/v1/shared`:             true,
-	`router/shared`:             true,
-	`middleware`:                true,
 }
 
 func main() {

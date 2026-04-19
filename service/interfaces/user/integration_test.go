@@ -45,11 +45,6 @@ func TestUserServicePort_Integration_EndToEnd(t *testing.T) {
 			DeleteUser(ctx context.Context, req *user.DeleteUserRequest) (*user.DeleteUserResponse, error)
 			ListUsers(ctx context.Context, req *user.ListUsersRequest) (*user.ListUsersResponse, error)
 
-			// 用户认证方法
-			RegisterUser(ctx context.Context, req *user.RegisterUserRequest) (*user.RegisterUserResponse, error)
-			LoginUser(ctx context.Context, req *user.LoginUserRequest) (*user.LoginUserResponse, error)
-			LogoutUser(ctx context.Context, req *user.LogoutUserRequest) (*user.LogoutUserResponse, error)
-
 			// 其他方法...
 		}
 
@@ -126,17 +121,6 @@ func TestUserServicePort_DTOValidation(t *testing.T) {
 		assert.Equal(t, 1, resp.Page)
 		assert.Equal(t, 20, resp.PageSize)
 		assert.Equal(t, 5, resp.TotalPages)
-	})
-
-	t.Run("LoginUserRequest结构验证", func(t *testing.T) {
-		req := &user.LoginUserRequest{
-			Username: "testuser",
-			Password: "password123",
-			ClientIP: "127.0.0.1",
-		}
-		assert.Equal(t, "testuser", req.Username)
-		assert.Equal(t, "password123", req.Password)
-		assert.Equal(t, "127.0.0.1", req.ClientIP)
 	})
 
 	t.Run("UpdatePasswordRequest结构验证", func(t *testing.T) {

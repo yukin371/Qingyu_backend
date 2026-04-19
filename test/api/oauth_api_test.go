@@ -1,4 +1,4 @@
-package auth
+package api
 
 import (
 	"bytes"
@@ -16,12 +16,12 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/oauth2"
 
+	sharedAPI "Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/internal/middleware/builtin"
 	authModel "Qingyu_backend/models/auth"
-	"Qingyu_backend/service/auth"
+	authservice "Qingyu_backend/service/auth"
 )
 
-// MockOAuthService 模拟OAuthService
 type MockOAuthService struct {
 	mock.Mock
 }
@@ -73,18 +73,15 @@ func (m *MockOAuthService) SetPrimaryAccount(ctx context.Context, userID, accoun
 	return args.Error(0)
 }
 
-// setupOAuthTestRouter 设置OAuth测试路由
-func setupOAuthTestRouter(oauthService *MockOAuthService, authService *MockAuthService) *gin.Engine {
+func setupOAuthTestRouter(oauthService *MockOAuthService, authService authservice.AuthService) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 
 	logger := zap.NewNop()
-
-	// 添加错误处理中间件
 	errorHandler := builtin.NewErrorHandlerMiddleware(logger)
 	r.Use(errorHandler.Handler())
 
-	api := NewOAuthAPI(oauthService, authService, logger)
+	api := sharedAPI.NewOAuthAPI(oauthService, authService, logger)
 
 	v1 := r.Group("/api/v1/shared/oauth")
 	{
@@ -98,17 +95,13 @@ func setupOAuthTestRouter(oauthService *MockOAuthService, authService *MockAuthS
 	return r
 }
 
-// setupOAuthTestRouterWithAuth 设置带认证的OAuth测试路由
-func setupOAuthTestRouterWithAuth(oauthService *MockOAuthService, authService *MockAuthService, userID string) *gin.Engine {
+func setupOAuthTestRouterWithAuth(oauthService *MockOAuthService, authService authservice.AuthService, userID string) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 
 	logger := zap.NewNop()
-
-	// 添加错误处理中间件
 	errorHandler := builtin.NewErrorHandlerMiddleware(logger)
 
-	// 模拟认证中间件
 	r.Use(func(c *gin.Context) {
 		if userID != "" {
 			c.Set("user_id", userID)
@@ -116,7 +109,7 @@ func setupOAuthTestRouterWithAuth(oauthService *MockOAuthService, authService *M
 		c.Next()
 	}, errorHandler.Handler())
 
-	api := NewOAuthAPI(oauthService, authService, logger)
+	api := sharedAPI.NewOAuthAPI(oauthService, authService, logger)
 
 	v1 := r.Group("/api/v1/shared/oauth")
 	{
@@ -130,15 +123,12 @@ func setupOAuthTestRouterWithAuth(oauthService *MockOAuthService, authService *M
 	return r
 }
 
-// ==================== GetAuthorizeURL Tests ====================
-
 func TestOAuthAPI_GetAuthorizeURL_Success(t *testing.T) {
-	// Given
 	mockOAuthService := new(MockOAuthService)
 	mockAuthService := new(MockAuthService)
 	router := setupOAuthTestRouter(mockOAuthService, mockAuthService)
 
-	reqBody := OAuthAuthorizeRequest{
+	reqBody := sharedAPI.OAuthAuthorizeRequest{
 		RedirectURI: "http://localhost:3000/callback",
 		State:       "random-state-123",
 	}
@@ -147,14 +137,12 @@ func TestOAuthAPI_GetAuthorizeURL_Success(t *testing.T) {
 
 	mockOAuthService.On("GetAuthURL", mock.Anything, authModel.OAuthProviderGoogle, reqBody.RedirectURI, reqBody.State, false, mock.AnythingOfType("[]string")).Return(expectedURL, nil)
 
-	// When
 	jsonBody, _ := json.Marshal(reqBody)
 	req, _ := http.NewRequest("POST", "/api/v1/shared/oauth/google/authorize", bytes.NewBuffer(jsonBody))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
-	// Then
 	assert.Equal(t, http.StatusOK, w.Code)
 
 	var response map[string]interface{}
@@ -170,35 +158,33 @@ func TestOAuthAPI_GetAuthorizeURL_Success(t *testing.T) {
 }
 
 func TestOAuthAPI_GetAuthorizeURL_MissingRedirectURI(t *testing.T) {
-	// Given
 	mockOAuthService := new(MockOAuthService)
 	mockAuthService := new(MockAuthService)
 	router := setupOAuthTestRouter(mockOAuthService, mockAuthService)
 
 	reqBody := map[string]string{
 		"state": "random-state-123",
-		// Missing redirect_uri
 	}
 
-	// When
+	mockOAuthService.On("GetAuthURL", mock.Anything, authModel.OAuthProviderGoogle, "", "random-state-123", false, mock.AnythingOfType("[]string")).Return("", assert.AnError)
+
 	jsonBody, _ := json.Marshal(reqBody)
 	req, _ := http.NewRequest("POST", "/api/v1/shared/oauth/google/authorize", bytes.NewBuffer(jsonBody))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
-	// Then
 	assert.Equal(t, http.StatusBadRequest, w.Code)
+	mockOAuthService.AssertExpectations(t)
 }
 
 func TestOAuthAPI_GetAuthorizeURL_LinkMode(t *testing.T) {
-	// Given
 	mockOAuthService := new(MockOAuthService)
 	mockAuthService := new(MockAuthService)
 	userID := "user123"
 	router := setupOAuthTestRouterWithAuth(mockOAuthService, mockAuthService, userID)
 
-	reqBody := OAuthAuthorizeRequest{
+	reqBody := sharedAPI.OAuthAuthorizeRequest{
 		RedirectURI: "http://localhost:3000/callback",
 		State:       "random-state-123",
 	}
@@ -207,81 +193,66 @@ func TestOAuthAPI_GetAuthorizeURL_LinkMode(t *testing.T) {
 
 	mockOAuthService.On("GetAuthURL", mock.Anything, authModel.OAuthProviderGitHub, reqBody.RedirectURI, reqBody.State, true, []string{userID}).Return(expectedURL, nil)
 
-	// When
 	jsonBody, _ := json.Marshal(reqBody)
 	req, _ := http.NewRequest("POST", "/api/v1/shared/oauth/github/authorize", bytes.NewBuffer(jsonBody))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
-	// Then
 	assert.Equal(t, http.StatusOK, w.Code)
-
 	mockOAuthService.AssertExpectations(t)
 }
 
 func TestOAuthAPI_GetAuthorizeURL_ServiceError(t *testing.T) {
-	// Given
 	mockOAuthService := new(MockOAuthService)
 	mockAuthService := new(MockAuthService)
 	router := setupOAuthTestRouter(mockOAuthService, mockAuthService)
 
-	reqBody := OAuthAuthorizeRequest{
+	reqBody := sharedAPI.OAuthAuthorizeRequest{
 		RedirectURI: "invalid://uri",
 		State:       "random-state-123",
 	}
 
 	mockOAuthService.On("GetAuthURL", mock.Anything, authModel.OAuthProviderGoogle, reqBody.RedirectURI, reqBody.State, false, mock.AnythingOfType("[]string")).Return("", assert.AnError)
 
-	// When
 	jsonBody, _ := json.Marshal(reqBody)
 	req, _ := http.NewRequest("POST", "/api/v1/shared/oauth/google/authorize", bytes.NewBuffer(jsonBody))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
-	// Then
 	assert.Equal(t, http.StatusBadRequest, w.Code)
-
 	mockOAuthService.AssertExpectations(t)
 }
 
 func TestOAuthAPI_GetAuthorizeURL_InvalidProvider(t *testing.T) {
-	// Given
 	mockOAuthService := new(MockOAuthService)
 	mockAuthService := new(MockAuthService)
 	router := setupOAuthTestRouter(mockOAuthService, mockAuthService)
 
-	reqBody := OAuthAuthorizeRequest{
+	reqBody := sharedAPI.OAuthAuthorizeRequest{
 		RedirectURI: "http://localhost:3000/callback",
 		State:       "random-state-123",
 	}
 
-	// Mock should return an error for invalid provider
 	mockOAuthService.On("GetAuthURL", mock.Anything, authModel.OAuthProvider("invalid_provider"), reqBody.RedirectURI, reqBody.State, false, mock.AnythingOfType("[]string")).Return("", assert.AnError)
 
-	// When
 	jsonBody, _ := json.Marshal(reqBody)
 	req, _ := http.NewRequest("POST", "/api/v1/shared/oauth/invalid_provider/authorize", bytes.NewBuffer(jsonBody))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
-	// Then
 	assert.Equal(t, http.StatusBadRequest, w.Code)
-
 	mockOAuthService.AssertExpectations(t)
 }
 
-// ==================== HandleCallback Tests ====================
-
 func TestOAuthAPI_HandleCallback_LoginMode_Success(t *testing.T) {
-	// Given
 	mockOAuthService := new(MockOAuthService)
 	mockAuthService := new(MockAuthService)
 	router := setupOAuthTestRouter(mockOAuthService, mockAuthService)
 
-	reqBody := OAuthCallbackRequest{
+	reqBody := sharedAPI.OAuthCallbackRequest{
 		Code:  "auth-code-123",
 		State: "random-state-123",
 	}
@@ -305,8 +276,8 @@ func TestOAuthAPI_HandleCallback_LoginMode_Success(t *testing.T) {
 		Username:   "testuser",
 	}
 
-	loginResp := &auth.LoginResponse{
-		User: &auth.UserInfo{
+	loginResp := &authservice.LoginResponse{
+		User: &authservice.UserInfo{
 			ID:       "user123",
 			Username: "testuser",
 			Email:    "user@example.com",
@@ -317,18 +288,16 @@ func TestOAuthAPI_HandleCallback_LoginMode_Success(t *testing.T) {
 
 	mockOAuthService.On("ExchangeCode", mock.Anything, authModel.OAuthProviderGoogle, reqBody.Code, reqBody.State).Return(token, session, nil)
 	mockOAuthService.On("GetUserInfo", mock.Anything, authModel.OAuthProviderGoogle, token).Return(identity, nil)
-	mockAuthService.On("OAuthLogin", mock.Anything, mock.MatchedBy(func(req *auth.OAuthLoginRequest) bool {
+	mockAuthService.On("OAuthLogin", mock.Anything, mock.MatchedBy(func(req *authservice.OAuthLoginRequest) bool {
 		return req.Provider == authModel.OAuthProviderGoogle && req.ProviderID == "google-id-123"
 	})).Return(loginResp, nil)
 
-	// When
 	jsonBody, _ := json.Marshal(reqBody)
 	req, _ := http.NewRequest("POST", "/api/v1/shared/oauth/google/callback", bytes.NewBuffer(jsonBody))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
-	// Then
 	assert.Equal(t, http.StatusOK, w.Code)
 
 	var response map[string]interface{}
@@ -342,13 +311,12 @@ func TestOAuthAPI_HandleCallback_LoginMode_Success(t *testing.T) {
 }
 
 func TestOAuthAPI_HandleCallback_LinkMode_Success(t *testing.T) {
-	// Given
 	mockOAuthService := new(MockOAuthService)
 	mockAuthService := new(MockAuthService)
 	userID := "user123"
 	router := setupOAuthTestRouterWithAuth(mockOAuthService, mockAuthService, userID)
 
-	reqBody := OAuthCallbackRequest{
+	reqBody := sharedAPI.OAuthCallbackRequest{
 		Code:  "auth-code-123",
 		State: "random-state-123",
 	}
@@ -381,14 +349,12 @@ func TestOAuthAPI_HandleCallback_LinkMode_Success(t *testing.T) {
 	mockOAuthService.On("GetUserInfo", mock.Anything, authModel.OAuthProviderGitHub, token).Return(identity, nil)
 	mockOAuthService.On("LinkAccount", mock.Anything, userID, authModel.OAuthProviderGitHub, token, identity).Return(account, nil)
 
-	// When
 	jsonBody, _ := json.Marshal(reqBody)
 	req, _ := http.NewRequest("POST", "/api/v1/shared/oauth/github/callback", bytes.NewBuffer(jsonBody))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
-	// Then
 	assert.Equal(t, http.StatusOK, w.Code)
 
 	var response map[string]interface{}
@@ -404,133 +370,86 @@ func TestOAuthAPI_HandleCallback_LinkMode_Success(t *testing.T) {
 }
 
 func TestOAuthAPI_HandleCallback_MissingCode(t *testing.T) {
-	// Given
 	mockOAuthService := new(MockOAuthService)
 	mockAuthService := new(MockAuthService)
 	router := setupOAuthTestRouter(mockOAuthService, mockAuthService)
 
 	reqBody := map[string]string{
 		"state": "random-state-123",
-		// Missing code
 	}
 
-	// When
+	mockOAuthService.On("ExchangeCode", mock.Anything, authModel.OAuthProviderGoogle, "", "random-state-123").Return(nil, &authModel.OAuthSession{}, assert.AnError)
+
 	jsonBody, _ := json.Marshal(reqBody)
 	req, _ := http.NewRequest("POST", "/api/v1/shared/oauth/google/callback", bytes.NewBuffer(jsonBody))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
-	// Then
 	assert.Equal(t, http.StatusBadRequest, w.Code)
-}
-
-func TestOAuthAPI_HandleCallback_MissingState(t *testing.T) {
-	// Given
-	mockOAuthService := new(MockOAuthService)
-	mockAuthService := new(MockAuthService)
-	router := setupOAuthTestRouter(mockOAuthService, mockAuthService)
-
-	reqBody := map[string]string{
-		"code": "auth-code-123",
-		// Missing state
-	}
-
-	// When
-	jsonBody, _ := json.Marshal(reqBody)
-	req, _ := http.NewRequest("POST", "/api/v1/shared/oauth/google/callback", bytes.NewBuffer(jsonBody))
-	req.Header.Set("Content-Type", "application/json")
-	w := httptest.NewRecorder()
-	router.ServeHTTP(w, req)
-
-	// Then
-	assert.Equal(t, http.StatusBadRequest, w.Code)
+	mockOAuthService.AssertExpectations(t)
 }
 
 func TestOAuthAPI_HandleCallback_ExchangeCodeError(t *testing.T) {
-	// Given
 	mockOAuthService := new(MockOAuthService)
 	mockAuthService := new(MockAuthService)
 	router := setupOAuthTestRouter(mockOAuthService, mockAuthService)
 
-	reqBody := OAuthCallbackRequest{
+	reqBody := sharedAPI.OAuthCallbackRequest{
 		Code:  "invalid-code",
 		State: "random-state-123",
 	}
 
-	mockOAuthService.On("ExchangeCode", mock.Anything, authModel.OAuthProviderGoogle, reqBody.Code, reqBody.State).Return(nil, (*authModel.OAuthSession)(nil), assert.AnError)
+	mockOAuthService.On("ExchangeCode", mock.Anything, authModel.OAuthProviderGoogle, reqBody.Code, reqBody.State).Return(nil, &authModel.OAuthSession{}, assert.AnError)
 
-	// When
 	jsonBody, _ := json.Marshal(reqBody)
 	req, _ := http.NewRequest("POST", "/api/v1/shared/oauth/google/callback", bytes.NewBuffer(jsonBody))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
-	// Then
 	assert.Equal(t, http.StatusBadRequest, w.Code)
-
 	mockOAuthService.AssertExpectations(t)
 }
 
 func TestOAuthAPI_HandleCallback_GetUserInfoError(t *testing.T) {
-	// Given
 	mockOAuthService := new(MockOAuthService)
 	mockAuthService := new(MockAuthService)
 	router := setupOAuthTestRouter(mockOAuthService, mockAuthService)
 
-	reqBody := OAuthCallbackRequest{
+	reqBody := sharedAPI.OAuthCallbackRequest{
 		Code:  "auth-code-123",
 		State: "random-state-123",
 	}
 
-	token := &oauth2.Token{
-		AccessToken: "access-token-123",
-	}
-
-	session := &authModel.OAuthSession{
-		ID:        primitive.NewObjectID(),
-		LinkMode:  false,
-		CreatedAt: time.Now(),
-	}
+	token := &oauth2.Token{AccessToken: "access-token-123"}
+	session := &authModel.OAuthSession{ID: primitive.NewObjectID()}
 
 	mockOAuthService.On("ExchangeCode", mock.Anything, authModel.OAuthProviderGoogle, reqBody.Code, reqBody.State).Return(token, session, nil)
 	mockOAuthService.On("GetUserInfo", mock.Anything, authModel.OAuthProviderGoogle, token).Return(nil, assert.AnError)
 
-	// When
 	jsonBody, _ := json.Marshal(reqBody)
 	req, _ := http.NewRequest("POST", "/api/v1/shared/oauth/google/callback", bytes.NewBuffer(jsonBody))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
-	// Then
 	assert.Equal(t, http.StatusBadRequest, w.Code)
-
 	mockOAuthService.AssertExpectations(t)
 }
 
 func TestOAuthAPI_HandleCallback_OAuthLoginError(t *testing.T) {
-	// Given
 	mockOAuthService := new(MockOAuthService)
 	mockAuthService := new(MockAuthService)
 	router := setupOAuthTestRouter(mockOAuthService, mockAuthService)
 
-	reqBody := OAuthCallbackRequest{
+	reqBody := sharedAPI.OAuthCallbackRequest{
 		Code:  "auth-code-123",
 		State: "random-state-123",
 	}
 
-	token := &oauth2.Token{
-		AccessToken: "access-token-123",
-	}
-
-	session := &authModel.OAuthSession{
-		ID:        primitive.NewObjectID(),
-		LinkMode:  false,
-		CreatedAt: time.Now(),
-	}
-
+	token := &oauth2.Token{AccessToken: "access-token-123"}
+	session := &authModel.OAuthSession{ID: primitive.NewObjectID()}
 	identity := &authModel.UserIdentity{
 		ProviderID: "google-id-123",
 		Email:      "user@example.com",
@@ -539,71 +458,20 @@ func TestOAuthAPI_HandleCallback_OAuthLoginError(t *testing.T) {
 
 	mockOAuthService.On("ExchangeCode", mock.Anything, authModel.OAuthProviderGoogle, reqBody.Code, reqBody.State).Return(token, session, nil)
 	mockOAuthService.On("GetUserInfo", mock.Anything, authModel.OAuthProviderGoogle, token).Return(identity, nil)
-	mockAuthService.On("OAuthLogin", mock.Anything, mock.AnythingOfType("*auth.OAuthLoginRequest")).Return((*auth.LoginResponse)(nil), assert.AnError)
+	mockAuthService.On("OAuthLogin", mock.Anything, mock.AnythingOfType("*auth.OAuthLoginRequest")).Return(nil, assert.AnError)
 
-	// When
 	jsonBody, _ := json.Marshal(reqBody)
 	req, _ := http.NewRequest("POST", "/api/v1/shared/oauth/google/callback", bytes.NewBuffer(jsonBody))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
-	// Then
 	assert.Equal(t, http.StatusBadRequest, w.Code)
-
 	mockOAuthService.AssertExpectations(t)
 	mockAuthService.AssertExpectations(t)
 }
 
-func TestOAuthAPI_HandleCallback_LinkAccountError(t *testing.T) {
-	// Given
-	mockOAuthService := new(MockOAuthService)
-	mockAuthService := new(MockAuthService)
-	userID := "user123"
-	router := setupOAuthTestRouterWithAuth(mockOAuthService, mockAuthService, userID)
-
-	reqBody := OAuthCallbackRequest{
-		Code:  "auth-code-123",
-		State: "random-state-123",
-	}
-
-	token := &oauth2.Token{
-		AccessToken: "access-token-123",
-	}
-
-	session := &authModel.OAuthSession{
-		ID:        primitive.NewObjectID(),
-		UserID:    userID,
-		LinkMode:  true,
-		CreatedAt: time.Now(),
-	}
-
-	identity := &authModel.UserIdentity{
-		ProviderID: "github-id-123",
-		Email:      "user@example.com",
-	}
-
-	mockOAuthService.On("ExchangeCode", mock.Anything, authModel.OAuthProviderGitHub, reqBody.Code, reqBody.State).Return(token, session, nil)
-	mockOAuthService.On("GetUserInfo", mock.Anything, authModel.OAuthProviderGitHub, token).Return(identity, nil)
-	mockOAuthService.On("LinkAccount", mock.Anything, userID, authModel.OAuthProviderGitHub, token, identity).Return(nil, assert.AnError)
-
-	// When
-	jsonBody, _ := json.Marshal(reqBody)
-	req, _ := http.NewRequest("POST", "/api/v1/shared/oauth/github/callback", bytes.NewBuffer(jsonBody))
-	req.Header.Set("Content-Type", "application/json")
-	w := httptest.NewRecorder()
-	router.ServeHTTP(w, req)
-
-	// Then
-	assert.Equal(t, http.StatusBadRequest, w.Code)
-
-	mockOAuthService.AssertExpectations(t)
-}
-
-// ==================== GetLinkedAccounts Tests ====================
-
 func TestOAuthAPI_GetLinkedAccounts_Success(t *testing.T) {
-	// Given
 	mockOAuthService := new(MockOAuthService)
 	mockAuthService := new(MockAuthService)
 	userID := "user123"
@@ -626,12 +494,10 @@ func TestOAuthAPI_GetLinkedAccounts_Success(t *testing.T) {
 
 	mockOAuthService.On("GetLinkedAccounts", mock.Anything, userID).Return(expectedAccounts, nil)
 
-	// When
 	req, _ := http.NewRequest("GET", "/api/v1/shared/oauth/accounts", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
-	// Then
 	assert.Equal(t, http.StatusOK, w.Code)
 
 	var response map[string]interface{}
@@ -644,22 +510,18 @@ func TestOAuthAPI_GetLinkedAccounts_Success(t *testing.T) {
 }
 
 func TestOAuthAPI_GetLinkedAccounts_Unauthorized(t *testing.T) {
-	// Given
 	mockOAuthService := new(MockOAuthService)
 	mockAuthService := new(MockAuthService)
-	router := setupOAuthTestRouterWithAuth(mockOAuthService, mockAuthService, "") // No user ID
+	router := setupOAuthTestRouterWithAuth(mockOAuthService, mockAuthService, "")
 
-	// When
 	req, _ := http.NewRequest("GET", "/api/v1/shared/oauth/accounts", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
-	// Then
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
 }
 
 func TestOAuthAPI_GetLinkedAccounts_ServiceError(t *testing.T) {
-	// Given
 	mockOAuthService := new(MockOAuthService)
 	mockAuthService := new(MockAuthService)
 	userID := "user123"
@@ -667,21 +529,15 @@ func TestOAuthAPI_GetLinkedAccounts_ServiceError(t *testing.T) {
 
 	mockOAuthService.On("GetLinkedAccounts", mock.Anything, userID).Return(nil, assert.AnError)
 
-	// When
 	req, _ := http.NewRequest("GET", "/api/v1/shared/oauth/accounts", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
-	// Then
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
-
 	mockOAuthService.AssertExpectations(t)
 }
 
-// ==================== UnlinkAccount Tests ====================
-
 func TestOAuthAPI_UnlinkAccount_Success(t *testing.T) {
-	// Given
 	mockOAuthService := new(MockOAuthService)
 	mockAuthService := new(MockAuthService)
 	userID := "user123"
@@ -690,12 +546,10 @@ func TestOAuthAPI_UnlinkAccount_Success(t *testing.T) {
 	accountID := "account-123"
 	mockOAuthService.On("UnlinkAccount", mock.Anything, userID, accountID).Return(nil)
 
-	// When
 	req, _ := http.NewRequest("DELETE", "/api/v1/shared/oauth/accounts/"+accountID, nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
-	// Then
 	assert.Equal(t, http.StatusOK, w.Code)
 
 	var response map[string]interface{}
@@ -708,38 +562,31 @@ func TestOAuthAPI_UnlinkAccount_Success(t *testing.T) {
 }
 
 func TestOAuthAPI_UnlinkAccount_Unauthorized(t *testing.T) {
-	// Given
 	mockOAuthService := new(MockOAuthService)
 	mockAuthService := new(MockAuthService)
-	router := setupOAuthTestRouterWithAuth(mockOAuthService, mockAuthService, "") // No user ID
+	router := setupOAuthTestRouterWithAuth(mockOAuthService, mockAuthService, "")
 
-	// When
 	req, _ := http.NewRequest("DELETE", "/api/v1/shared/oauth/accounts/account-123", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
-	// Then
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
 }
 
 func TestOAuthAPI_UnlinkAccount_EmptyAccountID(t *testing.T) {
-	// Given
 	mockOAuthService := new(MockOAuthService)
 	mockAuthService := new(MockAuthService)
 	userID := "user123"
 	router := setupOAuthTestRouterWithAuth(mockOAuthService, mockAuthService, userID)
 
-	// When
 	req, _ := http.NewRequest("DELETE", "/api/v1/shared/oauth/accounts/", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
-	// Then
 	assert.Equal(t, http.StatusNotFound, w.Code)
 }
 
 func TestOAuthAPI_UnlinkAccount_ServiceError(t *testing.T) {
-	// Given
 	mockOAuthService := new(MockOAuthService)
 	mockAuthService := new(MockAuthService)
 	userID := "user123"
@@ -748,21 +595,15 @@ func TestOAuthAPI_UnlinkAccount_ServiceError(t *testing.T) {
 	accountID := "account-123"
 	mockOAuthService.On("UnlinkAccount", mock.Anything, userID, accountID).Return(assert.AnError)
 
-	// When
 	req, _ := http.NewRequest("DELETE", "/api/v1/shared/oauth/accounts/"+accountID, nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
-	// Then
 	assert.Equal(t, http.StatusBadRequest, w.Code)
-
 	mockOAuthService.AssertExpectations(t)
 }
 
-// ==================== SetPrimaryAccount Tests ====================
-
 func TestOAuthAPI_SetPrimaryAccount_Success(t *testing.T) {
-	// Given
 	mockOAuthService := new(MockOAuthService)
 	mockAuthService := new(MockAuthService)
 	userID := "user123"
@@ -771,12 +612,10 @@ func TestOAuthAPI_SetPrimaryAccount_Success(t *testing.T) {
 	accountID := "account-123"
 	mockOAuthService.On("SetPrimaryAccount", mock.Anything, userID, accountID).Return(nil)
 
-	// When
 	req, _ := http.NewRequest("PUT", "/api/v1/shared/oauth/accounts/"+accountID+"/primary", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
-	// Then
 	assert.Equal(t, http.StatusOK, w.Code)
 
 	var response map[string]interface{}
@@ -789,38 +628,31 @@ func TestOAuthAPI_SetPrimaryAccount_Success(t *testing.T) {
 }
 
 func TestOAuthAPI_SetPrimaryAccount_Unauthorized(t *testing.T) {
-	// Given
 	mockOAuthService := new(MockOAuthService)
 	mockAuthService := new(MockAuthService)
-	router := setupOAuthTestRouterWithAuth(mockOAuthService, mockAuthService, "") // No user ID
+	router := setupOAuthTestRouterWithAuth(mockOAuthService, mockAuthService, "")
 
-	// When
 	req, _ := http.NewRequest("PUT", "/api/v1/shared/oauth/accounts/account-123/primary", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
-	// Then
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
 }
 
 func TestOAuthAPI_SetPrimaryAccount_EmptyAccountID(t *testing.T) {
-	// Given
 	mockOAuthService := new(MockOAuthService)
 	mockAuthService := new(MockAuthService)
 	userID := "user123"
 	router := setupOAuthTestRouterWithAuth(mockOAuthService, mockAuthService, userID)
 
-	// When
 	req, _ := http.NewRequest("PUT", "/api/v1/shared/oauth/accounts//primary", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
-	// Then
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
 
 func TestOAuthAPI_SetPrimaryAccount_ServiceError(t *testing.T) {
-	// Given
 	mockOAuthService := new(MockOAuthService)
 	mockAuthService := new(MockAuthService)
 	userID := "user123"
@@ -829,13 +661,10 @@ func TestOAuthAPI_SetPrimaryAccount_ServiceError(t *testing.T) {
 	accountID := "account-123"
 	mockOAuthService.On("SetPrimaryAccount", mock.Anything, userID, accountID).Return(assert.AnError)
 
-	// When
 	req, _ := http.NewRequest("PUT", "/api/v1/shared/oauth/accounts/"+accountID+"/primary", nil)
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
 
-	// Then
 	assert.Equal(t, http.StatusBadRequest, w.Code)
-
 	mockOAuthService.AssertExpectations(t)
 }

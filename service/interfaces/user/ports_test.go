@@ -45,21 +45,6 @@ func (m *MockUserPortForTest) ListUsers(ctx context.Context, req *user.ListUsers
 	return &user.ListUsersResponse{}, nil
 }
 
-// RegisterUser Mock实现
-func (m *MockUserPortForTest) RegisterUser(ctx context.Context, req *user.RegisterUserRequest) (*user.RegisterUserResponse, error) {
-	return &user.RegisterUserResponse{}, nil
-}
-
-// LoginUser Mock实现
-func (m *MockUserPortForTest) LoginUser(ctx context.Context, req *user.LoginUserRequest) (*user.LoginUserResponse, error) {
-	return &user.LoginUserResponse{}, nil
-}
-
-// LogoutUser Mock实现
-func (m *MockUserPortForTest) LogoutUser(ctx context.Context, req *user.LogoutUserRequest) (*user.LogoutUserResponse, error) {
-	return &user.LogoutUserResponse{}, nil
-}
-
 // UpdateLastLogin Mock实现
 func (m *MockUserPortForTest) UpdateLastLogin(ctx context.Context, req *user.UpdateLastLoginRequest) (*user.UpdateLastLoginResponse, error) {
 	return &user.UpdateLastLoginResponse{}, nil
@@ -235,38 +220,6 @@ func TestUserDTOs_StructureValidation(t *testing.T) {
 		assert.Equal(t, int64(0), resp.Total)
 		assert.Equal(t, 1, resp.Page)
 		assert.Equal(t, 20, resp.PageSize)
-	})
-
-	t.Run("RegisterUserRequest", func(t *testing.T) {
-		req := &user.RegisterUserRequest{
-			Username: "testuser",
-			Email:    "test@example.com",
-			Password: "password123",
-		}
-		assert.Equal(t, "testuser", req.Username)
-		assert.Equal(t, "test@example.com", req.Email)
-		assert.Equal(t, "password123", req.Password)
-	})
-
-	t.Run("RegisterUserResponse", func(t *testing.T) {
-		resp := &user.RegisterUserResponse{}
-		assert.NotNil(t, resp)
-	})
-
-	t.Run("LoginUserRequest", func(t *testing.T) {
-		req := &user.LoginUserRequest{
-			Username: "testuser",
-			Password: "password123",
-			ClientIP: "127.0.0.1",
-		}
-		assert.Equal(t, "testuser", req.Username)
-		assert.Equal(t, "password123", req.Password)
-		assert.Equal(t, "127.0.0.1", req.ClientIP)
-	})
-
-	t.Run("LoginUserResponse", func(t *testing.T) {
-		resp := &user.LoginUserResponse{}
-		assert.NotNil(t, resp)
 	})
 
 	t.Run("UpdatePasswordRequest", func(t *testing.T) {

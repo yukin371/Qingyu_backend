@@ -143,25 +143,6 @@ type ServiceContainer struct {
 	imageProcessor   storage.ImageProcessorService
 }
 
-type userTokenLifecycleAdapter struct {
-	authService auth.AuthService
-}
-
-func (a *userTokenLifecycleAdapter) Logout(ctx context.Context, token string) error {
-	return a.authService.Logout(ctx, token)
-}
-
-func (a *userTokenLifecycleAdapter) ValidateTokenUserID(ctx context.Context, token string) (string, error) {
-	claims, err := a.authService.ValidateToken(ctx, token)
-	if err != nil {
-		return "", err
-	}
-	if claims == nil {
-		return "", nil
-	}
-	return claims.UserID, nil
-}
-
 // NewServiceContainer 创建服务容器
 // Repository工厂将在Initialize()时自动创建
 func NewServiceContainer() *ServiceContainer {
@@ -1104,11 +1085,6 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 		if err := c.RegisterService("AuthService", baseAuthSvc); err != nil {
 			return fmt.Errorf("注册认证服务失败: %w", err)
 		}
-	}
-
-	// UserService 复用 AuthService 的 token 生命周期能力，避免 user 侧继续保留假实现。
-	if userSvcImpl, ok := c.userService.(*userService.UserServiceImpl); ok {
-		userSvcImpl.SetTokenLifecycleService(&userTokenLifecycleAdapter{authService: c.authService})
 	}
 
 	// 5.2.1 创建 OAuthService（可选，需要配置）

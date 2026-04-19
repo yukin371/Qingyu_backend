@@ -1,11 +1,15 @@
 package shared
 
 import (
+	"net/http"
+	"time"
+
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/pkg/emailcode"
 	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/auth"
+	serviceInterfaces "Qingyu_backend/service/interfaces/base"
 )
 
 // AuthAPI 认证服务API处理器
@@ -40,19 +44,37 @@ func (api *AuthAPI) Register(c *gin.Context) {
 		return
 	}
 
-	if api.codeManager.Enabled() {
-		if req.VerificationCode == "" {
-			response.BadRequest(c, "请先填写邮箱验证码", nil)
-			return
-		}
-		if err := api.codeManager.VerifyRegisterCode(req.Email, req.VerificationCode); err != nil {
-			response.BadRequest(c, "邮箱验证码校验失败: "+err.Error(), nil)
-			return
-		}
+	if !ValidateRegisterVerificationCode(c, api.codeManager, req.Email, req.VerificationCode) {
+		return
 	}
 
 	resp, err := api.authService.Register(c.Request.Context(), &req)
 	if err != nil {
+		if serviceErr, ok := err.(*serviceInterfaces.ServiceError); ok {
+			switch serviceErr.Type {
+			case serviceInterfaces.ErrorTypeValidation:
+				response.BadRequest(c, "注册失败", serviceErr.Message)
+			case serviceInterfaces.ErrorTypeBusiness:
+				if serviceErr.Message == "用户名已存在" {
+					c.JSON(http.StatusConflict, response.APIResponse{
+						Code:      2003,
+						Message:   "用户名已被注册",
+						Timestamp: time.Now().UnixMilli(),
+					})
+				} else if serviceErr.Message == "邮箱已存在" {
+					c.JSON(http.StatusConflict, response.APIResponse{
+						Code:      2004,
+						Message:   "邮箱已被注册",
+						Timestamp: time.Now().UnixMilli(),
+					})
+				} else {
+					response.BadRequest(c, "注册失败", serviceErr.Message)
+				}
+			default:
+				response.InternalError(c, err)
+			}
+			return
+		}
 		response.InternalError(c, err)
 		return
 	}
@@ -74,19 +96,7 @@ func (api *AuthAPI) Register(c *gin.Context) {
 //	@Failure		500		{object}	APIResponse
 //	@Router			/api/v1/shared/auth/login [post]
 func (api *AuthAPI) Login(c *gin.Context) {
-	var req auth.LoginRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "请求参数错误: "+err.Error(), nil)
-		return
-	}
-
-	resp, err := api.authService.Login(c.Request.Context(), &req)
-	if err != nil {
-		response.Unauthorized(c, "登录失败: "+err.Error())
-		return
-	}
-
-	response.SuccessWithMessage(c, "登录成功", resp)
+	HandleAuthLogin(c, api.authService)
 }
 
 // Logout 用户登出
@@ -102,15 +112,9 @@ func (api *AuthAPI) Login(c *gin.Context) {
 //	@Failure		500	{object}	APIResponse
 //	@Router			/api/v1/shared/auth/logout [post]
 func (api *AuthAPI) Logout(c *gin.Context) {
-	token := c.GetHeader("Authorization")
-	if token == "" {
-		response.Unauthorized(c, "未提供Token")
+	token, ok := GetBearerToken(c)
+	if !ok {
 		return
-	}
-
-	// 去除 "Bearer " 前缀
-	if len(token) > 7 && token[:7] == "Bearer " {
-		token = token[7:]
 	}
 
 	err := api.authService.Logout(c.Request.Context(), token)
@@ -135,15 +139,9 @@ func (api *AuthAPI) Logout(c *gin.Context) {
 //	@Failure		500	{object}	APIResponse
 //	@Router			/api/v1/shared/auth/refresh [post]
 func (api *AuthAPI) RefreshToken(c *gin.Context) {
-	token := c.GetHeader("Authorization")
-	if token == "" {
-		response.Unauthorized(c, "未提供Token")
+	token, ok := GetBearerToken(c)
+	if !ok {
 		return
-	}
-
-	// 去除 "Bearer " 前缀
-	if len(token) > 7 && token[:7] == "Bearer " {
-		token = token[7:]
 	}
 
 	newToken, err := api.authService.RefreshToken(c.Request.Context(), token)
@@ -168,14 +166,12 @@ func (api *AuthAPI) RefreshToken(c *gin.Context) {
 //	@Failure		500	{object}	APIResponse
 //	@Router			/api/v1/shared/auth/permissions [get]
 func (api *AuthAPI) GetUserPermissions(c *gin.Context) {
-	// 从Context中获取当前用户ID（由中间件设置）
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未认证")
+	userID, ok := GetUserIDWithMessage(c, "未认证")
+	if !ok {
 		return
 	}
 
-	permissions, err := api.authService.GetUserPermissions(c.Request.Context(), userID.(string))
+	permissions, err := api.authService.GetUserPermissions(c.Request.Context(), userID)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -197,14 +193,12 @@ func (api *AuthAPI) GetUserPermissions(c *gin.Context) {
 //	@Failure		500	{object}	APIResponse
 //	@Router			/api/v1/shared/auth/roles [get]
 func (api *AuthAPI) GetUserRoles(c *gin.Context) {
-	// 从Context中获取当前用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未认证")
+	userID, ok := GetUserIDWithMessage(c, "未认证")
+	if !ok {
 		return
 	}
 
-	roles, err := api.authService.GetUserRoles(c.Request.Context(), userID.(string))
+	roles, err := api.authService.GetUserRoles(c.Request.Context(), userID)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -231,8 +225,7 @@ func (api *AuthAPI) SendVerificationCode(c *gin.Context) {
 		return
 	}
 
-	if err := api.codeManager.SendRegisterCode(c.Request.Context(), req.Email); err != nil {
-		response.BadRequest(c, err.Error(), nil)
+	if !SendRegisterVerificationCode(c.Request.Context(), c, api.codeManager, req.Email) {
 		return
 	}
 

@@ -59,6 +59,13 @@ func TestAuthHandler_Logout_WithTokenCallsService(t *testing.T) {
 	handler.Logout(c)
 
 	require.Equal(t, http.StatusOK, w.Code)
+	var resp map[string]interface{}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, float64(0), resp["code"])
+	assert.Equal(t, "操作成功", resp["message"])
+	data := resp["data"].(map[string]interface{})
+	assert.Equal(t, "Logged out successfully", data["message"])
+	assert.Equal(t, true, data["success"])
 	mockService.AssertExpectations(t)
 }
 
@@ -76,6 +83,13 @@ func TestAuthHandler_Logout_WithoutTokenIsIdempotent(t *testing.T) {
 	handler.Logout(c)
 
 	assert.Equal(t, http.StatusOK, w.Code)
+	var resp map[string]interface{}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, float64(0), resp["code"])
+	assert.Equal(t, "操作成功", resp["message"])
+	data := resp["data"].(map[string]interface{})
+	assert.Equal(t, "Logged out successfully", data["message"])
+	mockService.AssertNotCalled(t, "Logout", mock.Anything, mock.Anything)
 }
 
 func TestAuthHandler_Logout_ServiceError(t *testing.T) {
@@ -104,6 +118,7 @@ func TestAuthHandler_Register_Success(t *testing.T) {
 	mockService := new(MockAuthHandlerService)
 	handler := NewAuthHandler(mockService)
 
+	// 用户域兼容入口保持旧语义：这里不要求 verification_code。
 	body := map[string]string{
 		"username": "tester",
 		"email":    "tester@example.com",
@@ -146,6 +161,80 @@ func TestAuthHandler_Register_Success(t *testing.T) {
 	assert.Equal(t, "user-1", data["user_id"])
 	assert.Equal(t, "active", data["status"])
 	assert.Equal(t, "token-123", data["token"])
+	mockService.AssertExpectations(t)
+}
+
+func TestAuthHandler_Register_DuplicateUsernameReturnsConflict(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	mockService := new(MockAuthHandlerService)
+	handler := NewAuthHandler(mockService)
+
+	body := map[string]string{
+		"username": "tester",
+		"email":    "tester@example.com",
+		"password": "Password@123",
+	}
+	payload, err := json.Marshal(body)
+	require.NoError(t, err)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/user/auth/register", bytes.NewReader(payload))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = req
+
+	mockService.On("Register", mock.Anything, &authsvc.RegisterRequest{
+		Username: "tester",
+		Email:    "tester@example.com",
+		Password: "Password@123",
+	}).Return(nil, serviceInterfaces.NewServiceError("AuthService", serviceInterfaces.ErrorTypeBusiness, "用户名已存在", nil)).Once()
+
+	handler.Register(c)
+
+	require.Equal(t, http.StatusConflict, w.Code)
+
+	var resp map[string]interface{}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, float64(2003), resp["code"])
+	assert.Equal(t, "用户名已被注册", resp["message"])
+	mockService.AssertExpectations(t)
+}
+
+func TestAuthHandler_Register_DuplicateEmailReturnsConflict(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	mockService := new(MockAuthHandlerService)
+	handler := NewAuthHandler(mockService)
+
+	body := map[string]string{
+		"username": "tester",
+		"email":    "tester@example.com",
+		"password": "Password@123",
+	}
+	payload, err := json.Marshal(body)
+	require.NoError(t, err)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/user/auth/register", bytes.NewReader(payload))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = req
+
+	mockService.On("Register", mock.Anything, &authsvc.RegisterRequest{
+		Username: "tester",
+		Email:    "tester@example.com",
+		Password: "Password@123",
+	}).Return(nil, serviceInterfaces.NewServiceError("AuthService", serviceInterfaces.ErrorTypeBusiness, "邮箱已存在", nil)).Once()
+
+	handler.Register(c)
+
+	require.Equal(t, http.StatusConflict, w.Code)
+
+	var resp map[string]interface{}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, float64(2004), resp["code"])
+	assert.Equal(t, "邮箱已被注册", resp["message"])
 	mockService.AssertExpectations(t)
 }
 
@@ -197,5 +286,79 @@ func TestAuthHandler_Login_Success(t *testing.T) {
 	assert.Equal(t, "token-123", data["token"])
 	user := data["user"].(map[string]interface{})
 	assert.Equal(t, "user-1", user["user_id"])
+	mockService.AssertExpectations(t)
+}
+
+func TestAuthHandler_Login_NotFoundMapsToGenericUnauthorized(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	mockService := new(MockAuthHandlerService)
+	handler := NewAuthHandler(mockService)
+
+	body := map[string]string{
+		"username": "tester",
+		"password": "wrong-password",
+	}
+	payload, err := json.Marshal(body)
+	require.NoError(t, err)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/user/auth/login", bytes.NewReader(payload))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = req
+
+	mockService.On("Login", mock.Anything, &authsvc.LoginRequest{
+		Username: "tester",
+		Password: "wrong-password",
+		ClientIP: "192.0.2.1",
+	}).Return(nil, serviceInterfaces.NewServiceError("AuthService", serviceInterfaces.ErrorTypeNotFound, "用户不存在", nil)).Once()
+
+	handler.Login(c)
+
+	require.Equal(t, http.StatusUnauthorized, w.Code)
+
+	var resp map[string]interface{}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, float64(1002), resp["code"])
+	assert.Equal(t, "用户名或密码错误", resp["message"])
+	mockService.AssertExpectations(t)
+}
+
+func TestAuthHandler_Login_ValidationErrorKeepsCompatMessage(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	mockService := new(MockAuthHandlerService)
+	handler := NewAuthHandler(mockService)
+
+	body := map[string]string{
+		"username": "tester",
+		"password": "short",
+	}
+	payload, err := json.Marshal(body)
+	require.NoError(t, err)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/user/auth/login", bytes.NewReader(payload))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = req
+
+	mockService.On("Login", mock.Anything, &authsvc.LoginRequest{
+		Username: "tester",
+		Password: "short",
+		ClientIP: "192.0.2.1",
+	}).Return(nil, serviceInterfaces.NewServiceError("AuthService", serviceInterfaces.ErrorTypeValidation, "密码长度不足", nil)).Once()
+
+	handler.Login(c)
+
+	require.Equal(t, http.StatusBadRequest, w.Code)
+
+	var resp map[string]interface{}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, float64(1001), resp["code"])
+	assert.Equal(t, "登录失败", resp["message"])
+	data := resp["data"].(map[string]interface{})
+	assert.Equal(t, "密码长度不足", data["details"])
 	mockService.AssertExpectations(t)
 }

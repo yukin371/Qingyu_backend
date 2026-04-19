@@ -106,9 +106,10 @@ import "Qingyu_backend/service/auth"
 - `service/container/` - 容器初始化
 - `service/interfaces/shared/` - 适配器层
 - `router/shared/` - 共享路由
-- `api/v1/auth/` - 认证API
 - `api/v1/shared/` - 共享API
 - `middleware/` - 中间件
+
+`api/v1/auth/` 历史包已删除，不应再作为允许名单或 owner 重新恢复。
 
 ### 禁止直接导入shared的模块
 

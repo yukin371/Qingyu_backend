@@ -100,30 +100,6 @@ func (m *MockUserService) ListUsers(ctx context.Context, req *userServiceInterfa
 	return args.Get(0).(*userServiceInterface.ListUsersResponse), args.Error(1)
 }
 
-func (m *MockUserService) RegisterUser(ctx context.Context, req *userServiceInterface.RegisterUserRequest) (*userServiceInterface.RegisterUserResponse, error) {
-	args := m.Called(ctx, req)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*userServiceInterface.RegisterUserResponse), args.Error(1)
-}
-
-func (m *MockUserService) LoginUser(ctx context.Context, req *userServiceInterface.LoginUserRequest) (*userServiceInterface.LoginUserResponse, error) {
-	args := m.Called(ctx, req)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*userServiceInterface.LoginUserResponse), args.Error(1)
-}
-
-func (m *MockUserService) LogoutUser(ctx context.Context, req *userServiceInterface.LogoutUserRequest) (*userServiceInterface.LogoutUserResponse, error) {
-	args := m.Called(ctx, req)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*userServiceInterface.LogoutUserResponse), args.Error(1)
-}
-
 func (m *MockUserService) UpdateLastLogin(ctx context.Context, req *userServiceInterface.UpdateLastLoginRequest) (*userServiceInterface.UpdateLastLoginResponse, error) {
 	args := m.Called(ctx, req)
 	if args.Get(0) == nil {
@@ -204,7 +180,6 @@ func (m *MockUserService) ConfirmPasswordReset(ctx context.Context, req *userSer
 	}
 	return args.Get(0).(*userServiceInterface.ConfirmPasswordResetResponse), args.Error(1)
 }
-
 
 // setupTestRouter 设置测试路由
 func setupTestRouter(userService userServiceInterface.UserService) *gin.Engine {

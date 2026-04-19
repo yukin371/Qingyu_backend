@@ -1,6 +1,8 @@
 # User Service 模块架构文档
 
-用户服务模块，提供用户注册、登录、密码管理、邮箱验证等核心用户业务逻辑。
+用户服务模块，提供用户 CRUD、密码管理、邮箱验证、状态管理与角色降级等核心用户业务逻辑。
+
+> 边界说明：公开注册、登录、登出和 JWT 生命周期已收敛到 `service/auth`；`service/user` 不再负责签发 token 或承担认证主链。
 
 ## 架构图
 
@@ -59,9 +61,6 @@ graph TB
 | 方法 | 职责 |
 |------|------|
 | `CreateUser` | 创建用户（管理端） |
-| `RegisterUser` | 用户注册（公开） |
-| `LoginUser` | 用户登录认证 |
-| `LogoutUser` | 用户登出 |
 | `GetUser` | 获取用户信息 |
 | `UpdateUser` | 更新用户信息 |
 | `DeleteUser` | 删除用户 |
@@ -71,10 +70,6 @@ graph TB
 | `ConfirmPasswordReset` | 确认密码重置 |
 | `SendEmailVerification` | 发送邮箱验证码 |
 | `VerifyEmail` | 验证邮箱 |
-| `AssignRole` | 分配角色 |
-| `RemoveRole` | 移除角色 |
-| `GetUserRoles` | 获取用户角色 |
-| `GetUserPermissions` | 获取用户权限 |
 | `DowngradeRole` | 角色降级 |
 
 ### PasswordService - 密码服务
@@ -175,74 +170,22 @@ graph LR
 | 服务 | Repository | 用途 |
 |------|------------|------|
 | UserServiceImpl | `UserRepository` | 用户CRUD、状态管理 |
-| UserServiceImpl | `RoleRepository` | 角色、权限管理 |
 | PasswordService | `UserRepository` | 密码更新、用户查询 |
 | VerificationService | `UserRepository` | 用户信息查询、验证状态更新 |
-| VerificationService | `RoleRepository` | 认证相关操作 |
+| VerificationService | `RoleRepository` | 历史兼容注入，待继续收口 |
 
 ## 核心流程说明
 
-### 用户注册流程
+### 认证边界说明
 
-```mermaid
-sequenceDiagram
-    participant Client
-    participant UserService
-    participant UserRepository
-    participant TokenManager
+公开注册、登录、登出与 Token 签发已迁移到 `service/auth`。当前 `service/user` 只负责：
 
-    Client->>UserService: RegisterUser(username, email, password)
-    UserService->>UserService: 验证请求参数
-    UserService->>UserRepository: ExistsByUsername()
-    UserService->>UserRepository: ExistsByEmail()
-    UserService->>UserService: 创建User对象
-    UserService->>UserService: SetPassword() (bcrypt加密)
-    UserService->>UserRepository: Create(user)
+- 用户资料与状态管理
+- 密码修改、密码重置
+- 邮箱验证码发送与验证
+- 用户角色降级等用户属性侧能力
 
-    alt 创建成功
-        UserService->>TokenManager: GenerateToken(userID, roles)
-        TokenManager-->>UserService: JWT Token
-        UserService-->>Client: RegisterUserResponse(user, token)
-    else 并发冲突
-        UserService->>UserService: 重试机制(最多3次)
-    end
-```
-
-### 用户登录流程
-
-```mermaid
-sequenceDiagram
-    participant Client
-    participant UserService
-    participant UserRepository
-    participant TokenManager
-
-    Client->>UserService: LoginUser(username, password)
-    UserService->>UserService: 验证参数非空
-    UserService->>UserRepository: GetByUsername(username)
-
-    alt 用户不存在
-        UserRepository-->>UserService: NotFoundError
-        UserService-->>Client: 用户不存在
-    else 用户存在
-        UserRepository-->>UserService: User
-        UserService->>UserService: ValidatePassword()
-
-        alt 密码错误
-            UserService-->>Client: 密码错误
-        else 密码正确
-            UserService->>UserService: 检查用户状态
-
-            alt 状态异常
-                UserService-->>Client: 账号未激活/已封禁/已删除
-            else 状态正常
-                UserService->>UserRepository: UpdateLastLogin()
-                UserService->>TokenManager: GenerateToken()
-                UserService-->>Client: LoginUserResponse(user, token)
-            end
-        end
-    end
-```
+认证主链请参考 `service/auth/README.md`。
 
 ### 密码重置流程
 

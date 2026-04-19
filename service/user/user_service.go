@@ -5,10 +5,8 @@ import (
 	user2 "Qingyu_backend/service/interfaces/user"
 	"context"
 	"fmt"
-	"regexp"
 	"time"
 
-	"Qingyu_backend/internal/middleware/auth"
 	usersModel "Qingyu_backend/models/users"
 	repoInterfaces "Qingyu_backend/repository/interfaces/user"
 
@@ -43,13 +41,6 @@ func indexOf(s, substr string) int {
 	return -1
 }
 
-// TokenLifecycleService 抽象当前可用的 token 生命周期能力。
-// UserService 通过这个最小接口复用 auth 的登出/验证逻辑，避免直接依赖具体实现。
-type TokenLifecycleService interface {
-	Logout(ctx context.Context, token string) error
-	ValidateTokenUserID(ctx context.Context, token string) (string, error)
-}
-
 // UserServiceImpl 用户服务实现
 //
 // TECHDEBT(#2026-03-22): 分层违规问题
@@ -60,11 +51,10 @@ type TokenLifecycleService interface {
 // 解决方案：引入事件驱动或接口隔离，在后续迭代中重构。
 // 详见：docs/reports/2026-03-22-user-auth-boundary-analysis.md
 type UserServiceImpl struct {
-	userRepo               repoInterfaces.UserRepository
-	tokenLifecycleService  TokenLifecycleService
-	logger                 *zap.Logger
-	name                   string
-	version                string
+	userRepo repoInterfaces.UserRepository
+	logger   *zap.Logger
+	name     string
+	version  string
 }
 
 // NewUserService 创建用户服务
@@ -75,11 +65,6 @@ func NewUserService(userRepo repoInterfaces.UserRepository) user2.UserService {
 		name:     "UserService",
 		version:  "1.0.0",
 	}
-}
-
-// SetTokenLifecycleService 注入当前可用的 token 生命周期能力。
-func (s *UserServiceImpl) SetTokenLifecycleService(tokenLifecycleService TokenLifecycleService) {
-	s.tokenLifecycleService = tokenLifecycleService
 }
 
 // Initialize 初始化服务
@@ -327,213 +312,6 @@ func (s *UserServiceImpl) ListUsers(ctx context.Context, req *user2.ListUsersReq
 	}, nil
 }
 
-// RegisterUser 注册用户
-func (s *UserServiceImpl) RegisterUser(ctx context.Context, req *user2.RegisterUserRequest) (*user2.RegisterUserResponse, error) {
-	// 1. 验证请求数据
-	if err := s.validateRegisterUserRequest(req); err != nil {
-		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "请求数据验证失败", err)
-	}
-
-	// 2. 检查用户是否已存在
-	exists, err := s.userRepo.ExistsByUsername(ctx, req.Username)
-	if err != nil {
-		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "检查用户名失败", err)
-	}
-	if exists {
-		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeBusiness, "用户名已存在", nil)
-	}
-
-	exists, err = s.userRepo.ExistsByEmail(ctx, req.Email)
-	if err != nil {
-		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "检查邮箱失败", err)
-	}
-	if exists {
-		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeBusiness, "邮箱已存在", nil)
-	}
-
-	// 3. 创建用户对象
-	user := &usersModel.User{
-		Username: req.Username,
-		Email:    req.Email,
-		Password: req.Password,
-		Roles:    []string{"reader"},          // 默认角色
-		Status:   usersModel.UserStatusActive, // 默认状态
-	}
-
-	// 4. 设置密码
-	if err := user.SetPassword(req.Password); err != nil {
-		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "设置密码失败", err)
-	}
-
-	// 5. 保存到数据库（带重试机制处理并发冲突）
-	maxRetries := 3
-	var lastErr error
-	for attempt := 0; attempt < maxRetries; attempt++ {
-		err := s.userRepo.Create(ctx, user)
-		if err == nil {
-			// 创建成功
-			break
-		}
-
-		lastErr = err
-
-		// 检查是否是唯一索引冲突（MongoDB错误代码11000）
-		if isDuplicateKeyError(err) {
-			// 重新检查用户是否已存在（可能是其他并发请求创建了）
-			exists, checkErr := s.userRepo.ExistsByUsername(ctx, req.Username)
-			if checkErr == nil && exists {
-				// 用户确实存在了，返回友好错误
-				return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeBusiness, "用户名已存在", nil)
-			}
-
-			// 如果是最后一次尝试，返回错误
-			if attempt == maxRetries-1 {
-				return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "创建用户失败（并发冲突）", err)
-			}
-
-			// 等待一小段时间后重试
-			time.Sleep(time.Duration(attempt+1) * 50 * time.Millisecond)
-			continue
-		}
-
-		// 其他类型的错误，直接返回
-		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "创建用户失败", err)
-	}
-
-	// 如果所有重试都失败，返回最后一次错误
-	if lastErr != nil {
-		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "创建用户失败", lastErr)
-	}
-
-	// 6. 生成JWT令牌 - 使用用户的实际角色列表
-	token, err := s.generateToken(user.ID.Hex(), user.Roles)
-	if err != nil {
-		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "生成Token失败", err)
-	}
-
-	return &user2.RegisterUserResponse{
-		User:  ToUserDTO(user),
-		Token: token,
-	}, nil
-}
-
-// LoginUser 登录用户
-func (s *UserServiceImpl) LoginUser(ctx context.Context, req *user2.LoginUserRequest) (*user2.LoginUserResponse, error) {
-	// 1. 验证请求数据
-	if req.Username == "" || req.Password == "" {
-		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "用户名和密码不能为空", nil)
-	}
-
-	// DEBUG: 记录登录尝试（不记录原始用户输入）
-	zap.L().Debug("登录尝试")
-
-	// 2. 获取用户
-	user, err := s.userRepo.GetByUsername(ctx, req.Username)
-	if err != nil {
-		zap.L().Debug("获取用户失败", zap.Error(err))
-		if repoInterfaces.IsNotFoundError(err) {
-			return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeNotFound, "用户不存在", err)
-		}
-		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "获取用户失败", err)
-	}
-
-	zap.L().Debug("用户找到",
-		zap.String("user_id", user.ID.Hex()),
-		zap.String("username", user.Username),
-		zap.String("status", string(user.Status)))
-	// 3. 验证密码
-	if !user.ValidatePassword(req.Password) {
-		zap.L().Debug("密码验证失败")
-		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeUnauthorized, "密码错误", nil)
-	}
-
-	zap.L().Debug("密码验证成功")
-
-	// 4. 检查用户状态
-	switch user.Status {
-	case usersModel.UserStatusInactive:
-		return nil, serviceInterfaces.NewServiceError(
-			s.name,
-			serviceInterfaces.ErrorTypeUnauthorized,
-			"账号未激活，请先验证邮箱",
-			nil,
-		)
-	case usersModel.UserStatusBanned:
-		return nil, serviceInterfaces.NewServiceError(
-			s.name,
-			serviceInterfaces.ErrorTypeUnauthorized,
-			"账号已被封禁，请联系管理员",
-			nil,
-		)
-	case usersModel.UserStatusDeleted:
-		return nil, serviceInterfaces.NewServiceError(
-			s.name,
-			serviceInterfaces.ErrorTypeUnauthorized,
-			"账号已删除",
-			nil,
-		)
-	case usersModel.UserStatusActive:
-		// 允许登录，继续执行
-	default:
-		return nil, serviceInterfaces.NewServiceError(
-			s.name,
-			serviceInterfaces.ErrorTypeInternal,
-			"未知的用户状态",
-			nil,
-		)
-	}
-
-	// 5. 更新最后登录时间
-	ip := req.ClientIP
-	if ip == "" {
-		ip = "unknown"
-	}
-	if err := s.userRepo.UpdateLastLogin(ctx, user.ID.Hex(), ip); err != nil {
-		// 记录错误但不影响登录流程
-		zap.L().Warn("更新最后登录时间失败", // codeql[go/log-injection]
-			zap.String("user_id", user.ID.Hex()),
-			zap.String("ip", ip),
-			zap.Error(err),
-		)
-	}
-
-	// 6. 生成JWT令牌 - 使用用户的实际角色列表
-	token, err := s.generateToken(user.ID.Hex(), user.Roles)
-	if err != nil {
-		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "生成Token失败", err)
-	}
-
-	return &user2.LoginUserResponse{
-		User:  ToUserDTO(user),
-		Token: token,
-	}, nil
-}
-
-// LogoutUser 登出用户
-func (s *UserServiceImpl) LogoutUser(ctx context.Context, req *user2.LogoutUserRequest) (*user2.LogoutUserResponse, error) {
-	if req == nil {
-		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "登出请求不能为空", nil)
-	}
-
-	if req.Token == "" {
-		return &user2.LogoutUserResponse{
-			Success: true,
-		}, nil
-	}
-
-	// 当前实现优先复用 auth 的吊销能力；
-	// 若运行时尚未注入该能力，则保持幂等成功，避免破坏旧调用方。
-	if s.tokenLifecycleService != nil {
-		if err := s.tokenLifecycleService.Logout(ctx, req.Token); err != nil {
-			return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "登出失败", err)
-		}
-	}
-
-	return &user2.LogoutUserResponse{
-		Success: true,
-	}, nil
-}
-
 // UpdateLastLogin 更新最后登录时间
 func (s *UserServiceImpl) UpdateLastLogin(ctx context.Context, req *user2.UpdateLastLoginRequest) (*user2.UpdateLastLoginResponse, error) {
 	// 1. 验证请求数据
@@ -675,26 +453,6 @@ func (s *UserServiceImpl) validateCreateUserRequest(req *user2.CreateUserRequest
 	return nil
 }
 
-// validateRegisterUserRequest 验证注册用户请求
-func (s *UserServiceImpl) validateRegisterUserRequest(req *user2.RegisterUserRequest) error {
-	if req.Username == "" {
-		return fmt.Errorf("用户名不能为空")
-	}
-	if req.Email == "" {
-		return fmt.Errorf("邮箱不能为空")
-	}
-	// 验证邮箱格式
-	emailRegex := `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
-	matched, _ := regexp.MatchString(emailRegex, req.Email)
-	if !matched {
-		return fmt.Errorf("邮箱格式不正确")
-	}
-	if req.Password == "" {
-		return fmt.Errorf("密码不能为空")
-	}
-	return nil
-}
-
 // validateUpdatePasswordRequest 验证更新密码请求
 func (s *UserServiceImpl) validateUpdatePasswordRequest(req *user2.UpdatePasswordRequest) error {
 	if req.ID == "" {
@@ -707,13 +465,6 @@ func (s *UserServiceImpl) validateUpdatePasswordRequest(req *user2.UpdatePasswor
 		return fmt.Errorf("新密码不能为空")
 	}
 	return nil
-}
-
-// generateToken 生成JWT令牌（辅助方法）
-func (s *UserServiceImpl) generateToken(userID string, roles []string) (string, error) {
-	// 使用middleware包中的GenerateToken函数
-	// 导入: "Qingyu_backend/middleware"
-	return auth.GenerateToken(userID, "", roles)
 }
 
 // ==================== 邮箱验证相关方法 ====================

@@ -116,10 +116,13 @@ $ go run ./scripts/check-dependencies
 - `service/container`
 - `service/interfaces/shared`
 - `router/shared`
-- `api/v1/auth`
 - `api/v1/shared`
 - `realtime/websocket`
 - `middleware`
+
+补充说明：
+- `api/v1/auth` 历史包已删除，不再属于允许列表
+- 认证 HTTP owner 已收敛到 `api/v1/shared/*`
 
 ### 禁止列表
 
@@ -163,6 +166,7 @@ $ go run ./scripts/check-dependencies
 
 - `service/shared/auth` 已删除，不再提供运行时兼容
 - 认证服务使用 `service/auth`
+- `api/v1/auth` Go 包已退场，不应在白名单或文档中继续当作 owner
 - 密码验证器使用 `service/user`
 - 鉴权/权限中间件使用 `internal/middleware/auth`
 
