@@ -11,6 +11,7 @@ import (
 
 	"Qingyu_backend/models/ai"
 	usersModel "Qingyu_backend/models/users"
+	pkgtransaction "Qingyu_backend/pkg/transaction"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -111,37 +112,30 @@ func NewMongoTransactionManager(client *mongo.Client, factory TransactionReposit
 
 // ExecuteTransaction 执行事务
 func (tm *MongoTransactionManager) ExecuteTransaction(ctx context.Context, fn TransactionFunc) error {
-	session, err := tm.client.StartSession()
-	if err != nil {
-		return fmt.Errorf("启动事务会话失败: %w", err)
-	}
-	defer session.EndSession(ctx)
-
 	// 创建事务上下文
 	txCtx := &mongoTransactionContext{
 		Context:                      ctx,
-		session:                      session,
 		transactionRepositoryFactory: tm.transactionRepositoryFactory,
 		transactionID:                generateTransactionID(),
-		inTransaction:                true,
+		inTransaction:                !pkgtransaction.MongoTransactionsDisabled(),
 	}
 
-	// 执行事务
-	_, err = session.WithTransaction(ctx, func(sc mongo.SessionContext) (interface{}, error) {
+	err := pkgtransaction.RunMongoSession(ctx, tm.client, func(session mongo.Session, sc mongo.SessionContext) error {
+		txCtx.session = session
 		// 更新事务上下文
 		txCtx.Context = sc
 
 		// 执行业务逻辑
 		if err := fn(txCtx); err != nil {
-			return nil, err
+			return err
 		}
 
 		// 检查是否标记为回滚
 		if txCtx.IsMarkedForRollback() {
-			return nil, fmt.Errorf("事务被标记为回滚: %s", txCtx.GetRollbackReason())
+			return fmt.Errorf("事务被标记为回滚: %s", txCtx.GetRollbackReason())
 		}
 
-		return nil, nil
+		return nil
 	})
 
 	if err != nil {

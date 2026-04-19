@@ -13,6 +13,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
+	pkgtransaction "Qingyu_backend/pkg/transaction"
 	"Qingyu_backend/repository/mongodb/base"
 
 	BookstoreInterface "Qingyu_backend/repository/interfaces/bookstore"
@@ -590,23 +591,10 @@ func rankingEligible(book *bookstore2.Book, rankingType bookstore2.RankingType, 
 	return now.Sub(*book.PublishedAt) <= 30*24*time.Hour
 }
 
-// ========== 事务支持 ==========
-
 // Transaction 执行事务
 func (r *MongoRankingRepository) Transaction(ctx context.Context, fn func(ctx context.Context) error) error {
-	session, err := r.client.StartSession()
-	if err != nil {
-		return fmt.Errorf("failed to start session: %w", err)
-	}
-	defer session.EndSession(ctx)
-
-	_, err = session.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
-		return nil, fn(sessCtx)
-	})
-
-	if err != nil {
+	if err := pkgtransaction.RunMongoTransaction(ctx, r.client, fn); err != nil {
 		return fmt.Errorf("transaction failed: %w", err)
 	}
-
 	return nil
 }

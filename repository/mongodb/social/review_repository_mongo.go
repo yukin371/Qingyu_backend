@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	pkgtransaction "Qingyu_backend/pkg/transaction"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -520,15 +521,7 @@ func (r *MongoReviewRepository) DecrementReviewLikeCount(ctx context.Context, re
 
 // RunInTransaction 在事务中执行书评相关操作
 func (r *MongoReviewRepository) RunInTransaction(ctx context.Context, fn func(context.Context) error) error {
-	session, err := r.reviewCollection.Database().Client().StartSession()
-	if err != nil {
-		return fmt.Errorf("failed to start review transaction session: %w", err)
-	}
-	defer session.EndSession(ctx)
-
-	_, err = session.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
-		return nil, fn(sessCtx)
-	})
+	err := pkgtransaction.RunMongoTransaction(ctx, r.reviewCollection.Database().Client(), fn)
 	if err != nil {
 		return fmt.Errorf("review transaction failed: %w", err)
 	}

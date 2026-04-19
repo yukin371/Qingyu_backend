@@ -2,6 +2,7 @@ package mongodb
 
 import (
 	"Qingyu_backend/models/bookstore"
+	pkgtransaction "Qingyu_backend/pkg/transaction"
 	"Qingyu_backend/repository/mongodb/base"
 	"context"
 	"errors"
@@ -957,16 +958,7 @@ func (r *MongoBookRepository) BatchUpdateCategory(ctx context.Context, bookIDs [
 
 // Transaction 执行事务
 func (r *MongoBookRepository) Transaction(ctx context.Context, fn func(ctx context.Context) error) error {
-	session, err := r.client.StartSession() // 启动会话
-	if err != nil {
-		return err
-	}
-	defer session.EndSession(ctx) // 确保会话结束
-
-	_, err = session.WithTransaction(ctx, func(sc mongo.SessionContext) (interface{}, error) {
-		return nil, fn(sc)
-	})
-	return err
+	return pkgtransaction.RunMongoTransaction(ctx, r.client, fn)
 }
 
 // List 实现基础接口的List

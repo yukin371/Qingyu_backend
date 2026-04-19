@@ -2,6 +2,7 @@ package reader
 
 import (
 	"Qingyu_backend/models/social"
+	pkgtransaction "Qingyu_backend/pkg/transaction"
 	"context"
 	"fmt"
 	"regexp"
@@ -384,15 +385,7 @@ func (r *MongoLikeRepository) Health(ctx context.Context) error {
 
 // RunInTransaction 在事务中执行点赞相关操作
 func (r *MongoLikeRepository) RunInTransaction(ctx context.Context, fn func(context.Context) error) error {
-	session, err := r.collection.Database().Client().StartSession()
-	if err != nil {
-		return fmt.Errorf("failed to start like transaction session: %w", err)
-	}
-	defer session.EndSession(ctx)
-
-	_, err = session.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
-		return nil, fn(sessCtx)
-	})
+	err := pkgtransaction.RunMongoTransaction(ctx, r.collection.Database().Client(), fn)
 	if err != nil {
 		return fmt.Errorf("like transaction failed: %w", err)
 	}

@@ -11,6 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 
 	usersModel "Qingyu_backend/models/users"
+	pkgtransaction "Qingyu_backend/pkg/transaction"
 )
 
 // TransactionManager 事务管理器
@@ -36,31 +37,33 @@ type TransactionOperation interface {
 
 // ExecuteTransaction 执行事务操作
 func (tm *TransactionManager) ExecuteTransaction(ctx context.Context, operations []TransactionOperation) error {
-	session, err := tm.client.StartSession()
-	if err != nil {
-		return fmt.Errorf("启动事务会话失败: %w", err)
-	}
-	defer session.EndSession(ctx)
+	transactionsDisabled := pkgtransaction.MongoTransactionsDisabled()
 
-	return mongo.WithSession(ctx, session, func(sc mongo.SessionContext) error {
-		if err := session.StartTransaction(); err != nil {
-			return fmt.Errorf("启动事务失败: %w", err)
+	return pkgtransaction.RunMongoSession(ctx, tm.client, func(session mongo.Session, sc mongo.SessionContext) error {
+		if !transactionsDisabled {
+			if err := session.StartTransaction(); err != nil {
+				return fmt.Errorf("启动事务失败: %w", err)
+			}
 		}
 
 		// 执行所有操作
 		for i, op := range operations {
 			if err := op.Execute(sc, tm.db); err != nil {
 				// 回滚事务
-				if abortErr := session.AbortTransaction(sc); abortErr != nil {
-					log.Printf("回滚事务失败: %v", abortErr)
+				if !transactionsDisabled {
+					if abortErr := session.AbortTransaction(sc); abortErr != nil {
+						log.Printf("回滚事务失败: %v", abortErr)
+					}
 				}
 				return fmt.Errorf("执行操作 %d (%s) 失败: %w", i+1, op.GetDescription(), err)
 			}
 		}
 
 		// 提交事务
-		if err := session.CommitTransaction(sc); err != nil {
-			return fmt.Errorf("提交事务失败: %w", err)
+		if !transactionsDisabled {
+			if err := session.CommitTransaction(sc); err != nil {
+				return fmt.Errorf("提交事务失败: %w", err)
+			}
 		}
 
 		return nil

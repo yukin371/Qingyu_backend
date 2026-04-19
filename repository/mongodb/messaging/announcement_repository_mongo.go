@@ -2,6 +2,7 @@ package messaging
 
 import (
 	"Qingyu_backend/models/messaging"
+	pkgtransaction "Qingyu_backend/pkg/transaction"
 	infra "Qingyu_backend/repository/interfaces/infrastructure"
 	interfaces "Qingyu_backend/repository/interfaces/messaging"
 	"context"
@@ -366,14 +367,5 @@ func (r *MongoAnnouncementRepository) BatchDelete(ctx context.Context, announcem
 
 // Transaction 执行事务
 func (r *MongoAnnouncementRepository) Transaction(ctx context.Context, fn func(ctx context.Context) error) error {
-	session, err := r.client.StartSession()
-	if err != nil {
-		return err
-	}
-	defer session.EndSession(ctx)
-
-	_, err = session.WithTransaction(ctx, func(sc mongo.SessionContext) (interface{}, error) {
-		return nil, fn(sc)
-	})
-	return err
+	return pkgtransaction.RunMongoTransaction(ctx, r.client, fn)
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	pkgtransaction "Qingyu_backend/pkg/transaction"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -741,15 +742,7 @@ func (r *MongoMessageRepository) Health(ctx context.Context) error {
 
 // RunInTransaction 在事务中执行消息相关操作
 func (r *MongoMessageRepository) RunInTransaction(ctx context.Context, fn func(context.Context) error) error {
-	session, err := r.db.Client().StartSession()
-	if err != nil {
-		return fmt.Errorf("failed to start message transaction session: %w", err)
-	}
-	defer session.EndSession(ctx)
-
-	_, err = session.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
-		return nil, fn(sessCtx)
-	})
+	err := pkgtransaction.RunMongoTransaction(ctx, r.db.Client(), fn)
 	if err != nil {
 		return fmt.Errorf("message transaction failed: %w", err)
 	}

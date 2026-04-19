@@ -2,6 +2,7 @@ package project
 
 import (
 	"Qingyu_backend/models/writer"
+	pkgtransaction "Qingyu_backend/pkg/transaction"
 	"Qingyu_backend/repository"
 	"context"
 	"errors"
@@ -469,12 +470,6 @@ func (s *VersionService) CreateCommit(ctx context.Context, projectID, authorID, 
 	}
 
 	// 使用MongoDB事务确保原子性
-	session, err := s.db.Client().StartSession()
-	if err != nil {
-		return nil, fmt.Errorf("failed to start session: %w", err)
-	}
-	defer session.EndSession(ctx)
-
 	callback := func(sessCtx mongo.SessionContext) (interface{}, error) {
 		// 插入提交记录
 		_, err := s.commitCol().InsertOne(sessCtx, commit)
@@ -537,7 +532,9 @@ func (s *VersionService) CreateCommit(ctx context.Context, projectID, authorID, 
 		return commit, nil
 	}
 
-	result, err := session.WithTransaction(ctx, callback)
+	result, err := pkgtransaction.RunMongoSessionWithResult(ctx, s.db.Client(), func(_ mongo.Session, sessCtx mongo.SessionContext) (interface{}, error) {
+		return callback(sessCtx)
+	})
 	if err != nil {
 		return nil, err
 	}

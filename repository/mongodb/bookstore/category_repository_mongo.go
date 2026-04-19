@@ -2,6 +2,7 @@ package mongodb
 
 import (
 	"Qingyu_backend/models/bookstore"
+	pkgtransaction "Qingyu_backend/pkg/transaction"
 	"context"
 	"errors"
 	"time"
@@ -420,14 +421,5 @@ func (r *MongoCategoryRepository) BatchUpdateStatus(ctx context.Context, categor
 
 // Transaction 执行事务
 func (r *MongoCategoryRepository) Transaction(ctx context.Context, fn func(ctx context.Context) error) error {
-	session, err := r.client.StartSession()
-	if err != nil {
-		return err
-	}
-	defer session.EndSession(ctx)
-
-	_, err = session.WithTransaction(ctx, func(sc mongo.SessionContext) (interface{}, error) {
-		return nil, fn(sc)
-	})
-	return err
+	return pkgtransaction.RunMongoTransaction(ctx, r.client, fn)
 }

@@ -2,6 +2,7 @@ package writer
 
 import (
 	"Qingyu_backend/models/writer"
+	pkgtransaction "Qingyu_backend/pkg/transaction"
 	"Qingyu_backend/repository/mongodb/base"
 	"context"
 	"fmt"
@@ -462,28 +463,21 @@ func (r *MongoProjectRepository) CountByStatus(ctx context.Context, status strin
 
 // CreateWithTransaction 在事务中创建项目
 func (r *MongoProjectRepository) CreateWithTransaction(ctx context.Context, project *writer.Project, callback func(ctx context.Context) error) error {
-	session, err := r.db.Client().StartSession()
-	if err != nil {
-		return fmt.Errorf("启动事务失败: %w", err)
-	}
-	defer session.EndSession(ctx)
-
-	_, err = session.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
+	err := pkgtransaction.RunMongoTransaction(ctx, r.db.Client(), func(sessCtx context.Context) error {
 		// 创建项目
 		if err := r.Create(sessCtx, project); err != nil {
-			return nil, err
+			return err
 		}
 
 		// 执行回调
 		if callback != nil {
 			if err := callback(sessCtx); err != nil {
-				return nil, err
+				return err
 			}
 		}
 
-		return nil, nil
+		return nil
 	})
-
 	if err != nil {
 		return fmt.Errorf("事务执行失败: %w", err)
 	}

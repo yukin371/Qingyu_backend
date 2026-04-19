@@ -2,6 +2,7 @@ package writer
 
 import (
 	"Qingyu_backend/models/writer"
+	pkgtransaction "Qingyu_backend/pkg/transaction"
 	"Qingyu_backend/repository/mongodb/base"
 	"context"
 	"fmt"
@@ -265,26 +266,19 @@ func (r *MongoDocumentContentRepository) LoadFromGridFS(ctx context.Context, gri
 
 // CreateWithTransaction 在事务中创建文档内容
 func (r *MongoDocumentContentRepository) CreateWithTransaction(ctx context.Context, content *writer.DocumentContent, callback func(ctx context.Context) error) error {
-	session, err := r.db.Client().StartSession()
-	if err != nil {
-		return fmt.Errorf("启动事务失败: %w", err)
-	}
-	defer session.EndSession(ctx)
-
-	_, err = session.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
+	err := pkgtransaction.RunMongoTransaction(ctx, r.db.Client(), func(sessCtx context.Context) error {
 		if err := r.Create(sessCtx, content); err != nil {
-			return nil, err
+			return err
 		}
 
 		if callback != nil {
 			if err := callback(sessCtx); err != nil {
-				return nil, err
+				return err
 			}
 		}
 
-		return nil, nil
+		return nil
 	})
-
 	if err != nil {
 		return fmt.Errorf("事务执行失败: %w", err)
 	}
