@@ -18,6 +18,7 @@ import (
 type MongoQuotaRepository struct {
 	quotaCollection       *mongo.Collection
 	transactionCollection *mongo.Collection
+	usersCollection       *mongo.Collection
 }
 
 // NewMongoQuotaRepository 创建MongoDB配额Repository
@@ -25,7 +26,61 @@ func NewMongoQuotaRepository(db *mongo.Database) aiInterfaces.QuotaRepository {
 	return &MongoQuotaRepository{
 		quotaCollection:       db.Collection(aiModels.UserQuota{}.CollectionName()),
 		transactionCollection: db.Collection(aiModels.QuotaTransaction{}.CollectionName()),
+		usersCollection:       db.Collection("users"),
 	}
+}
+
+type quotaUserProfile struct {
+	Username string   `bson:"username"`
+	Roles    []string `bson:"roles"`
+	VIPLevel int      `bson:"vip_level"`
+}
+
+func primaryRoleFromRoles(roles []string) string {
+	if len(roles) == 0 {
+		return ""
+	}
+
+	for _, preferred := range []string{"admin", "author", "reader"} {
+		for _, role := range roles {
+			if role == preferred {
+				return role
+			}
+		}
+	}
+
+	return roles[0]
+}
+
+func (r *MongoQuotaRepository) getUserProfile(ctx context.Context, userID string) (*quotaUserProfile, error) {
+	if r.usersCollection == nil || userID == "" {
+		return nil, nil
+	}
+
+	oid, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return nil, nil
+	}
+
+	var profile quotaUserProfile
+	if err := r.usersCollection.FindOne(ctx, bson.M{"_id": oid}).Decode(&profile); err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &profile, nil
+}
+
+func mergeBSONMaps(filters ...bson.M) bson.M {
+	merged := bson.M{}
+	for _, filter := range filters {
+		for key, value := range filter {
+			merged[key] = value
+		}
+	}
+	return merged
 }
 
 // CreateQuota 创建配额
@@ -352,49 +407,72 @@ func (r *MongoQuotaRepository) Health(ctx context.Context) error {
 
 // GetDashboardSummary 获取仪表盘汇总数据
 func (r *MongoQuotaRepository) GetDashboardSummary(ctx context.Context) (*aiModels.DashboardSummary, error) {
+	dailyFilter := bson.M{"quota_type": aiModels.QuotaTypeDaily}
+
 	// 统计总用户数
-	totalUsers, err := r.quotaCollection.CountDocuments(ctx, bson.M{})
+	totalUsers, err := r.quotaCollection.CountDocuments(ctx, dailyFilter)
 	if err != nil {
 		return nil, fmt.Errorf("统计总用户数失败: %w", err)
 	}
 
 	// 统计活跃用户数
-	activeFilter := bson.M{"status": aiModels.QuotaStatusActive}
+	activeFilter := mergeBSONMaps(dailyFilter, bson.M{"status": aiModels.QuotaStatusActive})
 	activeUsers, err := r.quotaCollection.CountDocuments(ctx, activeFilter)
 	if err != nil {
 		return nil, fmt.Errorf("统计活跃用户数失败: %w", err)
 	}
 
 	// 统计配额耗尽用户数
-	exhaustedFilter := bson.M{"status": aiModels.QuotaStatusExhausted}
+	exhaustedFilter := mergeBSONMaps(dailyFilter, bson.M{"status": aiModels.QuotaStatusExhausted})
 	exhaustedUsers, err := r.quotaCollection.CountDocuments(ctx, exhaustedFilter)
 	if err != nil {
 		return nil, fmt.Errorf("统计耗尽用户数失败: %w", err)
 	}
 
+	nearExhaustFilter := mergeBSONMaps(dailyFilter, bson.M{
+		"status": aiModels.QuotaStatusActive,
+		"$expr": bson.M{
+			"$and": bson.A{
+				bson.M{"$gt": bson.A{"$total_quota", 0}},
+				bson.M{"$gte": bson.A{
+					bson.M{"$divide": bson.A{"$used_quota", "$total_quota"}},
+					0.8,
+				}},
+			},
+		},
+	})
+	nearExhaustUsers, err := r.quotaCollection.CountDocuments(ctx, nearExhaustFilter)
+	if err != nil {
+		return nil, fmt.Errorf("统计临近耗尽用户数失败: %w", err)
+	}
+
 	// 统计暂停用户数
-	suspendedFilter := bson.M{"status": aiModels.QuotaStatusSuspended}
+	suspendedFilter := mergeBSONMaps(dailyFilter, bson.M{"status": aiModels.QuotaStatusSuspended})
 	suspendedUsers, err := r.quotaCollection.CountDocuments(ctx, suspendedFilter)
 	if err != nil {
 		return nil, fmt.Errorf("统计暂停用户数失败: %w", err)
 	}
 
-	// 统计总消费量和计算平均消费
+	// 统计真实消费流水总量和计算平均消费
 	pipeline := mongo.Pipeline{
+		{{Key: "$match", Value: bson.M{
+			"type":   "consume",
+			"amount": bson.M{"$gt": 0},
+		}}},
 		{{Key: "$group", Value: bson.M{
 			"_id":   nil,
-			"total": bson.M{"$sum": "$used_quota"},
+			"total": bson.M{"$sum": "$amount"},
 		}}},
 	}
 
-	cursor, err := r.quotaCollection.Aggregate(ctx, pipeline)
+	cursor, err := r.transactionCollection.Aggregate(ctx, pipeline)
 	if err != nil {
 		return nil, fmt.Errorf("统计总消费量失败: %w", err)
 	}
 	defer cursor.Close(ctx)
 
 	var result []struct {
-		Total int `bson:"total"`
+		Total int64 `bson:"total"`
 	}
 	if err = cursor.All(ctx, &result); err != nil {
 		return nil, fmt.Errorf("解析统计结果失败: %w", err)
@@ -402,7 +480,7 @@ func (r *MongoQuotaRepository) GetDashboardSummary(ctx context.Context) (*aiMode
 
 	totalConsumption := int64(0)
 	if len(result) > 0 {
-		totalConsumption = int64(result[0].Total)
+		totalConsumption = result[0].Total
 	}
 
 	avgConsumption := float64(0)
@@ -411,13 +489,13 @@ func (r *MongoQuotaRepository) GetDashboardSummary(ctx context.Context) (*aiMode
 	}
 
 	return &aiModels.DashboardSummary{
-		TotalUsers:      totalUsers,
-		ActiveUsers:     activeUsers,
-		ExhaustedUsers:  exhaustedUsers,
-		NearExhaustUsers: 0, // 需要额外查询接近耗尽的用户
-		SuspendedUsers:  suspendedUsers,
+		TotalUsers:       totalUsers,
+		ActiveUsers:      activeUsers,
+		ExhaustedUsers:   exhaustedUsers,
+		NearExhaustUsers: nearExhaustUsers,
+		SuspendedUsers:   suspendedUsers,
 		TotalConsumption: totalConsumption,
-		AvgConsumption:  avgConsumption,
+		AvgConsumption:   avgConsumption,
 	}, nil
 }
 
@@ -429,9 +507,11 @@ func (r *MongoQuotaRepository) GetQuotaDistribution(ctx context.Context) (*aiMod
 		ByService: make(map[string]int),
 		ByStatus:  make(map[string]int),
 	}
+	dailyMatch := bson.M{"quota_type": aiModels.QuotaTypeDaily}
 
 	// 按角色统计
 	rolePipeline := mongo.Pipeline{
+		{{Key: "$match", Value: dailyMatch}},
 		{{Key: "$group", Value: bson.M{
 			"_id":   "$metadata.user_role",
 			"count": bson.M{"$sum": 1},
@@ -446,13 +526,41 @@ func (r *MongoQuotaRepository) GetQuotaDistribution(ctx context.Context) (*aiMod
 			Count int    `bson:"count"`
 		}
 		_ = cursor.All(ctx, &roleResults)
-		for _, r := range roleResults {
-			distribution.ByRole[r.Role] = r.Count
+		for _, result := range roleResults {
+			if result.Role == "" {
+				continue
+			}
+			distribution.ByRole[result.Role] = result.Count
+		}
+	}
+
+	if len(distribution.ByRole) == 0 && r.usersCollection != nil {
+		userRolePipeline := mongo.Pipeline{
+			{{Key: "$match", Value: bson.M{"roles": bson.M{"$exists": true, "$ne": bson.A{}}}}},
+			{{Key: "$unwind", Value: "$roles"}},
+			{{Key: "$group", Value: bson.M{
+				"_id":   "$roles",
+				"count": bson.M{"$sum": 1},
+			}}},
+		}
+
+		cursor, err = r.usersCollection.Aggregate(ctx, userRolePipeline)
+		if err == nil {
+			defer cursor.Close(ctx)
+			var userRoleResults []struct {
+				Role  string `bson:"_id"`
+				Count int    `bson:"count"`
+			}
+			_ = cursor.All(ctx, &userRoleResults)
+			for _, result := range userRoleResults {
+				distribution.ByRole[result.Role] = result.Count
+			}
 		}
 	}
 
 	// 按等级统计
 	levelPipeline := mongo.Pipeline{
+		{{Key: "$match", Value: dailyMatch}},
 		{{Key: "$group", Value: bson.M{
 			"_id":   "$metadata.membership_level",
 			"count": bson.M{"$sum": 1},
@@ -467,13 +575,17 @@ func (r *MongoQuotaRepository) GetQuotaDistribution(ctx context.Context) (*aiMod
 			Count int    `bson:"count"`
 		}
 		_ = cursor.All(ctx, &levelResults)
-		for _, r := range levelResults {
-			distribution.ByLevel[r.Level] = r.Count
+		for _, result := range levelResults {
+			if result.Level == "" {
+				continue
+			}
+			distribution.ByLevel[result.Level] = result.Count
 		}
 	}
 
 	// 按状态统计
 	statusPipeline := mongo.Pipeline{
+		{{Key: "$match", Value: dailyMatch}},
 		{{Key: "$group", Value: bson.M{
 			"_id":   "$status",
 			"count": bson.M{"$sum": 1},
@@ -488,8 +600,40 @@ func (r *MongoQuotaRepository) GetQuotaDistribution(ctx context.Context) (*aiMod
 			Count  int    `bson:"count"`
 		}
 		_ = cursor.All(ctx, &statusResults)
-		for _, r := range statusResults {
-			distribution.ByStatus[r.Status] = r.Count
+		for _, result := range statusResults {
+			if result.Status == "" {
+				continue
+			}
+			distribution.ByStatus[result.Status] = result.Count
+		}
+	}
+
+	servicePipeline := mongo.Pipeline{
+		{{Key: "$match", Value: bson.M{
+			"type":    "consume",
+			"amount":  bson.M{"$gt": 0},
+			"service": bson.M{"$exists": true, "$ne": ""},
+		}}},
+		{{Key: "$group", Value: bson.M{
+			"_id":   "$service",
+			"total": bson.M{"$sum": "$amount"},
+		}}},
+		{{Key: "$sort", Value: bson.M{"total": -1}}},
+	}
+
+	cursor, err = r.transactionCollection.Aggregate(ctx, servicePipeline)
+	if err == nil {
+		defer cursor.Close(ctx)
+		var serviceResults []struct {
+			Service string `bson:"_id"`
+			Total   int64  `bson:"total"`
+		}
+		_ = cursor.All(ctx, &serviceResults)
+		for _, result := range serviceResults {
+			if result.Service == "" {
+				continue
+			}
+			distribution.ByService[result.Service] = int(result.Total)
 		}
 	}
 
@@ -498,16 +642,18 @@ func (r *MongoQuotaRepository) GetQuotaDistribution(ctx context.Context) (*aiMod
 
 // GetTopConsumers 获取消费排行
 func (r *MongoQuotaRepository) GetTopConsumers(ctx context.Context, limit int) ([]aiModels.UserQuotaRanking, error) {
-	// 聚合查询消费最高的用户
+	// 排行展示当前配额周期的消耗占比，只统计 daily 配额，避免多配额文档重复计数。
 	pipeline := mongo.Pipeline{
-		{{Key: "$group", Value: bson.M{
-			"_id":        "$user_id",
-			"usedQuota":  bson.M{"$sum": "$used_quota"},
-			"totalQuota": bson.M{"$first": "$total_quota"},
-			"role":       bson.M{"$first": "$metadata.user_role"},
-			"username":   bson.M{"$first": "$user_id"},
+		{{Key: "$match", Value: bson.M{
+			"quota_type": aiModels.QuotaTypeDaily,
 		}}},
-		{{Key: "$sort", Value: bson.M{"usedQuota": -1}}},
+		{{Key: "$project", Value: bson.M{
+			"userID":     "$user_id",
+			"usedQuota":  "$used_quota",
+			"totalQuota": "$total_quota",
+			"role":       "$metadata.user_role",
+		}}},
+		{{Key: "$sort", Value: bson.M{"usedQuota": -1, "totalQuota": -1}}},
 		{{Key: "$limit", Value: int64(limit)}},
 	}
 
@@ -518,7 +664,7 @@ func (r *MongoQuotaRepository) GetTopConsumers(ctx context.Context, limit int) (
 	defer cursor.Close(ctx)
 
 	var results []struct {
-		UserID     string `bson:"_id"`
+		UserID     string `bson:"userID"`
 		UsedQuota  int    `bson:"usedQuota"`
 		TotalQuota int    `bson:"totalQuota"`
 		Role       string `bson:"role"`
@@ -528,17 +674,29 @@ func (r *MongoQuotaRepository) GetTopConsumers(ctx context.Context, limit int) (
 	}
 
 	rankings := make([]aiModels.UserQuotaRanking, 0, len(results))
-	for _, r := range results {
+	for _, result := range results {
 		usagePercent := float64(0)
-		if r.TotalQuota > 0 {
-			usagePercent = float64(r.UsedQuota) / float64(r.TotalQuota) * 100
+		if result.TotalQuota > 0 {
+			usagePercent = float64(result.UsedQuota) / float64(result.TotalQuota) * 100
 		}
+
+		username := result.UserID
+		role := result.Role
+		if profile, err := r.getUserProfile(ctx, result.UserID); err == nil && profile != nil {
+			if profile.Username != "" {
+				username = profile.Username
+			}
+			if role == "" {
+				role = primaryRoleFromRoles(profile.Roles)
+			}
+		}
+
 		rankings = append(rankings, aiModels.UserQuotaRanking{
-			UserID:       r.UserID,
-			Username:     r.UserID, // 实际应关联用户表获取真实用户名
-			Role:         r.Role,
-			UsedQuota:    r.UsedQuota,
-			TotalQuota:   r.TotalQuota,
+			UserID:       result.UserID,
+			Username:     username,
+			Role:         role,
+			UsedQuota:    result.UsedQuota,
+			TotalQuota:   result.TotalQuota,
 			UsagePercent: usagePercent,
 		})
 	}
@@ -551,8 +709,8 @@ func (r *MongoQuotaRepository) GetConsumptionTrend(ctx context.Context, days int
 	// 从事务表获取消费趋势
 	pipeline := mongo.Pipeline{
 		{{Key: "$match", Value: bson.M{
-			"type":       "consume",
-			"timestamp":  bson.M{"$gte": time.Now().AddDate(0, 0, -days)},
+			"type":      "consume",
+			"timestamp": bson.M{"$gte": time.Now().AddDate(0, 0, -days)},
 		}}},
 		{{Key: "$group", Value: bson.M{
 			"_id": bson.M{
@@ -629,15 +787,26 @@ func (r *MongoQuotaRepository) ListUserQuotas(ctx context.Context, role, status,
 			usagePercent = float64(q.UsedQuota) / float64(q.TotalQuota) * 100
 		}
 
+		username := q.UserID
+		role := ""
 		memberLevel := ""
 		if q.Metadata != nil {
+			role = q.Metadata.UserRole
 			memberLevel = q.Metadata.MembershipLevel
+		}
+		if profile, err := r.getUserProfile(ctx, q.UserID); err == nil && profile != nil {
+			if profile.Username != "" {
+				username = profile.Username
+			}
+			if role == "" {
+				role = primaryRoleFromRoles(profile.Roles)
+			}
 		}
 
 		items = append(items, &aiModels.UserQuotaListItem{
 			UserID:       q.UserID,
-			Username:     q.UserID, // 实际应关联用户表获取真实用户名
-			Role:         string(q.QuotaType),
+			Username:     username,
+			Role:         role,
 			MemberLevel:  memberLevel,
 			DailyQuota:   q.TotalQuota,
 			DailyUsed:    q.UsedQuota,
