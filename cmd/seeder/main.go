@@ -129,7 +129,7 @@ var (
 	// socialCmd 填充社交数据
 	socialCmd = &cobra.Command{
 		Use:   "social",
-		Short: "填充社交数据（评论、点赞、收藏、关注）",
+		Short: "填充社交数据（动态、评论、点赞、收藏、关注）",
 		Run:   runSocial,
 	}
 

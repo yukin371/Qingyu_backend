@@ -9,6 +9,7 @@ import (
 	"time"
 
 	aiApi "Qingyu_backend/api/v1/ai"
+	discoveryAPI "Qingyu_backend/api/v1/discovery"
 	internalAPI "Qingyu_backend/api/v1/internalapi/ai"
 	searchRouter "Qingyu_backend/api/v1/search"
 	adminRouter "Qingyu_backend/router/admin"
@@ -16,6 +17,7 @@ import (
 	announcementsRouter "Qingyu_backend/router/announcements"
 	bookstoreRouter "Qingyu_backend/router/bookstore"
 	communityRouter "Qingyu_backend/router/community"
+	discoveryRouter "Qingyu_backend/router/discovery"
 	financeRouter "Qingyu_backend/router/finance"
 	internalAPIRouter "Qingyu_backend/router/internalapi"
 	notificationsRouter "Qingyu_backend/router/notifications"
@@ -35,6 +37,7 @@ import (
 	mongoAIRepo "Qingyu_backend/repository/mongodb/ai"
 	authRep "Qingyu_backend/repository/mongodb/auth"
 	bookstoreRepo "Qingyu_backend/repository/mongodb/bookstore"
+	mongoDiscoveryRepo "Qingyu_backend/repository/mongodb/discovery"
 	mongoReaderRepo "Qingyu_backend/repository/mongodb/reader"
 	recommendationRepo "Qingyu_backend/repository/mongodb/recommendation"
 	mongoSocialRepo "Qingyu_backend/repository/mongodb/social"
@@ -45,6 +48,7 @@ import (
 	baseService "Qingyu_backend/service/base"
 	bookstore "Qingyu_backend/service/bookstore"
 	"Qingyu_backend/service/container"
+	discoveryService "Qingyu_backend/service/discovery"
 	eventservice "Qingyu_backend/service/events"
 	serviceInterfaces "Qingyu_backend/service/interfaces"
 	internalAPIService "Qingyu_backend/service/internalapi"
@@ -58,12 +62,12 @@ import (
 	writerservice "Qingyu_backend/service/writer"
 
 	versionAPI "Qingyu_backend/api/v1"
+	communityApi "Qingyu_backend/api/v1/community"
 	financeApi "Qingyu_backend/api/v1/finance"
 	messagesApi "Qingyu_backend/api/v1/messages"
 	notificationsAPI "Qingyu_backend/api/v1/notifications"
 	recommendationAPI "Qingyu_backend/api/v1/recommendation"
 	socialApi "Qingyu_backend/api/v1/social"
-	communityApi "Qingyu_backend/api/v1/community"
 	"Qingyu_backend/config"
 	modelsMessaging "Qingyu_backend/models/messaging"
 	"Qingyu_backend/pkg/cache"
@@ -517,6 +521,7 @@ func RegisterRoutes(r *gin.Engine) {
 	// ============ 注册社区动态路由 (/api/v1/community) ============
 	// 获取 MongoDB 数据库
 	mongoDB := serviceContainer.GetMongoDB()
+	var discoveryPostService serviceInterfaces.PostService
 	if mongoDB != nil {
 		// 创建 Post Repository
 		postRepo := mongoSocialRepo.NewMongoPostRepository(mongoDB)
@@ -534,6 +539,7 @@ func RegisterRoutes(r *gin.Engine) {
 
 		// 创建 Post Service
 		postSvc := socialService.NewPostService(postRepo, eventBus)
+		discoveryPostService = postSvc
 
 		// 创建 Post API
 		postAPI := communityApi.NewPostAPI(postSvc)
@@ -629,6 +635,27 @@ func RegisterRoutes(r *gin.Engine) {
 		logger.Info("  - /api/v1/recommendation/homepage (首页推荐)")
 		logger.Info("  - /api/v1/recommendation/hot (热门推荐)")
 		logger.Info("  - /api/v1/recommendation/category (分类推荐)")
+	}
+
+	// ============ 注册发现页路由 ============
+	discoveryBookstoreSvc, bookstoreErrForDiscovery := serviceContainer.GetBookstoreService()
+	if bookstoreErrForDiscovery != nil {
+		logger.Warn("获取书店服务失败，跳过发现页路由注册", zap.Error(bookstoreErrForDiscovery))
+	} else {
+		discoverySvc := discoveryService.NewDiscoveryService(discoveryBookstoreSvc, recommendationSvc).
+			WithPostService(discoveryPostService)
+		if mongoDB != nil {
+			discoverySvc = discoverySvc.WithPreferenceRepository(mongoDiscoveryRepo.NewPreferenceRepository(mongoDB))
+		} else {
+			logger.Warn("MongoDB 不可用，发现页偏好持久化将降级为仅回显")
+		}
+		discoveryApi := discoveryAPI.NewDiscoveryAPI(discoverySvc)
+		discoveryRouter.RegisterDiscoveryRoutes(v1, discoveryApi)
+
+		logger.Info("✓ 发现页路由已注册到: /api/v1/discovery/")
+		logger.Info("  - /api/v1/discovery/personalized (发现页个性化推荐 - 匿名可访问)")
+		logger.Info("  - /api/v1/discovery/new-releases (发现页新书上架)")
+		logger.Info("  - /api/v1/discovery/editors-pick (发现页编辑推荐)")
 	}
 
 	// ============ 注册Announcements路由 ============

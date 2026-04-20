@@ -12,6 +12,7 @@ type RecommendationBehaviorType string
 const (
 	RecommendationBehaviorView     RecommendationBehaviorType = "view"
 	RecommendationBehaviorClick    RecommendationBehaviorType = "click"
+	RecommendationBehaviorDislike  RecommendationBehaviorType = "dislike"
 	RecommendationBehaviorCollect  RecommendationBehaviorType = "collect"
 	RecommendationBehaviorRead     RecommendationBehaviorType = "read"
 	RecommendationBehaviorFinish   RecommendationBehaviorType = "finish"
@@ -30,6 +31,7 @@ const (
 var AllRecommendationBehaviorTypes = []RecommendationBehaviorType{
 	RecommendationBehaviorView,
 	RecommendationBehaviorClick,
+	RecommendationBehaviorDislike,
 	RecommendationBehaviorCollect,
 	RecommendationBehaviorRead,
 	RecommendationBehaviorFinish,
@@ -55,6 +57,7 @@ func (t RecommendationBehaviorType) IsValid() bool {
 	switch normalizeRecommendationBehaviorType(string(t)) {
 	case RecommendationBehaviorView,
 		RecommendationBehaviorClick,
+		RecommendationBehaviorDislike,
 		RecommendationBehaviorCollect,
 		RecommendationBehaviorRead,
 		RecommendationBehaviorFinish,

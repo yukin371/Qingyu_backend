@@ -31,6 +31,7 @@ func TestParseRecommendationBehaviorType_NormalizesLegacyAliases(t *testing.T) {
 		"collect":  RecommendationBehaviorCollect,
 		"complete": RecommendationBehaviorFinish,
 		"finish":   RecommendationBehaviorFinish,
+		"dislike":  RecommendationBehaviorDislike,
 	}
 
 	for input, expected := range tests {

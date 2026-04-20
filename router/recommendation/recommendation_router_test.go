@@ -6,12 +6,24 @@ import (
 	"testing"
 
 	recoAPI "Qingyu_backend/api/v1/recommendation"
+	"Qingyu_backend/config"
 
 	"github.com/gin-gonic/gin"
 )
 
 func TestRegisterRecommendationRoutes_TableRoutesReachable(t *testing.T) {
 	gin.SetMode(gin.TestMode)
+	previousConfig := config.GlobalConfig
+	config.GlobalConfig = &config.Config{
+		JWT: &config.JWTConfig{
+			Secret:          "test-secret-key-123456",
+			ExpirationHours: 24,
+		},
+	}
+	defer func() {
+		config.GlobalConfig = previousConfig
+	}()
+
 	engine := gin.New()
 	api := recoAPI.NewRecommendationAPI(nil)
 
