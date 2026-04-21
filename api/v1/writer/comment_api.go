@@ -211,8 +211,7 @@ func (api *CommentAPI) UpdateComment(c *gin.Context) {
 	}
 
 	var req UpdateCommentRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
@@ -499,8 +498,7 @@ func (api *CommentAPI) SearchComments(c *gin.Context) {
 //	@Router			/api/v1/writer/comments/batch-delete [post]
 func (api *CommentAPI) BatchDeleteComments(c *gin.Context) {
 	var req BatchDeleteRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 

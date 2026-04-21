@@ -196,7 +196,7 @@ func RegisterWriterRoutes(r *gin.RouterGroup, searchSvc *searchservice.SearchSer
 	bookRepo := repositoryFactory.CreateBookRepository()
 	var dashboardSvc *writerservice.DashboardService
 	if projectRepo != nil && publishSvc != nil {
-		dashboardSvc = writerservice.NewDashboardService(projectRepo, publishSvc)
+		dashboardSvc = writerservice.NewDashboardService(projectRepo, bookRepo, publishSvc)
 	}
 
 	// 调用InitWriterRouter初始化文档编辑相关路由

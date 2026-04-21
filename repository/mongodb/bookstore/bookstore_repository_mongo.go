@@ -677,7 +677,25 @@ func (r *MongoBookRepository) CountByCategory(ctx context.Context, categoryID st
 
 // CountByAuthor 统计作者的书籍数量
 func (r *MongoBookRepository) CountByAuthor(ctx context.Context, author string) (int64, error) {
+	if author == "" {
+		return 0, nil
+	}
+
 	return r.GetCollection().CountDocuments(ctx, bson.M{"author": author})
+}
+
+// CountByAuthorID 根据作者 ID 统计书籍数量
+func (r *MongoBookRepository) CountByAuthorID(ctx context.Context, authorID string) (int64, error) {
+	if authorID == "" {
+		return 0, nil
+	}
+
+	objectID, err := primitive.ObjectIDFromHex(authorID)
+	if err != nil {
+		return 0, err
+	}
+
+	return r.GetCollection().CountDocuments(ctx, bson.M{"author_id": objectID})
 }
 
 // CountByStatus 统计指定状态的书籍数量

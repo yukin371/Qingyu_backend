@@ -36,9 +36,8 @@ func NewCharacterApi(characterService interfaces.CharacterService) *CharacterApi
 // @Failure 401 {object} response.APIResponse
 // @Router /api/v1/projects/{projectId}/characters [post]
 func (api *CharacterApi) CreateCharacter(c *gin.Context) {
-	projectID := c.Param("id")
-	if projectID == "" {
-		response.BadRequest(c, "项目ID不能为空", "")
+	projectID, ok := shared.GetRequiredParam(c, "id", "项目ID")
+	if !ok {
 		return
 	}
 
@@ -71,11 +70,12 @@ func (api *CharacterApi) CreateCharacter(c *gin.Context) {
 // @Failure 404 {object} response.APIResponse
 // @Router /api/v1/characters/{characterId} [get]
 func (api *CharacterApi) GetCharacter(c *gin.Context) {
-	characterID := c.Param("characterId")
-	projectID := c.Query("projectId")
-
-	if characterID == "" || projectID == "" {
-		response.BadRequest(c, "参数错误", "characterId和projectId不能为空")
+	characterID, ok := shared.GetRequiredParam(c, "characterId", "角色ID")
+	if !ok {
+		return
+	}
+	projectID, ok := shared.GetRequiredQuery(c, "projectId", "项目ID")
+	if !ok {
 		return
 	}
 
@@ -98,9 +98,8 @@ func (api *CharacterApi) GetCharacter(c *gin.Context) {
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/projects/{projectId}/characters [get]
 func (api *CharacterApi) ListCharacters(c *gin.Context) {
-	projectID := c.Param("id")
-	if projectID == "" {
-		response.BadRequest(c, "项目ID不能为空", "")
+	projectID, ok := shared.GetRequiredParam(c, "id", "项目ID")
+	if !ok {
 		return
 	}
 
@@ -135,11 +134,12 @@ func (api *CharacterApi) ListCharacters(c *gin.Context) {
 // @Failure 404 {object} response.APIResponse
 // @Router /api/v1/characters/{characterId} [put]
 func (api *CharacterApi) UpdateCharacter(c *gin.Context) {
-	characterID := c.Param("characterId")
-	projectID := c.Query("projectId")
-
-	if characterID == "" || projectID == "" {
-		response.BadRequest(c, "参数错误", "characterId和projectId不能为空")
+	characterID, ok := shared.GetRequiredParam(c, "characterId", "角色ID")
+	if !ok {
+		return
+	}
+	projectID, ok := shared.GetRequiredQuery(c, "projectId", "项目ID")
+	if !ok {
 		return
 	}
 
@@ -169,11 +169,12 @@ func (api *CharacterApi) UpdateCharacter(c *gin.Context) {
 // @Failure 404 {object} response.APIResponse
 // @Router /api/v1/characters/{characterId} [delete]
 func (api *CharacterApi) DeleteCharacter(c *gin.Context) {
-	characterID := c.Param("characterId")
-	projectID := c.Query("projectId")
-
-	if characterID == "" || projectID == "" {
-		response.BadRequest(c, "参数错误", "characterId和projectId不能为空")
+	characterID, ok := shared.GetRequiredParam(c, "characterId", "角色ID")
+	if !ok {
+		return
+	}
+	projectID, ok := shared.GetRequiredQuery(c, "projectId", "项目ID")
+	if !ok {
 		return
 	}
 
@@ -198,9 +199,8 @@ func (api *CharacterApi) DeleteCharacter(c *gin.Context) {
 // @Failure 400 {object} response.APIResponse
 // @Router /api/v1/characters/relations [post]
 func (api *CharacterApi) CreateCharacterRelation(c *gin.Context) {
-	projectID := c.Query("projectId")
-	if projectID == "" {
-		response.BadRequest(c, "项目ID不能为空", "")
+	projectID, ok := shared.GetRequiredQuery(c, "projectId", "项目ID")
+	if !ok {
 		return
 	}
 
@@ -229,9 +229,8 @@ func (api *CharacterApi) CreateCharacterRelation(c *gin.Context) {
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/projects/{projectId}/characters/relations [get]
 func (api *CharacterApi) ListCharacterRelations(c *gin.Context) {
-	projectID := c.Param("id")
-	if projectID == "" {
-		response.BadRequest(c, "项目ID不能为空", "")
+	projectID, ok := shared.GetRequiredParam(c, "id", "项目ID")
+	if !ok {
 		return
 	}
 
@@ -270,11 +269,12 @@ func (api *CharacterApi) ListCharacterRelations(c *gin.Context) {
 // @Failure 404 {object} response.APIResponse
 // @Router /api/v1/characters/relations/{relationId} [delete]
 func (api *CharacterApi) DeleteCharacterRelation(c *gin.Context) {
-	relationID := c.Param("relationId")
-	projectID := c.Query("projectId")
-
-	if relationID == "" || projectID == "" {
-		response.BadRequest(c, "参数错误", "relationId和projectId不能为空")
+	relationID, ok := shared.GetRequiredParam(c, "relationId", "关系ID")
+	if !ok {
+		return
+	}
+	projectID, ok := shared.GetRequiredQuery(c, "projectId", "项目ID")
+	if !ok {
 		return
 	}
 
@@ -297,9 +297,8 @@ func (api *CharacterApi) DeleteCharacterRelation(c *gin.Context) {
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/projects/{projectId}/characters/graph [get]
 func (api *CharacterApi) GetCharacterGraph(c *gin.Context) {
-	projectID := c.Param("id")
-	if projectID == "" {
-		response.BadRequest(c, "项目ID不能为空", "")
+	projectID, ok := shared.GetRequiredParam(c, "id", "项目ID")
+	if !ok {
 		return
 	}
 
@@ -325,11 +324,12 @@ func (api *CharacterApi) GetCharacterGraph(c *gin.Context) {
 // @Failure 400 {object} response.APIResponse
 // @Router /api/v1/characters/relations/{relationId}/timeline [post]
 func (api *CharacterApi) CreateRelationTimelineEvent(c *gin.Context) {
-	relationID := c.Param("relationId")
-	projectID := c.Query("projectId")
-
-	if relationID == "" || projectID == "" {
-		response.BadRequest(c, "参数错误", "relationId和projectId不能为空")
+	relationID, ok := shared.GetRequiredParam(c, "relationId", "关系ID")
+	if !ok {
+		return
+	}
+	projectID, ok := shared.GetRequiredQuery(c, "projectId", "项目ID")
+	if !ok {
 		return
 	}
 
@@ -361,11 +361,12 @@ func (api *CharacterApi) CreateRelationTimelineEvent(c *gin.Context) {
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/characters/relations/{relationId}/timeline [get]
 func (api *CharacterApi) GetRelationTimeline(c *gin.Context) {
-	relationID := c.Param("relationId")
-	projectID := c.Query("projectId")
-
-	if relationID == "" || projectID == "" {
-		response.BadRequest(c, "参数错误", "relationId和projectId不能为空")
+	relationID, ok := shared.GetRequiredParam(c, "relationId", "关系ID")
+	if !ok {
+		return
+	}
+	projectID, ok := shared.GetRequiredQuery(c, "projectId", "项目ID")
+	if !ok {
 		return
 	}
 
@@ -390,11 +391,12 @@ func (api *CharacterApi) GetRelationTimeline(c *gin.Context) {
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/characters/relations/timeline-events/{eventId} [put]
 func (api *CharacterApi) UpdateRelationTimelineEvent(c *gin.Context) {
-	eventID := c.Param("eventId")
-	projectID := c.Query("projectId")
-
-	if eventID == "" || projectID == "" {
-		response.BadRequest(c, "参数错误", "eventId和projectId不能为空")
+	eventID, ok := shared.GetRequiredParam(c, "eventId", "事件ID")
+	if !ok {
+		return
+	}
+	projectID, ok := shared.GetRequiredQuery(c, "projectId", "项目ID")
+	if !ok {
 		return
 	}
 
@@ -423,11 +425,12 @@ func (api *CharacterApi) UpdateRelationTimelineEvent(c *gin.Context) {
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/characters/relations/timeline-events/{eventId} [delete]
 func (api *CharacterApi) DeleteRelationTimelineEvent(c *gin.Context) {
-	eventID := c.Param("eventId")
-	projectID := c.Query("projectId")
-
-	if eventID == "" || projectID == "" {
-		response.BadRequest(c, "参数错误", "eventId和projectId不能为空")
+	eventID, ok := shared.GetRequiredParam(c, "eventId", "事件ID")
+	if !ok {
+		return
+	}
+	projectID, ok := shared.GetRequiredQuery(c, "projectId", "项目ID")
+	if !ok {
 		return
 	}
 

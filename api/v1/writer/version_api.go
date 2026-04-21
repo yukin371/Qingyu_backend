@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/writer/project"
 )
@@ -33,7 +34,10 @@ func NewVersionApi(versionService *project.VersionService) *VersionApi {
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/documents/{documentId}/versions [get]
 func (api *VersionApi) GetVersionHistory(c *gin.Context) {
-	documentID := c.Param("documentId")
+	documentID, ok := shared.GetRequiredParam(c, "documentId", "文档ID")
+	if !ok {
+		return
+	}
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "20"))
 
@@ -57,8 +61,14 @@ func (api *VersionApi) GetVersionHistory(c *gin.Context) {
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/documents/{documentId}/versions/{versionId} [get]
 func (api *VersionApi) GetVersion(c *gin.Context) {
-	documentID := c.Param("documentId")
-	versionID := c.Param("versionId")
+	documentID, ok := shared.GetRequiredParam(c, "documentId", "文档ID")
+	if !ok {
+		return
+	}
+	versionID, ok := shared.GetRequiredParam(c, "versionId", "版本ID")
+	if !ok {
+		return
+	}
 
 	version, err := api.versionService.GetVersion(c.Request.Context(), documentID, versionID)
 	if err != nil {
@@ -81,12 +91,16 @@ func (api *VersionApi) GetVersion(c *gin.Context) {
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/documents/{documentId}/versions/compare [get]
 func (api *VersionApi) CompareVersions(c *gin.Context) {
-	documentID := c.Param("documentId")
-	fromVersion := c.Query("fromVersion")
-	toVersion := c.Query("toVersion")
-
-	if fromVersion == "" || toVersion == "" {
-		response.BadRequest(c, "参数错误", "fromVersion和toVersion不能为空")
+	documentID, ok := shared.GetRequiredParam(c, "documentId", "文档ID")
+	if !ok {
+		return
+	}
+	fromVersion, ok := shared.GetRequiredQuery(c, "fromVersion", "源版本ID")
+	if !ok {
+		return
+	}
+	toVersion, ok := shared.GetRequiredQuery(c, "toVersion", "目标版本ID")
+	if !ok {
 		return
 	}
 
@@ -110,8 +124,14 @@ func (api *VersionApi) CompareVersions(c *gin.Context) {
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/documents/{documentId}/versions/{versionId}/restore [post]
 func (api *VersionApi) RestoreVersion(c *gin.Context) {
-	documentID := c.Param("documentId")
-	versionID := c.Param("versionId")
+	documentID, ok := shared.GetRequiredParam(c, "documentId", "文档ID")
+	if !ok {
+		return
+	}
+	versionID, ok := shared.GetRequiredParam(c, "versionId", "版本ID")
+	if !ok {
+		return
+	}
 
 	if err := api.versionService.RestoreVersion(c.Request.Context(), documentID, versionID); err != nil {
 		c.Error(err)

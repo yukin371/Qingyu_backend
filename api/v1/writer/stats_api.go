@@ -1,6 +1,7 @@
 package writer
 
 import (
+	"context"
 	"math"
 	"strconv"
 	"time"
@@ -34,6 +35,86 @@ func NewStatsApi(statsService *readingStats.ReadingStatsService, bookRepo bookst
 		statsService: statsService,
 		bookRepo:     bookRepo,
 	}
+}
+
+// ListMyBooks 获取当前作者的作品列表。
+// @Summary 获取当前作者作品列表
+// @Description 获取当前登录作者的书籍列表，用于统计与收入页筛选
+// @Tags Stats
+// @Accept json
+// @Produce json
+// @Param page query int false "页码" default(1)
+// @Param pageSize query int false "每页数量" default(20)
+// @Success 200 {object} response.APIResponse
+// @Failure 401 {object} response.APIResponse
+// @Failure 500 {object} response.APIResponse
+// @Router /api/v1/writer/books [get]
+func (api *StatsApi) ListMyBooks(c *gin.Context) {
+	userID, ok := shared.GetUserID(c)
+	if !ok {
+		return
+	}
+
+	if api.bookRepo == nil {
+		response.Success(c, gin.H{
+			"items":    []gin.H{},
+			"list":     []gin.H{},
+			"total":    0,
+			"page":     1,
+			"pageSize": 20,
+		})
+		return
+	}
+
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", c.DefaultQuery("size", "20")))
+	if page < 1 {
+		page = 1
+	}
+	if pageSize < 1 {
+		pageSize = 20
+	}
+	if pageSize > 100 {
+		pageSize = 100
+	}
+
+	offset := (page - 1) * pageSize
+	books, err := api.bookRepo.GetByAuthorID(c.Request.Context(), userID, pageSize, offset)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	total, err := api.countBooksByAuthor(c.Request.Context(), userID)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	items := make([]gin.H, 0, len(books))
+	for _, book := range books {
+		items = append(items, gin.H{
+			"id":           book.ID.Hex(),
+			"bookId":       book.ID.Hex(),
+			"title":        book.Title,
+			"status":       book.Status,
+			"chapterCount": book.ChapterCount,
+			"wordCount":    book.WordCount,
+		})
+	}
+
+	response.Success(c, gin.H{
+		"items":    items,
+		"list":     items,
+		"total":    total,
+		"page":     page,
+		"pageSize": pageSize,
+	})
+}
+
+func (api *StatsApi) countBooksByAuthor(ctx context.Context, userID string) (int, error) {
+	total, err := api.bookRepo.CountByAuthorID(ctx, userID)
+	return int(total), err
 }
 
 func (api *StatsApi) resolveBookID(c *gin.Context) (string, bool) {

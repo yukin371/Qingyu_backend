@@ -238,6 +238,11 @@ func (m *MockBookRepositoryForService) CountByAuthor(ctx context.Context, author
 	return args.Get(0).(int64), args.Error(1)
 }
 
+func (m *MockBookRepositoryForService) CountByAuthorID(ctx context.Context, authorID string) (int64, error) {
+	args := m.Called(ctx, authorID)
+	return args.Get(0).(int64), args.Error(1)
+}
+
 func (m *MockBookRepositoryForService) CountByStatus(ctx context.Context, status bookstoreModel.BookStatus) (int64, error) {
 	args := m.Called(ctx, status)
 	return args.Get(0).(int64), args.Error(1)
@@ -883,7 +888,7 @@ func TestBookstoreService_GetBooksByAuthorID(t *testing.T) {
 	}
 
 	mockBookRepo.On("GetByAuthorID", ctx, authorID.Hex(), 20, 0).Return(books, nil)
-	mockBookRepo.On("CountByAuthor", ctx, mock.Anything).Return(int64(1), nil)
+	mockBookRepo.On("CountByAuthorID", ctx, authorID.Hex()).Return(int64(1), nil)
 
 	// Act
 	result, total, err := service.GetBooksByAuthorID(ctx, authorID.Hex(), 1, 20)
@@ -1484,6 +1489,33 @@ func TestBookstoreService_GetWeeklyRanking(t *testing.T) {
 	mockRankingRepo.AssertExpectations(t)
 }
 
+// TestBookstoreService_GetWeeklyRanking_FallbackToLatestAvailable 测试周榜为空时回退到最近可用周期
+func TestBookstoreService_GetWeeklyRanking_FallbackToLatestAvailable(t *testing.T) {
+	// Arrange
+	service, _, _, _, mockRankingRepo := setupBookstoreServiceForTest()
+	ctx := context.Background()
+
+	currentPeriod := bookstoreModel.GetPeriodString(bookstoreModel.RankingTypeWeekly, time.Now())
+	lastWeekPeriod := bookstoreModel.GetPeriodString(bookstoreModel.RankingTypeWeekly, time.Now().AddDate(0, 0, -7))
+	fallbackRankings := []*bookstoreModel.RankingItem{
+		{BookID: primitive.NewObjectID(), Rank: 1, Period: lastWeekPeriod},
+	}
+
+	mockRankingRepo.On("GetByTypeWithBooks", ctx, bookstoreModel.RankingTypeWeekly, currentPeriod, 10, 0).
+		Return([]*bookstoreModel.RankingItem{}, nil).Once()
+	mockRankingRepo.On("GetByTypeWithBooks", ctx, bookstoreModel.RankingTypeWeekly, lastWeekPeriod, 10, 0).
+		Return(fallbackRankings, nil).Once()
+
+	// Act
+	result, err := service.GetWeeklyRanking(ctx, "", 10)
+
+	// Assert
+	require.NoError(t, err)
+	assert.Len(t, result, 1)
+	assert.Equal(t, lastWeekPeriod, result[0].Period)
+	mockRankingRepo.AssertExpectations(t)
+}
+
 // TestBookstoreService_GetMonthlyRanking 测试获取月榜
 func TestBookstoreService_GetMonthlyRanking(t *testing.T) {
 	// Arrange
@@ -1502,6 +1534,33 @@ func TestBookstoreService_GetMonthlyRanking(t *testing.T) {
 	// Assert
 	require.NoError(t, err)
 	assert.Len(t, result, 1)
+	mockRankingRepo.AssertExpectations(t)
+}
+
+// TestBookstoreService_GetMonthlyRanking_FallbackToLatestAvailable 测试月榜为空时回退到最近可用周期
+func TestBookstoreService_GetMonthlyRanking_FallbackToLatestAvailable(t *testing.T) {
+	// Arrange
+	service, _, _, _, mockRankingRepo := setupBookstoreServiceForTest()
+	ctx := context.Background()
+
+	currentPeriod := bookstoreModel.GetPeriodString(bookstoreModel.RankingTypeMonthly, time.Now())
+	lastMonthPeriod := bookstoreModel.GetPeriodString(bookstoreModel.RankingTypeMonthly, time.Now().AddDate(0, -1, 0))
+	fallbackRankings := []*bookstoreModel.RankingItem{
+		{BookID: primitive.NewObjectID(), Rank: 1, Period: lastMonthPeriod},
+	}
+
+	mockRankingRepo.On("GetByTypeWithBooks", ctx, bookstoreModel.RankingTypeMonthly, currentPeriod, 10, 0).
+		Return([]*bookstoreModel.RankingItem{}, nil).Once()
+	mockRankingRepo.On("GetByTypeWithBooks", ctx, bookstoreModel.RankingTypeMonthly, lastMonthPeriod, 10, 0).
+		Return(fallbackRankings, nil).Once()
+
+	// Act
+	result, err := service.GetMonthlyRanking(ctx, "", 10)
+
+	// Assert
+	require.NoError(t, err)
+	assert.Len(t, result, 1)
+	assert.Equal(t, lastMonthPeriod, result[0].Period)
 	mockRankingRepo.AssertExpectations(t)
 }
 

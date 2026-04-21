@@ -1,6 +1,7 @@
 package bookstore
 
 import (
+	"Qingyu_backend/config"
 	"Qingyu_backend/models/bookstore"
 	"context"
 	"fmt"
@@ -61,8 +62,14 @@ func (s *RankingScheduler) Start() error {
 	s.cron.Start()
 	s.logger.Println("Ranking scheduler started")
 
-	// 启动后立即补一次当天实时榜，避免首次启动后必须等待下一次 cron 周期。
+	// 启动后默认仅补一次实时榜，周榜/月榜改为受控开关，避免多实例启动时重复重算。
 	go s.updateRealtimeRanking()
+	if config.GetEnvBool("QINGYU_RANKING_STARTUP_FULL_REFRESH", false) {
+		go s.updateWeeklyRanking()
+		go s.updateMonthlyRanking()
+	} else {
+		s.logger.Println("Skipping weekly/monthly startup refresh; set QINGYU_RANKING_STARTUP_FULL_REFRESH=true to enable")
+	}
 	return nil
 }
 

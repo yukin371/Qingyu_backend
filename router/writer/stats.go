@@ -23,6 +23,8 @@ func InitStatsRouter(r *gin.RouterGroup, service *readingStats.ReadingStatsServi
 		statsGroup.GET("/today", aggregateApi.GetToday)
 	}
 
+	r.GET("/books", statsApi.ListMyBooks)
+
 	// 作品统计路由组
 	bookStats := r.Group("/books/:book_id")
 	{

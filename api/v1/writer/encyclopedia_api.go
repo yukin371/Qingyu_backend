@@ -60,7 +60,10 @@ func (api *EncyclopediaApi) ListConcepts(c *gin.Context) {
 // @Success 200 {object} response.APIResponse{data=[]writerModels.Concept}
 // @Router /api/v1/writer/projects/{id}/concepts/search [get]
 func (api *EncyclopediaApi) SearchConcepts(c *gin.Context) {
-	projectID := c.Param("id")
+	projectID, ok := shared.GetRequiredParam(c, "id", "项目ID")
+	if !ok {
+		return
+	}
 	keyword := c.Query("q")
 
 	if api.conceptRepo == nil {
@@ -100,7 +103,10 @@ func (api *EncyclopediaApi) SearchConcepts(c *gin.Context) {
 // @Success 200 {object} response.APIResponse{data=writerModels.Concept}
 // @Router /api/v1/writer/projects/{id}/concepts/{conceptId} [get]
 func (api *EncyclopediaApi) GetConcept(c *gin.Context) {
-	conceptID := c.Param("conceptId")
+	conceptID, ok := shared.GetRequiredParam(c, "conceptId", "概念ID")
+	if !ok {
+		return
+	}
 
 	if api.conceptRepo == nil {
 		response.NotFound(c, "概念未找到")

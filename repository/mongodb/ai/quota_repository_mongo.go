@@ -3,6 +3,8 @@ package ai
 import (
 	"context"
 	"fmt"
+	"log"
+	"sort"
 	"time"
 
 	aiModels "Qingyu_backend/models/ai"
@@ -17,17 +19,168 @@ import (
 // MongoQuotaRepository MongoDB配额Repository实现
 type MongoQuotaRepository struct {
 	quotaCollection       *mongo.Collection
+	legacyQuotaCollection *mongo.Collection
 	transactionCollection *mongo.Collection
 	usersCollection       *mongo.Collection
 }
 
+const (
+	quotaCollectionName             = "ai_quotas"
+	legacyQuotaCollectionName       = "ai_user_quotas"
+	quotaCollectionSelectionTimeout = 2 * time.Second
+)
+
 // NewMongoQuotaRepository 创建MongoDB配额Repository
 func NewMongoQuotaRepository(db *mongo.Database) aiInterfaces.QuotaRepository {
+	activeCollection, fallbackCollection := selectQuotaCollections(db)
 	return &MongoQuotaRepository{
-		quotaCollection:       db.Collection(aiModels.UserQuota{}.CollectionName()),
+		quotaCollection:       activeCollection,
+		legacyQuotaCollection: fallbackCollection,
 		transactionCollection: db.Collection(aiModels.QuotaTransaction{}.CollectionName()),
 		usersCollection:       db.Collection("users"),
 	}
+}
+
+// selectQuotaCollections 在启动时选择主/备 quota 集合，主集合维持现有读写口径，
+// 同时保留 fallback 集合供 legacy 兼容读写使用。
+func selectQuotaCollections(db *mongo.Database) (*mongo.Collection, *mongo.Collection) {
+	primary := db.Collection(quotaCollectionName)
+	legacy := db.Collection(legacyQuotaCollectionName)
+
+	ctx, cancel := context.WithTimeout(context.Background(), quotaCollectionSelectionTimeout)
+	defer cancel()
+
+	names, err := db.ListCollectionNames(ctx, bson.M{
+		"name": bson.M{
+			"$in": bson.A{quotaCollectionName, legacyQuotaCollectionName},
+		},
+	})
+	if err != nil {
+		return primary, legacy
+	}
+
+	hasPrimary := false
+	hasLegacy := false
+	for _, name := range names {
+		switch name {
+		case quotaCollectionName:
+			hasPrimary = true
+		case legacyQuotaCollectionName:
+			hasLegacy = true
+		}
+	}
+
+	switch {
+	case hasPrimary && !hasLegacy:
+		return primary, nil
+	case !hasPrimary && hasLegacy:
+		return legacy, primary
+	case !hasPrimary && !hasLegacy:
+		return primary, legacy
+	}
+
+	primaryCount, err := primary.CountDocuments(ctx, bson.M{})
+	if err == nil && primaryCount > 0 {
+		legacyCount, legacyErr := legacy.CountDocuments(ctx, bson.M{})
+		if legacyErr == nil && legacyCount > 0 {
+			log.Printf("[quota] detected mixed quota collections: %s=%d, %s=%d; reads will fallback to legacy collection",
+				quotaCollectionName, primaryCount, legacyQuotaCollectionName, legacyCount)
+		}
+		return primary, legacy
+	}
+
+	legacyCount, err := legacy.CountDocuments(ctx, bson.M{})
+	if err == nil && legacyCount > 0 {
+		return legacy, primary
+	}
+
+	return primary, legacy
+}
+
+func (r *MongoQuotaRepository) quotaReadCollections() []*mongo.Collection {
+	collections := []*mongo.Collection{r.quotaCollection}
+	if r.legacyQuotaCollection != nil && r.legacyQuotaCollection.Name() != r.quotaCollection.Name() {
+		collections = append(collections, r.legacyQuotaCollection)
+	}
+	return collections
+}
+
+func quotaDedupKey(userID string, quotaType aiModels.QuotaType) string {
+	return userID + "::" + string(quotaType)
+}
+
+func selectLatestQuota(current, candidate *aiModels.UserQuota) *aiModels.UserQuota {
+	if candidate == nil {
+		return current
+	}
+	if current == nil || candidate.UpdatedAt.After(current.UpdatedAt) {
+		return candidate
+	}
+	return current
+}
+
+func mergeLatestQuotasByKey(merged map[string]*aiModels.UserQuota, quotas []*aiModels.UserQuota) {
+	for _, quota := range quotas {
+		if quota == nil {
+			continue
+		}
+		key := quotaDedupKey(quota.UserID, quota.QuotaType)
+		merged[key] = selectLatestQuota(merged[key], quota)
+	}
+}
+
+func (r *MongoQuotaRepository) findQuotaByFilter(ctx context.Context, filter bson.M) (*aiModels.UserQuota, error) {
+	var selected *aiModels.UserQuota
+
+	for _, collection := range r.quotaReadCollections() {
+		var quota aiModels.UserQuota
+		err := collection.FindOne(ctx, filter).Decode(&quota)
+		if err == nil {
+			quotaCopy := quota
+			selected = selectLatestQuota(selected, &quotaCopy)
+			continue
+		}
+		if err != mongo.ErrNoDocuments {
+			return nil, fmt.Errorf("查询配额失败: %w", err)
+		}
+	}
+
+	if selected != nil {
+		return selected, nil
+	}
+
+	return nil, aiModels.ErrQuotaNotFound
+}
+
+func (r *MongoQuotaRepository) findQuotasByFilter(ctx context.Context, filter bson.M) ([]*aiModels.UserQuota, error) {
+	merged := make(map[string]*aiModels.UserQuota)
+
+	for _, collection := range r.quotaReadCollections() {
+		cursor, err := collection.Find(ctx, filter)
+		if err != nil {
+			return nil, fmt.Errorf("查询配额列表失败: %w", err)
+		}
+
+		var quotas []*aiModels.UserQuota
+		if err = cursor.All(ctx, &quotas); err != nil {
+			cursor.Close(ctx)
+			return nil, fmt.Errorf("解析配额列表失败: %w", err)
+		}
+		cursor.Close(ctx)
+
+		mergeLatestQuotasByKey(merged, quotas)
+	}
+
+	items := make([]*aiModels.UserQuota, 0, len(merged))
+	for _, quota := range merged {
+		items = append(items, quota)
+	}
+
+	sort.Slice(items, func(i, j int) bool {
+		return items[i].UpdatedAt.After(items[j].UpdatedAt)
+	})
+
+	return items, nil
 }
 
 type quotaUserProfile struct {
@@ -105,24 +258,20 @@ func (r *MongoQuotaRepository) GetQuotaByUserID(ctx context.Context, userID stri
 		"quota_type": quotaType,
 	}
 
-	var quota aiModels.UserQuota
-	err := r.quotaCollection.FindOne(ctx, filter).Decode(&quota)
+	quota, err := r.findQuotaByFilter(ctx, filter)
 	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			return nil, aiModels.ErrQuotaNotFound
-		}
-		return nil, fmt.Errorf("查询配额失败: %w", err)
+		return nil, err
 	}
 
 	// 检查是否需要重置
 	if quota.ShouldReset() {
 		quota.Reset()
-		if err := r.UpdateQuota(ctx, &quota); err != nil {
+		if err := r.UpdateQuota(ctx, quota); err != nil {
 			return nil, fmt.Errorf("重置配额失败: %w", err)
 		}
 	}
 
-	return &quota, nil
+	return quota, nil
 }
 
 // UpdateQuota 更新配额
@@ -145,12 +294,18 @@ func (r *MongoQuotaRepository) UpdateQuota(ctx context.Context, quota *aiModels.
 		},
 	}
 
-	result, err := r.quotaCollection.UpdateOne(ctx, filter, update)
-	if err != nil {
-		return fmt.Errorf("更新配额失败: %w", err)
+	matched := false
+	for _, collection := range r.quotaReadCollections() {
+		result, err := collection.UpdateOne(ctx, filter, update)
+		if err != nil {
+			return fmt.Errorf("更新配额失败: %w", err)
+		}
+		if result.MatchedCount > 0 {
+			matched = true
+		}
 	}
 
-	if result.MatchedCount == 0 {
+	if !matched {
 		return aiModels.ErrQuotaNotFound
 	}
 
@@ -164,12 +319,18 @@ func (r *MongoQuotaRepository) DeleteQuota(ctx context.Context, userID string, q
 		"quota_type": quotaType,
 	}
 
-	result, err := r.quotaCollection.DeleteOne(ctx, filter)
-	if err != nil {
-		return fmt.Errorf("删除配额失败: %w", err)
+	deleted := false
+	for _, collection := range r.quotaReadCollections() {
+		result, err := collection.DeleteOne(ctx, filter)
+		if err != nil {
+			return fmt.Errorf("删除配额失败: %w", err)
+		}
+		if result.DeletedCount > 0 {
+			deleted = true
+		}
 	}
 
-	if result.DeletedCount == 0 {
+	if !deleted {
 		return aiModels.ErrQuotaNotFound
 	}
 
@@ -180,15 +341,9 @@ func (r *MongoQuotaRepository) DeleteQuota(ctx context.Context, userID string, q
 func (r *MongoQuotaRepository) GetAllQuotasByUserID(ctx context.Context, userID string) ([]*aiModels.UserQuota, error) {
 	filter := bson.M{"user_id": userID}
 
-	cursor, err := r.quotaCollection.Find(ctx, filter)
+	quotas, err := r.findQuotasByFilter(ctx, filter)
 	if err != nil {
-		return nil, fmt.Errorf("查询配额列表失败: %w", err)
-	}
-	defer cursor.Close(ctx)
-
-	var quotas []*aiModels.UserQuota
-	if err = cursor.All(ctx, &quotas); err != nil {
-		return nil, fmt.Errorf("解析配额列表失败: %w", err)
+		return nil, err
 	}
 
 	// 检查并重置过期的配额
@@ -230,9 +385,10 @@ func (r *MongoQuotaRepository) BatchResetQuotas(ctx context.Context, quotaType a
 		},
 	}
 
-	_, err := r.quotaCollection.UpdateMany(ctx, filter, update)
-	if err != nil {
-		return fmt.Errorf("批量重置配额失败: %w", err)
+	for _, collection := range r.quotaReadCollections() {
+		if _, err := collection.UpdateMany(ctx, filter, update); err != nil {
+			return fmt.Errorf("批量重置配额失败: %w", err)
+		}
 	}
 
 	return nil
@@ -408,49 +564,27 @@ func (r *MongoQuotaRepository) Health(ctx context.Context) error {
 // GetDashboardSummary 获取仪表盘汇总数据
 func (r *MongoQuotaRepository) GetDashboardSummary(ctx context.Context) (*aiModels.DashboardSummary, error) {
 	dailyFilter := bson.M{"quota_type": aiModels.QuotaTypeDaily}
-
-	// 统计总用户数
-	totalUsers, err := r.quotaCollection.CountDocuments(ctx, dailyFilter)
+	quotas, err := r.findQuotasByFilter(ctx, dailyFilter)
 	if err != nil {
-		return nil, fmt.Errorf("统计总用户数失败: %w", err)
+		return nil, err
 	}
 
-	// 统计活跃用户数
-	activeFilter := mergeBSONMaps(dailyFilter, bson.M{"status": aiModels.QuotaStatusActive})
-	activeUsers, err := r.quotaCollection.CountDocuments(ctx, activeFilter)
-	if err != nil {
-		return nil, fmt.Errorf("统计活跃用户数失败: %w", err)
-	}
-
-	// 统计配额耗尽用户数
-	exhaustedFilter := mergeBSONMaps(dailyFilter, bson.M{"status": aiModels.QuotaStatusExhausted})
-	exhaustedUsers, err := r.quotaCollection.CountDocuments(ctx, exhaustedFilter)
-	if err != nil {
-		return nil, fmt.Errorf("统计耗尽用户数失败: %w", err)
-	}
-
-	nearExhaustFilter := mergeBSONMaps(dailyFilter, bson.M{
-		"status": aiModels.QuotaStatusActive,
-		"$expr": bson.M{
-			"$and": bson.A{
-				bson.M{"$gt": bson.A{"$total_quota", 0}},
-				bson.M{"$gte": bson.A{
-					bson.M{"$divide": bson.A{"$used_quota", "$total_quota"}},
-					0.8,
-				}},
-			},
-		},
-	})
-	nearExhaustUsers, err := r.quotaCollection.CountDocuments(ctx, nearExhaustFilter)
-	if err != nil {
-		return nil, fmt.Errorf("统计临近耗尽用户数失败: %w", err)
-	}
-
-	// 统计暂停用户数
-	suspendedFilter := mergeBSONMaps(dailyFilter, bson.M{"status": aiModels.QuotaStatusSuspended})
-	suspendedUsers, err := r.quotaCollection.CountDocuments(ctx, suspendedFilter)
-	if err != nil {
-		return nil, fmt.Errorf("统计暂停用户数失败: %w", err)
+	var activeUsers int64
+	var exhaustedUsers int64
+	var nearExhaustUsers int64
+	var suspendedUsers int64
+	for _, quota := range quotas {
+		switch quota.Status {
+		case aiModels.QuotaStatusActive:
+			activeUsers++
+			if quota.TotalQuota > 0 && float64(quota.UsedQuota)/float64(quota.TotalQuota) >= 0.8 {
+				nearExhaustUsers++
+			}
+		case aiModels.QuotaStatusExhausted:
+			exhaustedUsers++
+		case aiModels.QuotaStatusSuspended:
+			suspendedUsers++
+		}
 	}
 
 	// 统计真实消费流水总量和计算平均消费
@@ -484,6 +618,7 @@ func (r *MongoQuotaRepository) GetDashboardSummary(ctx context.Context) (*aiMode
 	}
 
 	avgConsumption := float64(0)
+	totalUsers := int64(len(quotas))
 	if totalUsers > 0 {
 		avgConsumption = float64(totalConsumption) / float64(totalUsers)
 	}
@@ -508,29 +643,26 @@ func (r *MongoQuotaRepository) GetQuotaDistribution(ctx context.Context) (*aiMod
 		ByStatus:  make(map[string]int),
 	}
 	dailyMatch := bson.M{"quota_type": aiModels.QuotaTypeDaily}
-
-	// 按角色统计
-	rolePipeline := mongo.Pipeline{
-		{{Key: "$match", Value: dailyMatch}},
-		{{Key: "$group", Value: bson.M{
-			"_id":   "$metadata.user_role",
-			"count": bson.M{"$sum": 1},
-		}}},
+	quotas, err := r.findQuotasByFilter(ctx, dailyMatch)
+	if err != nil {
+		return nil, err
 	}
 
-	cursor, err := r.quotaCollection.Aggregate(ctx, rolePipeline)
-	if err == nil {
-		defer cursor.Close(ctx)
-		var roleResults []struct {
-			Role  string `bson:"_id"`
-			Count int    `bson:"count"`
+	for _, quota := range quotas {
+		role := ""
+		level := ""
+		if quota.Metadata != nil {
+			role = quota.Metadata.UserRole
+			level = quota.Metadata.MembershipLevel
 		}
-		_ = cursor.All(ctx, &roleResults)
-		for _, result := range roleResults {
-			if result.Role == "" {
-				continue
-			}
-			distribution.ByRole[result.Role] = result.Count
+		if role != "" {
+			distribution.ByRole[role]++
+		}
+		if level != "" {
+			distribution.ByLevel[level]++
+		}
+		if quota.Status != "" {
+			distribution.ByStatus[string(quota.Status)]++
 		}
 	}
 
@@ -544,7 +676,7 @@ func (r *MongoQuotaRepository) GetQuotaDistribution(ctx context.Context) (*aiMod
 			}}},
 		}
 
-		cursor, err = r.usersCollection.Aggregate(ctx, userRolePipeline)
+		cursor, err := r.usersCollection.Aggregate(ctx, userRolePipeline)
 		if err == nil {
 			defer cursor.Close(ctx)
 			var userRoleResults []struct {
@@ -555,56 +687,6 @@ func (r *MongoQuotaRepository) GetQuotaDistribution(ctx context.Context) (*aiMod
 			for _, result := range userRoleResults {
 				distribution.ByRole[result.Role] = result.Count
 			}
-		}
-	}
-
-	// 按等级统计
-	levelPipeline := mongo.Pipeline{
-		{{Key: "$match", Value: dailyMatch}},
-		{{Key: "$group", Value: bson.M{
-			"_id":   "$metadata.membership_level",
-			"count": bson.M{"$sum": 1},
-		}}},
-	}
-
-	cursor, err = r.quotaCollection.Aggregate(ctx, levelPipeline)
-	if err == nil {
-		defer cursor.Close(ctx)
-		var levelResults []struct {
-			Level string `bson:"_id"`
-			Count int    `bson:"count"`
-		}
-		_ = cursor.All(ctx, &levelResults)
-		for _, result := range levelResults {
-			if result.Level == "" {
-				continue
-			}
-			distribution.ByLevel[result.Level] = result.Count
-		}
-	}
-
-	// 按状态统计
-	statusPipeline := mongo.Pipeline{
-		{{Key: "$match", Value: dailyMatch}},
-		{{Key: "$group", Value: bson.M{
-			"_id":   "$status",
-			"count": bson.M{"$sum": 1},
-		}}},
-	}
-
-	cursor, err = r.quotaCollection.Aggregate(ctx, statusPipeline)
-	if err == nil {
-		defer cursor.Close(ctx)
-		var statusResults []struct {
-			Status string `bson:"_id"`
-			Count  int    `bson:"count"`
-		}
-		_ = cursor.All(ctx, &statusResults)
-		for _, result := range statusResults {
-			if result.Status == "" {
-				continue
-			}
-			distribution.ByStatus[result.Status] = result.Count
 		}
 	}
 
@@ -621,7 +703,7 @@ func (r *MongoQuotaRepository) GetQuotaDistribution(ctx context.Context) (*aiMod
 		{{Key: "$sort", Value: bson.M{"total": -1}}},
 	}
 
-	cursor, err = r.transactionCollection.Aggregate(ctx, servicePipeline)
+	cursor, err := r.transactionCollection.Aggregate(ctx, servicePipeline)
 	if err == nil {
 		defer cursor.Close(ctx)
 		var serviceResults []struct {
@@ -642,47 +724,35 @@ func (r *MongoQuotaRepository) GetQuotaDistribution(ctx context.Context) (*aiMod
 
 // GetTopConsumers 获取消费排行
 func (r *MongoQuotaRepository) GetTopConsumers(ctx context.Context, limit int) ([]aiModels.UserQuotaRanking, error) {
-	// 排行展示当前配额周期的消耗占比，只统计 daily 配额，避免多配额文档重复计数。
-	pipeline := mongo.Pipeline{
-		{{Key: "$match", Value: bson.M{
-			"quota_type": aiModels.QuotaTypeDaily,
-		}}},
-		{{Key: "$project", Value: bson.M{
-			"userID":     "$user_id",
-			"usedQuota":  "$used_quota",
-			"totalQuota": "$total_quota",
-			"role":       "$metadata.user_role",
-		}}},
-		{{Key: "$sort", Value: bson.M{"usedQuota": -1, "totalQuota": -1}}},
-		{{Key: "$limit", Value: int64(limit)}},
-	}
-
-	cursor, err := r.quotaCollection.Aggregate(ctx, pipeline)
+	quotas, err := r.findQuotasByFilter(ctx, bson.M{"quota_type": aiModels.QuotaTypeDaily})
 	if err != nil {
-		return nil, fmt.Errorf("查询消费排行失败: %w", err)
-	}
-	defer cursor.Close(ctx)
-
-	var results []struct {
-		UserID     string `bson:"userID"`
-		UsedQuota  int    `bson:"usedQuota"`
-		TotalQuota int    `bson:"totalQuota"`
-		Role       string `bson:"role"`
-	}
-	if err = cursor.All(ctx, &results); err != nil {
-		return nil, fmt.Errorf("解析消费排行失败: %w", err)
+		return nil, err
 	}
 
-	rankings := make([]aiModels.UserQuotaRanking, 0, len(results))
-	for _, result := range results {
+	sort.Slice(quotas, func(i, j int) bool {
+		if quotas[i].UsedQuota == quotas[j].UsedQuota {
+			return quotas[i].TotalQuota > quotas[j].TotalQuota
+		}
+		return quotas[i].UsedQuota > quotas[j].UsedQuota
+	})
+
+	if limit > 0 && len(quotas) > limit {
+		quotas = quotas[:limit]
+	}
+
+	rankings := make([]aiModels.UserQuotaRanking, 0, len(quotas))
+	for _, quota := range quotas {
 		usagePercent := float64(0)
-		if result.TotalQuota > 0 {
-			usagePercent = float64(result.UsedQuota) / float64(result.TotalQuota) * 100
+		if quota.TotalQuota > 0 {
+			usagePercent = float64(quota.UsedQuota) / float64(quota.TotalQuota) * 100
 		}
 
-		username := result.UserID
-		role := result.Role
-		if profile, err := r.getUserProfile(ctx, result.UserID); err == nil && profile != nil {
+		username := quota.UserID
+		role := ""
+		if quota.Metadata != nil {
+			role = quota.Metadata.UserRole
+		}
+		if profile, err := r.getUserProfile(ctx, quota.UserID); err == nil && profile != nil {
 			if profile.Username != "" {
 				username = profile.Username
 			}
@@ -692,11 +762,11 @@ func (r *MongoQuotaRepository) GetTopConsumers(ctx context.Context, limit int) (
 		}
 
 		rankings = append(rankings, aiModels.UserQuotaRanking{
-			UserID:       result.UserID,
+			UserID:       quota.UserID,
 			Username:     username,
 			Role:         role,
-			UsedQuota:    result.UsedQuota,
-			TotalQuota:   result.TotalQuota,
+			UsedQuota:    quota.UsedQuota,
+			TotalQuota:   quota.TotalQuota,
 			UsagePercent: usagePercent,
 		})
 	}
@@ -757,31 +827,26 @@ func (r *MongoQuotaRepository) ListUserQuotas(ctx context.Context, role, status,
 		filter["user_id"] = bson.M{"$regex": search, "$options": "i"}
 	}
 
-	// 统计总数
-	total, err := r.quotaCollection.CountDocuments(ctx, filter)
+	quotas, err := r.findQuotasByFilter(ctx, filter)
 	if err != nil {
-		return nil, 0, fmt.Errorf("统计用户配额数量失败: %w", err)
+		return nil, 0, err
 	}
 
-	// 分页查询
-	opts := options.Find().
-		SetSort(bson.D{{Key: "updated_at", Value: -1}}).
-		SetSkip(int64((page - 1) * limit)).
-		SetLimit(int64(limit))
-
-	cursor, err := r.quotaCollection.Find(ctx, filter, opts)
-	if err != nil {
-		return nil, 0, fmt.Errorf("查询用户配额列表失败: %w", err)
+	total := int64(len(quotas))
+	start := (page - 1) * limit
+	if start < 0 {
+		start = 0
 	}
-	defer cursor.Close(ctx)
-
-	var quotas []*aiModels.UserQuota
-	if err = cursor.All(ctx, &quotas); err != nil {
-		return nil, 0, fmt.Errorf("解析用户配额列表失败: %w", err)
+	if start > len(quotas) {
+		start = len(quotas)
+	}
+	end := start + limit
+	if end > len(quotas) {
+		end = len(quotas)
 	}
 
-	items := make([]*aiModels.UserQuotaListItem, 0, len(quotas))
-	for _, q := range quotas {
+	items := make([]*aiModels.UserQuotaListItem, 0, end-start)
+	for _, q := range quotas[start:end] {
 		usagePercent := float64(0)
 		if q.TotalQuota > 0 {
 			usagePercent = float64(q.UsedQuota) / float64(q.TotalQuota) * 100

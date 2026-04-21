@@ -81,11 +81,12 @@ func (api *OutlineApi) CreateOutline(c *gin.Context) {
 // @Failure 404 {object} response.APIResponse
 // @Router /api/v1/writer/outlines/{outlineId} [get]
 func (api *OutlineApi) GetOutline(c *gin.Context) {
-	outlineID := c.Param("outlineId")
-	projectID := c.Query("projectId")
-
-	if outlineID == "" || projectID == "" {
-		response.BadRequest(c, "参数错误", "outlineId和projectId不能为空")
+	outlineID, ok := shared.GetRequiredParam(c, "outlineId", "大纲ID")
+	if !ok {
+		return
+	}
+	projectID, ok := shared.GetRequiredQuery(c, "projectId", "项目ID")
+	if !ok {
 		return
 	}
 
@@ -179,11 +180,12 @@ func (api *OutlineApi) GetOutlineTree(c *gin.Context) {
 // @Failure 404 {object} response.APIResponse
 // @Router /api/v1/writer/outlines/{outlineId} [put]
 func (api *OutlineApi) UpdateOutline(c *gin.Context) {
-	outlineID := c.Param("outlineId")
-	projectID := c.Query("projectId")
-
-	if outlineID == "" || projectID == "" {
-		response.BadRequest(c, "参数错误", "outlineId和projectId不能为空")
+	outlineID, ok := shared.GetRequiredParam(c, "outlineId", "大纲ID")
+	if !ok {
+		return
+	}
+	projectID, ok := shared.GetRequiredQuery(c, "projectId", "项目ID")
+	if !ok {
 		return
 	}
 
@@ -213,11 +215,12 @@ func (api *OutlineApi) UpdateOutline(c *gin.Context) {
 // @Failure 404 {object} response.APIResponse
 // @Router /api/v1/writer/outlines/{outlineId} [delete]
 func (api *OutlineApi) DeleteOutline(c *gin.Context) {
-	outlineID := c.Param("outlineId")
-	projectID := c.Query("projectId")
-
-	if outlineID == "" || projectID == "" {
-		response.BadRequest(c, "参数错误", "outlineId和projectId不能为空")
+	outlineID, ok := shared.GetRequiredParam(c, "outlineId", "大纲ID")
+	if !ok {
+		return
+	}
+	projectID, ok := shared.GetRequiredQuery(c, "projectId", "项目ID")
+	if !ok {
 		return
 	}
 

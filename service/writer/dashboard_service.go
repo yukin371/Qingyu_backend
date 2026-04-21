@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	bookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
 	writerRepo "Qingyu_backend/repository/interfaces/writer"
 	"Qingyu_backend/service/interfaces"
 )
@@ -19,14 +20,16 @@ type DashboardStats struct {
 
 // DashboardService 仪表板统计服务
 type DashboardService struct {
-	projectRepo   writerRepo.ProjectRepository
+	projectRepo    writerRepo.ProjectRepository
+	bookRepo       bookstoreRepo.BookRepository
 	publishService interfaces.PublishService
 }
 
 // NewDashboardService 创建仪表板统计服务
-func NewDashboardService(projectRepo writerRepo.ProjectRepository, publishService interfaces.PublishService) *DashboardService {
+func NewDashboardService(projectRepo writerRepo.ProjectRepository, bookRepo bookstoreRepo.BookRepository, publishService interfaces.PublishService) *DashboardService {
 	return &DashboardService{
-		projectRepo:   projectRepo,
+		projectRepo:    projectRepo,
+		bookRepo:       bookRepo,
 		publishService: publishService,
 	}
 }
@@ -62,6 +65,17 @@ func (s *DashboardService) GetStats(ctx context.Context, userID string) (*Dashbo
 	stats.TotalWords = totalWords
 	stats.TodayWords = todayWords
 
+	if stats.BookCount == 0 && s.bookRepo != nil {
+		bookCount, fallbackTotalWords, fallbackTodayWords, err := s.collectBookFallbackStats(ctx, userID, today)
+		if err != nil {
+			return nil, err
+		}
+
+		stats.BookCount = bookCount
+		stats.TotalWords = fallbackTotalWords
+		stats.TodayWords = fallbackTodayWords
+	}
+
 	// 待审核数量
 	if s.publishService != nil {
 		_, pendingCount, err := s.publishService.GetPendingPublicationRecords(ctx, 1, 1)
@@ -74,4 +88,31 @@ func (s *DashboardService) GetStats(ctx context.Context, userID string) (*Dashbo
 	stats.Streak = 0
 
 	return stats, nil
+}
+
+func (s *DashboardService) collectBookFallbackStats(ctx context.Context, userID string, today time.Time) (int64, int64, int64, error) {
+	const batchSize = 200
+
+	var count int64
+	var totalWords int64
+	var todayWords int64
+
+	for offset := 0; ; offset += batchSize {
+		books, err := s.bookRepo.GetByAuthorID(ctx, userID, batchSize, offset)
+		if err != nil {
+			return 0, 0, 0, err
+		}
+
+		count += int64(len(books))
+		for _, book := range books {
+			totalWords += book.WordCount
+			if book.UpdatedAt.After(today) {
+				todayWords += book.WordCount
+			}
+		}
+
+		if len(books) < batchSize {
+			return count, totalWords, todayWords, nil
+		}
+	}
 }

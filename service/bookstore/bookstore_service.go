@@ -210,7 +210,7 @@ func (s *BookstoreServiceImpl) GetBooksByAuthorID(ctx context.Context, authorID 
 	}
 
 	// 获取总数
-	total, err := s.bookRepo.CountByAuthor(ctx, authorID)
+	total, err := s.bookRepo.CountByAuthorID(ctx, authorID)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count books by author: %w", err)
 	}
@@ -799,6 +799,27 @@ func (s *BookstoreServiceImpl) GetRealtimeRanking(ctx context.Context, limit int
 	return []*bookstore2.RankingItem{}, nil
 }
 
+func (s *BookstoreServiceImpl) getLatestAvailableRanking(
+	ctx context.Context,
+	rankingType bookstore2.RankingType,
+	limit int,
+	fallbackWindow int,
+	periodBuilder func(offset int) string,
+) ([]*bookstore2.RankingItem, error) {
+	for offset := 0; offset <= fallbackWindow; offset++ {
+		period := periodBuilder(offset)
+		items, err := s.rankingRepo.GetByTypeWithBooks(ctx, rankingType, period, limit, 0)
+		if err != nil {
+			return nil, err
+		}
+		if len(items) > 0 {
+			return items, nil
+		}
+	}
+
+	return []*bookstore2.RankingItem{}, nil
+}
+
 // GetWeeklyRanking 获取周榜
 func (s *BookstoreServiceImpl) GetWeeklyRanking(ctx context.Context, period string, limit int) ([]*bookstore2.RankingItem, error) {
 	// 检查repository是否为nil
@@ -806,10 +827,17 @@ func (s *BookstoreServiceImpl) GetWeeklyRanking(ctx context.Context, period stri
 		return []*bookstore2.RankingItem{}, nil
 	}
 
-	if period == "" {
-		period = bookstore2.GetPeriodString(bookstore2.RankingTypeWeekly, time.Now())
+	if period != "" {
+		return s.rankingRepo.GetByTypeWithBooks(ctx, bookstore2.RankingTypeWeekly, period, limit, 0)
 	}
-	return s.rankingRepo.GetByTypeWithBooks(ctx, bookstore2.RankingTypeWeekly, period, limit, 0)
+
+	// 周榜按周分桶；如果本周数据尚未生成，则向前回看最近 8 周的最近一期可用数据，
+	// 避免首页首屏和周榜页直接出现空榜。
+	const fallbackWeeks = 8
+	now := time.Now()
+	return s.getLatestAvailableRanking(ctx, bookstore2.RankingTypeWeekly, limit, fallbackWeeks, func(offset int) string {
+		return bookstore2.GetPeriodString(bookstore2.RankingTypeWeekly, now.AddDate(0, 0, -7*offset))
+	})
 }
 
 // GetMonthlyRanking 获取月榜
@@ -819,10 +847,17 @@ func (s *BookstoreServiceImpl) GetMonthlyRanking(ctx context.Context, period str
 		return []*bookstore2.RankingItem{}, nil
 	}
 
-	if period == "" {
-		period = bookstore2.GetPeriodString(bookstore2.RankingTypeMonthly, time.Now())
+	if period != "" {
+		return s.rankingRepo.GetByTypeWithBooks(ctx, bookstore2.RankingTypeMonthly, period, limit, 0)
 	}
-	return s.rankingRepo.GetByTypeWithBooks(ctx, bookstore2.RankingTypeMonthly, period, limit, 0)
+
+	// 月榜按月分桶；如果当月榜单尚未生成，则向前回看最近 6 个月的最近一期可用数据，
+	// 避免月初重启或调度未执行时首页直接空白。
+	const fallbackMonths = 6
+	now := time.Now()
+	return s.getLatestAvailableRanking(ctx, bookstore2.RankingTypeMonthly, limit, fallbackMonths, func(offset int) string {
+		return bookstore2.GetPeriodString(bookstore2.RankingTypeMonthly, now.AddDate(0, -offset, 0))
+	})
 }
 
 // GetNewbieRanking 获取新人榜

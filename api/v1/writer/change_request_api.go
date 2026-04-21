@@ -31,11 +31,12 @@ func NewChangeRequestApi(crSvc *storyharness.ChangeRequestService) *ChangeReques
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/writer/projects/{id}/chapters/{chapterId}/change-requests [get]
 func (api *ChangeRequestApi) ListChangeRequests(c *gin.Context) {
-	projectID := c.Param("id")
-	chapterID := c.Param("chapterId")
-
-	if projectID == "" || chapterID == "" {
-		response.BadRequest(c, "参数错误", "projectID 和 chapterID 不能为空")
+	projectID, ok := shared.GetRequiredParam(c, "id", "项目ID")
+	if !ok {
+		return
+	}
+	chapterID, ok := shared.GetRequiredParam(c, "chapterId", "章节ID")
+	if !ok {
 		return
 	}
 
@@ -61,9 +62,8 @@ func (api *ChangeRequestApi) ListChangeRequests(c *gin.Context) {
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/writer/change-requests/{requestId} [get]
 func (api *ChangeRequestApi) GetChangeRequest(c *gin.Context) {
-	requestID := c.Param("requestId")
-	if requestID == "" {
-		response.BadRequest(c, "参数错误", "requestId 不能为空")
+	requestID, ok := shared.GetRequiredParam(c, "requestId", "建议ID")
+	if !ok {
 		return
 	}
 
@@ -87,9 +87,8 @@ func (api *ChangeRequestApi) GetChangeRequest(c *gin.Context) {
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/writer/change-requests/{requestId}/status [put]
 func (api *ChangeRequestApi) ProcessChangeRequest(c *gin.Context) {
-	requestID := c.Param("requestId")
-	if requestID == "" {
-		response.BadRequest(c, "参数错误", "requestId 不能为空")
+	requestID, ok := shared.GetRequiredParam(c, "requestId", "建议ID")
+	if !ok {
 		return
 	}
 

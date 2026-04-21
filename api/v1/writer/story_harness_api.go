@@ -3,6 +3,7 @@ package writer
 import (
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/writer/storyharness"
 )
@@ -40,11 +41,12 @@ func NewStoryHarnessApi(
 // @Failure 400 {object} response.APIResponse
 // @Router /api/v1/writer/projects/{id}/chapters/{chapterId}/context [get]
 func (api *StoryHarnessApi) GetChapterContext(c *gin.Context) {
-	projectID := c.Param("id")
-	chapterID := c.Param("chapterId")
-
-	if projectID == "" || chapterID == "" {
-		response.BadRequest(c, "参数错误", "projectID 和 chapterID 不能为空")
+	projectID, ok := shared.GetRequiredParam(c, "id", "项目ID")
+	if !ok {
+		return
+	}
+	chapterID, ok := shared.GetRequiredParam(c, "chapterId", "章节ID")
+	if !ok {
 		return
 	}
 
@@ -76,11 +78,12 @@ func (api *StoryHarnessApi) GetChapterContext(c *gin.Context) {
 // @Failure 400 {object} response.APIResponse
 // @Router /api/v1/writer/projects/{id}/chapters/{chapterId}/trigger-index [post]
 func (api *StoryHarnessApi) TriggerChapterIndex(c *gin.Context) {
-	projectID := c.Param("id")
-	chapterID := c.Param("chapterId")
-
-	if projectID == "" || chapterID == "" {
-		response.BadRequest(c, "参数错误", "projectID 和 chapterID 不能为空")
+	projectID, ok := shared.GetRequiredParam(c, "id", "项目ID")
+	if !ok {
+		return
+	}
+	chapterID, ok := shared.GetRequiredParam(c, "chapterId", "章节ID")
+	if !ok {
 		return
 	}
 	if api.indexerSvc == nil {
@@ -109,11 +112,12 @@ func (api *StoryHarnessApi) TriggerChapterIndex(c *gin.Context) {
 // @Failure 400 {object} response.APIResponse
 // @Router /api/v1/writer/projects/{id}/chapters/{chapterId}/rebuild-projection [post]
 func (api *StoryHarnessApi) RebuildChapterProjection(c *gin.Context) {
-	projectID := c.Param("id")
-	chapterID := c.Param("chapterId")
-
-	if projectID == "" || chapterID == "" {
-		response.BadRequest(c, "参数错误", "projectID 和 chapterID 不能为空")
+	projectID, ok := shared.GetRequiredParam(c, "id", "项目ID")
+	if !ok {
+		return
+	}
+	chapterID, ok := shared.GetRequiredParam(c, "chapterId", "章节ID")
+	if !ok {
 		return
 	}
 	if api.crSvc == nil {

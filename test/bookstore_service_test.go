@@ -86,6 +86,11 @@ func (m *MockBookRepository) CountByAuthor(ctx context.Context, author string) (
 	return args.Get(0).(int64), args.Error(1)
 }
 
+func (m *MockBookRepository) CountByAuthorID(ctx context.Context, authorID string) (int64, error) {
+	args := m.Called(ctx, authorID)
+	return args.Get(0).(int64), args.Error(1)
+}
+
 func (m *MockBookRepository) CountByStatus(ctx context.Context, status bookstore2.BookStatus) (int64, error) {
 	args := m.Called(ctx, status)
 	return args.Get(0).(int64), args.Error(1)

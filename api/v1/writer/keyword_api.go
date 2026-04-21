@@ -8,6 +8,7 @@ import (
 	"github.com/mozillazg/go-pinyin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/interfaces"
 )
@@ -55,9 +56,13 @@ func (api *KeywordApi) SearchKeywords(c *gin.Context) {
 		return
 	}
 
-	query := strings.TrimSpace(c.Query("q"))
+	rawQuery, ok := shared.GetRequiredQuery(c, "q", "查询关键词")
+	if !ok {
+		return
+	}
+	query := strings.TrimSpace(rawQuery)
 	if query == "" {
-		response.BadRequest(c, "q 不能为空", "")
+		response.BadRequest(c, "查询关键词不能为空", "")
 		return
 	}
 

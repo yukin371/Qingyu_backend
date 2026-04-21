@@ -105,9 +105,8 @@ func (api *EntityApi) GetEntityGraph(c *gin.Context) {
 // @Failure 404 {object} response.APIResponse
 // @Router /api/v1/writer/entities/{entityId}/state-fields [put]
 func (api *EntityApi) UpdateEntityStateFields(c *gin.Context) {
-	entityID := c.Param("entityId")
-	if entityID == "" {
-		response.BadRequest(c, "实体ID不能为空", "")
+	entityID, ok := shared.GetRequiredParam(c, "entityId", "实体ID")
+	if !ok {
 		return
 	}
 

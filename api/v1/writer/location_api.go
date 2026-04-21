@@ -22,9 +22,8 @@ func NewLocationApi(locationService interfaces.LocationService) *LocationApi {
 
 // CreateLocation 创建地点
 func (api *LocationApi) CreateLocation(c *gin.Context) {
-		projectID := c.Param("id")
-	if projectID == "" {
-		response.BadRequest(c, "项目ID不能为空", "")
+	projectID, ok := shared.GetRequiredParam(c, "id", "项目ID")
+	if !ok {
 		return
 	}
 
@@ -46,11 +45,12 @@ func (api *LocationApi) CreateLocation(c *gin.Context) {
 
 // GetLocation 获取地点详情
 func (api *LocationApi) GetLocation(c *gin.Context) {
-	locationID := c.Param("locationId")
-	projectID := c.Query("projectId")
-
-	if locationID == "" || projectID == "" {
-		response.BadRequest(c, "参数错误", "locationId和projectId不能为空")
+	locationID, ok := shared.GetRequiredParam(c, "locationId", "地点ID")
+	if !ok {
+		return
+	}
+	projectID, ok := shared.GetRequiredQuery(c, "projectId", "项目ID")
+	if !ok {
 		return
 	}
 
@@ -65,9 +65,8 @@ func (api *LocationApi) GetLocation(c *gin.Context) {
 
 // ListLocations 获取项目地点列表
 func (api *LocationApi) ListLocations(c *gin.Context) {
-		projectID := c.Param("id")
-	if projectID == "" {
-		response.BadRequest(c, "项目ID不能为空", "")
+	projectID, ok := shared.GetRequiredParam(c, "id", "项目ID")
+	if !ok {
 		return
 	}
 
@@ -82,9 +81,8 @@ func (api *LocationApi) ListLocations(c *gin.Context) {
 
 // GetLocationTree 获取地点层级树
 func (api *LocationApi) GetLocationTree(c *gin.Context) {
-		projectID := c.Param("id")
-	if projectID == "" {
-		response.BadRequest(c, "项目ID不能为空", "")
+	projectID, ok := shared.GetRequiredParam(c, "id", "项目ID")
+	if !ok {
 		return
 	}
 
@@ -99,11 +97,12 @@ func (api *LocationApi) GetLocationTree(c *gin.Context) {
 
 // UpdateLocation 更新地点
 func (api *LocationApi) UpdateLocation(c *gin.Context) {
-	locationID := c.Param("locationId")
-	projectID := c.Query("projectId")
-
-	if locationID == "" || projectID == "" {
-		response.BadRequest(c, "参数错误", "locationId和projectId不能为空")
+	locationID, ok := shared.GetRequiredParam(c, "locationId", "地点ID")
+	if !ok {
+		return
+	}
+	projectID, ok := shared.GetRequiredQuery(c, "projectId", "项目ID")
+	if !ok {
 		return
 	}
 
@@ -123,11 +122,12 @@ func (api *LocationApi) UpdateLocation(c *gin.Context) {
 
 // DeleteLocation 删除地点
 func (api *LocationApi) DeleteLocation(c *gin.Context) {
-	locationID := c.Param("locationId")
-	projectID := c.Query("projectId")
-
-	if locationID == "" || projectID == "" {
-		response.BadRequest(c, "参数错误", "locationId和projectId不能为空")
+	locationID, ok := shared.GetRequiredParam(c, "locationId", "地点ID")
+	if !ok {
+		return
+	}
+	projectID, ok := shared.GetRequiredQuery(c, "projectId", "项目ID")
+	if !ok {
 		return
 	}
 
@@ -142,9 +142,8 @@ func (api *LocationApi) DeleteLocation(c *gin.Context) {
 
 // CreateLocationRelation 创建地点关系
 func (api *LocationApi) CreateLocationRelation(c *gin.Context) {
-	projectID := c.Query("projectId")
-	if projectID == "" {
-		response.BadRequest(c, "项目ID不能为空", "")
+	projectID, ok := shared.GetRequiredQuery(c, "projectId", "项目ID")
+	if !ok {
 		return
 	}
 
@@ -164,9 +163,8 @@ func (api *LocationApi) CreateLocationRelation(c *gin.Context) {
 
 // ListLocationRelations 获取地点关系列表
 func (api *LocationApi) ListLocationRelations(c *gin.Context) {
-		projectID := c.Param("id")
-	if projectID == "" {
-		response.BadRequest(c, "项目ID不能为空", "")
+	projectID, ok := shared.GetRequiredParam(c, "id", "项目ID")
+	if !ok {
 		return
 	}
 
@@ -187,11 +185,12 @@ func (api *LocationApi) ListLocationRelations(c *gin.Context) {
 
 // DeleteLocationRelation 删除地点关系
 func (api *LocationApi) DeleteLocationRelation(c *gin.Context) {
-	relationID := c.Param("relationId")
-	projectID := c.Query("projectId")
-
-	if relationID == "" || projectID == "" {
-		response.BadRequest(c, "参数错误", "relationId和projectId不能为空")
+	relationID, ok := shared.GetRequiredParam(c, "relationId", "关系ID")
+	if !ok {
+		return
+	}
+	projectID, ok := shared.GetRequiredQuery(c, "projectId", "项目ID")
+	if !ok {
 		return
 	}
 

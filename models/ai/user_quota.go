@@ -68,7 +68,7 @@ type QuotaTransaction struct {
 
 // CollectionName 指定集合名
 func (UserQuota) CollectionName() string {
-	return "ai_user_quotas"
+	return "ai_quotas"
 }
 
 // CollectionName 指定集合名

@@ -34,8 +34,7 @@ func NewAuditApi(auditService audit.ContentAuditService) *AuditApi {
 // @Router /api/v1/audit/check [post]
 func (api *AuditApi) CheckContent(c *gin.Context) {
 	var req auditDTO.CheckContentRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
@@ -63,8 +62,7 @@ func (api *AuditApi) AuditDocument(c *gin.Context) {
 	documentID := c.Param("id")
 
 	var req auditDTO.AuditDocumentRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
@@ -129,8 +127,7 @@ func (api *AuditApi) SubmitAppeal(c *gin.Context) {
 	auditID := c.Param("id")
 
 	var req auditDTO.SubmitAppealRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
@@ -192,8 +189,7 @@ func (api *AuditApi) ReviewAudit(c *gin.Context) {
 	auditID := c.Param("id")
 
 	var req auditDTO.ReviewAuditRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
@@ -225,8 +221,7 @@ func (api *AuditApi) ReviewAppeal(c *gin.Context) {
 	auditID := c.Param("id")
 
 	var req auditDTO.ReviewAppealRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 

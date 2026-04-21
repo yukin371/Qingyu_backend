@@ -19,6 +19,9 @@ func RegisterFinanceRoutes(r *gin.RouterGroup, walletAPI *financeApi.WalletAPI, 
 		if walletAPI != nil {
 			walletGroup := financeGroup.Group("/wallet")
 			{
+				// 兼容旧调用方：直接访问 /wallet 返回钱包详情
+				walletGroup.GET("", walletAPI.GetWallet)
+
 				// 获取钱包余额
 				walletGroup.GET("/balance", walletAPI.GetBalance)
 
@@ -42,6 +45,8 @@ func RegisterFinanceRoutes(r *gin.RouterGroup, walletAPI *financeApi.WalletAPI, 
 
 				// 获取提现申请列表
 				walletGroup.GET("/withdraws", walletAPI.GetWithdrawRequests)
+				// 兼容旧调用方：/withdrawals 与 /withdraws 等价
+				walletGroup.GET("/withdrawals", walletAPI.GetWithdrawRequests)
 			}
 		}
 
