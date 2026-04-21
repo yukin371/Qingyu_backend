@@ -67,17 +67,17 @@ repository/
 
 ## 3. 架构问题
 
-### 3.1 跨层依赖: 中间件直接依赖业务服务 [P0]
+### 3.1 跨层依赖: 中间件直接依赖业务服务 [P0，已收敛]
 
 **问题描述**:
-`pkg/middleware/quota.go` 中间件直接依赖业务服务层：
+历史上 `pkg/middleware/quota.go` 中间件直接依赖业务服务层：
 
 ```go
 // pkg/middleware/quota.go:47
 quotaService := container.GetQuotaService()
 ```
 
-这违反了分层架构原则，中间件不应直接依赖业务服务。
+这违反了分层架构原则，中间件不应直接依赖业务服务。该问题现已通过接口注入并迁移到 `internal/middleware/quota.go` 收口。
 
 **影响**:
 - 架构层次混乱
@@ -226,7 +226,7 @@ type Checker interface {
     Consume(ctx context.Context, userID string, operation string) error
 }
 
-// pkg/middleware/quota.go
+// internal/middleware/quota.go
 type quotaMiddleware struct {
     checker quota.Checker
 }

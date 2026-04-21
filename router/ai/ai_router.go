@@ -2,8 +2,8 @@ package ai
 
 import (
 	aiApi "Qingyu_backend/api/v1/ai"
+	"Qingyu_backend/internal/middleware"
 	"Qingyu_backend/internal/middleware/auth"
-	"Qingyu_backend/pkg/middleware"
 	"Qingyu_backend/service/ai"
 
 	"github.com/gin-gonic/gin"
