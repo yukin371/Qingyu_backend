@@ -1283,6 +1283,14 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 		return fmt.Errorf("mongoTransactionRunner 类型不正确")
 	}
 	c.membershipService = financeService.NewMembershipServiceWithDependencies(membershipRepo, walletRepo, mongoTxRunner)
+	if c.quotaService != nil {
+		c.quotaService.SetProfileResolver(aiService.NewQuotaProfileResolver(userRepo, c.membershipService))
+	}
+	if membershipImpl, ok := c.membershipService.(*financeService.MembershipServiceImpl); ok && c.quotaService != nil {
+		membershipImpl.SetQuotaRefreshHandler(func(ctx context.Context, userID string) error {
+			return c.quotaService.RefreshUserQuotaProfile(ctx, userID)
+		})
+	}
 
 	authorRevenueRepo = c.repositoryFactory.CreateAuthorRevenueRepository()
 	c.authorRevenueService = financeService.NewAuthorRevenueServiceWithDependencies(authorRevenueRepo, walletRepo, mongoTxRunner)

@@ -238,10 +238,12 @@ func GetDefaultQuota(userRole, membershipLevel string) int {
 
 	switch userRole {
 	case "reader":
-		if membershipLevel == "vip" {
+		switch membershipLevel {
+		case "vip", "vip_monthly", "vip_yearly", "super_vip":
 			return config.VIPReaderDailyQuota
+		default:
+			return config.ReaderDailyQuota
 		}
-		return config.ReaderDailyQuota
 
 	case "writer":
 		switch membershipLevel {

@@ -116,11 +116,14 @@ func RegisterAdminRoutes(
 				quotaGroup.GET("/dashboard", quotaDashboardAPI.GetDashboard)
 				quotaGroup.GET("/statistics/global", quotaDashboardAPI.GetStatistics)
 				quotaGroup.GET("/statistics/trend", quotaDashboardAPI.GetTrend)
+				quotaGroup.GET("/statistics/reconciliation", quotaDashboardAPI.GetReconciliationSummary)
+				quotaGroup.POST("/statistics/reconciliation/check", quotaDashboardAPI.RunConsistencyCheck)
 				quotaGroup.POST("/dashboard/refresh", quotaDashboardAPI.RefreshCache)
 
 				// 用户配额管理
 				quotaGroup.GET("/users", quotaAdminAPI.ListUserQuotas)
 				quotaGroup.GET("/users/:userId", quotaAdminAPI.GetUserQuotaDetails)
+				quotaGroup.GET("/users/:userId/reconciliation", quotaAdminAPI.GetUserQuotaReconciliation)
 				quotaGroup.PUT("/users/:userId", quotaAdminAPI.UpdateUserQuota)
 				quotaGroup.POST("/users/:userId/recharge", quotaAdminAPI.RechargeUserQuota)
 				quotaGroup.POST("/users/:userId/suspend", quotaAdminAPI.SuspendUserQuota)

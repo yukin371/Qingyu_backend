@@ -231,6 +231,23 @@ func setConfigDefaults(cfg *Config) {
 		cfg.AI.AIService.Timeout = 30
 	}
 
+	// AI配额一致性阈值默认值
+	if cfg.AIQuota == nil {
+		cfg.AIQuota = &AIQuotaConfig{}
+	}
+	if cfg.AIQuota.ConsistencyThresholds == nil {
+		cfg.AIQuota.ConsistencyThresholds = &QuotaConsistencyThresholdsConfig{}
+	}
+	if cfg.AIQuota.ConsistencyThresholds.User == nil {
+		cfg.AIQuota.ConsistencyThresholds.User = cfg.AIQuota.GetConsistencyThreshold("user")
+	}
+	if cfg.AIQuota.ConsistencyThresholds.Workflow == nil {
+		cfg.AIQuota.ConsistencyThresholds.Workflow = cfg.AIQuota.GetConsistencyThreshold("workflow")
+	}
+	if cfg.AIQuota.ConsistencyThresholds.Global == nil {
+		cfg.AIQuota.ConsistencyThresholds.Global = cfg.AIQuota.GetConsistencyThreshold("global")
+	}
+
 	// 邮件默认值
 	if cfg.Email == nil {
 		cfg.Email = &EmailConfig{

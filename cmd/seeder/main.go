@@ -154,6 +154,13 @@ var (
 		Run:   runAIQuota,
 	}
 
+	// aiQuotaUsageCmd 填充 backend 侧 quota usage 样本
+	aiQuotaUsageCmd = &cobra.Command{
+		Use:   "ai-quota-usage",
+		Short: "填充本地 quota 对账所需的 backend 交易样本",
+		Run:   runAIQuotaUsage,
+	}
+
 	// importCmd 导入小说数据
 	importCmd = &cobra.Command{
 		Use:   "import",
@@ -292,6 +299,7 @@ func init() {
 	rootCmd.AddCommand(walletsCmd)
 	rootCmd.AddCommand(rankingsCmd)
 	rootCmd.AddCommand(aiQuotaCmd)
+	rootCmd.AddCommand(aiQuotaUsageCmd)
 	rootCmd.AddCommand(importCmd)
 	rootCmd.AddCommand(readerCmd)
 	rootCmd.AddCommand(notificationsCmd)
@@ -1167,6 +1175,27 @@ func runAIQuota(cmd *cobra.Command, args []string) {
 	}
 
 	fmt.Println("\nAI配额激活完成!")
+}
+
+// runAIQuotaUsage 填充 backend 侧 quota usage 样本
+func runAIQuotaUsage(cmd *cobra.Command, args []string) {
+	fmt.Println("开始填充 backend quota usage 样本...")
+
+	db, err := getDatabase()
+	if err != nil {
+		fmt.Printf("数据库连接失败: %v\n", err)
+		os.Exit(1)
+	}
+	defer db.Disconnect()
+
+	seeder := NewAIQuotaSeeder(db, cfg)
+
+	if err := seeder.SeedQuotaUsageSamples(); err != nil {
+		fmt.Printf("填充 backend quota usage 样本失败: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Println("\nbackend quota usage 样本填充完成!")
 }
 
 // runImport 导入小说数据

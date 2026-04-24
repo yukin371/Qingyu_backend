@@ -149,6 +149,20 @@ func (m *ViperConfigManager) setViperDefaults() {
 	m.viper.SetDefault("ai.base_url", "https://api.openai.com/v1")
 	m.viper.SetDefault("ai.max_tokens", 2000)
 	m.viper.SetDefault("ai.temperature", 7)
+
+	// AI配额一致性阈值
+	m.viper.SetDefault("ai_quota.consistency_thresholds.user.warning_tokens", 200)
+	m.viper.SetDefault("ai_quota.consistency_thresholds.user.critical_tokens", 1000)
+	m.viper.SetDefault("ai_quota.consistency_thresholds.user.warning_ratio", 0.1)
+	m.viper.SetDefault("ai_quota.consistency_thresholds.user.critical_ratio", 0.2)
+	m.viper.SetDefault("ai_quota.consistency_thresholds.workflow.warning_tokens", 200)
+	m.viper.SetDefault("ai_quota.consistency_thresholds.workflow.critical_tokens", 1000)
+	m.viper.SetDefault("ai_quota.consistency_thresholds.workflow.warning_ratio", 0.1)
+	m.viper.SetDefault("ai_quota.consistency_thresholds.workflow.critical_ratio", 0.2)
+	m.viper.SetDefault("ai_quota.consistency_thresholds.global.warning_tokens", 200)
+	m.viper.SetDefault("ai_quota.consistency_thresholds.global.critical_tokens", 1000)
+	m.viper.SetDefault("ai_quota.consistency_thresholds.global.warning_ratio", 0.1)
+	m.viper.SetDefault("ai_quota.consistency_thresholds.global.critical_ratio", 0.2)
 }
 
 // applyDatabaseEnvOverrides 应用数据库环境变量覆盖

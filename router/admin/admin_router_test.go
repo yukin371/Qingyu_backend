@@ -55,9 +55,12 @@ func TestRegisterAdminRoutes_RegistersQuotaRoutesWhenServicesAvailable(t *testin
 	assert.True(t, paths["/api/v1/admin/quota/dashboard"])
 	assert.True(t, paths["/api/v1/admin/quota/statistics/global"])
 	assert.True(t, paths["/api/v1/admin/quota/statistics/trend"])
+	assert.True(t, paths["/api/v1/admin/quota/statistics/reconciliation"])
+	assert.True(t, paths["/api/v1/admin/quota/statistics/reconciliation/check"])
 	assert.True(t, paths["/api/v1/admin/quota/dashboard/refresh"])
 	assert.True(t, paths["/api/v1/admin/quota/users"])
 	assert.True(t, paths["/api/v1/admin/quota/users/:userId"])
+	assert.True(t, paths["/api/v1/admin/quota/users/:userId/reconciliation"])
 	assert.True(t, paths["/api/v1/admin/quota/policies"])
 	assert.True(t, paths["/api/v1/admin/quota/alerts"])
 }

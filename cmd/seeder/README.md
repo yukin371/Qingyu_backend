@@ -256,6 +256,14 @@ go build -o seeder .         # Linux/Mac
 ./seeder.exe ai-quota
 ```
 
+#### ai-quota-usage - 填充本地 quota 对账交易样本
+
+为固定联调账号写入 backend 侧 `ai_quota_transactions` 样本，用于和 `Qingyu-Ai-Service/scripts/seed_quota_usage.py` 对齐本地对账数据。**依赖：users, ai-quota**
+
+```bash
+./seeder.exe ai-quota-usage
+```
+
 #### import - 导入小说数据
 
 从JSON文件导入大量小说数据。
@@ -315,6 +323,7 @@ go build -o seeder .         # Linux/Mac
 | stats | bookstore, chapters |
 | finance | users, bookstore |
 | ai-quota | users |
+| ai-quota-usage | users, ai-quota |
 
 ---
 

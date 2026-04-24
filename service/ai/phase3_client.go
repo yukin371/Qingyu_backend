@@ -133,6 +133,67 @@ func (c *Phase3Client) HealthCheck(ctx context.Context) (*pb.HealthCheckResponse
 	return c.client.HealthCheck(ctx, request)
 }
 
+// GetQuotaConsumption 查询用户在 AI 服务侧记录的配额消费。
+func (c *Phase3Client) GetQuotaConsumption(
+	ctx context.Context,
+	userID string,
+	timeRange string,
+	workflowType string,
+) (*pb.QuotaConsumptionResponse, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	request := &pb.QuotaConsumptionQuery{
+		UserId:       userID,
+		TimeRange:    timeRange,
+		WorkflowType: workflowType,
+	}
+
+	return c.client.GetQuotaConsumption(ctx, request)
+}
+
+// GetQuotaConsumptionBatch 批量查询用户在 AI 服务侧记录的配额消费。
+func (c *Phase3Client) GetQuotaConsumptionBatch(
+	ctx context.Context,
+	userIDs []string,
+	timeRange string,
+	workflowType string,
+) (*pb.QuotaConsumptionBatchResponse, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	request := &pb.QuotaConsumptionBatchQuery{
+		UserIds:      userIDs,
+		TimeRange:    timeRange,
+		WorkflowType: workflowType,
+	}
+
+	return c.client.GetQuotaConsumptionBatch(ctx, request)
+}
+
+// GetQuotaConsumptionSummary 聚合查询 AI 服务侧记录的配额消费。
+func (c *Phase3Client) GetQuotaConsumptionSummary(
+	ctx context.Context,
+	timeRange string,
+	workflowType string,
+	groupBy string,
+	page int32,
+	pageSize int32,
+) (*pb.QuotaConsumptionSummaryResponse, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	request := &pb.QuotaConsumptionSummaryQuery{
+		TimeRange:    timeRange,
+		WorkflowType: workflowType,
+		GroupBy:      groupBy,
+		Page:         page,
+		PageSize:     pageSize,
+	}
+
+	return c.client.GetQuotaConsumptionSummary(ctx, request)
+}
+
 // Close 关闭连接
 func (c *Phase3Client) Close() error {
 	if c.conn != nil {

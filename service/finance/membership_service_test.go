@@ -80,6 +80,36 @@ func (m *MockMembershipRepository) GetMembershipByID(ctx context.Context, id pri
 	return args.Get(0).(*financeModel.UserMembership), args.Error(1)
 }
 
+func TestMembershipServiceSubscribeTriggersQuotaRefresh(t *testing.T) {
+	ctx := context.Background()
+	userID := "quota-refresh-user"
+	planID := primitive.NewObjectID()
+
+	repo := newMembershipStateRepository(&financeModel.MembershipPlan{
+		ID:        planID,
+		Name:      "VIP月卡",
+		Type:      financeModel.MembershipTypeMonthly,
+		Duration:  30,
+		Price:     types.Money(1999),
+		IsEnabled: true,
+	})
+
+	service := NewMembershipService(repo)
+	impl, ok := service.(*MembershipServiceImpl)
+	require.True(t, ok)
+
+	refreshedUserID := ""
+	impl.SetQuotaRefreshHandler(func(ctx context.Context, gotUserID string) error {
+		refreshedUserID = gotUserID
+		return nil
+	})
+
+	membership, err := service.Subscribe(ctx, userID, planID.Hex(), "alipay")
+	require.NoError(t, err)
+	require.NotNil(t, membership)
+	assert.Equal(t, userID, refreshedUserID)
+}
+
 func (m *MockMembershipRepository) CreateMembership(ctx context.Context, membership *financeModel.UserMembership) error {
 	args := m.Called(ctx, membership)
 	return args.Error(0)

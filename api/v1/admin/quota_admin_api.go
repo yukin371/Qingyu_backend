@@ -13,8 +13,8 @@ import (
 
 // QuotaAdminAPI AI配额管理API处理器（管理员）
 type QuotaAdminAPI struct {
-	quotaService  *ai.QuotaService
-	adminService  *ai.QuotaAdminService
+	quotaService *ai.QuotaService
+	adminService *ai.QuotaAdminService
 }
 
 // NewQuotaAdminAPI 创建AI配额管理API实例
@@ -94,6 +94,39 @@ func (api *QuotaAdminAPI) GetUserQuotaDetails(c *gin.Context) {
 	}
 
 	response.SuccessWithMessage(c, "获取成功", quotas)
+}
+
+// GetUserQuotaReconciliation 获取单用户配额对账结果
+//
+//	@Summary		获取单用户配额对账结果
+//	@Description	管理员查看指定用户在 backend 与 AI service 之间的配额消费差异
+//	@Tags			管理员-AI配额管理
+//	@Produce		json
+//	@Security		ApiKeyAuth
+//	@Param			userId			path		string	true	"用户ID"
+//	@Param			timeRange		query		string	false	"时间范围(day/week/month/all，默认day)"
+//	@Param			workflowType	query		string	false	"工作流类型过滤"
+//	@Success		200				{object}	response.APIResponse
+//	@Router			/api/v1/admin/quota/users/{userId}/reconciliation [get]
+func (api *QuotaAdminAPI) GetUserQuotaReconciliation(c *gin.Context) {
+	targetUserID := c.Param("userId")
+	if targetUserID == "" {
+		response.BadRequest(c, "参数错误", "用户ID不能为空")
+		return
+	}
+
+	result, err := api.adminService.GetUserQuotaReconciliation(
+		c.Request.Context(),
+		targetUserID,
+		c.DefaultQuery("timeRange", "day"),
+		c.Query("workflowType"),
+	)
+	if err != nil {
+		response.InternalError(c, fmt.Errorf("获取配额对账结果失败: %w", err))
+		return
+	}
+
+	response.SuccessWithMessage(c, "获取成功", result)
 }
 
 // UpdateUserQuota 更新用户配额

@@ -106,6 +106,47 @@ func (s *QuotaAlertService) CountPendingAlerts(ctx context.Context) (map[aiModel
 	return s.alertRepo.CountByStatus(ctx)
 }
 
+// ResolveRecoveredConsistencyAlerts 将本轮已复核且已恢复一致的 consistency 告警自动标记为 resolved。
+func (s *QuotaAlertService) ResolveRecoveredConsistencyAlerts(
+	ctx context.Context,
+	checkedKeys map[string]struct{},
+	activeKeys map[string]struct{},
+	operatorID string,
+) error {
+	if len(checkedKeys) == 0 {
+		return nil
+	}
+	if operatorID == "" {
+		operatorID = "system"
+	}
+
+	alerts, _, err := s.alertRepo.List(ctx, string(aiModels.QuotaAlertTypeConsistency), "", "", 1, 1000)
+	if err != nil {
+		return fmt.Errorf("查询 consistency 告警失败: %w", err)
+	}
+
+	for _, alert := range alerts {
+		if alert == nil || !isOpenConsistencyAlertStatus(alert.Status) {
+			continue
+		}
+
+		alertKey := buildConsistencyAlertKey(alert.UserID, alert.Data)
+		if _, shouldSync := checkedKeys[alertKey]; !shouldSync {
+			continue
+		}
+		if _, stillActive := activeKeys[alertKey]; stillActive {
+			continue
+		}
+
+		alert.Resolve(operatorID)
+		if err := s.alertRepo.Update(ctx, alert); err != nil {
+			return fmt.Errorf("更新 recovered consistency 告警失败: %w", err)
+		}
+	}
+
+	return nil
+}
+
 // AlertManager 告警管理器
 type AlertManager struct {
 	alertService *QuotaAlertService
@@ -228,4 +269,8 @@ func (s *QuotaAlertService) CreateConsistencyAlert(ctx context.Context, userID, 
 // GenerateTransactionID 生成事务ID
 func GenerateTransactionID() primitive.ObjectID {
 	return primitive.NewObjectID()
+}
+
+func isOpenConsistencyAlertStatus(status aiModels.QuotaAlertStatus) bool {
+	return status == aiModels.QuotaAlertStatusPending || status == aiModels.QuotaAlertStatusAcknowledged
 }

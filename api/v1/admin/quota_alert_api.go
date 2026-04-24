@@ -31,7 +31,7 @@ func NewQuotaAlertAPI(alertService *ai.QuotaAlertService) *QuotaAlertAPI {
 //	@Security		ApiKeyAuth
 //	@Param			type	query		string	false	"告警类型(threshold/anomaly/abuse/consistency)"
 //	@Param			level	query		string	false	"告警级别(info/warning/critical)"
-//	@Param			status	query		string	false	"告警状态(pending/acknowledged/resolved/ignored)"
+//	@Param			status	query		string	false	"告警状态(open/all/pending/acknowledged/resolved/ignored)"
 //	@Param			page	query		int		false	"页码"
 //	@Param			limit	query		int		false	"每页数量"
 //	@Success		200		{object}	response.APIResponse

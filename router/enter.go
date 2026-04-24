@@ -886,7 +886,9 @@ func RegisterRoutes(r *gin.Engine) {
 		quotaAlertRepo := mongoAIRepo.NewMongoQuotaAlertRepository(mongoDB)
 
 		quotaAdminSvc = aiService.NewQuotaAdminService(quotaRepo, quotaAlertRepo)
+		quotaAdminSvc.SetConsumptionReader(quotaPhase3Client)
 		quotaDashboardSvc = aiService.NewQuotaDashboardService(quotaRepo, quotaAlertRepo, quotaRedisClient)
+		quotaDashboardSvc.SetConsumptionSummaryReader(quotaPhase3Client)
 		quotaPolicySvc = aiService.NewQuotaPolicyService(quotaPolicyRepo)
 		quotaAlertSvc = aiService.NewQuotaAlertService(quotaAlertRepo)
 		quotaService.SetPolicyService(quotaPolicySvc)
@@ -903,6 +905,7 @@ func RegisterRoutes(r *gin.Engine) {
 			quotaPhase3Client,
 			log.New(os.Stdout, "[quota-scheduler] ", log.LstdFlags),
 		)
+		quotaDashboardSvc.SetConsistencyRunner(quotaScheduler)
 
 		quotaSchedulerOnce.Do(func() {
 			if err := quotaScheduler.Start(); err != nil {

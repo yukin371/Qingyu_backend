@@ -811,6 +811,99 @@ func (r *MongoQuotaRepository) GetConsumptionTrend(ctx context.Context, days int
 	return results, nil
 }
 
+// GetConsumptionSummary 获取时间窗口内的消费聚合摘要。
+func (r *MongoQuotaRepository) GetConsumptionSummary(
+	ctx context.Context,
+	startTime, endTime time.Time,
+	workflowType, groupBy string,
+	page, pageSize int,
+) (*aiModels.QuotaConsumptionSummary, error) {
+	normalizedGroupBy := "user"
+	groupField := "$user_id"
+	if groupBy == "workflow" {
+		normalizedGroupBy = "workflow"
+		groupField = "$service"
+	}
+
+	filter := bson.M{
+		"type":      "consume",
+		"amount":    bson.M{"$gt": 0},
+		"timestamp": bson.M{"$gte": startTime, "$lte": endTime},
+	}
+	if workflowType != "" {
+		filter["service"] = workflowType
+	}
+
+	pipeline := mongo.Pipeline{
+		{{Key: "$match", Value: filter}},
+		{{Key: "$group", Value: bson.M{
+			"_id":           groupField,
+			"total_tokens":  bson.M{"$sum": "$amount"},
+			"total_records": bson.M{"$sum": 1},
+		}}},
+		{{Key: "$project", Value: bson.M{
+			"group_key":     bson.M{"$ifNull": bson.A{"$_id", ""}},
+			"total_tokens":  1,
+			"total_records": 1,
+		}}},
+		{{Key: "$sort", Value: bson.M{
+			"total_tokens": -1,
+			"group_key":    1,
+		}}},
+	}
+
+	cursor, err := r.transactionCollection.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, fmt.Errorf("查询消费聚合摘要失败: %w", err)
+	}
+	defer cursor.Close(ctx)
+
+	var items []aiModels.QuotaConsumptionSummaryItem
+	if err = cursor.All(ctx, &items); err != nil {
+		return nil, fmt.Errorf("解析消费聚合摘要失败: %w", err)
+	}
+
+	totalGroups := int64(len(items))
+	var totalTokens int64
+	var totalRecords int64
+	for _, item := range items {
+		totalTokens += item.TotalTokens
+		totalRecords += item.TotalRecords
+	}
+
+	if page <= 0 {
+		page = 1
+	}
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+	if pageSize > 100 {
+		pageSize = 100
+	}
+	start := (page - 1) * pageSize
+	if start < 0 {
+		start = 0
+	}
+	if start > len(items) {
+		start = len(items)
+	}
+	end := start + pageSize
+	if end > len(items) {
+		end = len(items)
+	}
+
+	return &aiModels.QuotaConsumptionSummary{
+		WorkflowType: workflowType,
+		GroupBy:      normalizedGroupBy,
+		Page:         page,
+		PageSize:     pageSize,
+		TotalGroups:  totalGroups,
+		TotalTokens:  totalTokens,
+		TotalRecords: totalRecords,
+		Items:        items[start:end],
+	}, nil
+}
+
 // ListUserQuotas 获取用户配额列表
 func (r *MongoQuotaRepository) ListUserQuotas(ctx context.Context, role, status, search string, page, limit int) ([]*aiModels.UserQuotaListItem, int64, error) {
 	filter := bson.M{}

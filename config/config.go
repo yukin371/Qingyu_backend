@@ -135,11 +135,12 @@ type ProviderConfig struct {
 
 // AIQuotaConfig AI配额配置
 type AIQuotaConfig struct {
-	DefaultQuotas    *DefaultQuotasConfig `mapstructure:"default_quotas"`
-	Reset            *QuotaResetConfig    `mapstructure:"reset"`
-	WarningThreshold float64              `mapstructure:"warning_threshold"`
-	AllowOverdraft   bool                 `mapstructure:"allow_overdraft"`
-	OverdraftLimit   int                  `mapstructure:"overdraft_limit"`
+	DefaultQuotas         *DefaultQuotasConfig              `mapstructure:"default_quotas"`
+	Reset                 *QuotaResetConfig                 `mapstructure:"reset"`
+	WarningThreshold      float64                           `mapstructure:"warning_threshold"`
+	AllowOverdraft        bool                              `mapstructure:"allow_overdraft"`
+	OverdraftLimit        int                               `mapstructure:"overdraft_limit"`
+	ConsistencyThresholds *QuotaConsistencyThresholdsConfig `mapstructure:"consistency_thresholds"`
 }
 
 // DefaultQuotasConfig 默认配额配置
@@ -153,6 +154,63 @@ type DefaultQuotasConfig struct {
 type QuotaResetConfig struct {
 	DailyResetHour  int  `mapstructure:"daily_reset_hour"`
 	EnableAutoReset bool `mapstructure:"enable_auto_reset"`
+}
+
+// QuotaConsistencyThresholdsConfig 一致性对账阈值配置。
+type QuotaConsistencyThresholdsConfig struct {
+	User     *QuotaConsistencyThresholdConfig `mapstructure:"user"`
+	Workflow *QuotaConsistencyThresholdConfig `mapstructure:"workflow"`
+	Global   *QuotaConsistencyThresholdConfig `mapstructure:"global"`
+}
+
+// QuotaConsistencyThresholdConfig 单类一致性阈值配置。
+type QuotaConsistencyThresholdConfig struct {
+	WarningTokens  int     `mapstructure:"warning_tokens"`
+	CriticalTokens int     `mapstructure:"critical_tokens"`
+	WarningRatio   float64 `mapstructure:"warning_ratio"`
+	CriticalRatio  float64 `mapstructure:"critical_ratio"`
+}
+
+// GetConsistencyThreshold 获取某类一致性阈值配置。
+func (c *AIQuotaConfig) GetConsistencyThreshold(scope string) *QuotaConsistencyThresholdConfig {
+	defaultThreshold := &QuotaConsistencyThresholdConfig{
+		WarningTokens:  200,
+		CriticalTokens: 1000,
+		WarningRatio:   0.1,
+		CriticalRatio:  0.2,
+	}
+	if c == nil || c.ConsistencyThresholds == nil {
+		return defaultThreshold
+	}
+
+	var threshold *QuotaConsistencyThresholdConfig
+	switch scope {
+	case "workflow":
+		threshold = c.ConsistencyThresholds.Workflow
+	case "global":
+		threshold = c.ConsistencyThresholds.Global
+	default:
+		threshold = c.ConsistencyThresholds.User
+	}
+
+	if threshold == nil {
+		return defaultThreshold
+	}
+
+	result := *defaultThreshold
+	if threshold.WarningTokens > 0 {
+		result.WarningTokens = threshold.WarningTokens
+	}
+	if threshold.CriticalTokens > 0 {
+		result.CriticalTokens = threshold.CriticalTokens
+	}
+	if threshold.WarningRatio > 0 {
+		result.WarningRatio = threshold.WarningRatio
+	}
+	if threshold.CriticalRatio > 0 {
+		result.CriticalRatio = threshold.CriticalRatio
+	}
+	return &result
 }
 
 // EmailConfig 邮件配置
@@ -240,6 +298,11 @@ func (c *AIQuotaConfig) GetDefaultQuota(userRole, membershipLevel string) int {
 	case "reader":
 		if quota, ok := c.DefaultQuotas.Reader[membershipLevel]; ok {
 			return quota
+		}
+		if membershipLevel == "vip_monthly" || membershipLevel == "vip_yearly" || membershipLevel == "super_vip" {
+			if quota, ok := c.DefaultQuotas.Reader["vip"]; ok {
+				return quota
+			}
 		}
 		// 如果没有找到对应等级，尝试normal
 		if quota, ok := c.DefaultQuotas.Reader["normal"]; ok {
@@ -457,6 +520,20 @@ func setDefaults() {
 	v.SetDefault("ai.ai_service.timeout", 30)
 	v.SetDefault("ai.ai_service.internal_api_key", "")
 	v.SetDefault("ai.ai_service.allowed_ips", []string{"127.0.0.1", "::1"})
+
+	// AI配额一致性阈值默认配置
+	v.SetDefault("ai_quota.consistency_thresholds.user.warning_tokens", 200)
+	v.SetDefault("ai_quota.consistency_thresholds.user.critical_tokens", 1000)
+	v.SetDefault("ai_quota.consistency_thresholds.user.warning_ratio", 0.1)
+	v.SetDefault("ai_quota.consistency_thresholds.user.critical_ratio", 0.2)
+	v.SetDefault("ai_quota.consistency_thresholds.workflow.warning_tokens", 200)
+	v.SetDefault("ai_quota.consistency_thresholds.workflow.critical_tokens", 1000)
+	v.SetDefault("ai_quota.consistency_thresholds.workflow.warning_ratio", 0.1)
+	v.SetDefault("ai_quota.consistency_thresholds.workflow.critical_ratio", 0.2)
+	v.SetDefault("ai_quota.consistency_thresholds.global.warning_tokens", 200)
+	v.SetDefault("ai_quota.consistency_thresholds.global.critical_tokens", 1000)
+	v.SetDefault("ai_quota.consistency_thresholds.global.warning_ratio", 0.1)
+	v.SetDefault("ai_quota.consistency_thresholds.global.critical_ratio", 0.2)
 
 	// Elasticsearch 默认配置
 	v.SetDefault("elasticsearch.enabled", false)

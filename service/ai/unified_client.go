@@ -477,6 +477,130 @@ func (c *UnifiedClient) HealthCheckSimple(ctx context.Context) error {
 	return nil
 }
 
+// GetQuotaConsumption 查询 AI 服务侧记录的配额消费。
+func (c *UnifiedClient) GetQuotaConsumption(
+	ctx context.Context,
+	userID string,
+	timeRange string,
+	workflowType string,
+) (*pb.QuotaConsumptionResponse, error) {
+	serviceName := "GetQuotaConsumption"
+	requestID := generateRequestID()
+	startTime := time.Now()
+
+	c.startTrace(serviceName, requestID)
+
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	request := &pb.QuotaConsumptionQuery{
+		UserId:       userID,
+		TimeRange:    timeRange,
+		WorkflowType: workflowType,
+	}
+
+	resp, err := c.aiServiceClient.GetQuotaConsumption(ctx, request)
+	if err != nil {
+		if ctx.Err() == context.DeadlineExceeded {
+			c.recordTimeout(serviceName)
+		}
+		c.recordCall(serviceName, false)
+		c.recordLatency(serviceName, time.Since(startTime))
+		c.endTrace(requestID, TraceStatusFailed, err)
+		return nil, err
+	}
+
+	c.recordCall(serviceName, true)
+	c.recordLatency(serviceName, time.Since(startTime))
+	c.endTrace(requestID, TraceStatusSuccess, nil)
+
+	return resp, nil
+}
+
+// GetQuotaConsumptionBatch 批量查询 AI 服务侧记录的配额消费。
+func (c *UnifiedClient) GetQuotaConsumptionBatch(
+	ctx context.Context,
+	userIDs []string,
+	timeRange string,
+	workflowType string,
+) (*pb.QuotaConsumptionBatchResponse, error) {
+	serviceName := "GetQuotaConsumptionBatch"
+	requestID := generateRequestID()
+	startTime := time.Now()
+
+	c.startTrace(serviceName, requestID)
+
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	request := &pb.QuotaConsumptionBatchQuery{
+		UserIds:      userIDs,
+		TimeRange:    timeRange,
+		WorkflowType: workflowType,
+	}
+
+	resp, err := c.aiServiceClient.GetQuotaConsumptionBatch(ctx, request)
+	if err != nil {
+		if ctx.Err() == context.DeadlineExceeded {
+			c.recordTimeout(serviceName)
+		}
+		c.recordCall(serviceName, false)
+		c.recordLatency(serviceName, time.Since(startTime))
+		c.endTrace(requestID, TraceStatusFailed, err)
+		return nil, err
+	}
+
+	c.recordCall(serviceName, true)
+	c.recordLatency(serviceName, time.Since(startTime))
+	c.endTrace(requestID, TraceStatusSuccess, nil)
+
+	return resp, nil
+}
+
+// GetQuotaConsumptionSummary 聚合查询 AI 服务侧记录的配额消费。
+func (c *UnifiedClient) GetQuotaConsumptionSummary(
+	ctx context.Context,
+	timeRange string,
+	workflowType string,
+	groupBy string,
+	page int32,
+	pageSize int32,
+) (*pb.QuotaConsumptionSummaryResponse, error) {
+	serviceName := "GetQuotaConsumptionSummary"
+	requestID := generateRequestID()
+	startTime := time.Now()
+
+	c.startTrace(serviceName, requestID)
+
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
+	defer cancel()
+
+	request := &pb.QuotaConsumptionSummaryQuery{
+		TimeRange:    timeRange,
+		WorkflowType: workflowType,
+		GroupBy:      groupBy,
+		Page:         page,
+		PageSize:     pageSize,
+	}
+
+	resp, err := c.aiServiceClient.GetQuotaConsumptionSummary(ctx, request)
+	if err != nil {
+		if ctx.Err() == context.DeadlineExceeded {
+			c.recordTimeout(serviceName)
+		}
+		c.recordCall(serviceName, false)
+		c.recordLatency(serviceName, time.Since(startTime))
+		c.endTrace(requestID, TraceStatusFailed, err)
+		return nil, err
+	}
+
+	c.recordCall(serviceName, true)
+	c.recordLatency(serviceName, time.Since(startTime))
+	c.endTrace(requestID, TraceStatusSuccess, nil)
+
+	return resp, nil
+}
+
 // Close 关闭连接
 func (c *UnifiedClient) Close() error {
 	if c.conn != nil {

@@ -7,6 +7,7 @@ import (
 	"time"
 
 	aiModels "Qingyu_backend/models/ai"
+	pb "Qingyu_backend/pkg/grpc/pb"
 	aiInterfaces "Qingyu_backend/repository/interfaces/ai"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -22,16 +23,26 @@ type BatchOperationResult struct {
 
 // QuotaAdminService 配额管理服务
 type QuotaAdminService struct {
-	quotaRepo aiInterfaces.QuotaRepository
-	alertRepo aiInterfaces.QuotaAlertRepository
+	quotaRepo         aiInterfaces.QuotaRepository
+	alertRepo         aiInterfaces.QuotaAlertRepository
+	consumptionReader quotaConsumptionReader
+}
+
+type quotaConsumptionReader interface {
+	GetQuotaConsumption(ctx context.Context, userID string, timeRange string, workflowType string) (*pb.QuotaConsumptionResponse, error)
 }
 
 // NewQuotaAdminService 创建配额管理服务
 func NewQuotaAdminService(quotaRepo aiInterfaces.QuotaRepository, alertRepo aiInterfaces.QuotaAlertRepository) *QuotaAdminService {
 	return &QuotaAdminService{
 		quotaRepo: quotaRepo,
-		alertRepo:  alertRepo,
+		alertRepo: alertRepo,
 	}
+}
+
+// SetConsumptionReader 设置 AI 服务对账读取客户端。
+func (s *QuotaAdminService) SetConsumptionReader(reader quotaConsumptionReader) {
+	s.consumptionReader = reader
 }
 
 // RechargeUserQuota 为用户充值配额
@@ -82,6 +93,7 @@ func (s *QuotaAdminService) RechargeUserQuota(ctx context.Context, userID string
 				ResetAt:        now.AddDate(0, 1, 0),
 			}
 		}
+		setQuotaManualOverride(quota, true)
 
 		if err := s.quotaRepo.CreateQuota(ctx, quota); err != nil {
 			return fmt.Errorf("创建配额失败: %w", err)
@@ -91,6 +103,7 @@ func (s *QuotaAdminService) RechargeUserQuota(ctx context.Context, userID string
 		beforeBalance := quota.RemainingQuota
 		quota.TotalQuota += amount
 		quota.RemainingQuota += amount
+		setQuotaManualOverride(quota, true)
 
 		if err := s.quotaRepo.UpdateQuota(ctx, quota); err != nil {
 			return fmt.Errorf("更新配额失败: %w", err)
@@ -282,6 +295,92 @@ func (s *QuotaAdminService) GetUserQuotaDetail(ctx context.Context, userID strin
 	return result, nil
 }
 
+// GetUserQuotaReconciliation 获取单用户配额对账结果。
+func (s *QuotaAdminService) GetUserQuotaReconciliation(
+	ctx context.Context,
+	userID string,
+	timeRange string,
+	workflowType string,
+) (*aiModels.UserQuotaReconciliation, error) {
+	if userID == "" {
+		return nil, errors.New("用户ID不能为空")
+	}
+	if s.consumptionReader == nil {
+		return nil, errors.New("AI配额对账客户端未配置")
+	}
+
+	normalizedRange, windowStart, windowEnd, err := resolveQuotaReconciliationWindow(timeRange, time.Now())
+	if err != nil {
+		return nil, err
+	}
+
+	transactions, err := s.quotaRepo.GetTransactionsByTimeRange(ctx, userID, windowStart, windowEnd)
+	if err != nil {
+		return nil, fmt.Errorf("获取后端配额事务失败: %w", err)
+	}
+
+	backendTotal := 0
+	backendRecordCount := 0
+	for _, tx := range transactions {
+		if tx == nil || tx.Type != "consume" {
+			continue
+		}
+		if workflowType != "" && tx.Service != workflowType {
+			continue
+		}
+		backendTotal += tx.Amount
+		backendRecordCount++
+	}
+
+	resp, err := s.consumptionReader.GetQuotaConsumption(ctx, userID, normalizedRange, workflowType)
+	if err != nil {
+		return nil, fmt.Errorf("获取AI服务配额消费失败: %w", err)
+	}
+	if !resp.GetSuccess() {
+		message := resp.GetErrorMessage()
+		if message == "" {
+			message = resp.GetMessage()
+		}
+		if message == "" {
+			message = "AI服务返回未成功状态"
+		}
+		return nil, errors.New(message)
+	}
+
+	level, shouldAlert := determineConsistencyAlertLevel(backendTotal, int(resp.GetTotalTokens()))
+	diff := absInt(backendTotal - int(resp.GetTotalTokens()))
+	diffRatio := calculateDifferenceRatioInt64(int64(backendTotal), int64(resp.GetTotalTokens()))
+
+	records := make([]aiModels.QuotaReconciliationRecord, 0, len(resp.GetRecords()))
+	for _, record := range resp.GetRecords() {
+		records = append(records, aiModels.QuotaReconciliationRecord{
+			ID:           record.GetId(),
+			WorkflowType: record.GetWorkflowType(),
+			TokensUsed:   int(record.GetTokensUsed()),
+			ConsumedAt:   record.GetConsumedAt(),
+		})
+	}
+
+	return &aiModels.UserQuotaReconciliation{
+		UserID:               userID,
+		TimeRange:            normalizedRange,
+		WorkflowType:         workflowType,
+		BackendQuotaType:     string(aiModels.QuotaTypeDaily),
+		BackendTotalTokens:   backendTotal,
+		BackendRecordCount:   backendRecordCount,
+		AIServiceTotalTokens: int(resp.GetTotalTokens()),
+		AIServiceRecordCount: int(resp.GetTotalRecords()),
+		DifferenceTokens:     diff,
+		DifferenceRatio:      diffRatio,
+		AlertLevel:           string(level),
+		ShouldAlert:          shouldAlert,
+		WindowStartAt:        windowStart,
+		WindowEndAt:          windowEnd,
+		CheckedAt:            time.Now(),
+		Records:              records,
+	}, nil
+}
+
 // 私有辅助方法
 func (s *QuotaAdminService) updateUserQuota(ctx context.Context, userID string, totalQuota int, quotaType aiModels.QuotaType) error {
 	quota, err := s.quotaRepo.GetQuotaByUserID(ctx, userID, quotaType)
@@ -311,6 +410,7 @@ func (s *QuotaAdminService) updateUserQuota(ctx context.Context, userID string, 
 					ResetAt:        now.AddDate(0, 1, 0),
 				}
 			}
+			setQuotaManualOverride(quota, true)
 
 			return s.quotaRepo.CreateQuota(ctx, quota)
 		}
@@ -320,6 +420,7 @@ func (s *QuotaAdminService) updateUserQuota(ctx context.Context, userID string, 
 	// 更新配额
 	quota.TotalQuota = totalQuota
 	quota.RemainingQuota = totalQuota - quota.UsedQuota
+	setQuotaManualOverride(quota, true)
 
 	return s.quotaRepo.UpdateQuota(ctx, quota)
 }
@@ -332,6 +433,7 @@ func (s *QuotaAdminService) SuspendUserQuota(ctx context.Context, userID string)
 	}
 
 	for _, quota := range quotas {
+		setQuotaManualOverride(quota, true)
 		quota.Status = aiModels.QuotaStatusSuspended
 		if err := s.quotaRepo.UpdateQuota(ctx, quota); err != nil {
 			return err
@@ -362,6 +464,7 @@ func (s *QuotaAdminService) ActivateUserQuota(ctx context.Context, userID string
 	}
 
 	for _, quota := range quotas {
+		setQuotaManualOverride(quota, true)
 		quota.Status = aiModels.QuotaStatusActive
 		if err := s.quotaRepo.UpdateQuota(ctx, quota); err != nil {
 			return err

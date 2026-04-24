@@ -13,6 +13,11 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+const (
+	quotaAlertStatusFilterOpen = "open"
+	quotaAlertStatusFilterAll  = "all"
+)
+
 // MongoQuotaAlertRepository MongoDB配额告警Repository实现
 type MongoQuotaAlertRepository struct {
 	collection *mongo.Collection
@@ -91,8 +96,7 @@ func (r *MongoQuotaAlertRepository) GetByID(ctx context.Context, id string) (*ai
 	return &alert, nil
 }
 
-// List 获取告警列表
-func (r *MongoQuotaAlertRepository) List(ctx context.Context, alertType, level, status string, page, limit int) ([]*aiModels.QuotaAlert, int64, error) {
+func buildQuotaAlertListFilter(alertType, level, status string) bson.M {
 	filter := bson.M{}
 
 	if alertType != "" {
@@ -103,9 +107,27 @@ func (r *MongoQuotaAlertRepository) List(ctx context.Context, alertType, level, 
 		filter["level"] = level
 	}
 
-	if status != "" {
-		filter["status"] = status
+	if status == "" || status == quotaAlertStatusFilterAll {
+		return filter
 	}
+
+	if status == quotaAlertStatusFilterOpen {
+		filter["status"] = bson.M{
+			"$in": []string{
+				string(aiModels.QuotaAlertStatusPending),
+				string(aiModels.QuotaAlertStatusAcknowledged),
+			},
+		}
+		return filter
+	}
+
+	filter["status"] = status
+	return filter
+}
+
+// List 获取告警列表
+func (r *MongoQuotaAlertRepository) List(ctx context.Context, alertType, level, status string, page, limit int) ([]*aiModels.QuotaAlert, int64, error) {
+	filter := buildQuotaAlertListFilter(alertType, level, status)
 
 	// 统计总数
 	total, err := r.collection.CountDocuments(ctx, filter)
@@ -227,7 +249,7 @@ func (r *MongoQuotaAlertRepository) CountByStatus(ctx context.Context) (map[aiMo
 	result := make(map[aiModels.QuotaAlertStatus]int64)
 	var items []struct {
 		Status aiModels.QuotaAlertStatus `bson:"_id"`
-		Count  int64                      `bson:"count"`
+		Count  int64                     `bson:"count"`
 	}
 
 	if err = cursor.All(ctx, &items); err != nil {

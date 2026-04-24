@@ -18,7 +18,7 @@ redis:
   poolsize: 10
 
 jwt:
-  secret: "test-secret-key-do-not-use-in-production"
+  secret: ""  # 示例占位：复制为 config.test.yaml 后自行填写
   expire: 7200  # 2小时
   issuer: "qingyu-test"
 
@@ -40,6 +40,24 @@ log:
     - "password"
     - "token"
     - "cookie"
+
+ai_quota:
+  consistency_thresholds:
+    user:
+      warning_tokens: 200
+      critical_tokens: 1000
+      warning_ratio: 0.1
+      critical_ratio: 0.2
+    workflow:
+      warning_tokens: 200
+      critical_tokens: 1000
+      warning_ratio: 0.1
+      critical_ratio: 0.2
+    global:
+      warning_tokens: 200
+      critical_tokens: 1000
+      warning_ratio: 0.1
+      critical_ratio: 0.2
 
 # 测试特定配置
 test:
@@ -71,7 +89,7 @@ external_api:
   providers:
     deepseek:
       name: "deepseek"
-      api_key: "YOUR_DEEPSEEK_API_KEY_HERE"  # 请在 https://platform.deepseek.com 申请API Key
+      api_key: ""  # 示例占位：请在 https://platform.deepseek.com 申请后填写
       base_url: "https://api.deepseek.com"
       enabled: true
       priority: 1
@@ -80,7 +98,7 @@ external_api:
         - "deepseek-reasoner"    # DeepSeek-V3.2-Exp 思考模式
     gemini:
       name: "gemini"
-      api_key: "YOUR_GEMINI_API_KEY_HERE"  # 备用提供商
+      api_key: ""  # 示例占位：备用提供商 Key
       base_url: "https://generativelanguage.googleapis.com"
       enabled: false
       priority: 2
