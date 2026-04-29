@@ -158,8 +158,7 @@ func (api *TemplateAPI) ListTemplates(c *gin.Context) {
 
 	// 排序参数
 	req.SortBy = c.DefaultQuery("sortBy", "created_at")
-	sortOrder, _ := strconv.Atoi(c.DefaultQuery("sortOrder", "-1"))
-	req.SortOrder = sortOrder
+	req.SortOrder = shared.GetIntParam(c, "sortOrder", true, -1, 0, 0)
 
 	// 调用service查询
 	templates, total, err := api.service.ListTemplates(c.Request.Context(), req)
