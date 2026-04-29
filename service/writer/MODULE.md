@@ -1,6 +1,6 @@
 # Writer Service
 
-> 最后更新：2026-03-29
+> 最后更新：2026-04-30
 
 ## 职责
 
@@ -31,3 +31,4 @@ API Handler → WriterServiceFactory → impl/{Port} → {子模块Service} → 
 - **4位错误码体系**：40xx 客户端错误 / 50xx 服务端错误，所有错误实现 `WriterError` 结构，支持字段级定位和可重试判断
 - **文档内容分层存储**：内容快照根据大小选择内联或外部存储（StoreSnapshot）
 - **发布是异步流程**：创建发布记录(pending) → 审核(approved/rejected) → 同步到书城(published)，通过 EventBus 解耦
+- **factory 与 compat 仍是活跃边界**：`WriterServiceFactory.CreateWithPorts` / `CreateFromImplementations` 当前仍通过 `_migration.NewWriterServiceAdapter` 返回运行态 `WriterService`。`service/writer/_migration/compat.go` 不能作为纯死代码整体删除；后续清理必须先替代 factory 的适配器返回边界，再拆纯 alias/compat 方法。

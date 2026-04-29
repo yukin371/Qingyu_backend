@@ -356,9 +356,8 @@ if err != nil {
 
 ### 3. 获取当前用户
 ```go
-userID, exists := c.Get("user_id")
-if !exists {
-    shared.Error(c, http.StatusUnauthorized, "未认证", "无法获取用户信息")
+userID, ok := shared.GetUserID(c)
+if !ok {
     return
 }
 ```
@@ -366,7 +365,7 @@ if !exists {
 ### 4. 权限验证
 只能操作自己的项目和文档：
 ```go
-if project.AuthorID != userID.(string) {
+if project.AuthorID != userID {
     shared.Error(c, http.StatusForbidden, "无权限", "只能操作自己的项目")
     return
 }
