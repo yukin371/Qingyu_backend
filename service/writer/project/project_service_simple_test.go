@@ -188,7 +188,7 @@ func TestProjectService_CreateProject_Success(t *testing.T) {
 	projectService := NewProjectService(mockRepo, mockEventBus)
 
 	userID := primitive.NewObjectID().Hex()
-	ctx = context.WithValue(ctx, "userId", userID)
+	ctx = contextWithUserID(ctx, userID)
 
 	req := &dto.CreateProjectRequest{
 		Title:    "测试项目",
@@ -227,7 +227,7 @@ func TestProjectService_CreateProject_EmptyTitle_ReturnError(t *testing.T) {
 	projectService := NewProjectService(mockRepo, mockEventBus)
 
 	userID := primitive.NewObjectID().Hex()
-	ctx = context.WithValue(ctx, "userId", userID)
+	ctx = contextWithUserID(ctx, userID)
 
 	// Act
 	tests := []struct {
@@ -296,7 +296,7 @@ func TestProjectService_GetProject_Success(t *testing.T) {
 
 	expectedProject := createTestProject(projectID, userID, "测试项目", writer.StatusDraft)
 
-	ctx = context.WithValue(ctx, "userId", userID)
+	ctx = contextWithUserID(ctx, userID)
 	mockRepo.On("GetByID", ctx, projectID).Return(expectedProject, nil).Once()
 
 	// Act
@@ -325,7 +325,7 @@ func TestProjectService_GetProject_NotFound_ReturnError(t *testing.T) {
 	userID := primitive.NewObjectID().Hex()
 	projectID := primitive.NewObjectID().Hex()
 
-	ctx = context.WithValue(ctx, "userId", userID)
+	ctx = contextWithUserID(ctx, userID)
 	mockRepo.On("GetByID", ctx, projectID).Return(nil, nil).Once()
 
 	// Act
@@ -355,7 +355,7 @@ func TestProjectService_UpdateProject_Success(t *testing.T) {
 
 	existingProject := createTestProject(projectID, userID, "原标题", writer.StatusDraft)
 
-	ctx = context.WithValue(ctx, "userId", userID)
+	ctx = contextWithUserID(ctx, userID)
 	mockRepo.On("GetByID", ctx, projectID).Return(existingProject, nil).Once()
 	mockRepo.On("Update", ctx, projectID, mock.Anything).Return(nil).Once()
 	mockEventBus.On("PublishAsync", ctx, mock.Anything).Return(nil).Once()
@@ -392,7 +392,7 @@ func TestProjectService_DeleteProject_Success(t *testing.T) {
 
 	existingProject := createTestProject(projectID, userID, "测试项目", writer.StatusDraft)
 
-	ctx = context.WithValue(ctx, "userId", userID)
+	ctx = contextWithUserID(ctx, userID)
 	mockRepo.On("GetByID", ctx, projectID).Return(existingProject, nil).Once()
 	mockRepo.On("SoftDelete", ctx, projectID, userID).Return(nil).Once()
 	mockEventBus.On("PublishAsync", ctx, mock.Anything).Return(nil).Once()
@@ -425,7 +425,7 @@ func TestProjectService_ListMyProjects_Success(t *testing.T) {
 		createTestProject(primitive.NewObjectID().Hex(), userID, "项目2", writer.StatusSerializing),
 	}
 
-	ctx = context.WithValue(ctx, "userId", userID)
+	ctx = contextWithUserID(ctx, userID)
 	mockRepo.On("GetListByOwnerID", ctx, userID, int64(10), int64(0)).Return(expectedProjects, nil).Once()
 	mockRepo.On("CountByOwner", ctx, userID).Return(int64(2), nil).Once()
 
@@ -464,7 +464,7 @@ func TestProjectService_ListMyProjects_WithStatus_Success(t *testing.T) {
 		createTestProject(primitive.NewObjectID().Hex(), userID, "连载中项目", writer.StatusSerializing),
 	}
 
-	ctx = context.WithValue(ctx, "userId", userID)
+	ctx = contextWithUserID(ctx, userID)
 	mockRepo.On("GetByOwnerAndStatus", ctx, userID, "serializing", int64(10), int64(0)).Return(expectedProjects, nil).Once()
 	mockRepo.On("CountByOwner", ctx, userID).Return(int64(1), nil).Once()
 

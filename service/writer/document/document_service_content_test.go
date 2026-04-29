@@ -30,7 +30,7 @@ func TestDocumentService_AutoSaveDocument_HandlesOptimisticConflictBySentinel(t 
 	project := &writer.Project{OwnedEntity: modelbase.OwnedEntity{AuthorID: userObjID}}
 	doc := &writer.Document{ProjectID: projectOID}
 
-	ctx := context.WithValue(context.Background(), "userId", userObjID.Hex())
+	ctx := contextWithTestUserID(context.Background(), userObjID.Hex())
 
 	docRepo.On("GetByID", mock.Anything, docID).Return(doc, nil).Once()
 	projectRepo.On("GetByID", mock.Anything, projectOID.Hex()).Return(project, nil).Once()
@@ -75,7 +75,7 @@ func TestDocumentService_UpdateDocumentContent_MapsSentinelConflictToBusinessErr
 	project := &writer.Project{OwnedEntity: modelbase.OwnedEntity{AuthorID: userObjID}}
 	doc := &writer.Document{ProjectID: projectOID}
 
-	ctx := context.WithValue(context.Background(), "userId", userObjID.Hex())
+	ctx := contextWithTestUserID(context.Background(), userObjID.Hex())
 
 	docRepo.On("GetByID", mock.Anything, docID).Return(doc, nil).Once()
 	projectRepo.On("GetByID", mock.Anything, projectOID.Hex()).Return(project, nil).Once()
@@ -115,7 +115,7 @@ func TestDocumentService_ReplaceDocumentContents_PreparesDataBeforeRepositoryCre
 	project := &writer.Project{OwnedEntity: modelbase.OwnedEntity{AuthorID: userObjID}}
 	doc := &writer.Document{ProjectID: projectOID}
 
-	ctx := context.WithValue(context.Background(), "userId", userObjID.Hex())
+	ctx := contextWithTestUserID(context.Background(), userObjID.Hex())
 
 	docRepo.On("GetByID", mock.Anything, docID).Return(doc, nil).Once()
 	projectRepo.On("GetByID", mock.Anything, projectOID.Hex()).Return(project, nil).Once()
