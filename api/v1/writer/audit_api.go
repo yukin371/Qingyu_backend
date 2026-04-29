@@ -155,12 +155,7 @@ func (api *AuditApi) SubmitAppeal(c *gin.Context) {
 // @Param limit query int false "数量限制" default(50)
 // @Success 200 {object} response.APIResponse
 func (api *AuditApi) GetPendingReviews(c *gin.Context) {
-	limit := 50
-	if limitStr := c.Query("limit"); limitStr != "" {
-		if l, err := c.GetQuery("limit"); err {
-			limit = int(l[0])
-		}
-	}
+	limit := shared.GetIntParam(c, "limit", true, 50, 1, 100)
 
 	records, err := api.auditService.GetPendingReviews(c.Request.Context(), limit)
 	if err != nil {
@@ -341,20 +336,8 @@ func (api *AuditApi) GetUserViolationSummary(c *gin.Context) {
 // @Param limit query int false "数量限制" default(50)
 // @Success 200 {object} response.APIResponse
 func (api *AuditApi) GetHighRiskAudits(c *gin.Context) {
-	minRiskLevel := 3
-	limit := 50
-
-	if level := c.Query("minRiskLevel"); level != "" {
-		if l, err := c.GetQuery("minRiskLevel"); err {
-			minRiskLevel = int(l[0])
-		}
-	}
-
-	if limitStr := c.Query("limit"); limitStr != "" {
-		if l, err := c.GetQuery("limit"); err {
-			limit = int(l[0])
-		}
-	}
+	minRiskLevel := shared.GetIntParam(c, "minRiskLevel", true, 3, 1, 5)
+	limit := shared.GetIntParam(c, "limit", true, 50, 1, 100)
 
 	records, err := api.auditService.GetHighRiskAudits(c.Request.Context(), minRiskLevel, limit)
 	if err != nil {
