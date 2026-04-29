@@ -34,6 +34,7 @@ Gin Router → Middleware（Auth/CORS/RateLimit） → Handler → Service → R
 | 获取用户名 | `c.Get("username")` + 类型断言 | `shared.GetUserName(c)` |
 | 获取用户角色 | `c.Get("roles")` + 类型断言 | `shared.GetUserRoles(c)` |
 | JSON 绑定 | `c.ShouldBindJSON` + err 响应 | `shared.BindJSON(c, &req)` |
+| 可选 JSON 绑定 | 直接忽略 `c.ShouldBindJSON` 错误 | `shared.BindJSONOptional(c, &req)` |
 | 兼容 JSON 绑定文案 | 手写 `请求参数错误: ...` | `shared.BindJSONWithMessage(c, &req, prefix)` |
 | Bearer Token（必需） | `c.GetHeader("Authorization")` + 手动裁剪 | `shared.GetBearerToken(c)` |
 | Bearer Token（可选） | `c.GetHeader("Authorization")` + 静默返回 | `shared.GetBearerTokenOptional(c)` |

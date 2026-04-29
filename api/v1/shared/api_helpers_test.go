@@ -260,6 +260,58 @@ func TestBindJSONWithMessage(t *testing.T) {
 	})
 }
 
+func TestBindJSONOptional(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	t.Run("bind success", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Request = httptest.NewRequest(http.MethodPost, "/", strings.NewReader(`{"name":"tester"}`))
+		c.Request.Header.Set("Content-Type", "application/json")
+
+		var req struct {
+			Name string `json:"name"`
+		}
+
+		BindJSONOptional(c, &req)
+
+		assert.Equal(t, "tester", req.Name)
+		assert.Equal(t, http.StatusOK, w.Code)
+	})
+
+	t.Run("empty body ignored", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Request = httptest.NewRequest(http.MethodPost, "/", nil)
+		c.Request.Header.Set("Content-Type", "application/json")
+
+		var req struct {
+			Name string `json:"name"`
+		}
+
+		BindJSONOptional(c, &req)
+
+		assert.Empty(t, req.Name)
+		assert.Equal(t, http.StatusOK, w.Code)
+	})
+
+	t.Run("invalid body ignored", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Request = httptest.NewRequest(http.MethodPost, "/", strings.NewReader(`{"name":`))
+		c.Request.Header.Set("Content-Type", "application/json")
+
+		var req struct {
+			Name string `json:"name"`
+		}
+
+		BindJSONOptional(c, &req)
+
+		assert.Empty(t, req.Name)
+		assert.Equal(t, http.StatusOK, w.Code)
+	})
+}
+
 func TestGetRequiredParam(t *testing.T) {
 	tests := []struct {
 		name         string

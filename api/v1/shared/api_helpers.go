@@ -236,6 +236,11 @@ func BindJSON(c *gin.Context, req interface{}) bool {
 	return true
 }
 
+// BindJSONOptional 尝试绑定可选 JSON 请求体，不因空请求体或绑定失败写入错误响应。
+func BindJSONOptional(c *gin.Context, req interface{}) {
+	_ = c.ShouldBindJSON(req)
+}
+
 // BindJSONWithMessage 绑定 JSON 请求体，并使用调用方指定的错误文案前缀。
 func BindJSONWithMessage(c *gin.Context, req interface{}, messagePrefix string) bool {
 	if err := c.ShouldBindJSON(req); err != nil {

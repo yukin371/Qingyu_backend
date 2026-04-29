@@ -210,7 +210,7 @@ func (api *EditorApi) ReindexDocumentContents(c *gin.Context) {
 func (api *EditorApi) CalculateWordCount(c *gin.Context) {
 	var req WordCountRequest
 	// 允许空请求体，不传则自动从文档获取内容
-	_ = c.ShouldBindJSON(&req)
+	shared.BindJSONOptional(c, &req)
 
 	content := req.Content
 	if content == "" {
