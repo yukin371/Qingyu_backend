@@ -66,20 +66,8 @@ func (api *StatsApi) ListMyBooks(c *gin.Context) {
 		return
 	}
 
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", c.DefaultQuery("size", "20")))
-	if page < 1 {
-		page = 1
-	}
-	if pageSize < 1 {
-		pageSize = 20
-	}
-	if pageSize > 100 {
-		pageSize = 100
-	}
-
-	offset := (page - 1) * pageSize
-	books, err := api.bookRepo.GetByAuthorID(c.Request.Context(), userID, pageSize, offset)
+	pagination := shared.GetPaginationParamsWithSizeKeys(c, 1, 20, 100, "pageSize", "size", "page_size")
+	books, err := api.bookRepo.GetByAuthorID(c.Request.Context(), userID, pagination.PageSize, pagination.Offset)
 	if err != nil {
 		c.Error(err)
 		return
@@ -107,8 +95,8 @@ func (api *StatsApi) ListMyBooks(c *gin.Context) {
 		"items":    items,
 		"list":     items,
 		"total":    total,
-		"page":     page,
-		"pageSize": pageSize,
+		"page":     pagination.Page,
+		"pageSize": pagination.PageSize,
 	})
 }
 
@@ -345,9 +333,8 @@ func (api *StatsApi) GetTopChapters(c *gin.Context) {
 		return
 	}
 
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
-	topChapters, total, err := api.statsService.GetChapterRankings(c.Request.Context(), bookID, page, size)
+	pagination := shared.GetPaginationParamsStandard(c)
+	topChapters, total, err := api.statsService.GetChapterRankings(c.Request.Context(), bookID, pagination.Page, pagination.PageSize)
 	if err != nil {
 		c.Error(err)
 		return

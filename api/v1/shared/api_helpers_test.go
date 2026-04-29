@@ -441,6 +441,54 @@ func TestGetPaginationParamsStandard(t *testing.T) {
 	}
 }
 
+func TestGetPaginationParamsWithSizeKeysAliases(t *testing.T) {
+	tests := []struct {
+		name             string
+		rawQuery         string
+		sizeKeys         []string
+		expectedPage     int
+		expectedPageSize int
+	}{
+		{
+			name:             "支持pageSize别名",
+			rawQuery:         "page=3&pageSize=15",
+			sizeKeys:         []string{"pageSize", "size", "page_size"},
+			expectedPage:     3,
+			expectedPageSize: 15,
+		},
+		{
+			name:             "支持page_size别名",
+			rawQuery:         "page=2&page_size=25",
+			sizeKeys:         []string{"page_size", "size", "pageSize"},
+			expectedPage:     2,
+			expectedPageSize: 25,
+		},
+		{
+			name:             "按调用方指定顺序选择别名",
+			rawQuery:         "page=2&size=12&pageSize=50&page_size=60",
+			sizeKeys:         []string{"pageSize", "size", "page_size"},
+			expectedPage:     2,
+			expectedPageSize: 50,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gin.SetMode(gin.TestMode)
+			w := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(w)
+			c.Request = httptest.NewRequest("GET", "/?"+tt.rawQuery, nil)
+
+			params := GetPaginationParamsWithSizeKeys(c, 1, 20, 100, tt.sizeKeys...)
+
+			assert.Equal(t, tt.expectedPage, params.Page)
+			assert.Equal(t, tt.expectedPageSize, params.PageSize)
+			assert.Equal(t, tt.expectedPageSize, params.Limit)
+			assert.Equal(t, (tt.expectedPage-1)*tt.expectedPageSize, params.Offset)
+		})
+	}
+}
+
 func TestGetIntParam(t *testing.T) {
 	tests := []struct {
 		name         string

@@ -2,7 +2,6 @@ package writer
 
 import (
 	"errors"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -112,8 +111,7 @@ func (api *CommentAPI) GetComments(c *gin.Context) {
 	}
 
 	// 解析查询参数
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
+	pagination := shared.GetPaginationParamsStandard(c)
 
 	// 构建筛选条件
 	docObjID, err := primitive.ObjectIDFromHex(documentID)
@@ -141,7 +139,7 @@ func (api *CommentAPI) GetComments(c *gin.Context) {
 		filter.Type = writermodels.CommentType(commentType)
 	}
 
-	comments, total, err := api.commentService.ListComments(c.Request.Context(), filter, page, size)
+	comments, total, err := api.commentService.ListComments(c.Request.Context(), filter, pagination.Page, pagination.PageSize)
 	if err != nil {
 		c.Error(err)
 		return
@@ -150,8 +148,8 @@ func (api *CommentAPI) GetComments(c *gin.Context) {
 	result := gin.H{
 		"comments": comments,
 		"total":    total,
-		"page":     page,
-		"size":     size,
+		"page":     pagination.Page,
+		"size":     pagination.PageSize,
 	}
 
 	response.Success(c, result)
@@ -464,10 +462,9 @@ func (api *CommentAPI) SearchComments(c *gin.Context) {
 		return
 	}
 
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
+	pagination := shared.GetPaginationParamsStandard(c)
 
-	comments, total, err := api.commentService.SearchComments(c.Request.Context(), keyword, documentID, page, size)
+	comments, total, err := api.commentService.SearchComments(c.Request.Context(), keyword, documentID, pagination.Page, pagination.PageSize)
 	if err != nil {
 		c.Error(err)
 		return
@@ -476,8 +473,8 @@ func (api *CommentAPI) SearchComments(c *gin.Context) {
 	result := gin.H{
 		"comments": comments,
 		"total":    total,
-		"page":     page,
-		"size":     size,
+		"page":     pagination.Page,
+		"size":     pagination.PageSize,
 		"keyword":  keyword,
 	}
 

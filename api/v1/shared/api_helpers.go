@@ -110,13 +110,31 @@ type PaginationParams struct {
 	Offset   int
 }
 
+func firstQueryValue(c *gin.Context, defaultValue string, keys ...string) string {
+	for _, key := range keys {
+		if value, exists := c.GetQuery(key); exists {
+			return value
+		}
+	}
+	return defaultValue
+}
+
 // GetPaginationParams 获取分页参数并验证
 // defaultPage: 默认页码
 // defaultPageSize: 默认每页数量
 // maxPageSize: 最大每页数量（0表示不限制）
 func GetPaginationParams(c *gin.Context, defaultPage, defaultPageSize, maxPageSize int) PaginationParams {
+	return GetPaginationParamsWithSizeKeys(c, defaultPage, defaultPageSize, maxPageSize, "size")
+}
+
+// GetPaginationParamsWithSizeKeys 获取分页参数，并允许调用方指定每页数量的查询参数名优先级。
+func GetPaginationParamsWithSizeKeys(c *gin.Context, defaultPage, defaultPageSize, maxPageSize int, sizeKeys ...string) PaginationParams {
+	if len(sizeKeys) == 0 {
+		sizeKeys = []string{"size"}
+	}
+
 	page, _ := strconv.Atoi(c.DefaultQuery("page", strconv.Itoa(defaultPage)))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("size", strconv.Itoa(defaultPageSize)))
+	pageSize, _ := strconv.Atoi(firstQueryValue(c, strconv.Itoa(defaultPageSize), sizeKeys...))
 
 	// 验证页码
 	if page < 1 {

@@ -1,6 +1,6 @@
 # API v1
 
-> 最后更新：2026-03-29
+> 最后更新：2026-04-30
 
 ## 职责
 
@@ -38,8 +38,10 @@ Gin Router → Middleware（Auth/CORS/RateLimit） → Handler → Service → R
 | Bearer Token（必需） | `c.GetHeader("Authorization")` + 手动裁剪 | `shared.GetBearerToken(c)` |
 | Bearer Token（可选） | `c.GetHeader("Authorization")` + 静默返回 | `shared.GetBearerTokenOptional(c)` |
 | 路径参数 | `c.Param` + 空值校验 | `shared.GetRequiredParam(c, key, name)` |
-| 分页参数 | 手动 `strconv.Atoi` | `shared.GetPaginationParamsStandard(c)` |
+| 分页参数 | 手动 `strconv.Atoi` | `shared.GetPaginationParamsStandard(c)` 或指定默认值/参数别名的 `shared.GetPaginationParams...` |
 | 传递 userID 到 service | `context.WithValue(ctx, "userId", ...)` | `shared.AddUserIDToContext(c)` |
+
+标准分页 helper 默认只读取 `size`；若历史接口使用 `pageSize` 或 `page_size`，必须通过 `shared.GetPaginationParamsWithSizeKeys(c, ...)` 显式声明兼容参数名和优先级，禁止在 handler 内重复实现分页解析。
 
 ## Auth 边界
 

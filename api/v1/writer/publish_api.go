@@ -2,7 +2,6 @@ package writer
 
 import (
 	"regexp"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 
@@ -262,17 +261,15 @@ func (api *PublishApi) GetPublicationRecords(c *gin.Context) {
 		return
 	}
 
-	// 获取分页参数（前端使用 "pageSize" 参数名，保留原始写法）
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "20"))
+	pagination := shared.GetPaginationParamsWithSizeKeys(c, 1, 20, 100, "pageSize", "size", "page_size")
 
-	records, total, err := api.publishService.GetPublicationRecords(c.Request.Context(), projectID, page, pageSize)
+	records, total, err := api.publishService.GetPublicationRecords(c.Request.Context(), projectID, pagination.Page, pagination.PageSize)
 	if err != nil {
 		c.Error(err)
 		return
 	}
 
-	response.Paginated(c, records, total, page, pageSize, "获取成功")
+	response.Paginated(c, records, total, pagination.Page, pagination.PageSize, "获取成功")
 }
 
 // GetPublicationRecord 获取发布记录详情

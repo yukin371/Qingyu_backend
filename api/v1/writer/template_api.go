@@ -152,10 +152,9 @@ func (api *TemplateAPI) ListTemplates(c *gin.Context) {
 	}
 
 	// 分页参数
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "20"))
-	req.Page = page
-	req.PageSize = pageSize
+	pagination := shared.GetPaginationParamsWithSizeKeys(c, 1, 20, 100, "pageSize", "size", "page_size")
+	req.Page = pagination.Page
+	req.PageSize = pagination.PageSize
 
 	// 排序参数
 	req.SortBy = c.DefaultQuery("sortBy", "created_at")
@@ -169,7 +168,7 @@ func (api *TemplateAPI) ListTemplates(c *gin.Context) {
 		return
 	}
 
-	response.Paginated(c, templates, total, page, pageSize, "查询成功")
+	response.Paginated(c, templates, total, pagination.Page, pagination.PageSize, "查询成功")
 }
 
 // GetTemplate 获取模板详情

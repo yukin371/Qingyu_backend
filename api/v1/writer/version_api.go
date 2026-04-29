@@ -1,8 +1,6 @@
 package writer
 
 import (
-	"strconv"
-
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
@@ -38,10 +36,9 @@ func (api *VersionApi) GetVersionHistory(c *gin.Context) {
 	if !ok {
 		return
 	}
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "20"))
+	pagination := shared.GetPaginationParamsWithSizeKeys(c, 1, 20, 100, "pageSize", "size", "page_size")
 
-	versions, err := api.versionService.GetVersionHistory(c.Request.Context(), documentID, page, pageSize)
+	versions, err := api.versionService.GetVersionHistory(c.Request.Context(), documentID, pagination.Page, pagination.PageSize)
 	if err != nil {
 		c.Error(err)
 		return

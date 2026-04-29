@@ -2,7 +2,6 @@ package writer
 
 import (
 	"errors"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 
@@ -56,15 +55,14 @@ func (api *SearchAPI) SearchDocuments(c *gin.Context) {
 	}
 
 	projectID := c.Query("project_id")
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
+	pagination := shared.GetPaginationParamsWithSizeKeys(c, 1, 20, 100, "page_size", "size", "pageSize")
 
 	// 3. 构建搜索请求
 	req := &search.SearchRequest{
 		Type:     search.SearchTypeDocuments,
 		Query:    keyword,
-		Page:     page,
-		PageSize: pageSize,
+		Page:     pagination.Page,
+		PageSize: pagination.PageSize,
 		Filter:   make(map[string]interface{}),
 	}
 
