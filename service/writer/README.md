@@ -10,19 +10,6 @@ Writer Service 负责处理写作工作台的所有业务逻辑，包括项目�
 
 ```mermaid
 graph TB
-    subgraph "WriterService 统一接口"
-        WS[WriterService]
-        Factory[WriterServiceFactory]
-    end
-
-    subgraph "Port 实现 (impl/)"
-        PM[ProjectManagementImpl]
-        DM[DocumentManagementImpl]
-        CM[ContentManagementImpl]
-        CB[CollaborationImpl]
-        PE[PublishExportImpl]
-    end
-
     subgraph "project/ 子模块"
         PS[ProjectService]
         VS[VersionService]
@@ -48,22 +35,6 @@ graph TB
         PService[PublishService]
         EService[ExportService]
     end
-
-    WS --> Factory
-    Factory --> PM
-    Factory --> DM
-    Factory --> CM
-    Factory --> CB
-    Factory --> PE
-
-    PM --> PS
-    DM --> DS
-    CM --> CS
-    CM --> LS
-    CM --> TLS
-    CB --> CmS
-    PE --> PService
-    PE --> EService
 
     PS --> VS
     PS --> AS
@@ -115,15 +86,7 @@ graph TB
 | `PreflightService` | 操作前预检查 |
 | `RetryService` | 重试机制 |
 
-### impl/ 子模块 - Port 实现
-
-| 实现 | 职责 |
-|------|------|
-| `ProjectManagementImpl` | 项目管理 Port 实现，委托给 ProjectService |
-| `DocumentManagementImpl` | 文档管理 Port 实现，委托给 DocumentService |
-| `ContentManagementImpl` | 内容管理 Port 实现，聚合 Character/Location/Timeline 服务 |
-| `CollaborationImpl` | 协作批注 Port 实现，委托给 CommentService |
-| `PublishExportImpl` | 发布导出 Port 实现，聚合 Publish/Export 服务 |
+> 历史 `WriterServiceFactory`、`service/writer/impl` Port 适配层和 `service/interfaces/writer` DTO/Port 接口已在 2026-04-30 退场。当前路由直接注入各子模块 service，避免保留第二套组合边界。
 
 ### 核心服务
 

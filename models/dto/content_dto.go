@@ -10,11 +10,11 @@ import (
 // ============================================================================
 
 // 本文件包含内容管理模块（Writer模块）的所有DTO定义
-// 用于替代 service/interfaces/writer/dto.go 和 service/writer/*/project_dto.go 中的重复定义
+// 用于替代历史 writer service interface DTO 和 service/writer/*/project_dto.go 中的重复定义
 //
 // 迁移指南：
-// 1. 使用 dto.CreateProjectRequest 替代原 service/interfaces/writer.CreateProjectRequest
-// 2. 使用 dto.CreateDocumentRequest 替代原 service/interfaces/writer.CreateDocumentRequest
+// 1. 使用 dto.CreateProjectRequest 作为项目创建请求
+// 2. 使用 dto.CreateDocumentRequest 作为文档创建请求
 // 3. 其他DTO类似迁移
 //
 // 注意：
