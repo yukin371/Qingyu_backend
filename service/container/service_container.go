@@ -924,11 +924,6 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	c.quotaService = aiService.NewQuotaService(quotaRepo)
 	// 注意：QuotaService 不完全实现 BaseService，不注册到 services map
 
-	// 创建聊天服务（使用临时内存存储）
-	chatRepo := aiService.NewInMemoryChatRepository()
-	c.chatService = aiService.NewChatService(c.aiService, chatRepo)
-	// 注意：ChatService 不完全实现 BaseService，不注册到 services map
-
 	// ============ 5.1 初始化 Phase3 gRPC 客户端 ============
 	aiCfg := config.GlobalConfig.AI
 	if aiCfg != nil && aiCfg.AIService != nil && aiCfg.AIService.Endpoint != "" {
@@ -943,6 +938,11 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	} else {
 		fmt.Println("警告: AI服务配置为空，跳过Phase3Client初始化")
 	}
+
+	// 创建聊天服务（使用临时内存存储）
+	chatRepo := aiService.NewInMemoryChatRepository()
+	c.chatService = aiService.NewChatService(aiService.NewPhase3TextGenerator(c.phase3Client), chatRepo)
+	// 注意：ChatService 不完全实现 BaseService，不注册到 services map
 
 	// ============ 5.2 初始化统一 gRPC 客户端 ============
 	if aiCfg != nil && aiCfg.AIService != nil && aiCfg.AIService.Endpoint != "" {

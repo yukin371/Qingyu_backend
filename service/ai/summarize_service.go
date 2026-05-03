@@ -6,19 +6,18 @@ import (
 	"strings"
 	"time"
 
-	"Qingyu_backend/service/ai/adapter"
 	"Qingyu_backend/service/ai/dto"
 )
 
 // SummarizeService 内容总结服务
 type SummarizeService struct {
-	adapterManager *adapter.AdapterManager
+	textGenerator TextGenerator
 }
 
 // NewSummarizeService 创建内容总结服务
-func NewSummarizeService(adapterManager *adapter.AdapterManager) *SummarizeService {
+func NewSummarizeService(textGenerator TextGenerator) *SummarizeService {
 	return &SummarizeService{
-		adapterManager: adapterManager,
+		textGenerator: textGenerator,
 	}
 }
 
@@ -39,13 +38,13 @@ func (s *SummarizeService) SummarizeContent(ctx context.Context, req *dto.Summar
 	}
 
 	// 调用AI生成摘要
-	adapterReq := &adapter.TextGenerationRequest{
+	generateReq := &TextGenerateRequest{
 		Prompt:      prompt,
 		Temperature: 0.5, // 总结任务使用中等温度
 		MaxTokens:   maxTokens,
 	}
 
-	result, err := s.adapterManager.AutoTextGeneration(ctx, adapterReq)
+	result, err := s.textGenerator.GenerateText(ctx, generateReq)
 	if err != nil {
 		return nil, fmt.Errorf("生成摘要失败: %w", err)
 	}
@@ -67,7 +66,7 @@ func (s *SummarizeService) SummarizeContent(ctx context.Context, req *dto.Summar
 		OriginalLength:  originalLength,
 		SummaryLength:   summaryLength,
 		CompressionRate: compressionRate,
-		TokensUsed:      result.Usage.TotalTokens,
+		TokensUsed:      result.TokensUsed,
 		Model:           result.Model,
 		ProcessedAt:     time.Now(),
 	}, nil
@@ -95,13 +94,13 @@ func (s *SummarizeService) SummarizeChapter(ctx context.Context, req *dto.Chapte
 请以JSON格式返回，包含summary, keyPoints, plotOutline, characters字段。`, chapterTitle, chapterContent)
 
 	// 调用AI生成总结
-	adapterReq := &adapter.TextGenerationRequest{
+	generateReq := &TextGenerateRequest{
 		Prompt:      prompt,
 		Temperature: 0.5,
 		MaxTokens:   1500,
 	}
 
-	result, err := s.adapterManager.AutoTextGeneration(ctx, adapterReq)
+	result, err := s.textGenerator.GenerateText(ctx, generateReq)
 	if err != nil {
 		return nil, fmt.Errorf("生成章节总结失败: %w", err)
 	}
@@ -115,7 +114,7 @@ func (s *SummarizeService) SummarizeChapter(ctx context.Context, req *dto.Chapte
 		KeyPoints:    []string{"关键点1", "关键点2", "关键点3"},
 		PlotOutline:  []dto.OutlineItem{},
 		Characters:   []dto.CharacterMention{},
-		TokensUsed:   result.Usage.TotalTokens,
+		TokensUsed:   result.TokensUsed,
 		ProcessedAt:  time.Now(),
 	}, nil
 }

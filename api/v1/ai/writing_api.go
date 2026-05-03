@@ -1,6 +1,7 @@
 package ai
 
 import (
+	"context"
 	"fmt"
 	"io"
 
@@ -15,15 +16,15 @@ import (
 
 // WritingApi AI写作API
 type WritingApi struct {
-	aiService    *aiService.Service
-	quotaService *aiService.QuotaService
+	textGenerator aiService.TextGenerator
+	quotaService  *aiService.QuotaService
 }
 
 // NewWritingApi 创建AI写作API实例
-func NewWritingApi(aiService *aiService.Service, quotaService *aiService.QuotaService) *WritingApi {
+func NewWritingApi(textGenerator aiService.TextGenerator, quotaService *aiService.QuotaService) *WritingApi {
 	return &WritingApi{
-		aiService:    aiService,
-		quotaService: quotaService,
+		textGenerator: textGenerator,
+		quotaService:  quotaService,
 	}
 }
 
@@ -61,22 +62,14 @@ func (api *WritingApi) ContinueWriting(c *gin.Context) {
 		return
 	}
 
-	// 转换为Service请求
-	serviceReq := &aiService.ContinueWritingRequest{
-		ProjectID:      req.ProjectID,
-		ChapterID:      req.ChapterID,
-		CurrentText:    req.CurrentText,
-		ContinueLength: req.ContinueLength,
-		Options:        req.Options,
-	}
-
 	// 生成请求ID
 	requestID := uuid.New().String()
 	c.Set("requestID", requestID)
 	c.Set("aiService", "continue_writing")
 
 	// 调用服务
-	result, err := api.aiService.ContinueWriting(c.Request.Context(), serviceReq)
+	generateReq := api.buildContinueTextRequest(req)
+	result, err := api.generateText(c.Request.Context(), generateReq)
 	if err != nil {
 		c.Error(err)
 		return
@@ -86,7 +79,12 @@ func (api *WritingApi) ContinueWriting(c *gin.Context) {
 	c.Set("tokensUsed", result.TokensUsed)
 	c.Set("aiModel", result.Model)
 
-	response.SuccessWithMessage(c, "续写成功", result)
+	response.SuccessWithMessage(c, "续写成功", gin.H{
+		"content":      result.Text,
+		"tokensUsed":   result.TokensUsed,
+		"model":        result.Model,
+		"finishReason": "stop",
+	})
 }
 
 // ContinueWritingStream 智能续写（流式）
@@ -115,20 +113,7 @@ func (api *WritingApi) ContinueWritingStream(c *gin.Context) {
 	// 生成请求ID
 	requestID := uuid.New().String()
 
-	// 转换为Service请求
-	serviceReq := &aiService.GenerateContentRequest{
-		ProjectID: req.ProjectID,
-		ChapterID: req.ChapterID,
-		Prompt:    fmt.Sprintf("请基于以下内容进行续写，保持风格和情节的连贯性：\n\n%s", req.CurrentText),
-		Options:   req.Options,
-	}
-
-	if req.ContinueLength > 0 {
-		serviceReq.Prompt += fmt.Sprintf("\n\n请续写约%d字的内容。", req.ContinueLength)
-	}
-
-	// 获取流式响应通道
-	streamChan, err := api.aiService.GenerateContentStream(c.Request.Context(), serviceReq)
+	result, err := api.generateText(c.Request.Context(), api.buildContinueTextRequest(req))
 	if err != nil {
 		c.SSEvent("error", gin.H{
 			"error": err.Error(),
@@ -136,58 +121,21 @@ func (api *WritingApi) ContinueWritingStream(c *gin.Context) {
 		return
 	}
 
-	// 流式推送
-	var totalTokens int
-	var model string
-	fullContent := ""
-
 	c.Stream(func(w io.Writer) bool {
-		select {
-		case <-c.Request.Context().Done():
-			// 客户端断开连接
-			return false
-
-		case chunk, ok := <-streamChan:
-			if !ok {
-				// channel关闭，发送完成事件
-				c.SSEvent("done", gin.H{
-					"requestId":  requestID,
-					"content":    fullContent,
-					"tokensUsed": totalTokens,
-					"model":      model,
-				})
-
-				// 异步消费配额
-				go func() {
-					userID, _ := c.Get("user_id")
-					_ = api.quotaService.ConsumeQuota(
-						c.Request.Context(),
-						userID.(string),
-						totalTokens,
-						"continue_writing",
-						model,
-						requestID,
-					)
-				}()
-
-				return false
-			}
-
-			// 累计内容和Token
-			fullContent += chunk.Content
-			totalTokens = chunk.TokensUsed
-			model = chunk.Model
-
-			// 发送增量数据
-			c.SSEvent("message", gin.H{
-				"requestId": requestID,
-				"delta":     chunk.Content,
-				"content":   fullContent,
-				"tokens":    totalTokens,
-			})
-
-			return true
-		}
+		c.SSEvent("message", gin.H{
+			"requestId": requestID,
+			"delta":     result.Text,
+			"content":   result.Text,
+			"tokens":    result.TokensUsed,
+		})
+		c.SSEvent("done", gin.H{
+			"requestId":  requestID,
+			"content":    result.Text,
+			"tokensUsed": result.TokensUsed,
+			"model":      result.Model,
+		})
+		api.consumeQuotaAsync(c, result.TokensUsed, "continue_writing", result.Model, requestID)
+		return false
 	})
 }
 
@@ -228,35 +176,13 @@ func (api *WritingApi) RewriteText(c *gin.Context) {
 	}
 
 	// 转换改写模式
-	var optimizeType string
-	switch req.RewriteMode {
-	case "expand":
-		optimizeType = "expand"
-	case "shorten":
-		optimizeType = "shorten"
-	case "polish":
-		optimizeType = "style"
-	default:
-		optimizeType = "style"
-	}
-
-	// 转换为Service请求
-	serviceReq := &aiService.OptimizeTextRequest{
-		ProjectID:    req.ProjectID,
-		ChapterID:    req.ChapterID,
-		OriginalText: req.OriginalText,
-		OptimizeType: optimizeType,
-		Instructions: req.Instructions,
-		Options:      req.Options,
-	}
-
 	// 生成请求ID
 	requestID := uuid.New().String()
 	c.Set("requestID", requestID)
 	c.Set("aiService", "rewrite")
 
 	// 调用服务
-	result, err := api.aiService.OptimizeText(c.Request.Context(), serviceReq)
+	result, err := api.generateText(c.Request.Context(), api.buildRewriteTextRequest(req))
 	if err != nil {
 		c.Error(err)
 		return
@@ -266,7 +192,12 @@ func (api *WritingApi) RewriteText(c *gin.Context) {
 	c.Set("tokensUsed", result.TokensUsed)
 	c.Set("aiModel", result.Model)
 
-	response.SuccessWithMessage(c, "改写成功", result)
+	response.SuccessWithMessage(c, "改写成功", gin.H{
+		"content":    result.Text,
+		"tokensUsed": result.TokensUsed,
+		"model":      result.Model,
+		"changes":    []string{"文本已优化"},
+	})
 }
 
 // RewriteTextStream 改写文本（流式）
@@ -295,7 +226,51 @@ func (api *WritingApi) RewriteTextStream(c *gin.Context) {
 	// 生成请求ID
 	requestID := uuid.New().String()
 
-	// 构建Prompt
+	result, err := api.generateText(c.Request.Context(), api.buildRewriteTextRequest(req))
+	if err != nil {
+		c.SSEvent("error", gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	c.Stream(func(w io.Writer) bool {
+		c.SSEvent("message", gin.H{
+			"requestId": requestID,
+			"delta":     result.Text,
+			"content":   result.Text,
+			"tokens":    result.TokensUsed,
+		})
+		c.SSEvent("done", gin.H{
+			"requestId":  requestID,
+			"content":    result.Text,
+			"tokensUsed": result.TokensUsed,
+			"model":      result.Model,
+		})
+		api.consumeQuotaAsync(c, result.TokensUsed, "rewrite", result.Model, requestID)
+		return false
+	})
+}
+
+func (api *WritingApi) buildContinueTextRequest(req ContinueWritingRequest) *aiService.TextGenerateRequest {
+	prompt := fmt.Sprintf("请基于以下内容进行续写，保持风格和情节的连贯性：\n\n%s", req.CurrentText)
+	if req.ContinueLength > 0 {
+		prompt += fmt.Sprintf("\n\n请续写约%d字的内容。", req.ContinueLength)
+	}
+
+	generateReq := &aiService.TextGenerateRequest{
+		ProjectID:    req.ProjectID,
+		ChapterID:    req.ChapterID,
+		Prompt:       prompt,
+		MaxTokens:    2000,
+		Temperature:  0.7,
+		WorkflowType: "continue_writing",
+	}
+	applyGenerateOptions(generateReq, req.Options)
+	return generateReq
+}
+
+func (api *WritingApi) buildRewriteTextRequest(req RewriteTextRequest) *aiService.TextGenerateRequest {
 	var prompt string
 	switch req.RewriteMode {
 	case "expand":
@@ -304,78 +279,64 @@ func (api *WritingApi) RewriteTextStream(c *gin.Context) {
 		prompt = "请对以下文本进行缩写，保留核心内容："
 	case "polish":
 		prompt = "请对以下文本进行润色，优化表达方式："
+	default:
+		prompt = "请优化以下文本："
 	}
 
 	if req.Instructions != "" {
 		prompt += fmt.Sprintf("\n\n具体要求：%s", req.Instructions)
 	}
-
 	prompt += fmt.Sprintf("\n\n原文：\n%s", req.OriginalText)
 
-	// 转换为Service请求
-	serviceReq := &aiService.GenerateContentRequest{
-		ProjectID: req.ProjectID,
-		ChapterID: req.ChapterID,
-		Prompt:    prompt,
-		Options:   req.Options,
+	generateReq := &aiService.TextGenerateRequest{
+		ProjectID:    req.ProjectID,
+		ChapterID:    req.ChapterID,
+		Prompt:       prompt,
+		MaxTokens:    2000,
+		Temperature:  0.7,
+		WorkflowType: "rewrite",
 	}
+	applyGenerateOptions(generateReq, req.Options)
+	return generateReq
+}
 
-	// 获取流式响应通道
-	streamChan, err := api.aiService.GenerateContentStream(c.Request.Context(), serviceReq)
-	if err != nil {
-		c.SSEvent("error", gin.H{
-			"error": err.Error(),
-		})
+func applyGenerateOptions(req *aiService.TextGenerateRequest, options *ai.GenerateOptions) {
+	if req == nil || options == nil {
+		return
+	}
+	if options.Model != "" {
+		req.Model = options.Model
+	}
+	if options.MaxTokens > 0 {
+		req.MaxTokens = options.MaxTokens
+	}
+	if options.Temperature > 0 {
+		req.Temperature = float64(options.Temperature)
+	}
+}
+
+func (api *WritingApi) generateText(ctx context.Context, req *aiService.TextGenerateRequest) (*aiService.TextGenerateResponse, error) {
+	if api == nil || api.textGenerator == nil {
+		return nil, fmt.Errorf("AI text generator is not configured")
+	}
+	return api.textGenerator.GenerateText(ctx, req)
+}
+
+func (api *WritingApi) consumeQuotaAsync(c *gin.Context, tokensUsed int, serviceName, model, requestID string) {
+	if api.quotaService == nil || tokensUsed <= 0 {
+		return
+	}
+	userIDValue, ok := c.Get("user_id")
+	if !ok {
+		return
+	}
+	userID, ok := userIDValue.(string)
+	if !ok || userID == "" {
 		return
 	}
 
-	// 流式推送
-	var totalTokens int
-	var model string
-	fullContent := ""
-
-	c.Stream(func(w io.Writer) bool {
-		select {
-		case <-c.Request.Context().Done():
-			return false
-
-		case chunk, ok := <-streamChan:
-			if !ok {
-				c.SSEvent("done", gin.H{
-					"requestId":  requestID,
-					"content":    fullContent,
-					"tokensUsed": totalTokens,
-					"model":      model,
-				})
-
-				// 异步消费配额
-				go func() {
-					userID, _ := c.Get("user_id")
-					_ = api.quotaService.ConsumeQuota(
-						c.Request.Context(),
-						userID.(string),
-						totalTokens,
-						"rewrite",
-						model,
-						requestID,
-					)
-				}()
-
-				return false
-			}
-
-			fullContent += chunk.Content
-			totalTokens = chunk.TokensUsed
-			model = chunk.Model
-
-			c.SSEvent("message", gin.H{
-				"requestId": requestID,
-				"delta":     chunk.Content,
-				"content":   fullContent,
-				"tokens":    totalTokens,
-			})
-
-			return true
-		}
-	})
+	ctx := c.Request.Context()
+	go func() {
+		_ = api.quotaService.ConsumeQuota(ctx, userID, tokensUsed, serviceName, model, requestID)
+	}()
 }

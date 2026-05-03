@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"Qingyu_backend/service/ai/adapter"
 	"Qingyu_backend/service/ai/dto"
 
 	"github.com/google/uuid"
@@ -16,15 +15,15 @@ import (
 
 // ProofreadService 文本校对服务
 type ProofreadService struct {
-	adapterManager *adapter.AdapterManager
+	textGenerator TextGenerator
 	// 可以添加存储层来保存校对结果
 	// repository ProofreadRepository
 }
 
 // NewProofreadService 创建文本校对服务
-func NewProofreadService(adapterManager *adapter.AdapterManager) *ProofreadService {
+func NewProofreadService(textGenerator TextGenerator) *ProofreadService {
 	return &ProofreadService{
-		adapterManager: adapterManager,
+		textGenerator: textGenerator,
 	}
 }
 
@@ -46,13 +45,13 @@ func (s *ProofreadService) ProofreadContent(ctx context.Context, req *dto.Proofr
 	prompt := s.buildProofreadPrompt(req)
 
 	// 调用AI进行校对
-	adapterReq := &adapter.TextGenerationRequest{
+	generateReq := &TextGenerateRequest{
 		Prompt:      prompt,
 		Temperature: 0.3, // 校对任务使用较低温度以确保准确性
 		MaxTokens:   2000,
 	}
 
-	result, err := s.adapterManager.AutoTextGeneration(ctx, adapterReq)
+	result, err := s.textGenerator.GenerateText(ctx, generateReq)
 	if err != nil {
 		return nil, fmt.Errorf("校对失败: %w", err)
 	}
@@ -74,7 +73,7 @@ func (s *ProofreadService) ProofreadContent(ctx context.Context, req *dto.Proofr
 		Issues:          issues,
 		Score:           score,
 		Statistics:      stats,
-		TokensUsed:      result.Usage.TotalTokens,
+		TokensUsed:      result.TokensUsed,
 		Model:           result.Model,
 		ProcessedAt:     time.Now(),
 	}, nil

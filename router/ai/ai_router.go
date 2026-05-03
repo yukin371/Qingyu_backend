@@ -11,8 +11,10 @@ import (
 
 // InitAIRouter 初始化AI路由
 func InitAIRouter(r *gin.RouterGroup, aiService *ai.Service, chatService *ai.ChatService, quotaService *ai.QuotaService, phase3Client *ai.Phase3Client, storyWriteApi *aiApi.StoryWriteApi) {
+	textGenerator := ai.NewPhase3TextGenerator(phase3Client)
+
 	// 创建API实例
-	writingApiHandler := aiApi.NewWritingApi(aiService, quotaService)
+	writingApiHandler := aiApi.NewWritingApi(textGenerator, quotaService)
 	chatApiHandler := aiApi.NewChatApi(chatService, quotaService)
 	systemApiHandler := aiApi.NewSystemApi(aiService)
 	quotaApiHandler := aiApi.NewQuotaApi(quotaService)
@@ -24,9 +26,9 @@ func InitAIRouter(r *gin.RouterGroup, aiService *ai.Service, chatService *ai.Cha
 	}
 
 	// 创建写作辅助服务实例
-	summarizeService := ai.NewSummarizeService(aiService.GetAdapterManager())
-	proofreadService := ai.NewProofreadService(aiService.GetAdapterManager())
-	sensitiveWordsService := ai.NewSensitiveWordsService(aiService.GetAdapterManager())
+	summarizeService := ai.NewSummarizeService(textGenerator)
+	proofreadService := ai.NewProofreadService(textGenerator)
+	sensitiveWordsService := ai.NewSensitiveWordsService(textGenerator)
 	writingAssistantApiHandler := aiApi.NewWritingAssistantApi(summarizeService, proofreadService, sensitiveWordsService)
 
 	// AI主路由组

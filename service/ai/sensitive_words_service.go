@@ -7,7 +7,6 @@ import (
 	"sync"
 	"time"
 
-	"Qingyu_backend/service/ai/adapter"
 	"Qingyu_backend/service/ai/dto"
 
 	"github.com/google/uuid"
@@ -15,8 +14,8 @@ import (
 
 // SensitiveWordsService 敏感词检测服务
 type SensitiveWordsService struct {
-	adapterManager *adapter.AdapterManager
-	wordLibrary    *SensitiveWordLibrary
+	textGenerator TextGenerator
+	wordLibrary   *SensitiveWordLibrary
 	// 可以添加存储层来保存检测结果
 	// repository SensitiveWordsRepository
 }
@@ -50,10 +49,10 @@ func NewSensitiveWordLibrary() *SensitiveWordLibrary {
 }
 
 // NewSensitiveWordsService 创建敏感词检测服务
-func NewSensitiveWordsService(adapterManager *adapter.AdapterManager) *SensitiveWordsService {
+func NewSensitiveWordsService(textGenerator TextGenerator) *SensitiveWordsService {
 	return &SensitiveWordsService{
-		adapterManager: adapterManager,
-		wordLibrary:    NewSensitiveWordLibrary(),
+		textGenerator: textGenerator,
+		wordLibrary:   NewSensitiveWordLibrary(),
 	}
 }
 
@@ -345,13 +344,13 @@ func (s *SensitiveWordsService) aiSemanticAnalysis(ctx context.Context, content 
 如果未发现敏感内容，请返回空数组。`, content)
 
 	// 调用AI
-	adapterReq := &adapter.TextGenerationRequest{
+	generateReq := &TextGenerateRequest{
 		Prompt:      prompt,
 		Temperature: 0.3,
 		MaxTokens:   1000,
 	}
 
-	_, err := s.adapterManager.AutoTextGeneration(ctx, adapterReq)
+	_, err := s.textGenerator.GenerateText(ctx, generateReq)
 	if err != nil {
 		return nil, err
 	}

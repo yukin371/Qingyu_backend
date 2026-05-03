@@ -113,6 +113,12 @@ func (s *quotaConsumptionReaderStub) GetQuotaConsumption(ctx context.Context, us
 
 func TestQuotaAdminServiceGetUserQuotaReconciliation(t *testing.T) {
 	now := time.Now()
+	dayStart := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	elapsed := now.Sub(dayStart)
+	firstConsumeAt := dayStart.Add(elapsed / 4)
+	secondConsumeAt := dayStart.Add(elapsed / 2)
+	otherWorkflowAt := dayStart.Add((elapsed * 3) / 4)
+	restoreAt := now
 	repo := &quotaAdminRepoStub{
 		transactions: []*aiModels.QuotaTransaction{
 			{
@@ -120,28 +126,28 @@ func TestQuotaAdminServiceGetUserQuotaReconciliation(t *testing.T) {
 				Type:      "consume",
 				Service:   "story_write",
 				Amount:    120,
-				Timestamp: now.Add(-time.Hour),
+				Timestamp: firstConsumeAt,
 			},
 			{
 				UserID:    "user-1",
 				Type:      "consume",
 				Service:   "story_write",
 				Amount:    80,
-				Timestamp: now.Add(-2 * time.Hour),
+				Timestamp: secondConsumeAt,
 			},
 			{
 				UserID:    "user-1",
 				Type:      "consume",
 				Service:   "outline",
 				Amount:    50,
-				Timestamp: now.Add(-3 * time.Hour),
+				Timestamp: otherWorkflowAt,
 			},
 			{
 				UserID:    "user-1",
 				Type:      "restore",
 				Service:   "story_write",
 				Amount:    -20,
-				Timestamp: now.Add(-30 * time.Minute),
+				Timestamp: restoreAt,
 			},
 		},
 	}
@@ -152,8 +158,8 @@ func TestQuotaAdminServiceGetUserQuotaReconciliation(t *testing.T) {
 			TotalTokens:  150,
 			TotalRecords: 2,
 			Records: []*pb.QuotaRecord{
-				{Id: "r1", WorkflowType: "story_write", TokensUsed: 70, ConsumedAt: now.Add(-time.Hour).Format(time.RFC3339)},
-				{Id: "r2", WorkflowType: "story_write", TokensUsed: 80, ConsumedAt: now.Add(-2 * time.Hour).Format(time.RFC3339)},
+				{Id: "r1", WorkflowType: "story_write", TokensUsed: 70, ConsumedAt: firstConsumeAt.Format(time.RFC3339)},
+				{Id: "r2", WorkflowType: "story_write", TokensUsed: 80, ConsumedAt: secondConsumeAt.Format(time.RFC3339)},
 			},
 		},
 	})
