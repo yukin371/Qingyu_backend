@@ -8,11 +8,12 @@ import (
 	"time"
 
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.uber.org/zap"
 
 	"Qingyu_backend/models/shared"
 	"Qingyu_backend/models/shared/types"
-	BookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
 	"Qingyu_backend/repository"
+	BookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
 )
 
 // BookStatisticsService 书籍统计服务接口
@@ -479,7 +480,9 @@ func (s *BookStatisticsServiceImpl) IncrementViewCount(ctx context.Context, book
 	// 更新热度分数
 	if err := s.UpdateHotScore(ctx, bookID); err != nil {
 		// 热度分数更新失败不影响主要操作
-		fmt.Printf("failed to update hot score for book %s: %v\n", bookID, err)
+		zap.L().Warn("Failed to update hot score",
+			zap.String("book_id", bookID),
+			zap.Error(err))
 	}
 
 	// 清除相关缓存
@@ -505,7 +508,9 @@ func (s *BookStatisticsServiceImpl) IncrementFavoriteCount(ctx context.Context, 
 
 	// 更新热度分数
 	if err := s.UpdateHotScore(ctx, bookID); err != nil {
-		fmt.Printf("failed to update hot score for book %s: %v\n", bookID, err)
+		zap.L().Warn("Failed to update hot score",
+			zap.String("book_id", bookID),
+			zap.Error(err))
 	}
 
 	// 清除相关缓存
@@ -531,7 +536,9 @@ func (s *BookStatisticsServiceImpl) DecrementFavoriteCount(ctx context.Context, 
 
 	// 更新热度分数
 	if err := s.UpdateHotScore(ctx, bookID); err != nil {
-		fmt.Printf("failed to update hot score for book %s: %v\n", bookID, err)
+		zap.L().Warn("Failed to update hot score",
+			zap.String("book_id", bookID),
+			zap.Error(err))
 	}
 
 	// 清除相关缓存
@@ -557,7 +564,9 @@ func (s *BookStatisticsServiceImpl) IncrementCommentCount(ctx context.Context, b
 
 	// 更新热度分数
 	if err := s.UpdateHotScore(ctx, bookID); err != nil {
-		fmt.Printf("failed to update hot score for book %s: %v\n", bookID, err)
+		zap.L().Warn("Failed to update hot score",
+			zap.String("book_id", bookID),
+			zap.Error(err))
 	}
 
 	// 清除相关缓存
@@ -582,7 +591,9 @@ func (s *BookStatisticsServiceImpl) DecrementCommentCount(ctx context.Context, b
 
 	// 更新热度分数
 	if err := s.UpdateHotScore(ctx, bookID); err != nil {
-		fmt.Printf("failed to update hot score for book %s: %v\n", bookID, err)
+		zap.L().Warn("Failed to update hot score",
+			zap.String("book_id", bookID),
+			zap.Error(err))
 	}
 
 	// 清除相关缓存
@@ -607,7 +618,9 @@ func (s *BookStatisticsServiceImpl) IncrementShareCount(ctx context.Context, boo
 
 	// 更新热度分数
 	if err := s.UpdateHotScore(ctx, bookID); err != nil {
-		fmt.Printf("failed to update hot score for book %s: %v\n", bookID, err)
+		zap.L().Warn("Failed to update hot score",
+			zap.String("book_id", bookID),
+			zap.Error(err))
 	}
 
 	// 清除相关缓存
@@ -669,7 +682,9 @@ func (s *BookStatisticsServiceImpl) UpdateRating(ctx context.Context, bookID str
 
 	// 更新热度分数
 	if err := s.UpdateHotScore(ctx, bookID); err != nil {
-		fmt.Printf("failed to update hot score for book %s: %v\n", bookID, err)
+		zap.L().Warn("Failed to update hot score",
+			zap.String("book_id", bookID),
+			zap.Error(err))
 	}
 
 	// 清除相关缓存
@@ -710,7 +725,9 @@ func (s *BookStatisticsServiceImpl) RemoveRating(ctx context.Context, bookID str
 
 	// 更新热度分数
 	if err := s.UpdateHotScore(ctx, bookID); err != nil {
-		fmt.Printf("failed to update hot score for book %s: %v\n", bookID, err)
+		zap.L().Warn("Failed to update hot score",
+			zap.String("book_id", bookID),
+			zap.Error(err))
 	}
 
 	// 清除相关缓存

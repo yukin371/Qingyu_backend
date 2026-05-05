@@ -206,20 +206,12 @@ func (s *UserServiceImpl) UpdateUser(ctx context.Context, req *user2.UpdateUserR
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeValidation, "更新数据不能为空", nil)
 	}
 
-	// DEBUG: 记录日志
-	fmt.Printf("[DEBUG] UpdateUser called: ID=%s, Updates=%+v\n", req.ID, req.Updates)
-
 	// 2. 检查用户是否存在
 	exists, err := s.userRepo.Exists(ctx, req.ID)
 	if err != nil {
-		fmt.Printf("[DEBUG] Exists error: %v\n", err)
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "检查用户存在性失败", err)
 	}
-	fmt.Printf("[DEBUG] Exists result: %v\n", exists)
 	if !exists {
-		// DEBUG: 尝试直接GetByID来验证
-		_, getErr := s.userRepo.GetByID(ctx, req.ID)
-		fmt.Printf("[DEBUG] GetByID when Exists=false: error=%v\n", getErr)
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeNotFound, "用户不存在", nil)
 	}
 
@@ -428,10 +420,6 @@ func (s *UserServiceImpl) ResetPassword(ctx context.Context, req *user2.ResetPas
 	// 	}
 	// }
 
-	// 模拟：打印日志代替发送邮件
-	fmt.Printf("[Password Reset] Token generated for %s: %s\n", req.Email, resetToken)
-	fmt.Printf("[Password Reset] Email content:\n%s\n", emailBody)
-
 	return &user2.ResetPasswordResponse{
 		Success: true,
 	}, nil
@@ -531,10 +519,6 @@ func (s *UserServiceImpl) SendEmailVerification(ctx context.Context, req *user2.
 	// 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "发送验证邮件失败", err)
 	// 	}
 	// }
-
-	// 模拟：打印日志代替发送邮件（避免输出用户输入和敏感数据）
-	fmt.Printf("[Email Verification] Code generated successfully\n")
-	fmt.Printf("[Email Verification] Email template generated\n")
 
 	return &user2.SendEmailVerificationResponse{
 		Success:   true,
@@ -643,10 +627,6 @@ func (s *UserServiceImpl) RequestPasswordReset(ctx context.Context, req *user2.R
 	// 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "发送重置邮件失败", err)
 	// 	}
 	// }
-
-	// 模拟：打印日志代替发送邮件（避免输出用户输入和敏感数据）
-	fmt.Printf("[Password Reset] Token generated successfully\n")
-	fmt.Printf("[Password Reset] Reset email template generated\n")
 
 	return &user2.RequestPasswordResetResponse{
 		Success:   true,

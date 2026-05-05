@@ -2,11 +2,11 @@ package websocket
 
 import (
 	"encoding/json"
-	"fmt"
 	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
+	"go.uber.org/zap"
 )
 
 // ProgressMessage 阅读进度消息
@@ -167,14 +167,14 @@ func (c *Client) ReadPump() {
 		_, message, err := c.Conn.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				fmt.Printf("WebSocket error: %v\n", err)
+				zap.L().Warn("WebSocket read error", zap.Error(err))
 			}
 			break
 		}
 
 		var progressMsg ProgressMessage
 		if err := json.Unmarshal(message, &progressMsg); err != nil {
-			fmt.Printf("Invalid message format: %v\n", err)
+			zap.L().Warn("Invalid WebSocket progress message", zap.Error(err))
 			continue
 		}
 

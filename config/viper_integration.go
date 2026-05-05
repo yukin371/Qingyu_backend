@@ -8,6 +8,7 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 )
 
 // ViperConfigManager viper配置管理器
@@ -26,15 +27,15 @@ func NewViperConfigManager() *ViperConfigManager {
 func (m *ViperConfigManager) LoadFromFile(configPath string) error {
 	// 检查是否指定了完整的配置文件路径
 	configFile := os.Getenv("CONFIG_FILE")
-	fmt.Printf("[Config] CONFIG_FILE environment variable: '%s'\n", configFile)
+	zap.L().Debug("CONFIG_FILE environment variable loaded", zap.String("value", configFile))
 
 	if configFile != "" {
 		// 使用指定的配置文件
-		fmt.Printf("[Config] Loading config from specified file: %s\n", configFile)
+		zap.L().Debug("Loading config from specified file", zap.String("path", configFile))
 		m.viper.SetConfigFile(configFile)
 	} else {
 		// 使用默认配置文件查找
-		fmt.Println("[Config] CONFIG_FILE not set, using default search")
+		zap.L().Debug("CONFIG_FILE not set, using default search")
 		m.viper.SetConfigName("config")
 		m.viper.SetConfigType("yaml")
 
@@ -216,12 +217,12 @@ func (m *ViperConfigManager) applyDatabaseEnvOverrides(config *DatabaseConfig) e
 func (m *ViperConfigManager) WatchConfig(onChange func(*Config)) {
 	m.viper.WatchConfig()
 	m.viper.OnConfigChange(func(e fsnotify.Event) {
-		fmt.Printf("配置文件变更: %s\n", e.Name)
+		zap.L().Info("配置文件变更", zap.String("path", e.Name))
 
 		// 重新加载配置
 		config, err := m.LoadAppConfig()
 		if err != nil {
-			fmt.Printf("重新加载配置失败: %v\n", err)
+			zap.L().Error("重新加载配置失败", zap.Error(err))
 			return
 		}
 

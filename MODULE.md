@@ -28,14 +28,16 @@
 - `router/enter.go` 的中间件顺序（如鉴权 > RBAC > 日志）不得随意调换，任何改动需要同步文档。
 - 共享服务（如 `service/shared`）必须保持单一 owner，不允许不同模块私自 fork 实现。
 - 命名约定不宜出现 `notification/notifications` / `user/users` 等重复层级；若需要调整需先列出命名影响范围。
+- 运行时主链路不得使用临时 stdout/debug dump 作为诊断手段；生产可见诊断应走既有 logger / middleware 链路，并在风险清理计划中记录例外。
 
 ## 常见坑
 1. `router/enter.go` 责任过重，增加新的全局中间件前必须评估对现有路由的影响并补充测试。
 2. `service/shared` 是职责黑洞，复用前必须确认现有实现满足需求，否则会造成隐性依赖循环。
 3. 命名漂移（`notification/notifications`、`user/users`、`stats/reading-stats` 等）依然存在，改名需同步 API 文档与前端 contract。
 4. 缺乏明确的 ownership 时容易重复实现 shared helper，改动前必须回答 “本实现是否已经存在” 这类强制问题。
+5. Phase 5 已完成 writer factory / compat / port adapter 核心退场，删除前备份归档在 `backup/writer-compat-predelete-20260430` 与 `backup/ai-adapter-predelete-20260503` 两个后端 tag；后续不要把这些旧文件名当作当前运行态 owner。
 
 ## 文档同步触发条件
 - 新增/调整 API 时同步更新 `docs/api`、`docs/architecture` 与 swagger 产物。
 - 任何涉及 `router/enter.go`、`service/shared`、命名空间调整的改动需在 `docs/standards` 与 `docs/review` 下写 review/risk 说明。
-- 关键模块重构（例如 writer、reader、ai）的边界或验证方式变化时更新 `Qingyu_backend/MODULE.md` 并在父仓库 `docs/plans/submodules/backend/` 创建 plan 梳理。
+- 关键模块重构（例如 writer、reader、ai）的边界、备份归档或验证方式变化时更新 `Qingyu_backend/MODULE.md` 并在父仓库 `docs/plans/submodules/backend/` 创建或回写 plan 梳理。

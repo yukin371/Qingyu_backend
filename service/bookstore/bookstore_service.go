@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"Qingyu_backend/repository"
+	"go.uber.org/zap"
 )
 
 // BookstoreService 书城服务接口 - 专注于书城列表展示和首页聚合
@@ -140,33 +141,29 @@ func (s *BookstoreServiceImpl) GetBookByID(ctx context.Context, id string) (*boo
 	// Repository 层现在接受 string 类型的 ID
 	book, err := s.bookRepo.GetByID(ctx, id)
 	if err != nil {
-		fmt.Printf("[DEBUG] GetBookByID(%s) repository error: %v\n", id, err) // codeql[go/log-injection]
 		return nil, fmt.Errorf("failed to get book: %w", err)
 	}
 
 	if book == nil {
-		fmt.Printf("[DEBUG] GetBookByID(%s) book not found (nil)\n", id) // codeql[go/log-injection]
 		return nil, errors.New("book not found")
 	}
 
-	fmt.Printf("[DEBUG] GetBookByID(%s) found book: %s, status: %s\n", id, book.Title, book.Status) // codeql[go/log-injection]
-
 	// 只有连载中和已完结的书籍可以访问
 	if book.Status != bookstore2.BookStatusOngoing && book.Status != bookstore2.BookStatusCompleted {
-		fmt.Printf("[DEBUG] GetBookByID(%s) book status check failed: %s not in [ongoing, completed]\n", id, book.Status) // codeql[go/log-injection]
 		return nil, errors.New("book not available")
 	}
 
 	if s.collectionRepo != nil {
 		collectCount, countErr := s.collectionRepo.CountBookCollections(ctx, id)
 		if countErr != nil {
-			fmt.Printf("[WARN] GetBookByID(%s) failed to count collections: %v\n", id, countErr) // codeql[go/log-injection]
+			zap.L().Warn("Failed to count book collections",
+				zap.String("book_id", id),
+				zap.Error(countErr))
 		} else {
 			book.CollectCount = collectCount
 		}
 	}
 
-	fmt.Printf("[DEBUG] GetBookByID(%s) returning book successfully\n", id) // codeql[go/log-injection]
 	return book, nil
 }
 
@@ -383,22 +380,14 @@ func (s *BookstoreServiceImpl) SearchBooksWithFilter(ctx context.Context, filter
 			return nil, 0, fmt.Errorf("failed to search books: %w", err)
 		}
 
-		fmt.Printf("[DEBUG] 获取到 %d 本书籍，搜索关键词: %s\n", len(allBooks), *filter.Keyword) // codeql[go/log-injection]
-
 		// 在Go代码中过滤关键词和其他条件
 		keyword := *filter.Keyword // 不使用ToLower，因为中文没有大小写
 		filteredBooks := make([]*bookstore2.Book, 0)
-		matchCount := 0
 		for _, book := range allBooks {
 			// 检查关键词匹配（不区分大小写）
 			keywordMatch := strings.Contains(strings.ToLower(book.Title), strings.ToLower(keyword)) ||
 				strings.Contains(strings.ToLower(book.Author), strings.ToLower(keyword)) ||
 				strings.Contains(strings.ToLower(book.Introduction), strings.ToLower(keyword))
-
-			if keywordMatch {
-				matchCount++
-				fmt.Printf("[DEBUG] 匹配到书籍: %s (作者: %s)\n", book.Title, book.Author)
-			}
 
 			if !keywordMatch {
 				continue
@@ -757,7 +746,7 @@ func (s *BookstoreServiceImpl) GetHomepageData(ctx context.Context) (*HomepageDa
 	for i := 0; i < 8; i++ {
 		if err := <-errChan; err != nil {
 			// 记录错误但不中断，让其他goroutine继续
-			fmt.Printf("[WARNING] GetHomepageData部分数据获取失败: %v\n", err)
+			zap.L().Warn("GetHomepageData部分数据获取失败", zap.Error(err))
 			if firstError == nil {
 				firstError = err
 			}

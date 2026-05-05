@@ -1,6 +1,6 @@
 # API v1
 
-> 最后更新：2026-04-30
+> 最后更新：2026-05-05
 
 ## 职责
 
@@ -22,6 +22,7 @@ Gin Router → Middleware（Auth/CORS/RateLimit） → Handler → Service → R
 - **字段名转换**：后端返回 `snake_case`，前端拦截器自动转 `camelCase`，后端无需处理
 - **shared/ 公共层**：`api/v1/shared/` 包含通用的请求验证、响应构建、认证处理，新 API 模块应复用而非重写；其中标准认证/OAuth HTTP owner 已收敛到 `api/v1/shared/auth_api.go` 与 `api/v1/shared/oauth_api.go`
 - **Swagger 注解**：每个 API 端点必须有 Swagger 注解，用于自动生成文档和 Orval 前端类型
+- **运行时输出禁区**：handler 正常请求路径不得使用 `fmt.Print*`、`println` 或 JSON dump 写 stdout；已知 writer 输出点已在 2026-05-05 清理，后续排障应走 logger / middleware，并把临时输出作为风险尾项记录。
 
 ## 辅助函数使用规范（强制）
 
@@ -45,6 +46,8 @@ Gin Router → Middleware（Auth/CORS/RateLimit） → Handler → Service → R
 | 传递 userID 到 service | `context.WithValue(ctx, "userId", ...)` | `shared.AddUserIDToContext(c)` |
 
 标准分页 helper 默认只读取 `size`；若历史接口使用 `pageSize` 或 `page_size`，必须通过 `shared.GetPaginationParamsWithSizeKeys(c, ...)` 显式声明兼容参数名和优先级，禁止在 handler 内重复实现分页解析。
+
+`GetFirstParam` 与 `GetIntQueryInRange` 已用于收口 writer 的 `projectId/id` 兼容 path 与 `limit/days` 业务数值 query。后续新增 helper 前必须先确认该参数是否属于通用 API 规则；纯业务过滤条件可以保留在模块 handler，但需要避免非法值静默变成错误业务值。
 
 ## Auth 边界
 

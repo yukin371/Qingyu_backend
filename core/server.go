@@ -146,7 +146,9 @@ func RunServer(r *gin.Engine) error {
 	}
 
 	addr := fmt.Sprintf(":%s", cfg.Port)
-	fmt.Printf("Server is running on port %s in %s mode\n", cfg.Port, cfg.Mode)
+	logger.Info("Server is starting",
+		zap.String("port", cfg.Port),
+		zap.String("mode", cfg.Mode))
 	return r.Run(addr)
 }
 

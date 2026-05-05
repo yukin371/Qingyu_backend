@@ -8,6 +8,7 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 
 	authModel "Qingyu_backend/models/auth"
 )
@@ -369,7 +370,7 @@ func LoadConfig(configPath string) (*Config, error) {
 			if _, err := os.Stat(testConfigFile); err == nil {
 				v.SetConfigFile(testConfigFile)
 				testConfigFound = true
-				fmt.Printf("[Config] Using test config: %s\n", testConfigFile)
+				zap.L().Debug("Using test config", zap.String("path", testConfigFile))
 				break
 			}
 		}
@@ -384,7 +385,7 @@ func LoadConfig(configPath string) (*Config, error) {
 			v.AddConfigPath("../../configs") // 从cmd/server运行时（新）
 			v.AddConfigPath("../../config")  // 从cmd/server运行时（兼容）
 			v.AddConfigPath(".")             // 当前目录
-			fmt.Println("[Config] Test config not found, using default config search")
+			zap.L().Debug("Test config not found, using default config search")
 		}
 	}
 
@@ -396,7 +397,7 @@ func LoadConfig(configPath string) (*Config, error) {
 	if err := v.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			// 配置文件未找到错误；如果有默认值，可以继续
-			fmt.Printf("Warning: Config file not found: %v\n", err)
+			zap.L().Warn("Config file not found, using defaults", zap.Error(err))
 		} else {
 			// 其他错误
 			return nil, fmt.Errorf("fatal error reading config file: %w", err)
@@ -598,12 +599,12 @@ func WatchConfig(onChange func()) {
 	v.WatchConfig()
 	if onChange != nil {
 		v.OnConfigChange(func(e fsnotify.Event) {
-			fmt.Printf("Config file changed: %s\n", e.Name)
+			zap.L().Info("Config file changed", zap.String("path", e.Name))
 
 			// 重新加载配置
 			config := &Config{}
 			if err := v.Unmarshal(config); err != nil {
-				fmt.Printf("Error reloading config: %v\n", err)
+				zap.L().Error("Error reloading config", zap.Error(err))
 				return
 			}
 
@@ -612,7 +613,7 @@ func WatchConfig(onChange func()) {
 
 			// 验证配置
 			if err := ValidateConfig(config); err != nil {
-				fmt.Printf("Error validating reloaded config: %v\n", err)
+				zap.L().Error("Error validating reloaded config", zap.Error(err))
 				return
 			}
 
