@@ -42,17 +42,13 @@ func (api *DocumentApi) CreateDocument(c *gin.Context) {
 		return
 	}
 
-	projectID := c.Param("projectId")
-
-	// 验证项目ID
-	if projectID == "" {
-		response.BadRequest(c, "参数错误", "项目ID不能为空")
+	projectID, paramOK := shared.GetRequiredParam(c, "projectId", "项目ID")
+	if !paramOK {
 		return
 	}
 
 	// 验证登录状态并将用户ID添加到context
-	_, ok := shared.GetUserID(c)
-	if !ok {
+	if _, ok := shared.GetUserID(c); !ok {
 		return
 	}
 

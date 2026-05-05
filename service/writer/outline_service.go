@@ -2,7 +2,6 @@ package writer
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"Qingyu_backend/models/writer"
@@ -334,18 +333,12 @@ func (s *OutlineService) buildTree(
 
 	// 获取子节点
 	children, err := s.outlineRepo.FindByParentID(ctx, projectID, node.ID.Hex())
-	if err != nil {
-		fmt.Printf("[buildTree] 获取子节点失败: %v, nodeID: %s, title: %s\n", err, node.ID.Hex(), node.Title)
-	}
-	if len(children) > 0 {
-		fmt.Printf("[buildTree] 节点 %s 有 %d 个子节点\n", node.Title, len(children))
+	if err == nil && len(children) > 0 {
 		treeNode.Children = make([]*serviceInterfaces.OutlineTreeNode, 0, len(children))
 		for _, child := range children {
 			childTreeNode := s.buildTree(ctx, child, projectID)
 			treeNode.Children = append(treeNode.Children, childTreeNode)
 		}
-	} else {
-		fmt.Printf("[buildTree] 节点 %s 没有子节点 (children=%d, err=%v)\n", node.Title, len(children), err)
 	}
 
 	return treeNode

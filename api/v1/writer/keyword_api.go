@@ -1,7 +1,6 @@
 package writer
 
 import (
-	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -41,10 +40,7 @@ type keywordSearchResponse struct {
 
 // SearchKeywords 按项目搜索角色/地点关键词（支持前缀补全）
 func (api *KeywordApi) SearchKeywords(c *gin.Context) {
-	projectID := c.Param("projectId")
-	if projectID == "" {
-		projectID = c.Param("id")
-	}
+	projectID := shared.GetFirstParam(c, "projectId", "id")
 	if projectID == "" {
 		response.BadRequest(c, "项目ID不能为空", "")
 		return
@@ -73,11 +69,9 @@ func (api *KeywordApi) SearchKeywords(c *gin.Context) {
 		return
 	}
 
-	limit := 20
-	if l := c.Query("limit"); l != "" {
-		if parsed, err := strconv.Atoi(l); err == nil && parsed > 0 && parsed <= 100 {
-			limit = parsed
-		}
+	limit, ok := shared.GetIntQueryInRange(c, "limit", 20, 1, 100)
+	if !ok {
+		limit = 20
 	}
 
 	suggestions := make([]keywordSuggestion, 0, limit)

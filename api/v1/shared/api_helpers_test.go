@@ -359,6 +359,48 @@ func TestGetRequiredParam(t *testing.T) {
 	}
 }
 
+func TestGetFirstParam(t *testing.T) {
+	tests := []struct {
+		name     string
+		params   gin.Params
+		expected string
+	}{
+		{
+			name: "返回第一个非空参数",
+			params: gin.Params{
+				{Key: "projectId", Value: "project-1"},
+				{Key: "id", Value: "legacy-1"},
+			},
+			expected: "project-1",
+		},
+		{
+			name: "第一个参数为空时回退到后续参数",
+			params: gin.Params{
+				{Key: "id", Value: "legacy-1"},
+			},
+			expected: "legacy-1",
+		},
+		{
+			name:     "全部缺失时返回空字符串",
+			params:   gin.Params{},
+			expected: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gin.SetMode(gin.TestMode)
+			w := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(w)
+			c.Params = tt.params
+
+			result := GetFirstParam(c, "projectId", "id")
+
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
 func TestGetRequiredQuery(t *testing.T) {
 	tests := []struct {
 		name         string
@@ -603,6 +645,64 @@ func TestGetIntParam(t *testing.T) {
 			}
 
 			result := GetIntParam(c, "limit", false, tt.defaultValue, tt.min, tt.max)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestGetIntQueryInRange(t *testing.T) {
+	tests := []struct {
+		name       string
+		rawQuery   string
+		expected   int
+		expectedOk bool
+	}{
+		{
+			name:       "正常值",
+			rawQuery:   "days=30",
+			expected:   30,
+			expectedOk: true,
+		},
+		{
+			name:       "缺失时使用默认值",
+			rawQuery:   "",
+			expected:   7,
+			expectedOk: true,
+		},
+		{
+			name:       "格式非法",
+			rawQuery:   "days=abc",
+			expected:   0,
+			expectedOk: false,
+		},
+		{
+			name:       "小于最小值",
+			rawQuery:   "days=0",
+			expected:   0,
+			expectedOk: false,
+		},
+		{
+			name:       "大于最大值",
+			rawQuery:   "days=366",
+			expected:   0,
+			expectedOk: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gin.SetMode(gin.TestMode)
+			w := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(w)
+			target := "/"
+			if tt.rawQuery != "" {
+				target += "?" + tt.rawQuery
+			}
+			c.Request = httptest.NewRequest("GET", target, nil)
+
+			result, ok := GetIntQueryInRange(c, "days", 7, 1, 365)
+
+			assert.Equal(t, tt.expectedOk, ok)
 			assert.Equal(t, tt.expected, result)
 		})
 	}

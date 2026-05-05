@@ -3,7 +3,6 @@ package writer
 import (
 	"context"
 	"math"
-	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -382,10 +381,8 @@ func (api *StatsApi) GetDailyStats(c *gin.Context) {
 		return
 	}
 
-	// 解析天数参数
-	daysStr := c.DefaultQuery("days", "7")
-	days, err := strconv.Atoi(daysStr)
-	if err != nil || days < 1 || days > 365 {
+	days, ok := shared.GetIntQueryInRange(c, "days", 7, 1, 365)
+	if !ok {
 		response.BadRequest(c, "参数错误", "天数必须在1-365之间")
 		return
 	}
@@ -489,10 +486,8 @@ func (api *StatsApi) GetRetentionRate(c *gin.Context) {
 		return
 	}
 
-	// 解析天数参数
-	daysStr := c.DefaultQuery("days", "7")
-	days, err := strconv.Atoi(daysStr)
-	if err != nil || days < 1 || days > 90 {
+	days, ok := shared.GetIntQueryInRange(c, "days", 7, 1, 90)
+	if !ok {
 		response.BadRequest(c, "参数错误", "天数必须在1-90之间")
 		return
 	}
@@ -520,8 +515,8 @@ func (api *StatsApi) GetSubscribersTrend(c *gin.Context) {
 		return
 	}
 
-	days, err := strconv.Atoi(c.DefaultQuery("days", "30"))
-	if err != nil || days < 1 || days > 365 {
+	days, ok := shared.GetIntQueryInRange(c, "days", 30, 1, 365)
+	if !ok {
 		response.BadRequest(c, "参数错误", "天数必须在1-365之间")
 		return
 	}

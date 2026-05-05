@@ -36,7 +36,6 @@ func countTipTapWords(tipTapJson string) int {
 	var doc map[string]interface{}
 	if err := json.Unmarshal([]byte(tipTapJson), &doc); err != nil {
 		// JSON解析失败，返回0
-		fmt.Printf("[countTipTapWords] JSON解析失败: %v\n", err)
 		return 0
 	}
 
@@ -304,30 +303,20 @@ func (s *DocumentService) GetDocument(ctx context.Context, documentID string) (*
 
 // GetDocumentTree 获取文档树
 func (s *DocumentService) GetDocumentTree(ctx context.Context, projectID string) (*DocumentTreeResponse, error) {
-	fmt.Printf("[DEBUG] GetDocumentTree called with projectID: %s\n", projectID)
-
 	// 1. 验证项目查看权限
 	_, _, err := s.authHelper.VerifyProjectView(ctx, projectID)
 	if err != nil {
-		fmt.Printf("[DEBUG] VerifyProjectView failed: %v\n", err)
 		return nil, err
 	}
 
 	// 2. 获取所有文档
 	documents, err := s.documentRepo.GetByProjectID(ctx, projectID, 1000, 0)
 	if err != nil {
-		fmt.Printf("[DEBUG] GetByProjectID failed: %v\n", err)
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询文档树失败", "", err)
-	}
-
-	fmt.Printf("[DEBUG] GetByProjectID returned %d documents\n", len(documents))
-	for i, doc := range documents {
-		fmt.Printf("[DEBUG]   Doc[%d]: ID=%s, Title=%s, Type=%s, ParentID=%s\n", i, doc.ID.Hex(), doc.Title, doc.Type, doc.ParentID.Hex())
 	}
 
 	// 3. 构建树形结构
 	tree := s.buildDocumentTree(documents)
-	fmt.Printf("[DEBUG] buildDocumentTree returned %d root nodes\n", len(tree))
 
 	return &DocumentTreeResponse{
 		ProjectID: projectID,
@@ -872,11 +861,8 @@ func (s *DocumentService) AutoSaveDocument(ctx context.Context, req *dto.AutoSav
 		"updated_at": time.Now(),
 	}
 
-	if err := s.documentRepo.Update(ctx, req.DocumentID, updates); err != nil {
-		// 内容已保存，但元数据更新失败，记录错误但不返回失败
-		// 下次获取文档时会自动同步
-		fmt.Printf("警告：更新文档元数据失败: %v\n", err)
-	}
+	// 内容已保存；元数据更新失败不阻断主流程，下次获取文档时会自动同步。
+	_ = s.documentRepo.Update(ctx, req.DocumentID, updates)
 
 	// 更新项目统计（异步）
 	go func() {
@@ -1102,10 +1088,8 @@ func (s *DocumentService) UpdateDocumentContent(ctx context.Context, req *dto.Up
 		"updated_at": time.Now(),
 	}
 
-	if err := s.documentRepo.Update(ctx, req.DocumentID, updates); err != nil {
-		// 内容已保存，但元数据更新失败，记录错误但不返回失败
-		fmt.Printf("警告：更新文档元数据失败: %v\n", err)
-	}
+	// 内容已保存；元数据更新失败不阻断主流程。
+	_ = s.documentRepo.Update(ctx, req.DocumentID, updates)
 
 	// 更新项目统计（异步）
 	go s.updateProjectStatistics(context.Background(), doc.ProjectID.Hex())
@@ -1294,12 +1278,10 @@ func (s *DocumentService) ReplaceDocumentContents(ctx context.Context, req *dto.
 	}
 
 	now := time.Now()
-	if err := s.documentRepo.Update(ctx, req.DocumentID, map[string]interface{}{
+	_ = s.documentRepo.Update(ctx, req.DocumentID, map[string]interface{}{
 		"word_count": totalWordCount,
 		"updated_at": now,
-	}); err != nil {
-		fmt.Printf("警告：更新文档字数失败: %v\n", err)
-	}
+	})
 
 	if s.eventBus != nil {
 		s.eventBus.PublishAsync(ctx, &serviceBase.BaseEvent{

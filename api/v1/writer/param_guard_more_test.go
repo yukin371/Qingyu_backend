@@ -78,6 +78,46 @@ func TestKeywordApiSearchKeywords_RequiresQuery(t *testing.T) {
 	assert.Contains(t, w.Body.String(), "查询关键词不能为空")
 }
 
+func TestStatsApiGetDailyStats_RejectsInvalidDaysQuery(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	api := NewStatsApi(nil, nil)
+	c, w := newWriterTestContext(http.MethodGet, "/api/v1/writer/books/book-1/daily-stats?days=abc", "", gin.Params{
+		{Key: "book_id", Value: "book-1"},
+	})
+
+	api.GetDailyStats(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "天数必须在1-365之间")
+}
+
+func TestStatsApiGetRetentionRate_RejectsOutOfRangeDaysQuery(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	api := NewStatsApi(nil, nil)
+	c, w := newWriterTestContext(http.MethodGet, "/api/v1/writer/books/book-1/retention?days=91", "", gin.Params{
+		{Key: "book_id", Value: "book-1"},
+	})
+
+	api.GetRetentionRate(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "天数必须在1-90之间")
+}
+
+func TestWriterStatsAggregateAPIGetViews_RejectsInvalidDaysQuery(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	api := NewWriterStatsAggregateAPI(nil, nil)
+	c, w := newWriterTestContext(http.MethodGet, "/api/v1/writer/stats/views?bookId=book-1&days=0", "", nil)
+
+	api.GetViews(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "天数必须在1-365之间")
+}
+
 func TestStoryHarnessApiGetChapterContext_RequiresChapterIDParam(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 

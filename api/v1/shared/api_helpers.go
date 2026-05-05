@@ -89,6 +89,17 @@ func GetRequiredParam(c *gin.Context, key, displayName string) (string, bool) {
 	return param, true
 }
 
+// GetFirstParam 从多个路径参数名中返回第一个非空值。
+// 用于兼容历史路由中同一语义参数存在多个命名的场景；该函数不写响应。
+func GetFirstParam(c *gin.Context, keys ...string) string {
+	for _, key := range keys {
+		if value := c.Param(key); value != "" {
+			return value
+		}
+	}
+	return ""
+}
+
 // GetRequiredQuery 获取必需的查询参数，如果为空则返回错误响应
 // 返回: (param, ok) - ok为false表示已发送错误响应
 func GetRequiredQuery(c *gin.Context, key, displayName string) (string, bool) {
@@ -204,6 +215,29 @@ func GetIntParam(c *gin.Context, key string, isQuery bool, defaultValue, min, ma
 	}
 
 	return value
+}
+
+// GetIntQueryInRange 获取整数查询参数，并校验其范围。
+// 查询参数缺失时返回默认值；参数存在但格式或范围非法时返回 ok=false，由调用方决定错误响应语义。
+func GetIntQueryInRange(c *gin.Context, key string, defaultValue, min, max int) (value int, ok bool) {
+	valueStr := c.Query(key)
+	if valueStr == "" {
+		return defaultValue, true
+	}
+
+	parsed, err := strconv.Atoi(valueStr)
+	if err != nil {
+		return 0, false
+	}
+
+	if min > 0 && parsed < min {
+		return 0, false
+	}
+	if max > 0 && parsed > max {
+		return 0, false
+	}
+
+	return parsed, true
 }
 
 // ============ JSON绑定辅助函数 ============

@@ -39,7 +39,9 @@ Gin Router → Middleware（Auth/CORS/RateLimit） → Handler → Service → R
 | Bearer Token（必需） | `c.GetHeader("Authorization")` + 手动裁剪 | `shared.GetBearerToken(c)` |
 | Bearer Token（可选） | `c.GetHeader("Authorization")` + 静默返回 | `shared.GetBearerTokenOptional(c)` |
 | 路径参数 | `c.Param` + 空值校验 | `shared.GetRequiredParam(c, key, name)` |
+| 兼容路径参数别名 | 手写 `projectId` / `id` fallback | `shared.GetFirstParam(c, "projectId", "id")` 后保留业务层响应语义 |
 | 分页参数 | 手动 `strconv.Atoi` | `shared.GetPaginationParamsStandard(c)` 或指定默认值/参数别名的 `shared.GetPaginationParams...` |
+| 业务整数 query | 手动 `strconv.Atoi` + 范围判断 | `shared.GetIntQueryInRange(c, key, defaultValue, min, max)` 后按业务语义返回错误或默认值 |
 | 传递 userID 到 service | `context.WithValue(ctx, "userId", ...)` | `shared.AddUserIDToContext(c)` |
 
 标准分页 helper 默认只读取 `size`；若历史接口使用 `pageSize` 或 `page_size`，必须通过 `shared.GetPaginationParamsWithSizeKeys(c, ...)` 显式声明兼容参数名和优先级，禁止在 handler 内重复实现分页解析。

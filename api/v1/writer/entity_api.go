@@ -15,10 +15,7 @@ type EntityApi struct {
 }
 
 func getEntityProjectID(c *gin.Context) string {
-	if projectID := c.Param("projectId"); projectID != "" {
-		return projectID
-	}
-	return c.Param("id")
+	return shared.GetFirstParam(c, "projectId", "id")
 }
 
 // NewEntityApi 创建EntityApi实例
