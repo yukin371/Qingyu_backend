@@ -1,7 +1,6 @@
 package project
 
 import (
-	"log"
 	"sync"
 	"time"
 
@@ -49,7 +48,6 @@ func (s *AutoSaveService) StartAutoSave(documentID, projectID, nodeID, userID st
 
 	// 如果已存在会话，先停止旧会话
 	if session, exists := s.sessions[documentID]; exists {
-		log.Printf("[AutoSave] 文档 %s 的自动保存已在运行，重启会话", documentID)
 		close(session.stopChan)
 		session.ticker.Stop()
 	}
@@ -69,8 +67,6 @@ func (s *AutoSaveService) StartAutoSave(documentID, projectID, nodeID, userID st
 
 	// 启动后台定时保存
 	go s.runAutoSave(session)
-
-	log.Printf("[AutoSave] 启动文档自动保存: documentID=%s, interval=%v", documentID, s.interval)
 	return nil
 }
 
@@ -91,8 +87,6 @@ func (s *AutoSaveService) StopAutoSave(documentID string) error {
 	close(session.stopChan)
 	session.ticker.Stop()
 	delete(s.sessions, documentID)
-
-	log.Printf("[AutoSave] 停止文档自动保存: documentID=%s", documentID)
 	return nil
 }
 
@@ -103,18 +97,13 @@ func (s *AutoSaveService) runAutoSave(session *autoSaveSession) {
 		case <-session.ticker.C:
 			// 执行自动保存
 			if err := s.performAutoSave(session); err != nil {
-				log.Printf("[AutoSave] 自动保存失败: documentID=%s, error=%v",
-					session.documentID, err)
 				// MVP: 记录错误但不停止自动保存
 			} else {
 				session.lastSaved = time.Now()
-				log.Printf("[AutoSave] 自动保存成功: documentID=%s, time=%v",
-					session.documentID, session.lastSaved)
 			}
 
 		case <-session.stopChan:
 			// 收到停止信号
-			log.Printf("[AutoSave] 自动保存协程退出: documentID=%s", session.documentID)
 			return
 		}
 	}
@@ -168,14 +157,12 @@ func (s *AutoSaveService) StopAll() {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	for documentID, session := range s.sessions {
+	for _, session := range s.sessions {
 		close(session.stopChan)
 		session.ticker.Stop()
-		log.Printf("[AutoSave] 停止自动保存会话: %s", documentID)
 	}
 
 	s.sessions = make(map[string]*autoSaveSession)
-	log.Println("[AutoSave] 所有自动保存会话已停止")
 }
 
 // UpdateInterval 更新自动保存间隔（仅影响新启动的会话）
@@ -185,12 +172,10 @@ func (s *AutoSaveService) UpdateInterval(interval time.Duration) {
 	defer s.mu.Unlock()
 
 	if interval < 10*time.Second {
-		log.Println("[AutoSave] 自动保存间隔过短，设置为最小值10秒")
 		interval = 10 * time.Second
 	}
 
 	s.interval = interval
-	log.Printf("[AutoSave] 自动保存间隔已更新为: %v（仅影响新会话）", interval)
 }
 
 // --- 以下为未来增强候选，不属于当前 MVP 行为 ---
