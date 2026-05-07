@@ -39,6 +39,10 @@ func objectIDFromHex(id, resource string) (primitive.ObjectID, error) {
 	return objectID, nil
 }
 
+func calculateSnapshotWordCount(content string) int {
+	return len([]rune(content))
+}
+
 // getDocumentContent 获取文档内容（辅助函数）
 func (s *VersionService) getDocumentContent(ctx context.Context, documentID string) (*writer.DocumentContent, error) {
 	var content writer.DocumentContent
@@ -777,13 +781,18 @@ func (s *VersionService) GetVersionHistory(ctx context.Context, documentID strin
 	// 转换为响应格式
 	versions := make([]*VersionInfo, 0, len(revisions))
 	for _, rev := range revisions {
+		wordCount := 0
+		if rev.StorageRef == "" {
+			wordCount = calculateSnapshotWordCount(rev.Snapshot)
+		}
+
 		versions = append(versions, &VersionInfo{
 			VersionID: rev.ID.Hex(),
 			Version:   rev.Version,
 			Message:   rev.Message,
 			CreatedAt: rev.CreatedAt,
 			CreatedBy: rev.AuthorID,
-			WordCount: 0, // TODO: 从快照中获取字数
+			WordCount: wordCount,
 		})
 	}
 
