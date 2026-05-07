@@ -10,6 +10,7 @@ import (
 	"Qingyu_backend/service/ai/dto"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.uber.org/zap"
 )
 
 // ChatRepositoryInterface 聊天仓库接口
@@ -311,14 +312,20 @@ func (s *ChatService) StartChatStream(ctx context.Context, req *ChatRequest) (<-
 		// 保存AI消息
 		if err := s.repository.CreateMessage(ctx, assistantMessage); err != nil {
 			// 记录错误但不中断流式响应
-			fmt.Printf("保存AI消息失败: %v\n", err)
+			zap.L().Warn("保存AI消息失败",
+				zap.String("session_id", session.SessionID),
+				zap.Error(err),
+			)
 		}
 
 		// 更新会话
 		session.UpdatedAt = time.Now()
 		if err := s.repository.UpdateSession(ctx, session); err != nil {
 			// 记录错误但不中断流式响应
-			fmt.Printf("保存会话失败: %v\n", err)
+			zap.L().Warn("保存会话失败",
+				zap.String("session_id", session.SessionID),
+				zap.Error(err),
+			)
 		}
 	}()
 
