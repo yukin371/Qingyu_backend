@@ -10,6 +10,7 @@ import (
 	"Qingyu_backend/pkg/cache"
 	pb "Qingyu_backend/pkg/grpc/pb"
 	aiInterfaces "Qingyu_backend/repository/interfaces/ai"
+	"go.uber.org/zap"
 )
 
 // QuotaDashboardService 配额仪表盘服务
@@ -212,7 +213,7 @@ func (s *QuotaDashboardService) RefreshDashboardCache(ctx context.Context) error
 	if s.redisClient != nil {
 		cacheKey := "quota:dashboard"
 		if err := s.redisClient.Delete(ctx, cacheKey); err != nil {
-			fmt.Printf("清除仪表盘缓存失败: %v\n", err)
+			zap.L().Warn("清除仪表盘缓存失败", zap.Error(err))
 			return err
 		}
 	}
@@ -241,12 +242,12 @@ func (s *QuotaDashboardService) cacheDashboard(ctx context.Context, dashboard *a
 	cacheKey := "quota:dashboard"
 	data, err := json.Marshal(dashboard)
 	if err != nil {
-		fmt.Printf("序列化仪表盘数据失败: %v\n", err)
+		zap.L().Warn("序列化仪表盘数据失败", zap.Error(err))
 		return
 	}
 
 	if err := s.redisClient.Set(ctx, cacheKey, string(data), s.cacheTTL); err != nil {
-		fmt.Printf("写入仪表盘缓存失败: %v\n", err)
+		zap.L().Warn("写入仪表盘缓存失败", zap.Error(err))
 	}
 }
 
