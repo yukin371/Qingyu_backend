@@ -60,6 +60,11 @@ func (api *BatchOperationAPI) SubmitBatchOperation(c *gin.Context) {
 		return
 	}
 
+	if len(req.ExpectedVersions) > 0 {
+		response.BadRequest(c, "参数错误", "当前暂不支持 expectedVersions 预检查")
+		return
+	}
+
 	// 从上下文获取用户ID
 	userID, ok := shared.GetUserID(c)
 	if !ok {
