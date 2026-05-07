@@ -2,12 +2,20 @@ package lock
 
 import (
 	"context"
+	"errors"
 	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
 
 	"Qingyu_backend/pkg/cache"
+)
+
+var (
+	ErrDocumentLocked          = errors.New("document locked")
+	ErrLockPermissionDenied    = errors.New("lock permission denied")
+	ErrLockAcquireFailed       = errors.New("lock acquire failed")
+	ErrLockRefreshUnauthorized = errors.New("lock refresh unauthorized")
 )
 
 // DocumentLock 文档锁
@@ -87,7 +95,7 @@ func (s *RedisDocumentLockService) LockDocument(ctx context.Context, documentID,
 			return status.Lock, nil
 		}
 		// 被其他用户锁定
-		return nil, fmt.Errorf("document is locked by %s", status.LockOwner)
+		return nil, fmt.Errorf("%w: document is locked by %s", ErrDocumentLocked, status.LockOwner)
 	}
 
 	// 创建锁
@@ -115,12 +123,12 @@ func (s *RedisDocumentLockService) LockDocument(ctx context.Context, documentID,
 		return nil, fmt.Errorf("failed to check lock: %w", err)
 	}
 	if exists > 0 {
-		return nil, fmt.Errorf("failed to acquire lock: document is locked")
+		return nil, fmt.Errorf("%w: document is locked", ErrDocumentLocked)
 	}
 
 	// 设置锁
 	if err := s.client.Set(ctx, key, data, ttl); err != nil {
-		return nil, fmt.Errorf("failed to acquire lock: %w", err)
+		return nil, fmt.Errorf("%w: %w", ErrLockAcquireFailed, err)
 	}
 
 	// 保存到本地缓存
@@ -144,7 +152,7 @@ func (s *RedisDocumentLockService) UnlockDocument(ctx context.Context, documentI
 	}
 
 	if status.Lock.UserID != userID {
-		return fmt.Errorf("permission denied: lock owned by %s", status.LockOwner)
+		return fmt.Errorf("%w: lock owned by %s", ErrLockPermissionDenied, status.LockOwner)
 	}
 
 	// 删除Redis锁
@@ -169,7 +177,7 @@ func (s *RedisDocumentLockService) RefreshLock(ctx context.Context, documentID, 
 	}
 
 	if !status.IsLocked || status.Lock.UserID != userID {
-		return fmt.Errorf("not authorized to refresh lock")
+		return fmt.Errorf("%w: not authorized to refresh lock", ErrLockRefreshUnauthorized)
 	}
 
 	// 更新过期时间
