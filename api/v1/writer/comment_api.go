@@ -2,6 +2,7 @@ package writer
 
 import (
 	"errors"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -125,15 +126,11 @@ func (api *CommentAPI) GetComments(c *gin.Context) {
 		Resolved:   nil,
 	}
 
-	if resolved := c.Query("resolved"); resolved != "" {
-		if resolved == "true" {
-			trueVal := true
-			filter.Resolved = &trueVal
-		} else {
-			falseVal := false
-			filter.Resolved = &falseVal
-		}
+	resolved, ok := parseResolvedQuery(c)
+	if !ok {
+		return
 	}
+	filter.Resolved = resolved
 
 	if commentType := c.Query("type"); commentType != "" {
 		filter.Type = writermodels.CommentType(commentType)
@@ -153,6 +150,21 @@ func (api *CommentAPI) GetComments(c *gin.Context) {
 	}
 
 	response.Success(c, result)
+}
+
+func parseResolvedQuery(c *gin.Context) (*bool, bool) {
+	resolvedStr := c.Query("resolved")
+	if resolvedStr == "" {
+		return nil, true
+	}
+
+	resolved, err := strconv.ParseBool(resolvedStr)
+	if err != nil {
+		response.BadRequest(c, "参数错误", "resolved 必须是布尔值")
+		return nil, false
+	}
+
+	return &resolved, true
 }
 
 // GetComment 获取批注详情
