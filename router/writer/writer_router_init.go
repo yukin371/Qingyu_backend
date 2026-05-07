@@ -59,6 +59,19 @@ func RegisterWriterRoutes(r *gin.RouterGroup, searchSvc *searchservice.SearchSer
 	// 创建DocumentService
 	documentSvc := documentService.NewDocumentService(documentRepo, documentContentRepo, projectRepoForDoc, eventBus)
 
+	// 创建BatchOperationService
+	var batchOpSvc *documentService.BatchOperationService
+	if mongoDB := serviceContainer.GetMongoDB(); mongoDB != nil {
+		batchOpRepo := mongoWriterRepo.NewMongoBatchOperationRepository(mongoDB)
+		batchOpSvc = documentService.NewBatchOperationService(
+			batchOpRepo,
+			documentRepo,
+			documentContentRepo,
+			projectRepoForDoc,
+			eventBus,
+		)
+	}
+
 	// 获取MongoDB数据库连接用于VersionService
 	mongoDB := serviceContainer.GetMongoDB()
 
@@ -200,7 +213,7 @@ func RegisterWriterRoutes(r *gin.RouterGroup, searchSvc *searchservice.SearchSer
 	}
 
 	// 调用InitWriterRouter初始化文档编辑相关路由
-	InitWriterRouter(r, projectSvc, documentSvc, versionSvc, searchSvc, exportSvc, publishSvc, lockSvc, commentSvc, templateSvc, statsSvc, bookRepo, characterSvc, locationSvc, dashboardSvc)
+	InitWriterRouter(r, projectSvc, documentSvc, batchOpSvc, versionSvc, searchSvc, exportSvc, publishSvc, lockSvc, commentSvc, templateSvc, statsSvc, bookRepo, characterSvc, locationSvc, dashboardSvc)
 
 	// 创建 Story Harness 服务
 	var contextSvc *storyharness.ContextService

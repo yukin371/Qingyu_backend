@@ -6,6 +6,9 @@ import (
 	"strings"
 	"testing"
 
+	"Qingyu_backend/config"
+	documentservice "Qingyu_backend/service/writer/document"
+
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 )
@@ -82,4 +85,43 @@ func TestInitStoryHarnessRoutes_TriggerIndexRouteRegistered(t *testing.T) {
 	assert.NotEqual(t, http.StatusNotFound, w.Code)
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	assert.Contains(t, w.Body.String(), "索引服务不可用")
+}
+
+func TestInitWriterRouter_BatchOperationRouteRegistered(t *testing.T) {
+	engine := newWriterRouteEngine()
+	v1 := engine.Group("/api/v1")
+	originalConfig := config.GlobalConfig
+	t.Cleanup(func() {
+		config.GlobalConfig = originalConfig
+	})
+	config.GlobalConfig = &config.Config{
+		JWT: &config.JWTConfig{
+			Secret:          "test-secret",
+			ExpirationHours: 24,
+		},
+	}
+
+	InitWriterRouter(
+		v1,
+		nil,
+		nil,
+		&documentservice.BatchOperationService{},
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+
+	w := performWriterRequest(engine, http.MethodPost, "/api/v1/writer/batch-operations", "{}")
+
+	assert.NotEqual(t, http.StatusNotFound, w.Code)
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
 }
