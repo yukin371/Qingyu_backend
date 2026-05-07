@@ -65,6 +65,11 @@ func (api *BatchOperationAPI) SubmitBatchOperation(c *gin.Context) {
 		return
 	}
 
+	if req.Type != writer.BatchOpTypeDelete {
+		response.BadRequest(c, "参数错误", "当前仅支持 delete 批量操作")
+		return
+	}
+
 	// 从上下文获取用户ID
 	userID, ok := shared.GetUserID(c)
 	if !ok {

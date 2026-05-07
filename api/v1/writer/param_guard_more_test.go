@@ -179,6 +179,22 @@ func TestBatchOperationApiSubmit_RejectsUnsupportedExpectedVersions(t *testing.T
 	assert.Contains(t, w.Body.String(), "当前暂不支持 expectedVersions 预检查")
 }
 
+func TestBatchOperationApiSubmit_RejectsUnsupportedOperationType(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	api := NewBatchOperationAPI(document.BatchOperationService{})
+	c, w := newWriterTestContext(http.MethodPost, "/api/v1/writer/batch-operations", `{
+		"projectId":"507f1f77bcf86cd799439011",
+		"type":"move",
+		"targetIds":["doc-1"]
+	}`, nil)
+
+	api.SubmitBatchOperation(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "当前仅支持 delete 批量操作")
+}
+
 func TestEditorApiUpdateUserShortcuts_RejectsUnsupportedPersistence(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
