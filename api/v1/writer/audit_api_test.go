@@ -5,9 +5,11 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/mock"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	auditModel "Qingyu_backend/models/audit"
 	auditInterface "Qingyu_backend/service/interfaces/audit"
@@ -140,4 +142,90 @@ func TestAuditApiGetHighRiskAuditsParsesNumericQueries(t *testing.T) {
 		t.Fatalf("expected status %d, got %d", http.StatusOK, resp.Code)
 	}
 	service.AssertExpectations(t)
+}
+
+func TestConvertAuditRecordToResponse(t *testing.T) {
+	reviewedAt := time.Now().Add(-time.Hour)
+	record := &auditModel.AuditRecord{
+		IdentifiedEntity: auditModel.AuditRecord{}.IdentifiedEntity,
+		TargetType:       auditModel.TargetTypeDocument,
+		TargetID:         primitive.NewObjectID(),
+		AuthorID:         primitive.NewObjectID(),
+		Status:           auditModel.StatusRejected,
+		Result:           auditModel.ResultReject,
+		RiskLevel:        4,
+		RiskScore:        88.5,
+		Violations: []auditModel.ViolationDetail{
+			{Type: "sensitive", Level: 4, Description: "敏感内容"},
+		},
+		ReviewerID:   primitive.NewObjectID(),
+		ReviewNote:   "需要修改",
+		AppealStatus: auditModel.AppealPending,
+		ReviewedAt:   &reviewedAt,
+	}
+	record.GenerateID()
+	record.TouchForCreate()
+
+	resp := convertAuditRecordToResponse(record)
+
+	if resp.ID != record.ID.Hex() || resp.TargetID != record.TargetID.Hex() || resp.AuthorID != record.AuthorID.Hex() {
+		t.Fatalf("unexpected id mapping: %+v", resp)
+	}
+	if resp.ReviewerID != record.ReviewerID.Hex() || resp.CanAppeal {
+		t.Fatalf("unexpected review mapping: %+v", resp)
+	}
+	if resp.RiskLevel != record.RiskLevel || resp.RiskScore != record.RiskScore {
+		t.Fatalf("unexpected risk mapping: %+v", resp)
+	}
+}
+
+func TestConvertViolationRecordToResponse(t *testing.T) {
+	expiresAt := time.Now().Add(time.Hour)
+	record := &auditModel.ViolationRecord{
+		ID:              "v1",
+		UserID:          "user-1",
+		TargetType:      "document",
+		TargetID:        "doc-1",
+		ViolationType:   "spam",
+		ViolationLevel:  3,
+		ViolationCount:  2,
+		PenaltyType:     auditModel.PenaltyAccountMuted,
+		PenaltyDuration: 7,
+		IsPenalized:     true,
+		Description:     "重复刷屏",
+		CreatedAt:       time.Now().Add(-time.Hour),
+		ExpiresAt:       &expiresAt,
+	}
+
+	resp := convertViolationRecordToResponse(record)
+
+	if resp.ID != record.ID || resp.UserID != record.UserID || resp.TargetID != record.TargetID {
+		t.Fatalf("unexpected violation mapping: %+v", resp)
+	}
+	if !resp.IsActive || resp.PenaltyType != record.PenaltyType {
+		t.Fatalf("unexpected violation status mapping: %+v", resp)
+	}
+}
+
+func TestConvertUserViolationSummaryToResponse(t *testing.T) {
+	summary := &auditModel.UserViolationSummary{
+		UserID:              "user-1",
+		TotalViolations:     6,
+		WarningCount:        2,
+		RejectCount:         2,
+		HighRiskCount:       2,
+		LastViolationAt:     time.Now(),
+		ActivePenalties:     1,
+		IsBanned:            false,
+		IsPermanentlyBanned: false,
+	}
+
+	resp := convertUserViolationSummaryToResponse(summary)
+
+	if resp.UserID != summary.UserID || resp.TotalViolations != summary.TotalViolations {
+		t.Fatalf("unexpected summary mapping: %+v", resp)
+	}
+	if !resp.IsHighRiskUser || resp.ShouldBan {
+		t.Fatalf("unexpected derived flags: %+v", resp)
+	}
 }
