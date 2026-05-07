@@ -305,6 +305,11 @@ func (api *StatsApi) GetBookRevenue(c *gin.Context) {
 		endDate = time.Now()
 	}
 
+	if startDate.After(endDate) {
+		response.BadRequest(c, "参数错误", "开始日期不能晚于结束日期")
+		return
+	}
+
 	// 获取收入细分
 	revenueBreakdown, err := api.statsService.GetRevenueBreakdown(c.Request.Context(), bookID, startDate, endDate)
 	if err != nil {

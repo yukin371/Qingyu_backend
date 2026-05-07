@@ -106,6 +106,20 @@ func TestStatsApiGetRetentionRate_RejectsOutOfRangeDaysQuery(t *testing.T) {
 	assert.Contains(t, w.Body.String(), "天数必须在1-90之间")
 }
 
+func TestStatsApiGetBookRevenue_RejectsReversedDateRange(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	api := NewStatsApi(nil, nil)
+	c, w := newWriterTestContext(http.MethodGet, "/api/v1/writer/books/book-1/revenue?start_date=2026-05-08&end_date=2026-05-07", "", gin.Params{
+		{Key: "book_id", Value: "book-1"},
+	})
+
+	api.GetBookRevenue(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "开始日期不能晚于结束日期")
+}
+
 func TestWriterStatsAggregateAPIGetViews_RejectsInvalidDaysQuery(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
