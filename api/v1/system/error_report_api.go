@@ -1,13 +1,13 @@
 package system
 
 import (
-	"log"
 	"strings"
 	"time"
 
 	"Qingyu_backend/pkg/response"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 )
 
 type clientErrorReport struct {
@@ -43,16 +43,15 @@ func (api *HealthAPI) ReportClientErrors(c *gin.Context) {
 	}
 
 	for _, item := range req.Errors {
-		log.Printf(
-			"[client-error] code=%d type=%s url=%s user=%s message=%s timestamp=%s details=%v ua=%s",
-			item.ErrorCode,
-			item.ErrorType,
-			item.URL,
-			item.UserID,
-			item.ErrorMessage,
-			normalizeClientErrorTimestamp(item.Timestamp),
-			item.Details,
-			truncateClientUserAgent(item.UserAgent),
+		zap.L().Info("接收前端错误上报",
+			zap.Int("error_code", item.ErrorCode),
+			zap.String("error_type", item.ErrorType),
+			zap.String("url", item.URL),
+			zap.String("user_id", item.UserID),
+			zap.String("error_message", item.ErrorMessage),
+			zap.String("timestamp", normalizeClientErrorTimestamp(item.Timestamp)),
+			zap.Any("details", item.Details),
+			zap.String("user_agent", truncateClientUserAgent(item.UserAgent)),
 		)
 	}
 
