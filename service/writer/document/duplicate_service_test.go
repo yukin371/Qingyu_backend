@@ -2,11 +2,15 @@ package document
 
 import (
 	"Qingyu_backend/models/writer"
+	modelbase "Qingyu_backend/models/writer/base"
 	"Qingyu_backend/pkg/utils"
 	"context"
 	"testing"
 
+	servicemock "Qingyu_backend/service/mock"
+
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -247,6 +251,36 @@ func TestDuplicateService_ToResponse(t *testing.T) {
 	assert.Equal(t, docID.Hex(), result.DocumentID)
 	assert.Equal(t, "测试文档", result.Title)
 	assert.Equal(t, "test-doc", result.StableRef)
+}
+
+// TestDuplicateService_duplicateContent 测试复制内容时字数与字符数会一起同步
+func TestDuplicateService_duplicateContent(t *testing.T) {
+	docRepo := new(MockDocumentRepository)
+	contentRepo := new(servicemock.MockDocumentContentRepository)
+	service := NewDuplicateService(docRepo, contentRepo)
+
+	sourceDocumentID := primitive.NewObjectID().Hex()
+	newDoc := &writer.Document{IdentifiedEntity: modelbase.IdentifiedEntity{ID: primitive.NewObjectID()}}
+
+	contentRepo.On("GetByDocumentID", mock.Anything, sourceDocumentID).Return(&writer.DocumentContent{
+		Content:     "你好，world",
+		ContentType: "markdown",
+		WordCount:   0,
+		CharCount:   0,
+	}, nil).Once()
+	contentRepo.On("Create", mock.Anything, mock.MatchedBy(func(content *writer.DocumentContent) bool {
+		return content != nil &&
+			content.DocumentID == newDoc.ID &&
+			content.WordCount == 8 &&
+			content.CharCount == len([]rune("你好，world")) &&
+			content.Version == 1
+	})).Return(nil).Once()
+
+	err := service.duplicateContent(context.Background(), sourceDocumentID, newDoc)
+
+	assert.NoError(t, err)
+	assert.Equal(t, 8, newDoc.WordCount)
+	contentRepo.AssertExpectations(t)
 }
 
 // TestDuplicateService_BaseServiceInterface 测试BaseService接口实现

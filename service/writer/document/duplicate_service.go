@@ -159,12 +159,14 @@ func (s *DuplicateService) duplicateContent(ctx context.Context, sourceDocumentI
 	}
 
 	// 创建新内容
+	wordCount := countWords(sourceContent.Content, sourceContent.ContentType)
+	charCount := len([]rune(sourceContent.Content))
 	newContent := &writer.DocumentContent{
 		DocumentID:  newDoc.ID,
 		Content:     sourceContent.Content,
 		ContentType: sourceContent.ContentType,
-		WordCount:   0, // 重置字数统计
-		CharCount:   0, // 重置字符统计
+		WordCount:   wordCount,
+		CharCount:   charCount,
 		Version:     1, // 新文档版本从1开始
 	}
 
@@ -176,9 +178,7 @@ func (s *DuplicateService) duplicateContent(ctx context.Context, sourceDocumentI
 	}
 
 	// 更新文档的字数统计
-	if sourceContent.WordCount > 0 {
-		newDoc.WordCount = sourceContent.WordCount
-	}
+	newDoc.WordCount = wordCount
 
 	return nil
 }
