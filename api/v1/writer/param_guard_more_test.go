@@ -178,3 +178,33 @@ func TestBatchOperationApiSubmit_RejectsUnsupportedExpectedVersions(t *testing.T
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	assert.Contains(t, w.Body.String(), "当前暂不支持 expectedVersions 预检查")
 }
+
+func TestEditorApiUpdateUserShortcuts_RejectsUnsupportedPersistence(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	api := NewEditorApi(nil)
+	c, w := newWriterTestContext(http.MethodPut, "/api/v1/writer/user/shortcuts", `{
+		"shortcuts":{
+			"save":{"action":"save","key":"Ctrl+S"}
+		}
+	}`, nil)
+	c.Set("user_id", "user-1")
+
+	api.UpdateUserShortcuts(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "当前暂不支持持久化自定义快捷键")
+}
+
+func TestEditorApiResetUserShortcuts_RejectsUnsupportedPersistence(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	api := NewEditorApi(nil)
+	c, w := newWriterTestContext(http.MethodPost, "/api/v1/writer/user/shortcuts/reset", "", nil)
+	c.Set("user_id", "user-1")
+
+	api.ResetUserShortcuts(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "当前暂不支持持久化自定义快捷键")
+}

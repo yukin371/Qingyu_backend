@@ -284,7 +284,7 @@ func (api *EditorApi) UpdateUserShortcuts(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, nil)
+	response.BadRequest(c, "参数错误", "当前暂不支持持久化自定义快捷键")
 }
 
 // ResetUserShortcuts 重置用户快捷键配置
@@ -296,18 +296,12 @@ func (api *EditorApi) UpdateUserShortcuts(c *gin.Context) {
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/writer/user/shortcuts/reset [post]
 func (api *EditorApi) ResetUserShortcuts(c *gin.Context) {
-	userID, ok := shared.GetUserID(c)
-	if !ok {
+	if _, ok := shared.GetUserID(c); !ok {
 		response.Unauthorized(c, "未授权")
 		return
 	}
 
-	if err := api.shortcutService.ResetUserShortcuts(c.Request.Context(), userID); err != nil {
-		c.Error(err)
-		return
-	}
-
-	response.Success(c, nil)
+	response.BadRequest(c, "参数错误", "当前暂不支持持久化自定义快捷键")
 }
 
 // GetShortcutHelp 获取快捷键帮助
