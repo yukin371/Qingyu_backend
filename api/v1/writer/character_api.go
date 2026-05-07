@@ -1,8 +1,6 @@
 package writer
 
 import (
-	"log"
-
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
@@ -103,18 +101,10 @@ func (api *CharacterApi) ListCharacters(c *gin.Context) {
 		return
 	}
 
-	log.Printf("[ListCharacters] 获取项目角色列表, projectID=%s", projectID)
-
 	characters, err := api.characterService.List(c.Request.Context(), projectID)
 	if err != nil {
-		log.Printf("[ListCharacters] 获取角色列表失败: %v", err)
 		c.Error(err)
 		return
-	}
-
-	log.Printf("[ListCharacters] 成功获取角色, 数量=%d", len(characters))
-	if len(characters) > 0 {
-		log.Printf("[ListCharacters] 第一个角色: ID=%s, Name=%s", characters[0].ID, characters[0].Name)
 	}
 
 	response.Success(c, characters)
@@ -240,18 +230,10 @@ func (api *CharacterApi) ListCharacterRelations(c *gin.Context) {
 		charIDPtr = &characterID
 	}
 
-	log.Printf("[ListCharacterRelations] 获取项目关系列表, projectID=%s, characterID=%s", projectID, characterID)
-
 	relations, err := api.characterService.ListRelations(c.Request.Context(), projectID, charIDPtr)
 	if err != nil {
-		log.Printf("[ListCharacterRelations] 获取关系列表失败: %v", err)
 		c.Error(err)
 		return
-	}
-
-	log.Printf("[ListCharacterRelations] 成功获取关系, 数量=%d", len(relations))
-	if len(relations) > 0 {
-		log.Printf("[ListCharacterRelations] 第一个关系: ID=%s, FromID=%s, ToID=%s", relations[0].ID, relations[0].FromID, relations[0].ToID)
 	}
 
 	response.Success(c, relations)
