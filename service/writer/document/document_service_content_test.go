@@ -218,3 +218,67 @@ func TestDocumentService_ReplaceDocumentContents_RejectsDuplicateOrder(t *testin
 	docRepo.AssertNotCalled(t, "GetByID", mock.Anything, mock.Anything)
 	contentRepo.AssertNotCalled(t, "List", mock.Anything, mock.Anything)
 }
+
+func TestDocumentService_GetSaveStatus_PrefersDocumentContentState(t *testing.T) {
+	docRepo := new(MockDocumentRepository)
+	contentRepo := new(servicemock.MockDocumentContentRepository)
+	svc := NewDocumentService(docRepo, contentRepo, nil, nil)
+
+	docID := primitive.NewObjectID().Hex()
+	docUpdatedAt := time.Date(2026, 5, 7, 10, 0, 0, 0, time.UTC)
+	lastSavedAt := time.Date(2026, 5, 7, 10, 5, 0, 0, time.UTC)
+
+	docRepo.On("GetByID", mock.Anything, docID).Return(&writer.Document{
+		Timestamps: modelbase.Timestamps{
+			CreatedAt: time.Date(2026, 5, 7, 9, 0, 0, 0, time.UTC),
+			UpdatedAt: docUpdatedAt,
+		},
+		WordCount: 12,
+	}, nil).Once()
+	contentRepo.On("GetByDocumentID", mock.Anything, docID).Return(&writer.DocumentContent{
+		Version:     7,
+		LastSavedAt: lastSavedAt,
+		WordCount:   24,
+	}, nil).Once()
+
+	status, err := svc.GetSaveStatus(context.Background(), docID)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, status)
+	assert.Equal(t, 7, status.CurrentVersion)
+	assert.Equal(t, lastSavedAt, status.LastSavedAt)
+	assert.Equal(t, 24, status.WordCount)
+
+	docRepo.AssertExpectations(t)
+	contentRepo.AssertExpectations(t)
+}
+
+func TestDocumentService_GetSaveStatus_FallsBackWhenContentMissing(t *testing.T) {
+	docRepo := new(MockDocumentRepository)
+	contentRepo := new(servicemock.MockDocumentContentRepository)
+	svc := NewDocumentService(docRepo, contentRepo, nil, nil)
+
+	docID := primitive.NewObjectID().Hex()
+	createdAt := time.Date(2026, 5, 7, 9, 0, 0, 0, time.UTC)
+	updatedAt := createdAt.Add(10 * time.Minute)
+
+	docRepo.On("GetByID", mock.Anything, docID).Return(&writer.Document{
+		Timestamps: modelbase.Timestamps{
+			CreatedAt: createdAt,
+			UpdatedAt: updatedAt,
+		},
+		WordCount: 18,
+	}, nil).Once()
+	contentRepo.On("GetByDocumentID", mock.Anything, docID).Return(nil, nil).Once()
+
+	status, err := svc.GetSaveStatus(context.Background(), docID)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, status)
+	assert.Equal(t, 3, status.CurrentVersion)
+	assert.Equal(t, updatedAt, status.LastSavedAt)
+	assert.Equal(t, 18, status.WordCount)
+
+	docRepo.AssertExpectations(t)
+	contentRepo.AssertExpectations(t)
+}

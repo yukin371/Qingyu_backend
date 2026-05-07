@@ -914,23 +914,41 @@ func (s *DocumentService) GetSaveStatus(ctx context.Context, documentID string) 
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorNotFound, "文档不存在", "", nil)
 	}
 
-	// 3. 获取文档版本号
-	// TODO:注意：完整的版本控制系统应该使用 VersionService
-	// 当前实现：基于文档创建和更新时间差来估算版本号
+	// 3. 优先从内容记录获取真实保存状态；缺失时再回退到文档级估算
 	currentVersion := s.calculateDocumentVersion(doc)
+	lastSavedAt := doc.UpdatedAt
+	wordCount := doc.WordCount
+
+	content, err := s.documentContentRepo.GetByDocumentID(ctx, documentID)
+	if err != nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询文档内容失败", "", err)
+	}
+	if content != nil {
+		if content.Version > 0 {
+			currentVersion = content.Version
+		}
+		if content.WordCount > 0 {
+			wordCount = content.WordCount
+		}
+		if !content.LastSavedAt.IsZero() {
+			lastSavedAt = content.LastSavedAt
+		} else if !content.UpdatedAt.IsZero() {
+			lastSavedAt = content.UpdatedAt
+		}
+	}
 
 	// 4. 返回保存状态
 	return &SaveStatusResponse{
 		DocumentID:     documentID,
-		LastSavedAt:    doc.UpdatedAt,
+		LastSavedAt:    lastSavedAt,
 		CurrentVersion: currentVersion,
 		IsSaving:       false,
-		WordCount:      doc.WordCount,
+		WordCount:      wordCount,
 	}, nil
 }
 
 // calculateDocumentVersion 计算文档版本号
-// 注意：这是简化实现。生产环境应该使用 VersionService 管理真实的版本控制
+// 注意：这是内容记录缺失时的兼容兜底；真实版本应优先来自 DocumentContent.Version
 func (s *DocumentService) calculateDocumentVersion(doc *writer.Document) int {
 	// 方案1：基于时间差估算版本号（每次更新视为一个新版本）
 	// 假设平均每5分钟保存一次
@@ -947,7 +965,7 @@ func (s *DocumentService) calculateDocumentVersion(doc *writer.Document) int {
 
 	return estimatedVersion
 
-	// TODO(Production): 使用 VersionService 获取真实版本号
+	// TODO(Production): 若后续补齐统一 VersionService，再以其作为最终兜底来源
 	// if s.versionService != nil {
 	// 	version, err := s.versionService.GetCurrentVersion(ctx, doc.ID)
 	// 	if err == nil && version > 0 {
