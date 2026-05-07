@@ -10,6 +10,7 @@ import (
 
 	"Qingyu_backend/models/writer"
 	"Qingyu_backend/repository/interfaces/infrastructure"
+	servicemock "Qingyu_backend/service/mock"
 )
 
 // MockDocumentRepository 模拟DocumentRepository
@@ -246,7 +247,8 @@ func (m *MockProjectRepository) CreateWithTransaction(ctx context.Context, proje
 func TestPreflightService_ValidateBatchOperation(t *testing.T) {
 	ctx := context.Background()
 	mockRepo := new(MockDocumentRepository)
-	service := NewPreflightService(mockRepo)
+	contentRepo := new(servicemock.MockDocumentContentRepository)
+	service := NewPreflightService(mockRepo, contentRepo)
 
 	projectID := primitive.NewObjectID()
 	userID := primitive.NewObjectID()
@@ -294,7 +296,8 @@ func TestPreflightService_ValidateBatchOperation(t *testing.T) {
 func TestPreflightService_InvalidDocument(t *testing.T) {
 	ctx := context.Background()
 	mockRepo := new(MockDocumentRepository)
-	service := NewPreflightService(mockRepo)
+	contentRepo := new(servicemock.MockDocumentContentRepository)
+	service := NewPreflightService(mockRepo, contentRepo)
 
 	projectID := primitive.NewObjectID()
 	userID := primitive.NewObjectID()
@@ -329,7 +332,7 @@ func TestPreflightService_InvalidDocument(t *testing.T) {
 func TestPreflightService_InvalidIDFormat(t *testing.T) {
 	ctx := context.Background()
 	mockRepo := new(MockDocumentRepository)
-	service := NewPreflightService(mockRepo)
+	service := NewPreflightService(mockRepo, nil)
 
 	projectID := primitive.NewObjectID()
 	userID := primitive.NewObjectID()
@@ -356,7 +359,8 @@ func TestPreflightService_InvalidIDFormat(t *testing.T) {
 func TestPreflightService_WrongProject(t *testing.T) {
 	ctx := context.Background()
 	mockRepo := new(MockDocumentRepository)
-	service := NewPreflightService(mockRepo)
+	contentRepo := new(servicemock.MockDocumentContentRepository)
+	service := NewPreflightService(mockRepo, contentRepo)
 
 	projectID := primitive.NewObjectID()
 	otherProjectID := primitive.NewObjectID()
@@ -400,7 +404,7 @@ func TestPreflightService_WrongProject(t *testing.T) {
 func TestPreflightService_NormalizeTargetIDs_Deduplication(t *testing.T) {
 	ctx := context.Background()
 	mockRepo := new(MockDocumentRepository)
-	service := NewPreflightService(mockRepo)
+	service := NewPreflightService(mockRepo, nil)
 
 	projectID := primitive.NewObjectID()
 
@@ -421,7 +425,7 @@ func TestPreflightService_NormalizeTargetIDs_Deduplication(t *testing.T) {
 func TestPreflightService_NormalizeTargetIDs_Descendants(t *testing.T) {
 	ctx := context.Background()
 	mockRepo := new(MockDocumentRepository)
-	service := NewPreflightService(mockRepo)
+	service := NewPreflightService(mockRepo, nil)
 
 	projectID := primitive.NewObjectID()
 
@@ -474,7 +478,8 @@ func TestPreflightService_NormalizeTargetIDs_Descendants(t *testing.T) {
 func TestPreflightService_MixedValidInvalid(t *testing.T) {
 	ctx := context.Background()
 	mockRepo := new(MockDocumentRepository)
-	service := NewPreflightService(mockRepo)
+	contentRepo := new(servicemock.MockDocumentContentRepository)
+	service := NewPreflightService(mockRepo, contentRepo)
 
 	projectID := primitive.NewObjectID()
 	userID := primitive.NewObjectID()
@@ -526,7 +531,8 @@ func TestPreflightService_MixedValidInvalid(t *testing.T) {
 func TestPreflightService_ContinueOnInvalid(t *testing.T) {
 	ctx := context.Background()
 	mockRepo := new(MockDocumentRepository)
-	service := NewPreflightService(mockRepo)
+	contentRepo := new(servicemock.MockDocumentContentRepository)
+	service := NewPreflightService(mockRepo, contentRepo)
 
 	projectID := primitive.NewObjectID()
 	userID := primitive.NewObjectID()
@@ -569,6 +575,153 @@ func TestPreflightService_ContinueOnInvalid(t *testing.T) {
 	assert.Equal(t, 1, summary.InvalidCount, "Expected 1 invalid ID")
 
 	mockRepo.AssertExpectations(t)
+}
+
+func TestPreflightService_VersionConflictAbort(t *testing.T) {
+	ctx := context.Background()
+	mockRepo := new(MockDocumentRepository)
+	contentRepo := new(servicemock.MockDocumentContentRepository)
+	service := NewPreflightService(mockRepo, contentRepo)
+
+	projectID := primitive.NewObjectID()
+	userID := primitive.NewObjectID()
+
+	doc := &writer.Document{
+		ProjectID: projectID,
+		Title:     "Versioned Doc",
+		StableRef: generateStableRef(),
+		OrderKey:  "a0",
+		Type:      writer.TypeChapter,
+	}
+	doc.IdentifiedEntity.ID = primitive.NewObjectID()
+	doc.TouchForCreate()
+
+	mockRepo.On("GetByID", ctx, doc.ID.Hex()).Return(doc, nil).Once()
+	contentRepo.On("GetByDocumentID", ctx, doc.ID.Hex()).Return(&writer.DocumentContent{
+		DocumentID: doc.ID,
+		Version:    5,
+	}, nil).Once()
+
+	summary, result, err := service.ValidateBatchOperation(
+		ctx,
+		projectID,
+		writer.BatchOpTypeDelete,
+		[]string{doc.ID.Hex()},
+		&PreflightOptions{
+			UserID:             userID,
+			ConflictPolicy:     writer.ConflictPolicyAbort,
+			ExpectedVersions:   map[string]int{doc.ID.Hex(): 3},
+			IncludeDescendants: false,
+		},
+	)
+
+	assert.ErrorIs(t, err, ErrVersionConflict)
+	assert.NotNil(t, summary)
+	assert.NotNil(t, result)
+	assert.Len(t, result.InvalidIDs, 1)
+	assert.Equal(t, "version_conflict", result.InvalidIDs[0].Code)
+
+	mockRepo.AssertExpectations(t)
+	contentRepo.AssertExpectations(t)
+}
+
+func TestPreflightService_VersionConflictSkip(t *testing.T) {
+	ctx := context.Background()
+	mockRepo := new(MockDocumentRepository)
+	contentRepo := new(servicemock.MockDocumentContentRepository)
+	service := NewPreflightService(mockRepo, contentRepo)
+
+	projectID := primitive.NewObjectID()
+	userID := primitive.NewObjectID()
+
+	doc := &writer.Document{
+		ProjectID: projectID,
+		Title:     "Versioned Doc",
+		StableRef: generateStableRef(),
+		OrderKey:  "a0",
+		Type:      writer.TypeChapter,
+		Level:     0,
+	}
+	doc.IdentifiedEntity.ID = primitive.NewObjectID()
+	doc.TouchForCreate()
+
+	mockRepo.On("GetByID", ctx, doc.ID.Hex()).Return(doc, nil).Once()
+	contentRepo.On("GetByDocumentID", ctx, doc.ID.Hex()).Return(&writer.DocumentContent{
+		DocumentID: doc.ID,
+		Version:    5,
+	}, nil).Once()
+
+	summary, result, err := service.ValidateBatchOperation(
+		ctx,
+		projectID,
+		writer.BatchOpTypeDelete,
+		[]string{doc.ID.Hex()},
+		&PreflightOptions{
+			UserID:           userID,
+			ConflictPolicy:   writer.ConflictPolicySkip,
+			ExpectedVersions: map[string]int{doc.ID.Hex(): 3},
+		},
+	)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, summary)
+	assert.NotNil(t, result)
+	assert.Empty(t, result.ValidIDs)
+	assert.Len(t, result.SkippedIDs, 1)
+	assert.Len(t, result.Warnings, 1)
+	assert.Equal(t, 1, summary.SkippedCount)
+
+	mockRepo.AssertExpectations(t)
+	contentRepo.AssertExpectations(t)
+}
+
+func TestPreflightService_VersionConflictOverwrite(t *testing.T) {
+	ctx := context.Background()
+	mockRepo := new(MockDocumentRepository)
+	contentRepo := new(servicemock.MockDocumentContentRepository)
+	service := NewPreflightService(mockRepo, contentRepo)
+
+	projectID := primitive.NewObjectID()
+	userID := primitive.NewObjectID()
+
+	doc := &writer.Document{
+		ProjectID: projectID,
+		Title:     "Versioned Doc",
+		StableRef: generateStableRef(),
+		OrderKey:  "a0",
+		Type:      writer.TypeChapter,
+		Level:     0,
+	}
+	doc.IdentifiedEntity.ID = primitive.NewObjectID()
+	doc.TouchForCreate()
+
+	mockRepo.On("GetByID", ctx, doc.ID.Hex()).Return(doc, nil).Once()
+	contentRepo.On("GetByDocumentID", ctx, doc.ID.Hex()).Return(&writer.DocumentContent{
+		DocumentID: doc.ID,
+		Version:    5,
+	}, nil).Once()
+
+	summary, result, err := service.ValidateBatchOperation(
+		ctx,
+		projectID,
+		writer.BatchOpTypeDelete,
+		[]string{doc.ID.Hex()},
+		&PreflightOptions{
+			UserID:           userID,
+			ConflictPolicy:   writer.ConflictPolicyOverwrite,
+			ExpectedVersions: map[string]int{doc.ID.Hex(): 3},
+		},
+	)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, summary)
+	assert.NotNil(t, result)
+	assert.Len(t, result.ValidIDs, 1)
+	assert.Len(t, result.Warnings, 1)
+	assert.Equal(t, 1, summary.ValidCount)
+
+	mockRepo.AssertExpectations(t)
+	contentRepo.AssertExpectations(t)
 }
 
 // generateStableRef 生成稳定的引用标识
