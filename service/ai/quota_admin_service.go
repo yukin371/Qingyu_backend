@@ -11,6 +11,7 @@ import (
 	aiInterfaces "Qingyu_backend/repository/interfaces/ai"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.uber.org/zap"
 )
 
 // BatchOperationResult 批量操作结果
@@ -124,7 +125,11 @@ func (s *QuotaAdminService) RechargeUserQuota(ctx context.Context, userID string
 		}
 
 		if err := s.quotaRepo.CreateTransaction(ctx, transaction); err != nil {
-			fmt.Printf("创建充值记录失败: %v\n", err)
+			zap.L().Warn("创建充值记录失败",
+				zap.String("user_id", userID),
+				zap.String("quota_type", string(quotaTypeEnum)),
+				zap.Error(err),
+			)
 		}
 	}
 
@@ -143,7 +148,10 @@ func (s *QuotaAdminService) RechargeUserQuota(ctx context.Context, userID string
 	}
 
 	if err := s.alertRepo.Create(ctx, alert); err != nil {
-		fmt.Printf("创建告警记录失败: %v\n", err)
+		zap.L().Warn("创建配额充值告警记录失败",
+			zap.String("user_id", userID),
+			zap.Error(err),
+		)
 	}
 
 	return nil
@@ -450,7 +458,10 @@ func (s *QuotaAdminService) SuspendUserQuota(ctx context.Context, userID string)
 	}
 
 	if err := s.alertRepo.Create(ctx, alert); err != nil {
-		fmt.Printf("创建告警记录失败: %v\n", err)
+		zap.L().Warn("创建配额暂停告警记录失败",
+			zap.String("user_id", userID),
+			zap.Error(err),
+		)
 	}
 
 	return nil
@@ -481,7 +492,10 @@ func (s *QuotaAdminService) ActivateUserQuota(ctx context.Context, userID string
 	}
 
 	if err := s.alertRepo.Create(ctx, alert); err != nil {
-		fmt.Printf("创建告警记录失败: %v\n", err)
+		zap.L().Warn("创建配额激活告警记录失败",
+			zap.String("user_id", userID),
+			zap.Error(err),
+		)
 	}
 
 	return nil
