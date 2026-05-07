@@ -162,23 +162,6 @@ func TestChangeRequestApiListChangeRequests_RequiresChapterIDParam(t *testing.T)
 	assert.Contains(t, w.Body.String(), "章节ID不能为空")
 }
 
-func TestBatchOperationApiSubmit_RejectsUnsupportedExpectedVersions(t *testing.T) {
-	gin.SetMode(gin.TestMode)
-
-	api := NewBatchOperationAPI(document.BatchOperationService{})
-	c, w := newWriterTestContext(http.MethodPost, "/api/v1/writer/batch-operations", `{
-		"projectId":"507f1f77bcf86cd799439011",
-		"type":"delete",
-		"targetIds":["doc-1"],
-		"expectedVersions":{"doc-1":2}
-	}`, nil)
-
-	api.SubmitBatchOperation(c)
-
-	assert.Equal(t, http.StatusBadRequest, w.Code)
-	assert.Contains(t, w.Body.String(), "当前暂不支持 expectedVersions 预检查")
-}
-
 func TestBatchOperationApiSubmit_RejectsUnsupportedOperationType(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 

@@ -1,10 +1,12 @@
 package document
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"Qingyu_backend/models/writer"
+	servicemock "Qingyu_backend/service/mock"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -141,3 +143,90 @@ func TestBatchOperationService_Progress(t *testing.T) {
 // TestBatchOperationService_Submit - 需要数据库连接
 // TestBatchOperationService_Execute - 需要数据库连接
 // TestBatchOperationService_Undo - 需要数据库连接
+
+func TestBatchOperationServiceRunPreflight_AcceptsMatchingExpectedVersions(t *testing.T) {
+	ctx := context.Background()
+	docRepo := new(MockDocumentRepository)
+	contentRepo := new(servicemock.MockDocumentContentRepository)
+
+	projectID := primitive.NewObjectID()
+	docID := primitive.NewObjectID().Hex()
+	doc := &writer.Document{
+		ProjectID: projectID,
+		Title:     "Doc",
+		StableRef: primitive.NewObjectID().Hex(),
+		OrderKey:  writer.DefaultOrderKey,
+		Type:      writer.TypeChapter,
+	}
+	doc.TouchForCreate()
+	doc.ID, _ = primitive.ObjectIDFromHex(docID)
+
+	docRepo.On("GetByIDs", ctx, []string{docID}).Return([]*writer.Document{doc}, nil).Once()
+	contentRepo.On("GetByDocumentID", ctx, docID).Return(&writer.DocumentContent{
+		DocumentID: doc.ID,
+		Version:    3,
+	}, nil).Once()
+
+	service := &BatchOperationService{
+		docRepo:     docRepo,
+		contentRepo: contentRepo,
+	}
+	batchOp := &writer.BatchOperation{
+		ProjectID:      projectID,
+		TargetIDs:      []string{docID},
+		ConflictPolicy: writer.ConflictPolicyAbort,
+	}
+
+	summary, err := service.runPreflight(ctx, batchOp, map[string]int{docID: 3})
+	if err != nil {
+		t.Fatalf("expected matching versions to pass, got error: %v", err)
+	}
+	if summary.ValidCount != 1 || summary.InvalidCount != 0 {
+		t.Fatalf("unexpected summary: %+v", summary)
+	}
+}
+
+func TestBatchOperationServiceRunPreflight_RejectsVersionConflict(t *testing.T) {
+	ctx := context.Background()
+	docRepo := new(MockDocumentRepository)
+	contentRepo := new(servicemock.MockDocumentContentRepository)
+
+	projectID := primitive.NewObjectID()
+	docID := primitive.NewObjectID().Hex()
+	doc := &writer.Document{
+		ProjectID: projectID,
+		Title:     "Doc",
+		StableRef: primitive.NewObjectID().Hex(),
+		OrderKey:  writer.DefaultOrderKey,
+		Type:      writer.TypeChapter,
+	}
+	doc.TouchForCreate()
+	doc.ID, _ = primitive.ObjectIDFromHex(docID)
+
+	docRepo.On("GetByIDs", ctx, []string{docID}).Return([]*writer.Document{doc}, nil).Once()
+	contentRepo.On("GetByDocumentID", ctx, docID).Return(&writer.DocumentContent{
+		DocumentID: doc.ID,
+		Version:    5,
+	}, nil).Once()
+
+	service := &BatchOperationService{
+		docRepo:     docRepo,
+		contentRepo: contentRepo,
+	}
+	batchOp := &writer.BatchOperation{
+		ProjectID:      projectID,
+		TargetIDs:      []string{docID},
+		ConflictPolicy: writer.ConflictPolicyAbort,
+	}
+
+	summary, err := service.runPreflight(ctx, batchOp, map[string]int{docID: 3})
+	if err != ErrVersionConflict {
+		t.Fatalf("expected ErrVersionConflict, got: %v", err)
+	}
+	if summary == nil || summary.InvalidCount != 1 {
+		t.Fatalf("expected 1 invalid item, got summary: %+v", summary)
+	}
+	if len(summary.Errors) == 0 {
+		t.Fatal("expected version conflict error details")
+	}
+}

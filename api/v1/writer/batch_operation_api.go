@@ -60,11 +60,6 @@ func (api *BatchOperationAPI) SubmitBatchOperation(c *gin.Context) {
 		return
 	}
 
-	if len(req.ExpectedVersions) > 0 {
-		response.BadRequest(c, "参数错误", "当前暂不支持 expectedVersions 预检查")
-		return
-	}
-
 	if req.Type != writer.BatchOpTypeDelete {
 		response.BadRequest(c, "参数错误", "当前仅支持 delete 批量操作")
 		return
