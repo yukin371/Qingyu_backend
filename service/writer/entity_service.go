@@ -3,7 +3,6 @@ package writer
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -47,7 +46,6 @@ func (s *entityService) ListEntities(ctx context.Context, projectID string, enti
 	if shouldQueryCharacter {
 		characterSummaries, err := s.listCharacters(ctx, projectID)
 		if err != nil {
-			log.Printf("[EntityService] 查询角色失败: %v", err)
 			// 不中断，继续查询其他类型
 		} else {
 			summaries = append(summaries, characterSummaries...)
@@ -58,7 +56,6 @@ func (s *entityService) ListEntities(ctx context.Context, projectID string, enti
 	if shouldQueryItem {
 		itemSummaries, err := s.listItems(ctx, projectID)
 		if err != nil {
-			log.Printf("[EntityService] 查询物品失败: %v", err)
 		} else {
 			summaries = append(summaries, itemSummaries...)
 		}
@@ -68,7 +65,6 @@ func (s *entityService) ListEntities(ctx context.Context, projectID string, enti
 	if shouldQueryLocation && s.locationService != nil {
 		locationSummaries, err := s.listLocations(ctx, projectID)
 		if err != nil {
-			log.Printf("[EntityService] 查询地点失败: %v", err)
 		} else {
 			summaries = append(summaries, locationSummaries...)
 		}
@@ -78,7 +74,6 @@ func (s *entityService) ListEntities(ctx context.Context, projectID string, enti
 	if shouldQueryOrganization {
 		organizationSummaries, err := s.listOrganizations(ctx, projectID)
 		if err != nil {
-			log.Printf("[EntityService] 查询组织失败: %v", err)
 		} else {
 			summaries = append(summaries, organizationSummaries...)
 		}
@@ -102,7 +97,6 @@ func (s *entityService) GetEntityGraph(ctx context.Context, projectID string) (*
 	if s.characterService != nil {
 		relations, err := s.characterService.ListRelations(ctx, projectID, nil)
 		if err != nil {
-			log.Printf("[EntityService] 获取角色关系失败: %v", err)
 		} else {
 			for _, rel := range relations {
 				graph.Edges = append(graph.Edges, interfaces.RelationEdge{
