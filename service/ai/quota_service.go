@@ -15,6 +15,7 @@ import (
 	"Qingyu_backend/service/base"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.uber.org/zap"
 )
 
 // QuotaService 配额服务（增强版，支持Redis缓存和预警）
@@ -162,7 +163,12 @@ func (s *QuotaService) CheckQuota(ctx context.Context, userID string, amount int
 			// 更新到数据库
 			if updateErr := s.quotaRepo.UpdateQuota(ctx, quota); updateErr != nil {
 				// 升级失败不影响检查，继续使用旧值
-				fmt.Printf("警告: 配额升级失败: %v\n", updateErr)
+				zap.L().Warn("配额升级失败，继续使用旧配额",
+					zap.String("user_id", userID),
+					zap.String("user_role", userRole),
+					zap.String("membership_level", membershipLevel),
+					zap.Error(updateErr),
+				)
 			}
 		}
 	}
@@ -452,12 +458,19 @@ func (s *QuotaService) cacheQuota(ctx context.Context, quota *ai.UserQuota) {
 	data, err := json.Marshal(quota)
 	if err != nil {
 		// 缓存失败不影响业务，仅记录日志
-		fmt.Printf("缓存配额失败: %v\n", err)
+		zap.L().Warn("缓存配额失败",
+			zap.String("user_id", quota.UserID),
+			zap.String("quota_type", string(quota.QuotaType)),
+			zap.Error(err),
+		)
 		return
 	}
 
 	if err := s.redisClient.Set(ctx, cacheKey, string(data), s.cacheTTL); err != nil {
-		fmt.Printf("写入Redis失败: %v\n", err)
+		zap.L().Warn("写入配额缓存失败",
+			zap.String("cache_key", cacheKey),
+			zap.Error(err),
+		)
 	}
 }
 
@@ -469,7 +482,10 @@ func (s *QuotaService) invalidateQuotaCache(ctx context.Context, userID string, 
 
 	cacheKey := fmt.Sprintf("quota:user:%s:%s", userID, quotaType)
 	if err := s.redisClient.Delete(ctx, cacheKey); err != nil {
-		fmt.Printf("清除缓存失败: %v\n", err)
+		zap.L().Warn("清除配额缓存失败",
+			zap.String("cache_key", cacheKey),
+			zap.Error(err),
+		)
 	}
 }
 
@@ -508,7 +524,12 @@ func (s *QuotaService) checkAndPublishWarning(ctx context.Context, quota *ai.Use
 
 		// 异步发布事件
 		if err := s.eventBus.PublishAsync(ctx, event); err != nil {
-			fmt.Printf("发布配额预警事件失败: %v\n", err)
+			zap.L().Warn("发布配额预警事件失败",
+				zap.String("user_id", quota.UserID),
+				zap.String("quota_type", string(quota.QuotaType)),
+				zap.String("level", level),
+				zap.Error(err),
+			)
 		}
 	}
 }
