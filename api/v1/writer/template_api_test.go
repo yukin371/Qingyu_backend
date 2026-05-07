@@ -103,3 +103,23 @@ func TestTemplateAPIListTemplatesKeepsValidSortOrder(t *testing.T) {
 		t.Fatalf("expected sortOrder 1, got %d", repo.filter.SortOrder)
 	}
 }
+
+func TestTemplateAPIListTemplatesRejectsInvalidIsSystem(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	repo := &captureTemplateRepository{}
+	service := document.NewTemplateService(repo, zap.NewNop())
+	api := NewTemplateAPI(service, zap.NewNop())
+	router := gin.New()
+	router.GET("/templates", api.ListTemplates)
+
+	req, _ := http.NewRequest(http.MethodGet, "/templates?isSystem=not-bool", nil)
+	resp := httptest.NewRecorder()
+	router.ServeHTTP(resp, req)
+
+	if resp.Code != http.StatusBadRequest {
+		t.Fatalf("expected status %d, got %d", http.StatusBadRequest, resp.Code)
+	}
+	if repo.filter != nil {
+		t.Fatal("expected request to be rejected before repository query")
+	}
+}

@@ -146,9 +146,11 @@ func (api *TemplateAPI) ListTemplates(c *gin.Context) {
 	// 是否系统模板
 	if isSystemStr := c.Query("isSystem"); isSystemStr != "" {
 		isSystem, err := strconv.ParseBool(isSystemStr)
-		if err == nil {
-			req.IsSystem = &isSystem
+		if err != nil {
+			response.BadRequest(c, "参数错误", "无效的 isSystem 参数")
+			return
 		}
+		req.IsSystem = &isSystem
 	}
 
 	// 分页参数
