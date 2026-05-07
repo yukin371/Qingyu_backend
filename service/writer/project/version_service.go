@@ -834,7 +834,7 @@ func (s *VersionService) GetVersion(ctx context.Context, documentID, versionID s
 		Message:    revision.Message,
 		CreatedAt:  revision.CreatedAt,
 		CreatedBy:  revision.AuthorID,
-		WordCount:  len(content), // 简单字数统计
+		WordCount:  calculateSnapshotWordCount(content),
 	}, nil
 }
 
