@@ -10,6 +10,7 @@ import (
 	aiInterfaces "Qingyu_backend/repository/interfaces/ai"
 
 	"github.com/redis/go-redis/v9"
+	"go.uber.org/zap"
 )
 
 // QuotaAnomalyDetector 配额异常检测器
@@ -32,17 +33,17 @@ func NewQuotaAnomalyDetector(quotaRepo aiInterfaces.QuotaRepository, alertServic
 func (d *QuotaAnomalyDetector) DetectAnomalies(ctx context.Context) error {
 	// 检测突发性异常
 	if err := d.detectSpikeUsage(ctx); err != nil {
-		fmt.Printf("突发性异常检测失败: %v\n", err)
+		zap.L().Warn("突发性异常检测失败", zap.Error(err))
 	}
 
 	// 检测滥用异常
 	if err := d.detectRateAbuse(ctx); err != nil {
-		fmt.Printf("滥用异常检测失败: %v\n", err)
+		zap.L().Warn("滥用异常检测失败", zap.Error(err))
 	}
 
 	// 检测配额耗尽
 	if err := d.detectQuotaExhaustion(ctx); err != nil {
-		fmt.Printf("配额耗尽检测失败: %v\n", err)
+		zap.L().Warn("配额耗尽检测失败", zap.Error(err))
 	}
 
 	return nil
@@ -117,7 +118,10 @@ func (d *QuotaAnomalyDetector) detectSpikeUsage(ctx context.Context) error {
 			}
 
 			if err := d.alertService.CreateAlert(ctx, alert); err != nil {
-				fmt.Printf("创建异常告警失败[%s]: %v\n", userID, err)
+				zap.L().Warn("创建异常告警失败",
+					zap.String("user_id", userID),
+					zap.Error(err),
+				)
 			}
 		}
 	}
@@ -173,7 +177,10 @@ func (d *QuotaAnomalyDetector) detectRateAbuse(ctx context.Context) error {
 			}
 
 			if err := d.alertService.CreateAlert(ctx, alert); err != nil {
-				fmt.Printf("创建滥用告警失败[%s]: %v\n", user.UserID, err)
+				zap.L().Warn("创建滥用告警失败",
+					zap.String("user_id", user.UserID),
+					zap.Error(err),
+				)
 			}
 		}
 
@@ -193,7 +200,10 @@ func (d *QuotaAnomalyDetector) detectRateAbuse(ctx context.Context) error {
 			}
 
 			if err := d.alertService.CreateAlert(ctx, alert); err != nil {
-				fmt.Printf("创建滥用告警失败[%s]: %v\n", user.UserID, err)
+				zap.L().Warn("创建滥用告警失败",
+					zap.String("user_id", user.UserID),
+					zap.Error(err),
+				)
 			}
 		}
 	}
@@ -235,7 +245,10 @@ func (d *QuotaAnomalyDetector) detectQuotaExhaustion(ctx context.Context) error 
 			}
 
 			if err := d.alertService.CreateAlert(ctx, alert); err != nil {
-				fmt.Printf("创建配额耗尽告警失败[%s]: %v\n", user.UserID, err)
+				zap.L().Warn("创建配额耗尽告警失败",
+					zap.String("user_id", user.UserID),
+					zap.Error(err),
+				)
 			}
 		} else if remainingPercent < 0.1 {
 			// 严重不足（剩余<10%）
@@ -256,7 +269,10 @@ func (d *QuotaAnomalyDetector) detectQuotaExhaustion(ctx context.Context) error 
 			}
 
 			if err := d.alertService.CreateAlert(ctx, alert); err != nil {
-				fmt.Printf("创建严重不足告警失败[%s]: %v\n", user.UserID, err)
+				zap.L().Warn("创建严重不足告警失败",
+					zap.String("user_id", user.UserID),
+					zap.Error(err),
+				)
 			}
 		} else if remainingPercent < 0.2 {
 			// 警告级别（剩余<20%）
@@ -277,7 +293,10 @@ func (d *QuotaAnomalyDetector) detectQuotaExhaustion(ctx context.Context) error 
 			}
 
 			if err := d.alertService.CreateAlert(ctx, alert); err != nil {
-				fmt.Printf("创建接近耗尽告警失败[%s]: %v\n", user.UserID, err)
+				zap.L().Warn("创建接近耗尽告警失败",
+					zap.String("user_id", user.UserID),
+					zap.Error(err),
+				)
 			}
 		}
 	}
