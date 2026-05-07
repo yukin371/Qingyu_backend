@@ -9,6 +9,7 @@ import (
 	aiInterfaces "Qingyu_backend/repository/interfaces/ai"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.uber.org/zap"
 )
 
 // QuotaAlertService 配额告警服务
@@ -175,10 +176,15 @@ func (am *AlertManager) ProcessAlerts(ctx context.Context, threshold time.Durati
 			// 自动降级为已确认
 			err := am.alertService.AcknowledgeAlert(ctx, alert.ID.Hex(), "system")
 			if err != nil {
-				fmt.Printf("自动确认告警失败[%s]: %v\n", alert.ID.Hex(), err)
+				zap.L().Warn("自动确认告警失败",
+					zap.String("alert_id", alert.ID.Hex()),
+					zap.Error(err),
+				)
 				continue
 			}
-			fmt.Printf("告警超时自动确认: %s\n", alert.ID.Hex())
+			zap.L().Info("告警超时自动确认",
+				zap.String("alert_id", alert.ID.Hex()),
+			)
 		}
 	}
 
@@ -200,7 +206,10 @@ func (am *AlertManager) AutoResolveResolvedAlerts(ctx context.Context, maxAge ti
 			// 删除旧告警（软删除）
 			err := am.alertService.IgnoreAlert(ctx, alert.ID.Hex(), "system")
 			if err != nil {
-				fmt.Printf("删除旧告警失败[%s]: %v\n", alert.ID.Hex(), err)
+				zap.L().Warn("删除旧告警失败",
+					zap.String("alert_id", alert.ID.Hex()),
+					zap.Error(err),
+				)
 			}
 		}
 	}
