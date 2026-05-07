@@ -193,9 +193,8 @@ func (s *AutoSaveService) UpdateInterval(interval time.Duration) {
 	log.Printf("[AutoSave] 自动保存间隔已更新为: %v（仅影响新会话）", interval)
 }
 
-// --- 以下为未来增强功能的占位符 ---
+// --- 以下为未来增强候选，不属于当前 MVP 行为 ---
 
-// TODO: Phase 2 增强功能
 // - [ ] 内容变更检测（只在内容变化时保存）
 // - [ ] 变更字符数阈值触发（100字符变更触发保存）
 // - [ ] 离线保存队列（网络断开时排队）
