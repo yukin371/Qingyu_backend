@@ -280,3 +280,76 @@ func TestDocumentApiCreateDocument_ProjectNotFound(t *testing.T) {
 
 	mockProjectRepo.AssertExpectations(t)
 }
+
+func TestDocumentApiCreateDocument_ProjectOwnerMismatch(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	userID := primitive.NewObjectID().Hex()
+	projectID := primitive.NewObjectID().Hex()
+	ownerID := primitive.NewObjectID()
+
+	mockProjectRepo := new(mockProjectRepository)
+	mockProjectRepo.On("GetByID", mock.Anything, projectID).Return(&writer.Project{
+		OwnedEntity: base.OwnedEntity{
+			AuthorID: ownerID,
+		},
+		Visibility: writer.VisibilityPrivate,
+	}, nil).Once()
+
+	api := NewDocumentApi(document.NewDocumentService(nil, nil, mockProjectRepo, nil))
+	router := setupDocumentCreateTestRouter(api, userID)
+
+	reqBody, err := json.Marshal(map[string]any{
+		"title": "新文档",
+		"type":  "chapter",
+	})
+	require.NoError(t, err)
+
+	req, err := http.NewRequest(http.MethodPost, "/api/v1/writer/projects/"+projectID+"/documents", bytes.NewBuffer(reqBody))
+	require.NoError(t, err)
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+
+	var resp map[string]any
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, float64(5000), resp["code"])
+	assert.Contains(t, resp["details"].(string), "无权限编辑该项目")
+
+	mockProjectRepo.AssertExpectations(t)
+}
+
+func TestDocumentApiCreateDocument_ValidationError(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	userID := primitive.NewObjectID().Hex()
+	projectID := primitive.NewObjectID().Hex()
+
+	mockProjectRepo := new(mockProjectRepository)
+	api := NewDocumentApi(document.NewDocumentService(nil, nil, mockProjectRepo, nil))
+	router := setupDocumentCreateTestRouter(api, userID)
+
+	reqBody, err := json.Marshal(map[string]any{
+		"title": "新文档",
+		"type":  "invalid_type",
+	})
+	require.NoError(t, err)
+
+	req, err := http.NewRequest(http.MethodPost, "/api/v1/writer/projects/"+projectID+"/documents", bytes.NewBuffer(reqBody))
+	require.NoError(t, err)
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+
+	var resp map[string]any
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, float64(5000), resp["code"])
+	assert.Contains(t, resp["details"].(string), "参数验证失败")
+	assert.Contains(t, resp["details"].(string), "无效的文档类型")
+}
