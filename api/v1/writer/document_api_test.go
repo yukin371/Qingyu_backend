@@ -194,6 +194,23 @@ func TestDocumentApiCreateDocument_ServiceError(t *testing.T) {
 	mockProjectRepo.AssertExpectations(t)
 }
 
+func TestDocumentApiCreateDocument_ServiceNotInitialized(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	projectID := primitive.NewObjectID().Hex()
+	api := &DocumentApi{}
+	router := setupDocumentCreateTestRouter(api, "")
+
+	req, err := http.NewRequest(http.MethodPost, "/api/v1/writer/projects/"+projectID+"/documents", nil)
+	require.NoError(t, err)
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Contains(t, w.Body.String(), "服务未初始化")
+}
+
 func TestDocumentApiCreateDocument_ProjectLookupFailure(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
