@@ -425,6 +425,37 @@ func TestQuotaAdminAPIGetUserQuotaDetailsSurfacesServiceError(t *testing.T) {
 	})
 }
 
+func TestQuotaAdminAPIGetUserQuotaReconciliationRejectsMissingUserID(t *testing.T) {
+	repo := newQuotaAdminAPITestRepo()
+	_, _ = setupQuotaAdminAPITestHarness(repo, nil)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest(http.MethodGet, "/users/reconciliation", nil)
+
+	api := NewQuotaAdminAPI(aiService.NewQuotaService(repo), aiService.NewQuotaAdminService(repo, &noopQuotaAlertRepo{}))
+	api.GetUserQuotaReconciliation(c)
+
+	require.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "用户ID不能为空")
+}
+
+func TestQuotaAdminAPIRechargeUserQuotaRejectsMissingUserID(t *testing.T) {
+	repo := newQuotaAdminAPITestRepo()
+	_, _ = setupQuotaAdminAPITestHarness(repo, nil)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest(http.MethodPost, "/users/recharge", nil)
+	c.Request.Header.Set("Content-Type", "application/json")
+
+	api := NewQuotaAdminAPI(aiService.NewQuotaService(repo), aiService.NewQuotaAdminService(repo, &noopQuotaAlertRepo{}))
+	api.RechargeUserQuota(c)
+
+	require.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "用户ID不能为空")
+}
+
 func TestQuotaAdminAPIUpdateSuspendAndActivateHandlers(t *testing.T) {
 	t.Run("rejects missing user ID for update", func(t *testing.T) {
 		repo := newQuotaAdminAPITestRepo()
