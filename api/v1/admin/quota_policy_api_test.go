@@ -175,6 +175,52 @@ func TestQuotaPolicyAPIListPoliciesNormalizesPagingAndForwardsFilters(t *testing
 	require.Len(t, resp.Data, 1)
 }
 
+func TestQuotaPolicyAPIListPoliciesFallsBackToDefaultPageOnInvalidPageQuery(t *testing.T) {
+	repo := newQuotaPolicyAPITestRepo()
+	repo.listItems = []*aiModels.QuotaPolicy{
+		{
+			ID:         primitive.NewObjectID(),
+			Name:       "reader-normal",
+			UserRole:   aiModels.UserRoleReader,
+			Status:     aiModels.QuotaPolicyStatusActive,
+			DailyQuota: 120,
+		},
+	}
+	repo.listTotal = 1
+	router := setupQuotaPolicyAPITestRouter(repo)
+
+	req, _ := http.NewRequest(http.MethodGet, "/policies?page=abc", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, 1, repo.lastListPage)
+	assert.Equal(t, 20, repo.lastListLimit)
+}
+
+func TestQuotaPolicyAPIListPoliciesFallsBackToDefaultLimitOnInvalidLimitQuery(t *testing.T) {
+	repo := newQuotaPolicyAPITestRepo()
+	repo.listItems = []*aiModels.QuotaPolicy{
+		{
+			ID:         primitive.NewObjectID(),
+			Name:       "reader-normal",
+			UserRole:   aiModels.UserRoleReader,
+			Status:     aiModels.QuotaPolicyStatusActive,
+			DailyQuota: 120,
+		},
+	}
+	repo.listTotal = 1
+	router := setupQuotaPolicyAPITestRouter(repo)
+
+	req, _ := http.NewRequest(http.MethodGet, "/policies?limit=abc", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, 1, repo.lastListPage)
+	assert.Equal(t, 20, repo.lastListLimit)
+}
+
 func TestQuotaPolicyAPICreatePolicyMapsRequestAndSurfacesErrors(t *testing.T) {
 	t.Run("maps request body to policy entity", func(t *testing.T) {
 		repo := newQuotaPolicyAPITestRepo()
