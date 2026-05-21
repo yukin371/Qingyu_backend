@@ -234,6 +234,47 @@ func TestDocumentApiDuplicateDocument_RequiresLogin(t *testing.T) {
 	assert.Equal(t, float64(1002), resp["code"])
 }
 
+func TestDocumentApiDuplicateDocument_RejectsMalformedJSON(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	router := gin.New()
+	router.Use(func(c *gin.Context) {
+		c.Set("user_id", primitive.NewObjectID().Hex())
+		c.Next()
+	})
+
+	api := &DocumentApi{}
+	router.POST("/api/v1/writer/documents/:id/duplicate", api.DuplicateDocument)
+
+	documentID := primitive.NewObjectID().Hex()
+	req, err := http.NewRequest(http.MethodPost, "/api/v1/writer/documents/"+documentID+"/duplicate", bytes.NewBufferString("{"))
+	require.NoError(t, err)
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestDocumentApiMoveDocument_RejectsMalformedJSON(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	router := gin.New()
+	api := &DocumentApi{}
+	router.PUT("/api/v1/writer/documents/:id/move", api.MoveDocument)
+
+	documentID := primitive.NewObjectID().Hex()
+	req, err := http.NewRequest(http.MethodPut, "/api/v1/writer/documents/"+documentID+"/move", bytes.NewBufferString("{"))
+	require.NoError(t, err)
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
 func TestDocumentApiCreateDocumentByBody_ServiceNotInitialized(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
