@@ -313,6 +313,45 @@ func TestQuotaPolicyAPIListPoliciesSurfacesRepositoryFailure(t *testing.T) {
 	assert.Contains(t, w.Body.String(), "获取策略列表失败")
 }
 
+func TestQuotaPolicyAPIUpdatePolicyRejectsMalformedJSON(t *testing.T) {
+	repo := newQuotaPolicyAPITestRepo()
+	policyID := primitive.NewObjectID()
+	repo.policiesByID[policyID.Hex()] = &aiModels.QuotaPolicy{
+		ID:              policyID,
+		Name:            "reader-normal",
+		UserRole:        aiModels.UserRoleReader,
+		MembershipLevel: aiModels.MembershipLevelNormal,
+	}
+	router := setupQuotaPolicyAPITestRouter(repo)
+
+	req, _ := http.NewRequest(http.MethodPut, "/policies/"+policyID.Hex(), strings.NewReader("{"))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "参数错误")
+}
+
+func TestQuotaPolicyAPIDeletePolicySurfacesDeleteFailure(t *testing.T) {
+	repo := newQuotaPolicyAPITestRepo()
+	policyID := primitive.NewObjectID()
+	repo.policiesByID[policyID.Hex()] = &aiModels.QuotaPolicy{
+		ID:        policyID,
+		IsDefault: false,
+	}
+	repo.deleteErr = errors.New("delete failed")
+	router := setupQuotaPolicyAPITestRouter(repo)
+
+	req, _ := http.NewRequest(http.MethodDelete, "/policies/"+policyID.Hex(), nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Contains(t, w.Body.String(), "删除策略失败")
+	assert.Contains(t, w.Body.String(), "delete failed")
+}
+
 func TestQuotaPolicyAPIUpdateAndDeleteSuccess(t *testing.T) {
 	t.Run("updates existing policy", func(t *testing.T) {
 		repo := newQuotaPolicyAPITestRepo()
