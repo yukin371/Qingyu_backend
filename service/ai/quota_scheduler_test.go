@@ -268,6 +268,33 @@ func TestQuotaSchedulerConsistencyChecksHandleMissingDependenciesAndDownstreamEr
 		err := scheduler.checkAggregatedConsistency(context.Background())
 		assert.NoError(t, err)
 	})
+
+	t.Run("skips aggregated checks when summary load fails", func(t *testing.T) {
+		scheduler := &QuotaScheduler{
+			dashboardService: &QuotaDashboardService{
+				quotaRepo: &quotaDashboardRepoStub{consumptionErr: errors.New("summary down")},
+			},
+			logger: log.Default(),
+		}
+
+		err := scheduler.checkAggregatedConsistency(context.Background())
+		assert.NoError(t, err)
+	})
+
+	t.Run("skips aggregated checks when reconciliation summary is empty", func(t *testing.T) {
+		scheduler := &QuotaScheduler{
+			dashboardService: &QuotaDashboardService{
+				quotaRepo: &quotaDashboardRepoStub{},
+				consumptionReader: &quotaSummaryReaderStub{
+					response: &pb.QuotaConsumptionSummaryResponse{Success: true},
+				},
+			},
+			logger: log.Default(),
+		}
+
+		err := scheduler.checkAggregatedConsistency(context.Background())
+		assert.NoError(t, err)
+	})
 }
 
 type quotaSchedulerAIClientConnStub struct {

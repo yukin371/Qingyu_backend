@@ -265,6 +265,23 @@ func TestQuotaDashboardAPIGetTrendDefaultsInvalidDaysToSeven(t *testing.T) {
 	assert.Equal(t, 42, resp.Data[0].Consumption)
 }
 
+func TestQuotaDashboardAPIGetTrendReturnsEmptyListWhenRepositoryReturnsNoData(t *testing.T) {
+	repo := &quotaDashboardRepoForAPITest{trend: []aiModels.TrendPoint{}}
+	router := setupQuotaDashboardAPITestRouter(repo, &quotaDashboardAlertRepoForAPITest{}, nil, nil)
+
+	req, _ := http.NewRequest("GET", "/statistics/trend", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+
+	var resp struct {
+		Data []any `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	require.Len(t, resp.Data, 0)
+}
+
 func TestQuotaDashboardAPIGetReconciliationSummaryNormalizesPagingAndGroupBy(t *testing.T) {
 	repo := &quotaDashboardRepoForAPITest{
 		consumption: &aiModels.QuotaConsumptionSummary{
@@ -349,6 +366,27 @@ func TestQuotaDashboardAPIGetStatisticsReturnsInternalErrorWhenSummaryFails(t *t
 	assert.Contains(t, w.Body.String(), "获取统计数据失败")
 }
 
+func TestQuotaDashboardAPIGetStatisticsReturnsEmptyPayloadWhenSummaryIsEmpty(t *testing.T) {
+	repo := &quotaDashboardRepoForAPITest{summary: &aiModels.DashboardSummary{}}
+	router := setupQuotaDashboardAPITestRouter(repo, &quotaDashboardAlertRepoForAPITest{}, nil, nil)
+
+	req, _ := http.NewRequest("GET", "/statistics/global", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+
+	var resp struct {
+		Data struct {
+			TotalUsers       int64 `json:"totalUsers"`
+			TotalConsumption int64 `json:"totalConsumption"`
+		} `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, int64(0), resp.Data.TotalUsers)
+	assert.Equal(t, int64(0), resp.Data.TotalConsumption)
+}
+
 func TestQuotaDashboardAPIRunConsistencyCheckInvokesRunner(t *testing.T) {
 	repo := &quotaDashboardRepoForAPITest{}
 	runner := &quotaConsistencyRunnerForAPITest{}
@@ -418,6 +456,30 @@ func TestQuotaDashboardAPIGetReconciliationSummarySurfacesReaderFailure(t *testi
 	require.Equal(t, http.StatusInternalServerError, w.Code)
 	assert.Contains(t, w.Body.String(), "获取对账摘要失败")
 	assert.Contains(t, w.Body.String(), "获取AI服务消费聚合摘要失败")
+}
+
+func TestQuotaDashboardAPIGetReconciliationSummaryMapsAIFailureWithoutMessage(t *testing.T) {
+	repo := &quotaDashboardRepoForAPITest{
+		consumption: &aiModels.QuotaConsumptionSummary{
+			GroupBy:      "workflow",
+			TotalGroups:  0,
+			TotalTokens:  0,
+			TotalRecords: 0,
+			Items:        []aiModels.QuotaConsumptionSummaryItem{},
+		},
+	}
+	reader := &quotaDashboardSummaryReaderForAPITest{
+		response: &pb.QuotaConsumptionSummaryResponse{Success: false},
+	}
+	router := setupQuotaDashboardAPITestRouter(repo, &quotaDashboardAlertRepoForAPITest{}, reader, nil)
+
+	req, _ := http.NewRequest("GET", "/statistics/reconciliation?timeRange=day&groupBy=workflow", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Contains(t, w.Body.String(), "获取对账摘要失败")
+	assert.Contains(t, w.Body.String(), "AI服务消费聚合摘要返回未成功状态")
 }
 
 func TestQuotaDashboardAPIGetDashboardReturnsEmptyPayloadWhenRepositoriesAreEmpty(t *testing.T) {

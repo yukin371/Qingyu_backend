@@ -359,6 +359,52 @@ func TestQuotaAdminAPIGetUserQuotaDetailsAndReconciliationHandlers(t *testing.T)
 		assert.Equal(t, 2, reconciliationResult.Data.AIServiceRecordCount)
 		assert.Equal(t, 50, reconciliationResult.Data.DifferenceTokens)
 	})
+
+	t.Run("returns empty reconciliation records when ai service has no data", func(t *testing.T) {
+		repo := newQuotaAdminAPITestRepo()
+		repo.transactions = []*aiModels.QuotaTransaction{}
+		reader := &quotaConsumptionReaderStub{
+			response: &pb.QuotaConsumptionResponse{Success: true},
+		}
+		_, router := setupQuotaAdminAPITestHarness(repo, reader)
+
+		req, _ := http.NewRequest(http.MethodGet, "/users/user-1/reconciliation", nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		require.Equal(t, http.StatusOK, w.Code)
+		var resp struct {
+			Data struct {
+				BackendTotalTokens   int `json:"backendTotalTokens"`
+				BackendRecordCount   int `json:"backendRecordCount"`
+				AIServiceTotalTokens int `json:"aiServiceTotalTokens"`
+				AIServiceRecordCount int `json:"aiServiceRecordCount"`
+				DifferenceTokens     int `json:"differenceTokens"`
+			} `json:"data"`
+		}
+		require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+		assert.Equal(t, 0, resp.Data.BackendTotalTokens)
+		assert.Equal(t, 0, resp.Data.BackendRecordCount)
+		assert.Equal(t, 0, resp.Data.AIServiceTotalTokens)
+		assert.Equal(t, 0, resp.Data.AIServiceRecordCount)
+		assert.Equal(t, 0, resp.Data.DifferenceTokens)
+	})
+
+	t.Run("maps unsuccessful ai response without message to internal error", func(t *testing.T) {
+		repo := newQuotaAdminAPITestRepo()
+		reader := &quotaConsumptionReaderStub{
+			response: &pb.QuotaConsumptionResponse{Success: false},
+		}
+		_, router := setupQuotaAdminAPITestHarness(repo, reader)
+
+		req, _ := http.NewRequest(http.MethodGet, "/users/user-1/reconciliation", nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		require.Equal(t, http.StatusInternalServerError, w.Code)
+		assert.Contains(t, w.Body.String(), "获取配额对账结果失败")
+		assert.Contains(t, w.Body.String(), "AI服务返回未成功状态")
+	})
 }
 
 func TestQuotaAdminAPIUpdateSuspendAndActivateHandlers(t *testing.T) {

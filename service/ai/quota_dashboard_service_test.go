@@ -2,6 +2,7 @@ package ai
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -16,11 +17,15 @@ import (
 
 type quotaDashboardRepoStub struct {
 	summary         *aiModels.DashboardSummary
+	summaryErr      error
 	distribution    *aiModels.QuotaDistribution
+	distributionErr error
 	topConsumers    []aiModels.UserQuotaRanking
 	topConsumersErr error
 	trend           []aiModels.TrendPoint
+	trendErr        error
 	consumption     *aiModels.QuotaConsumptionSummary
+	consumptionErr  error
 }
 
 func (s *quotaDashboardRepoStub) CreateQuota(ctx context.Context, quota *aiModels.UserQuota) error {
@@ -68,6 +73,9 @@ func (s *quotaDashboardRepoStub) GetTotalConsumption(ctx context.Context, userID
 }
 
 func (s *quotaDashboardRepoStub) GetDashboardSummary(ctx context.Context) (*aiModels.DashboardSummary, error) {
+	if s.summaryErr != nil {
+		return nil, s.summaryErr
+	}
 	if s.summary != nil {
 		return s.summary, nil
 	}
@@ -75,6 +83,9 @@ func (s *quotaDashboardRepoStub) GetDashboardSummary(ctx context.Context) (*aiMo
 }
 
 func (s *quotaDashboardRepoStub) GetQuotaDistribution(ctx context.Context) (*aiModels.QuotaDistribution, error) {
+	if s.distributionErr != nil {
+		return nil, s.distributionErr
+	}
 	if s.distribution != nil {
 		return s.distribution, nil
 	}
@@ -92,6 +103,9 @@ func (s *quotaDashboardRepoStub) GetTopConsumers(ctx context.Context, limit int)
 }
 
 func (s *quotaDashboardRepoStub) GetConsumptionTrend(ctx context.Context, days int) ([]aiModels.TrendPoint, error) {
+	if s.trendErr != nil {
+		return nil, s.trendErr
+	}
 	if len(s.trend) > 0 {
 		return s.trend, nil
 	}
@@ -99,6 +113,9 @@ func (s *quotaDashboardRepoStub) GetConsumptionTrend(ctx context.Context, days i
 }
 
 func (s *quotaDashboardRepoStub) GetConsumptionSummary(ctx context.Context, startTime, endTime time.Time, workflowType, groupBy string, page, pageSize int) (*aiModels.QuotaConsumptionSummary, error) {
+	if s.consumptionErr != nil {
+		return nil, s.consumptionErr
+	}
 	if s.consumption != nil {
 		return s.consumption, nil
 	}
@@ -287,9 +304,53 @@ func TestQuotaDashboardServiceGetDashboardReturnsEmptyCollectionsWhenRepositorie
 
 	assert.Equal(t, int64(0), result.Summary.TotalUsers)
 	assert.Equal(t, int64(0), result.Summary.TotalConsumption)
+	require.Len(t, result.Distribution.ByRole, 0)
+	require.Len(t, result.Distribution.ByLevel, 0)
+	require.Len(t, result.Distribution.ByService, 0)
+	require.Len(t, result.Distribution.ByStatus, 0)
 	require.Len(t, result.TopConsumers, 0)
 	require.Len(t, result.RecentAlerts, 0)
 	require.Len(t, result.TrendData, 0)
+}
+
+func TestQuotaDashboardServiceGetDashboardPropagatesRepositoryFailures(t *testing.T) {
+	tests := []struct {
+		name      string
+		repo      *quotaDashboardRepoStub
+		alertRepo *quotaAlertRepoStub
+		want      string
+	}{
+		{
+			name: "summary failure",
+			repo: &quotaDashboardRepoStub{summaryErr: errors.New("summary down")},
+			want: "获取仪表盘汇总失败",
+		},
+		{
+			name: "distribution failure",
+			repo: &quotaDashboardRepoStub{distributionErr: errors.New("distribution down")},
+			want: "获取配额分布失败",
+		},
+		{
+			name: "top consumers failure",
+			repo: &quotaDashboardRepoStub{topConsumersErr: errors.New("top consumers down")},
+			want: "获取消费排行失败",
+		},
+		{
+			name: "trend failure",
+			repo: &quotaDashboardRepoStub{trendErr: errors.New("trend down")},
+			want: "获取趋势数据失败",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			service := NewQuotaDashboardService(tt.repo, newQuotaAlertRepoStub(), nil)
+			result, err := service.GetDashboard(context.Background())
+			require.Error(t, err)
+			assert.Nil(t, result)
+			assert.Contains(t, err.Error(), tt.want)
+		})
+	}
 }
 
 func TestQuotaDashboardServiceRunConsistencyCheckRequiresRunnerAndDelegates(t *testing.T) {
