@@ -671,3 +671,175 @@ func TestDocumentService_ReindexDocumentContents_ReturnsUpdateError(t *testing.T
 	projectRepo.AssertExpectations(t)
 	contentRepo.AssertExpectations(t)
 }
+
+func TestDocumentService_UpdateDocumentContent_RejectsEmptyDocumentID(t *testing.T) {
+	docRepo := new(MockDocumentRepository)
+	projectRepo := new(MockProjectRepository)
+	contentRepo := new(servicemock.MockDocumentContentRepository)
+	svc := NewDocumentService(docRepo, contentRepo, projectRepo, nil)
+
+	err := svc.UpdateDocumentContent(context.Background(), &dto.UpdateContentRequest{
+		DocumentID: "",
+		Content:    "ignored",
+	})
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "文档ID不能为空")
+	docRepo.AssertNotCalled(t, "GetByID", mock.Anything, mock.Anything)
+	projectRepo.AssertNotCalled(t, "GetByID", mock.Anything, mock.Anything)
+	contentRepo.AssertNotCalled(t, "GetByDocumentID", mock.Anything, mock.Anything)
+}
+
+func TestDocumentService_UpdateDocumentContent_RejectsInvalidDocumentIDOnFirstSave(t *testing.T) {
+	docRepo := new(MockDocumentRepository)
+	projectRepo := new(MockProjectRepository)
+	contentRepo := new(servicemock.MockDocumentContentRepository)
+	svc := NewDocumentService(docRepo, contentRepo, projectRepo, nil)
+
+	userObjID, _ := primitive.ObjectIDFromHex("507f1f77bcf86cd799439011")
+	projectOID := primitive.NewObjectID()
+	docID := "invalid-object-id"
+
+	project := &writer.Project{OwnedEntity: modelbase.OwnedEntity{AuthorID: userObjID}}
+	doc := &writer.Document{ProjectID: projectOID}
+	ctx := contextWithTestUserID(context.Background(), userObjID.Hex())
+
+	docRepo.On("GetByID", mock.Anything, docID).Return(doc, nil).Once()
+	projectRepo.On("GetByID", mock.Anything, projectOID.Hex()).Return(project, nil).Once()
+	contentRepo.On("GetByDocumentID", mock.Anything, docID).Return(nil, nil).Once()
+
+	err := svc.UpdateDocumentContent(ctx, &dto.UpdateContentRequest{
+		DocumentID: docID,
+		Content:    "first save",
+	})
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "无效的文档ID")
+
+	docRepo.AssertExpectations(t)
+	projectRepo.AssertExpectations(t)
+	contentRepo.AssertExpectations(t)
+}
+
+func TestDocumentService_UpdateDocumentContent_PropagatesGetByDocumentIDError(t *testing.T) {
+	docRepo := new(MockDocumentRepository)
+	projectRepo := new(MockProjectRepository)
+	contentRepo := new(servicemock.MockDocumentContentRepository)
+	svc := NewDocumentService(docRepo, contentRepo, projectRepo, nil)
+
+	userObjID, _ := primitive.ObjectIDFromHex("507f1f77bcf86cd799439011")
+	projectOID := primitive.NewObjectID()
+	docID := primitive.NewObjectID().Hex()
+
+	project := &writer.Project{OwnedEntity: modelbase.OwnedEntity{AuthorID: userObjID}}
+	doc := &writer.Document{ProjectID: projectOID}
+	ctx := contextWithTestUserID(context.Background(), userObjID.Hex())
+
+	docRepo.On("GetByID", mock.Anything, docID).Return(doc, nil).Once()
+	projectRepo.On("GetByID", mock.Anything, projectOID.Hex()).Return(project, nil).Once()
+	contentRepo.On("GetByDocumentID", mock.Anything, docID).Return(nil, errors.New("db offline")).Once()
+
+	err := svc.UpdateDocumentContent(ctx, &dto.UpdateContentRequest{
+		DocumentID: docID,
+		Content:    "payload",
+	})
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "查询文档内容失败")
+
+	docRepo.AssertExpectations(t)
+	projectRepo.AssertExpectations(t)
+	contentRepo.AssertExpectations(t)
+}
+
+func TestDocumentService_UpdateDocumentContent_PropagatesGenericUpdateError(t *testing.T) {
+	docRepo := new(MockDocumentRepository)
+	projectRepo := new(MockProjectRepository)
+	contentRepo := new(servicemock.MockDocumentContentRepository)
+	svc := NewDocumentService(docRepo, contentRepo, projectRepo, nil)
+
+	userObjID, _ := primitive.ObjectIDFromHex("507f1f77bcf86cd799439011")
+	projectOID := primitive.NewObjectID()
+	docID := primitive.NewObjectID().Hex()
+
+	project := &writer.Project{OwnedEntity: modelbase.OwnedEntity{AuthorID: userObjID}}
+	doc := &writer.Document{ProjectID: projectOID}
+	ctx := contextWithTestUserID(context.Background(), userObjID.Hex())
+
+	docRepo.On("GetByID", mock.Anything, docID).Return(doc, nil).Once()
+	projectRepo.On("GetByID", mock.Anything, projectOID.Hex()).Return(project, nil).Once()
+	contentRepo.On("GetByDocumentID", mock.Anything, docID).Return(&writer.DocumentContent{Version: 2}, nil).Once()
+	contentRepo.On("UpdateWithVersion", mock.Anything, docID, mock.AnythingOfType("map[string]interface {}"), 2).Return(errors.New("write failed")).Once()
+
+	err := svc.UpdateDocumentContent(ctx, &dto.UpdateContentRequest{
+		DocumentID: docID,
+		Content:    "payload",
+		Version:    2,
+	})
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "保存内容失败")
+
+	docRepo.AssertExpectations(t)
+	projectRepo.AssertExpectations(t)
+	contentRepo.AssertExpectations(t)
+}
+
+func TestDocumentService_GetDocumentContents_ReturnsErrorWhenListFails(t *testing.T) {
+	docRepo := new(MockDocumentRepository)
+	projectRepo := new(MockProjectRepository)
+	contentRepo := new(servicemock.MockDocumentContentRepository)
+	svc := NewDocumentService(docRepo, contentRepo, projectRepo, nil)
+
+	userObjID, _ := primitive.ObjectIDFromHex("507f1f77bcf86cd799439011")
+	projectOID := primitive.NewObjectID()
+	docID := primitive.NewObjectID().Hex()
+
+	project := &writer.Project{OwnedEntity: modelbase.OwnedEntity{AuthorID: userObjID}}
+	doc := &writer.Document{ProjectID: projectOID}
+	ctx := contextWithTestUserID(context.Background(), userObjID.Hex())
+
+	docRepo.On("GetByID", mock.Anything, docID).Return(doc, nil).Once()
+	projectRepo.On("GetByID", mock.Anything, projectOID.Hex()).Return(project, nil).Once()
+	contentRepo.On("List", mock.Anything, mock.Anything).Return(nil, errors.New("db timeout")).Once()
+
+	resp, err := svc.GetDocumentContents(ctx, docID)
+
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.Contains(t, err.Error(), "查询文档段落失败")
+
+	docRepo.AssertExpectations(t)
+	projectRepo.AssertExpectations(t)
+	contentRepo.AssertExpectations(t)
+}
+
+func TestDocumentService_ReindexDocumentContents_ReturnsEmptyResponseWhenNoRows(t *testing.T) {
+	docRepo := new(MockDocumentRepository)
+	projectRepo := new(MockProjectRepository)
+	contentRepo := new(servicemock.MockDocumentContentRepository)
+	svc := NewDocumentService(docRepo, contentRepo, projectRepo, nil)
+
+	userObjID, _ := primitive.ObjectIDFromHex("507f1f77bcf86cd799439011")
+	projectOID := primitive.NewObjectID()
+	docID := primitive.NewObjectID().Hex()
+
+	project := &writer.Project{OwnedEntity: modelbase.OwnedEntity{AuthorID: userObjID}}
+	doc := &writer.Document{ProjectID: projectOID}
+	ctx := contextWithTestUserID(context.Background(), userObjID.Hex())
+
+	docRepo.On("GetByID", mock.Anything, docID).Return(doc, nil).Once()
+	projectRepo.On("GetByID", mock.Anything, projectOID.Hex()).Return(project, nil).Once()
+	contentRepo.On("List", mock.Anything, mock.Anything).Return([]*writer.DocumentContent{}, nil).Once()
+
+	resp, err := svc.ReindexDocumentContents(ctx, docID)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, docID, resp.DocumentID)
+	assert.Equal(t, 0, resp.Total)
+
+	docRepo.AssertExpectations(t)
+	projectRepo.AssertExpectations(t)
+	contentRepo.AssertExpectations(t)
+}

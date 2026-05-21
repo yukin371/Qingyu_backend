@@ -337,6 +337,18 @@ func TestQuotaDashboardAPIGetDashboardReturnsInternalErrorWhenSummaryFails(t *te
 	assert.Contains(t, w.Body.String(), "获取仪表盘数据失败")
 }
 
+func TestQuotaDashboardAPIGetStatisticsReturnsInternalErrorWhenSummaryFails(t *testing.T) {
+	repo := &quotaDashboardRepoForAPITest{summaryErr: errors.New("boom")}
+	router := setupQuotaDashboardAPITestRouter(repo, &quotaDashboardAlertRepoForAPITest{}, nil, nil)
+
+	req, _ := http.NewRequest("GET", "/statistics/global", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Contains(t, w.Body.String(), "获取统计数据失败")
+}
+
 func TestQuotaDashboardAPIRunConsistencyCheckInvokesRunner(t *testing.T) {
 	repo := &quotaDashboardRepoForAPITest{}
 	runner := &quotaConsistencyRunnerForAPITest{}

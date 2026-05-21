@@ -253,6 +253,25 @@ func TestQuotaDashboardServiceGetReconciliationSummaryNormalizesInputAndHandlesF
 	assert.Contains(t, err.Error(), "ai unavailable")
 }
 
+func TestQuotaDashboardServiceGetDashboardReturnsEmptyCollectionsWhenRepositoriesAreEmpty(t *testing.T) {
+	repo := &quotaDashboardRepoStub{
+		topConsumers: []aiModels.UserQuotaRanking{},
+		trend:        []aiModels.TrendPoint{},
+	}
+	alertRepo := newQuotaAlertRepoStub()
+	service := NewQuotaDashboardService(repo, alertRepo, nil)
+
+	result, err := service.GetDashboard(context.Background())
+	require.NoError(t, err)
+	require.NotNil(t, result)
+
+	assert.Equal(t, int64(0), result.Summary.TotalUsers)
+	assert.Equal(t, int64(0), result.Summary.TotalConsumption)
+	require.Len(t, result.TopConsumers, 0)
+	require.Len(t, result.RecentAlerts, 0)
+	require.Len(t, result.TrendData, 0)
+}
+
 func TestQuotaDashboardServiceRunConsistencyCheckRequiresRunnerAndDelegates(t *testing.T) {
 	service := NewQuotaDashboardService(&quotaDashboardRepoStub{}, nil, nil)
 

@@ -213,6 +213,26 @@ func TestQuotaAlertAPIListAlertsSupportsAllStatus(t *testing.T) {
 	require.Len(t, response.Data, 2)
 }
 
+func TestQuotaAlertAPIListAlertsReturnsEmptyPageWhenNoAlerts(t *testing.T) {
+	router := setupQuotaAlertAPITestRouterWithRepo(&quotaAlertRepoForAPITest{})
+
+	req, _ := http.NewRequest("GET", "/alerts", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+
+	var response struct {
+		Code  int              `json:"code"`
+		Total int              `json:"total"`
+		Data  []map[string]any `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &response))
+	assert.Equal(t, 200, response.Code)
+	assert.Equal(t, 0, response.Total)
+	require.Len(t, response.Data, 0)
+}
+
 func TestQuotaAlertAPIListAlertsNormalizesPagingAndFiltersOpenStatus(t *testing.T) {
 	repo := &quotaAlertRepoForAPITest{
 		alerts: []*aiModels.QuotaAlert{
