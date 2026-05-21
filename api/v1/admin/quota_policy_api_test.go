@@ -299,3 +299,65 @@ func TestQuotaPolicyAPIGetUpdateDeleteAndInitializeErrorBranches(t *testing.T) {
 		assert.Contains(t, w.Body.String(), "初始化默认策略失败")
 	})
 }
+
+func TestQuotaPolicyAPIListPoliciesSurfacesRepositoryFailure(t *testing.T) {
+	repo := newQuotaPolicyAPITestRepo()
+	repo.listErr = errors.New("list failed")
+	router := setupQuotaPolicyAPITestRouter(repo)
+
+	req, _ := http.NewRequest(http.MethodGet, "/policies", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Contains(t, w.Body.String(), "获取策略列表失败")
+}
+
+func TestQuotaPolicyAPIUpdateAndDeleteSuccess(t *testing.T) {
+	t.Run("updates existing policy", func(t *testing.T) {
+		repo := newQuotaPolicyAPITestRepo()
+		policy := &aiModels.QuotaPolicy{
+			ID:              primitive.NewObjectID(),
+			Name:            "reader-normal",
+			UserRole:        aiModels.UserRoleReader,
+			MembershipLevel: aiModels.MembershipLevelNormal,
+			DailyQuota:      100,
+			MonthlyQuota:    3000,
+		}
+		repo.policiesByID[policy.ID.Hex()] = policy
+		repo.policiesByRoleAndLevel[quotaPolicyAPIRepoKey(policy.UserRole, policy.MembershipLevel)] = policy
+		router := setupQuotaPolicyAPITestRouter(repo)
+
+		reqBody := `{"name":"reader-updated","userRole":"reader","membershipLevel":"normal","dailyQuota":222,"monthlyQuota":6666,"totalQuota":-1,"description":"updated"}`
+		req, _ := http.NewRequest(http.MethodPut, "/policies/"+policy.ID.Hex(), strings.NewReader(reqBody))
+		req.Header.Set("Content-Type", "application/json")
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		require.Equal(t, http.StatusOK, w.Code)
+		require.Len(t, repo.updatedPolicies, 1)
+		updated := repo.updatedPolicies[0]
+		assert.Equal(t, "reader-updated", updated.Name)
+		assert.Equal(t, 222, updated.DailyQuota)
+		assert.Equal(t, 6666, updated.MonthlyQuota)
+		assert.Equal(t, -1, updated.TotalQuota)
+		assert.Equal(t, "updated", updated.Description)
+	})
+
+	t.Run("deletes non default policy", func(t *testing.T) {
+		repo := newQuotaPolicyAPITestRepo()
+		policy := &aiModels.QuotaPolicy{
+			ID:        primitive.NewObjectID(),
+			IsDefault: false,
+		}
+		repo.policiesByID[policy.ID.Hex()] = policy
+		router := setupQuotaPolicyAPITestRouter(repo)
+
+		req, _ := http.NewRequest(http.MethodDelete, "/policies/"+policy.ID.Hex(), nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		require.Equal(t, http.StatusOK, w.Code)
+		assert.Equal(t, []string{policy.ID.Hex()}, repo.deletedIDs)
+	})
+}
