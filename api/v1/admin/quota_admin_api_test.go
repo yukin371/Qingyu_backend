@@ -518,6 +518,32 @@ func TestQuotaAdminAPIActivateUserQuotaRejectsMissingUserID(t *testing.T) {
 	assert.Contains(t, w.Body.String(), "用户ID不能为空")
 }
 
+func TestQuotaAdminAPIUpdateUserQuotaRejectsMissingTotalQuota(t *testing.T) {
+	repo := newQuotaAdminAPITestRepo()
+	_, router := setupQuotaAdminAPITestHarness(repo, nil)
+
+	req, _ := http.NewRequest(http.MethodPut, "/users/user-1", strings.NewReader(`{"quotaType":"daily"}`))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "参数错误")
+}
+
+func TestQuotaAdminAPIBatchRechargeRejectsMissingUserIDs(t *testing.T) {
+	repo := newQuotaAdminAPITestRepo()
+	_, router := setupQuotaAdminAPITestHarness(repo, nil)
+
+	req, _ := http.NewRequest(http.MethodPost, "/batch-recharge", strings.NewReader(`{"amount":100,"quotaType":"daily","reason":"test"}`))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "参数错误")
+}
+
 func TestQuotaAdminAPIUpdateSuspendAndActivateHandlers(t *testing.T) {
 	t.Run("rejects missing user ID for update", func(t *testing.T) {
 		repo := newQuotaAdminAPITestRepo()
