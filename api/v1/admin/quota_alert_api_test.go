@@ -432,6 +432,59 @@ func TestQuotaAlertAPIActionHandlersRejectMissingIDAndMalformedJSON(t *testing.T
 	})
 }
 
+func TestQuotaAlertAPIActionHandlersRejectMissingID(t *testing.T) {
+	cases := []struct {
+		name    string
+		handler func(*gin.Context)
+	}{
+		{name: "acknowledge", handler: NewQuotaAlertAPI(aiService.NewQuotaAlertService(&quotaAlertRepoForAPITest{})).AcknowledgeAlert},
+		{name: "resolve", handler: NewQuotaAlertAPI(aiService.NewQuotaAlertService(&quotaAlertRepoForAPITest{})).ResolveAlert},
+		{name: "ignore", handler: NewQuotaAlertAPI(aiService.NewQuotaAlertService(&quotaAlertRepoForAPITest{})).IgnoreAlert},
+	}
+
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(w)
+			c.Request = httptest.NewRequest(http.MethodPut, "/alerts", strings.NewReader(`{"operatorId":"admin-1"}`))
+
+			tt.handler(c)
+
+			require.Equal(t, http.StatusBadRequest, w.Code)
+			assert.Contains(t, w.Body.String(), "告警ID不能为空")
+		})
+	}
+}
+
+func TestQuotaAlertAPIActionHandlersSurfaceServiceErrors(t *testing.T) {
+	cases := []struct {
+		name       string
+		method     string
+		path       string
+		wantErrMsg string
+	}{
+		{name: "acknowledge", method: http.MethodPut, path: "/alerts/507f1f77bcf86cd799439011/acknowledge", wantErrMsg: "确认告警失败"},
+		{name: "resolve", method: http.MethodPut, path: "/alerts/507f1f77bcf86cd799439011/resolve", wantErrMsg: "解决告警失败"},
+		{name: "ignore", method: http.MethodPut, path: "/alerts/507f1f77bcf86cd799439011/ignore", wantErrMsg: "忽略告警失败"},
+	}
+
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			router := setupQuotaAlertAPITestRouterWithRepo(&quotaAlertRepoForAPITest{
+				getByIDErr: errors.New("repo down"),
+			})
+
+			req, _ := http.NewRequest(tt.method, tt.path, strings.NewReader(`{"operatorId":"admin-1"}`))
+			req.Header.Set("Content-Type", "application/json")
+			w := httptest.NewRecorder()
+			router.ServeHTTP(w, req)
+
+			require.Equal(t, http.StatusInternalServerError, w.Code)
+			assert.Contains(t, w.Body.String(), tt.wantErrMsg)
+		})
+	}
+}
+
 func TestQuotaAlertAPIListAlertsSurfacesRepositoryErrors(t *testing.T) {
 	repo := &quotaAlertRepoForAPITest{
 		listErr: errors.New("query failed"),
