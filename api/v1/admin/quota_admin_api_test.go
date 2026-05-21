@@ -531,6 +531,19 @@ func TestQuotaAdminAPIUpdateUserQuotaRejectsMissingTotalQuota(t *testing.T) {
 	assert.Contains(t, w.Body.String(), "参数错误")
 }
 
+func TestQuotaAdminAPIUpdateUserQuotaRejectsNegativeTotalQuota(t *testing.T) {
+	repo := newQuotaAdminAPITestRepo()
+	_, router := setupQuotaAdminAPITestHarness(repo, nil)
+
+	req, _ := http.NewRequest(http.MethodPut, "/users/user-1", strings.NewReader(`{"quotaType":"daily","totalQuota":-1}`))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "参数错误")
+}
+
 func TestQuotaAdminAPIUpdateUserQuotaRejectsMissingQuotaType(t *testing.T) {
 	repo := newQuotaAdminAPITestRepo()
 	_, router := setupQuotaAdminAPITestHarness(repo, nil)
@@ -549,6 +562,19 @@ func TestQuotaAdminAPIBatchRechargeRejectsMissingUserIDs(t *testing.T) {
 	_, router := setupQuotaAdminAPITestHarness(repo, nil)
 
 	req, _ := http.NewRequest(http.MethodPost, "/batch-recharge", strings.NewReader(`{"amount":100,"quotaType":"daily","reason":"test"}`))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "参数错误")
+}
+
+func TestQuotaAdminAPIRechargeUserQuotaRejectsNonPositiveAmount(t *testing.T) {
+	repo := newQuotaAdminAPITestRepo()
+	_, router := setupQuotaAdminAPITestHarness(repo, nil)
+
+	req, _ := http.NewRequest(http.MethodPost, "/users/user-1/recharge", strings.NewReader(`{"amount":0,"quotaType":"daily","reason":"test"}`))
 	req.Header.Set("Content-Type", "application/json")
 	w := httptest.NewRecorder()
 	router.ServeHTTP(w, req)
