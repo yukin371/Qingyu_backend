@@ -24,6 +24,11 @@
 - ✅ Docker + Docker Compose - 容器化部署
 - ✅ GitHub Actions - CI/CD 流水线
 
+**已集成/实现**：
+- ✅ **对象存储** - MinIO（文件存储，通过 StorageService 多后端工厂）
+- ✅ **MongoDB 事务** - 通过 `pkg/transaction` 统一管理，支持单机禁用降级
+- ✅ **事件总线** - EventBus 进程内异步事件
+
 **规划中技术**：
 - 🔜 **消息队列** - RabbitMQ/Kafka（异步任务处理、事件驱动）
 - 🔜 **分布式追踪** - Jaeger/Zipkin（链路追踪）
@@ -34,7 +39,6 @@
 - 🔜 **API 网关** - Kong/Traefik
 - 🔜 **分布式事务** - Saga/TCC 模式
 - 🔜 **读写分离** - MongoDB Replica Set
-- 🔜 **对象存储** - MinIO（文件存储）
 
 ### 业务场景
 
@@ -42,7 +46,7 @@
 
 ### 核心特色
 
-- **完整内容生态** - 从创作到阅读的完整闭环，包含书店、阅读器、社交互动等10大业务模块
+- **完整内容生态** - 从创作到阅读的完整闭环，涵盖 20+ 业务模块（写作、书城、阅读器、社交、AI、财务、推荐、发现、社区、通知、管理后台等）
 - **模块化架构** - 清晰的分层设计（API → Service → Repository），依赖注入容器管理，支持微服务演进
 - **高性能设计** - MongoDB + Redis 多层缓存，支持10万+QPS，响应时间<100ms
 - **开发友好** - 完善的测试体系、Docker一键启动、Makefile命令管理、热重载开发
@@ -82,21 +86,16 @@
 
 ## Git Hooks
 
-为避免把密钥、令牌或私钥提交进仓库，项目提供了版本化的 `pre-commit` 钩子。
-
-Linux / macOS:
+项目使用 Husky 管理 Git hooks，根仓库 `.husky/` 目录下维护钩子脚本。
 
 ```bash
-./scripts/install-git-hooks.sh
+# 安装 hooks（项目根目录已有 package.json）
+npm run hooks:install        # Linux / macOS / Windows 通用
+# 或 Windows 专用脚本
+.\scripts\setup-hooks.ps1
 ```
 
-Windows PowerShell:
-
-```powershell
-.\scripts\install-git-hooks.ps1
-```
-
-安装后，Git 会在提交前扫描已暂存的新增内容，拦截高风险密钥模式和明显的凭据赋值。
+安装后，`pre-commit` 钩子会在提交前扫描暂存内容，拦截高风险密钥模式。子模块各自维护独立校验逻辑。
 
 ## 系统架构
 
@@ -114,7 +113,7 @@ graph TB
         Middleware[中间件链<br/>JWT/CORS/限流/日志]
     end
 
-    subgraph "业务层 - 10大模块"
+    subgraph "业务层 - 核心模块"
         AI[AI智能写作]
         Bookstore[书店系统]
         Reader[阅读器]
@@ -125,6 +124,10 @@ graph TB
         Recommend[推荐系统]
         Notice[通知公告]
         Admin[管理后台]
+        Discovery[发现页]
+        Community[社区动态]
+        Search[统一搜索]
+        Shared[共享服务]
     end
 
     subgraph "数据层"
@@ -150,6 +153,10 @@ graph TB
     Middleware --> Recommend
     Middleware --> Notice
     Middleware --> Admin
+    Middleware --> Discovery
+    Middleware --> Community
+    Middleware --> Search
+    Middleware --> Shared
 
     AI --> PythonAI
     PythonAI --> Milvus
@@ -195,7 +202,7 @@ graph TB
 
 ```bash
 # 1. 克隆项目
-git clone https://github.com/your-org/Qingyu_backend.git
+git clone https://github.com/yukin371/Qingyu_backend.git
 cd Qingyu_backend
 
 # 2. 配置AI密钥（可选）
@@ -356,24 +363,45 @@ docker logs qingyu-python-ai
 Qingyu_backend/
 ├── cmd/server/              # 应用入口
 │   └── main.go             # 主程序入口
-├── api/v1/                 # API层 - 10大模块路由
+├── api/v1/                 # API层 - 业务模块路由
 │   ├── ai/                 # AI智能写作接口
 │   ├── bookstore/          # 书店系统接口
 │   ├── reader/             # 阅读器接口
 │   ├── social/             # 社交互动接口
 │   ├── writer/             # 写作创作接口
-│   ├── auth/               # 认证授权接口
+│   ├── user/               # 用户系统接口
+│   ├── shared/             # 共享服务接口（认证/存储/OAuth）
 │   ├── finance/            # 财务支付接口
 │   ├── recommendation/     # 推荐系统接口
-│   ├── notifications/      # 通知公告接口
-│   └── admin/              # 管理后台接口
+│   ├── notifications/      # 通知接口
+│   ├── announcements/      # 公告接口
+│   ├── admin/              # 管理后台接口
+│   ├── discovery/          # 发现页接口
+│   ├── community/          # 社区动态接口
+│   ├── search/             # 统一搜索接口
+│   ├── reading-stats/      # 阅读统计接口
+│   ├── system/             # 系统监控接口
+│   └── internalapi/        # 内部 API（AI Service 回调）
+├── router/                 # 路由注册（各模块独立 router 文件）
+│   └── enter.go            # 主路由入口
 ├── service/                # 业务逻辑层
 │   ├── container/          # 依赖注入容器
 │   ├── ai/                 # AI服务
+│   ├── auth/               # 认证服务
 │   ├── bookstore/          # 书店业务
 │   ├── reader/             # 阅读业务
 │   ├── writer/             # 写作业务
-│   └── [其他模块]/
+│   ├── user/               # 用户服务
+│   ├── social/             # 社交服务
+│   ├── finance/            # 财务服务
+│   ├── admin/              # 管理服务
+│   ├── shared/             # 共享服务（缓存/存储/权限/配置）
+│   ├── recommendation/     # 推荐服务
+│   ├── notification/       # 通知服务
+│   ├── discovery/          # 发现服务
+│   ├── search/             # 搜索服务
+│   ├── messaging/          # 消息服务
+│   └── internalapi/        # 内部 API 服务
 ├── repository/             # 数据访问层
 │   ├── interfaces/         # Repository接口定义
 │   ├── mongodb/            # MongoDB操作封装
@@ -384,29 +412,10 @@ Qingyu_backend/
 │   ├── user/               # 用户模型
 │   ├── bookstore/          # 书店模型
 │   └── [其他模型]/
-├── middleware/             # 中间件
-│   ├── auth_middleware.go  # JWT认证
-│   ├── rbac_middleware.go  # 权限控制
-│   ├── rate_limit.go       # 限流
-│   └── logger.go           # 日志记录
-├── router/                 # 路由注册
-│   └── router.go           # 主路由
-├── core/                   # 核心初始化
-│   ├── database.go         # 数据库初始化
-│   └── redis.go            # Redis初始化
-├── config/                 # 配置文件
-│   ├── config.yaml         # 默认配置
-│   ├── config.test.yaml    # 测试配置
-│   └── config.docker.yaml  # Docker配置
-├── pkg/                    # 通用工具包
-│   ├── cache/              # 缓存封装
-│   ├── logger/             # 日志工具
-│   ├── errors/             # 错误处理
-│   └── response/           # 响应封装
-├── python_ai_service/      # Python AI服务
-│   ├── src/                # FastAPI应用
-│   ├── proto/              # gRPC协议定义
-│   └── tests/              # AI服务测试
+├── middleware/             # 中间件（JWT/CORS/限流/日志/压缩/Quota）
+├── core/                   # 核心初始化（Server/DB/Redis）
+├── config/                 # 配置文件（config.yaml / config.test.yaml / config.docker.yaml）
+├── pkg/                    # 通用工具包（cache/logger/errors/response/transaction/shared helpers）
 ├── test/                   # 测试代码
 │   ├── unit/               # 单元测试
 │   ├── integration/        # 集成测试
@@ -472,7 +481,7 @@ func Initialize() *Container {
 
 ## 核心功能模块
 
-### 10大业务模块概览
+### 核心业务模块概览
 
 <details>
 <summary><b>1. AI智能写作模块</b></summary>
@@ -490,11 +499,14 @@ func Initialize() *Container {
 
 **关键接口**：
 ```bash
-POST /api/v1/ai/writing/continue     # 智能续写
-POST /api/v1/ai/writing/generate     # 内容生成
-POST /api/v1/ai/creative/character   # 角色创建
-POST /api/v1/ai/creative/outline     # 大纲生成
-GET  /api/v1/ai/context/:projectId   # 上下文获取
+POST /api/v1/ai/writing/continue          # 智能续写
+POST /api/v1/ai/writing/continue/stream   # 智能续写（流式）
+POST /api/v1/ai/writing/rewrite           # 文本改写
+POST /api/v1/ai/writing/proofread         # 文本校对
+POST /api/v1/ai/chat                      # AI聊天
+POST /api/v1/ai/creative/outline          # 大纲生成
+POST /api/v1/ai/creative/characters       # 角色生成
+GET  /api/v1/ai/quota                     # 配额查询
 ```
 
 **文档**：[AI模块设计文档](./docs/design/ai/README.md)
@@ -512,11 +524,12 @@ GET  /api/v1/ai/context/:projectId   # 上下文获取
 
 **关键接口**：
 ```bash
-GET  /api/v1/bookstore/books           # 书籍列表
-POST /api/v1/bookstore/books           # 发布书籍
-GET  /api/v1/bookstore/books/:id       # 书籍详情
-GET  /api/v1/bookstore/search          # 搜索书籍
-GET  /api/v1/bookstore/ranking         # 排行榜
+GET  /api/v1/bookstore/homepage           # 首页聚合数据
+GET  /api/v1/bookstore/books              # 书籍列表
+GET  /api/v1/bookstore/books/search       # 搜索书籍
+GET  /api/v1/bookstore/books/:id          # 书籍详情
+GET  /api/v1/bookstore/rankings/realtime  # 实时榜
+GET  /api/v1/bookstore/categories/tree    # 分类树
 ```
 </details>
 
@@ -532,10 +545,12 @@ GET  /api/v1/bookstore/ranking         # 排行榜
 
 **关键接口**：
 ```bash
-GET  /api/v1/reader/books/:id/chapters/:chapterId
-POST /api/v1/reader/progress
-GET  /api/v1/reader/bookmarks
-POST /api/v1/reader/annotations
+GET  /api/v1/reader/books                        # 我的书架
+GET  /api/v1/reader/books/:bookId/chapters/:chapterId  # 章节阅读
+POST /api/v1/reader/progress                     # 保存进度
+POST /api/v1/reader/annotations                  # 创建标注
+GET  /api/v1/reader/statistics/overview          # 阅读统计
+POST /api/v1/reader/chapters/:chapterId/purchase # 购买章节
 ```
 </details>
 
@@ -551,10 +566,13 @@ POST /api/v1/reader/annotations
 
 **关键接口**：
 ```bash
-POST /api/v1/social/comments
-POST /api/v1/social/like
-GET  /api/v1/social/following
-POST /api/v1/social/booklists
+POST /api/v1/social/comments              # 发表评论
+POST /api/v1/social/books/:bookId/like    # 点赞书籍
+POST /api/v1/social/follow/:userId        # 关注用户
+GET  /api/v1/social/collections           # 收藏列表
+POST /api/v1/social/reviews               # 发表书评
+POST /api/v1/social/booklists             # 创建书单
+GET  /api/v1/social/messages/conversations # 会话列表
 ```
 </details>
 
@@ -567,14 +585,16 @@ POST /api/v1/social/booklists
 - 版本控制和历史回溯
 - 人物设定管理
 - 世界观设定
-- 协作编辑支持
+- 文档锁定与解锁
 
 **关键接口**：
 ```bash
-POST /api/v1/writer/projects
-PUT  /api/v1/writer/documents/:id
-POST /api/v1/writer/versions
-GET  /api/v1/writer/settings/:projectId
+POST /api/v1/writer/projects                       # 创建项目
+GET  /api/v1/writer/project/:projectId/documents/tree  # 文档树
+POST /api/v1/writer/documents/:id/autosave         # 自动保存
+GET  /api/v1/writer/document/:docId/versions       # 版本历史
+POST /api/v1/writer/projects/:id/publish           # 发布项目
+POST /api/v1/writer/projects/:id/characters        # 创建角色
 ```
 </details>
 
@@ -591,11 +611,11 @@ GET  /api/v1/writer/settings/:projectId
 
 **关键接口**：
 ```bash
-POST /api/v1/auth/register
-POST /api/v1/auth/login
-GET  /api/v1/users/profile
-PUT  /api/v1/users/settings
-POST /api/v1/auth/refresh
+POST /api/v1/user/auth/register         # 注册
+POST /api/v1/user/auth/login            # 登录
+POST /api/v1/shared/auth/refresh        # Token刷新
+GET  /api/v1/user/profile               # 个人资料
+POST /api/v1/shared/oauth/:provider/authorize  # OAuth
 ```
 </details>
 
@@ -612,10 +632,12 @@ POST /api/v1/auth/refresh
 
 **关键接口**：
 ```bash
-GET  /api/v1/finance/wallet
-POST /api/v1/finance/recharge
-GET  /api/v1/finance/orders
-GET  /api/v1/finance/author/revenue
+GET  /api/v1/finance/wallet                  # 钱包信息
+POST /api/v1/finance/wallet/recharge         # 充值
+GET  /api/v1/finance/membership/plans        # 会员套餐
+POST /api/v1/finance/membership/subscribe    # 订阅会员
+GET  /api/v1/finance/author/earnings         # 作者收入
+POST /api/v1/finance/author/withdraw         # 申请提现
 ```
 </details>
 
@@ -631,9 +653,10 @@ GET  /api/v1/finance/author/revenue
 
 **关键接口**：
 ```bash
-GET /api/v1/recommendation/for-you
-GET /api/v1/recommendation/similar/:id
-GET /api/v1/recommendation/hot
+GET  /api/v1/recommendation/personalized  # 个性化推荐
+GET  /api/v1/recommendation/similar       # 相似推荐
+GET  /api/v1/recommendation/hot           # 热门推荐
+POST /api/v1/recommendation/behavior      # 行为记录
 ```
 </details>
 
@@ -649,9 +672,10 @@ GET /api/v1/recommendation/hot
 
 **关键接口**：
 ```bash
-GET  /api/v1/notifications
-POST /api/v1/admin/announcements
-PUT  /api/v1/notifications/settings
+GET  /api/v1/notifications              # 通知列表
+GET  /api/v1/notifications/unread-count  # 未读数量
+PUT  /api/v1/notifications/preferences   # 通知偏好
+GET  /api/v1/announcements/effective     # 有效公告
 ```
 </details>
 
@@ -667,10 +691,12 @@ PUT  /api/v1/notifications/settings
 
 **关键接口**：
 ```bash
-GET  /api/v1/admin/users
-POST /api/v1/admin/audit/:id
-GET  /api/v1/admin/stats
-PUT  /api/v1/admin/config
+GET  /api/v1/admin/users                    # 用户管理
+POST /api/v1/admin/audit/:id/review         # 内容审核
+GET  /api/v1/admin/stats                    # 系统统计
+GET  /api/v1/admin/quota/dashboard          # AI配额仪表盘
+PUT  /api/v1/admin/config                   # 系统配置
+GET  /api/v1/admin/quota/alerts             # 配额告警
 ```
 </details>
 
@@ -1336,8 +1362,8 @@ go tool pprof -list CreateBook /path/to/profile
 
 ## 联系方式
 
-- 项目主页：https://github.com/your-org/Qingyu_backend
-- 问题反馈：https://github.com/your-org/Qingyu_backend/issues
+- 项目主页：https://github.com/yukin371/Qingyu_backend
+- 问题反馈：https://github.com/yukin371/Qingyu_backend/issues
 - 邮箱：dev@qingyu.com
 
 ## 相关文档
