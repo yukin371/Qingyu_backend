@@ -11,25 +11,31 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	bookstoreModel "Qingyu_backend/models/bookstore"
+	sharedModel "Qingyu_backend/models/shared"
 	statsModel "Qingyu_backend/models/stats"
+	bookstoreRepo "Qingyu_backend/repository/mongodb/bookstore"
 	statsRepo "Qingyu_backend/repository/mongodb/stats"
 	readingStats "Qingyu_backend/service/reader/stats"
 	"Qingyu_backend/test/testutil"
 )
 
-func setupWriterStatsAggregateAPITest(t *testing.T) (*WriterStatsAggregateAPI, string) {
+func setupWriterStatsAggregateAPITest(t *testing.T) (*WriterStatsAggregateAPI, string, string) {
 	t.Helper()
 
 	db, cleanup := testutil.SetupTestDB(t)
 	t.Cleanup(cleanup)
 
 	ctx := context.Background()
+	bookRepo := bookstoreRepo.NewMongoBookRepository(db.Client(), db.Name())
 	bookStatsRepo := statsRepo.NewMongoBookStatsRepository(db)
 	readerBehaviorRepo := statsRepo.NewMongoReaderBehaviorRepository(db)
 	chapterStatsRepo := statsRepo.NewMongoChapterStatsRepository(db)
 	statsService := readingStats.NewReadingStatsService(chapterStatsRepo, readerBehaviorRepo, bookStatsRepo)
 
-	bookID := primitive.NewObjectID().Hex()
+	bookOID := primitive.NewObjectID()
+	bookID := bookOID.Hex()
+	projectID := "project-lookup"
 	now := time.Now()
 	today := now.Truncate(24 * time.Hour)
 	twoDaysAgo := today.AddDate(0, 0, -2)
@@ -42,6 +48,13 @@ func setupWriterStatsAggregateAPITest(t *testing.T) (*WriterStatsAggregateAPI, s
 			t.Fatalf("seed writer stats fixtures failed: %v", err)
 		}
 	}
+
+	must(bookRepo.Create(ctx, &bookstoreModel.Book{
+		IdentifiedEntity: sharedModel.IdentifiedEntity{ID: bookOID},
+		ProjectID:        &projectID,
+		Title:            "测试作品",
+		AuthorID:         "author-1",
+	}))
 
 	must(bookStatsRepo.Create(ctx, &statsModel.BookStats{
 		BookID:             bookID,
@@ -124,7 +137,7 @@ func setupWriterStatsAggregateAPITest(t *testing.T) (*WriterStatsAggregateAPI, s
 		StatDate:       today,
 	}))
 
-	return NewWriterStatsAggregateAPI(statsService, nil), bookID
+	return NewWriterStatsAggregateAPI(statsService, bookRepo), bookID, projectID
 }
 
 func decodeWriterStatsAggregateResponse(t *testing.T, body []byte) map[string]any {
@@ -137,10 +150,42 @@ func decodeWriterStatsAggregateResponse(t *testing.T, body []byte) map[string]an
 	return resp
 }
 
+func TestWriterStatsAggregateAPIResolveAggregateBookIDPrefersExplicitParams(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	api := NewWriterStatsAggregateAPI(nil, nil)
+
+	c, _ := newWriterTestContext(http.MethodGet, "/api/v1/writer/stats/overview?bookId=book-1&projectId=project-1", "", nil)
+	bookID, ok := api.resolveAggregateBookID(c)
+	assert.True(t, ok)
+	assert.Equal(t, "book-1", bookID)
+
+	c, _ = newWriterTestContext(http.MethodGet, "/api/v1/writer/stats/overview?projectId=project-2", "", nil)
+	bookID, ok = api.resolveAggregateBookID(c)
+	assert.True(t, ok)
+	assert.Equal(t, "project-2", bookID)
+}
+
+func TestSumViewMetricsAggregatesViewsAndSubscribers(t *testing.T) {
+	views, subscribers := sumViewMetrics([]*statsModel.BookStatsDaily{
+		{
+			DailyViews:       12,
+			DailySubscribers: 3,
+		},
+		{
+			DailyViews:       5,
+			DailySubscribers: 2,
+		},
+	})
+
+	assert.Equal(t, int64(17), views)
+	assert.Equal(t, int64(5), subscribers)
+}
+
 func TestWriterStatsAggregateAPIGetOverview_Success(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	api, bookID := setupWriterStatsAggregateAPITest(t)
+	api, bookID, _ := setupWriterStatsAggregateAPITest(t)
 	c, w := newWriterTestContext(http.MethodGet, "/api/v1/writer/stats/overview?bookId="+bookID, "", nil)
 
 	api.GetOverview(c)
@@ -178,7 +223,7 @@ func TestWriterStatsAggregateAPIGetOverview_Success(t *testing.T) {
 func TestWriterStatsAggregateAPIGetViews_Success(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	api, bookID := setupWriterStatsAggregateAPITest(t)
+	api, bookID, _ := setupWriterStatsAggregateAPITest(t)
 	c, w := newWriterTestContext(http.MethodGet, "/api/v1/writer/stats/views?bookId="+bookID+"&days=7", "", nil)
 
 	api.GetViews(c)
@@ -201,7 +246,7 @@ func TestWriterStatsAggregateAPIGetViews_Success(t *testing.T) {
 func TestWriterStatsAggregateAPIGetSubscribers_Success(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	api, bookID := setupWriterStatsAggregateAPITest(t)
+	api, bookID, _ := setupWriterStatsAggregateAPITest(t)
 	c, w := newWriterTestContext(http.MethodGet, "/api/v1/writer/stats/subscribers?bookId="+bookID+"&days=7", "", nil)
 
 	api.GetSubscribers(c)
@@ -223,7 +268,7 @@ func TestWriterStatsAggregateAPIGetSubscribers_Success(t *testing.T) {
 func TestWriterStatsAggregateAPIGetChapters_Success(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	api, bookID := setupWriterStatsAggregateAPITest(t)
+	api, bookID, _ := setupWriterStatsAggregateAPITest(t)
 	c, w := newWriterTestContext(http.MethodGet, "/api/v1/writer/stats/chapters?bookId="+bookID, "", nil)
 
 	api.GetChapters(c)
@@ -247,7 +292,7 @@ func TestWriterStatsAggregateAPIGetChapters_Success(t *testing.T) {
 func TestWriterStatsAggregateAPIGetToday_Success(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
-	api, bookID := setupWriterStatsAggregateAPITest(t)
+	api, bookID, _ := setupWriterStatsAggregateAPITest(t)
 	c, w := newWriterTestContext(http.MethodGet, "/api/v1/writer/stats/today?bookId="+bookID, "", nil)
 
 	api.GetToday(c)
@@ -262,4 +307,23 @@ func TestWriterStatsAggregateAPIGetToday_Success(t *testing.T) {
 	assert.Equal(t, float64(8), data["views"])
 	assert.Equal(t, float64(2), data["subscribers"])
 	assert.Equal(t, float64(0), data["words"])
+}
+
+func TestWriterStatsAggregateAPIGetOverview_ResolvesProjectID(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	api, bookID, projectID := setupWriterStatsAggregateAPITest(t)
+	c, w := newWriterTestContext(http.MethodGet, "/api/v1/writer/stats/overview?projectId="+projectID, "", nil)
+
+	api.GetOverview(c)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	resp := decodeWriterStatsAggregateResponse(t, w.Body.Bytes())
+	data := resp["data"].(map[string]any)
+	assert.Equal(t, bookID, data["bookId"])
+	assert.Equal(t, "测试作品", data["title"])
+	assert.Equal(t, float64(120), data["totalViews"])
+	assert.Equal(t, float64(8), data["todayViews"])
+	assert.Equal(t, float64(17), data["monthViews"])
+	assert.Equal(t, float64(0.5), data["retentionRate"])
 }

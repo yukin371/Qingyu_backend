@@ -147,6 +147,109 @@ func TestQuotaPolicyServiceCreatePolicyAppliesDefaultsAndDetectsDuplicates(t *te
 	})
 }
 
+func TestQuotaPolicyServiceUpdatePolicyValidatesExistenceConflictsAndQuotaDefaults(t *testing.T) {
+	t.Run("rejects nil policy", func(t *testing.T) {
+		service := NewQuotaPolicyService(newQuotaPolicyRepoStub())
+
+		err := service.UpdatePolicy(context.Background(), nil)
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "策略不能为空")
+	})
+
+	t.Run("rejects missing policy", func(t *testing.T) {
+		service := NewQuotaPolicyService(newQuotaPolicyRepoStub())
+
+		err := service.UpdatePolicy(context.Background(), &aiModels.QuotaPolicy{ID: primitive.NewObjectID()})
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "策略不存在")
+	})
+
+	t.Run("rejects duplicate role and membership combination", func(t *testing.T) {
+		repo := newQuotaPolicyRepoStub()
+		existing := &aiModels.QuotaPolicy{
+			ID:              primitive.NewObjectID(),
+			UserRole:        aiModels.UserRoleReader,
+			MembershipLevel: aiModels.MembershipLevelNormal,
+		}
+		conflict := &aiModels.QuotaPolicy{
+			ID:              primitive.NewObjectID(),
+			UserRole:        aiModels.UserRoleWriter,
+			MembershipLevel: aiModels.MembershipLevelVipMonthly,
+		}
+		repo.policiesByID[existing.ID.Hex()] = existing
+		repo.policiesByID[conflict.ID.Hex()] = conflict
+		repo.policiesByRoleAndLevel[policyRepoKey(existing.UserRole, existing.MembershipLevel)] = existing
+		repo.policiesByRoleAndLevel[policyRepoKey(conflict.UserRole, conflict.MembershipLevel)] = conflict
+
+		service := NewQuotaPolicyService(repo)
+		err := service.UpdatePolicy(context.Background(), &aiModels.QuotaPolicy{
+			ID:              existing.ID,
+			UserRole:        conflict.UserRole,
+			MembershipLevel: conflict.MembershipLevel,
+		})
+
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "已存在角色")
+		assert.Empty(t, repo.updatePolicies)
+	})
+
+	t.Run("fills default daily and monthly quota on update", func(t *testing.T) {
+		repo := newQuotaPolicyRepoStub()
+		existing := &aiModels.QuotaPolicy{
+			ID:              primitive.NewObjectID(),
+			UserRole:        aiModels.UserRoleWriter,
+			MembershipLevel: aiModels.MembershipLevelVipMonthly,
+			DailyQuota:      88,
+			MonthlyQuota:    1234,
+			TotalQuota:      5000,
+		}
+		repo.policiesByID[existing.ID.Hex()] = existing
+		repo.policiesByRoleAndLevel[policyRepoKey(existing.UserRole, existing.MembershipLevel)] = existing
+
+		service := NewQuotaPolicyService(repo)
+		err := service.UpdatePolicy(context.Background(), &aiModels.QuotaPolicy{
+			ID:              existing.ID,
+			UserRole:        existing.UserRole,
+			MembershipLevel: existing.MembershipLevel,
+			DailyQuota:      0,
+			MonthlyQuota:    -1,
+			TotalQuota:      0,
+		})
+
+		require.NoError(t, err)
+		require.Len(t, repo.updatePolicies, 1)
+		updated := repo.updatePolicies[0]
+		assert.Equal(t, 1000, updated.DailyQuota)
+		assert.Equal(t, 30000, updated.MonthlyQuota)
+		assert.Equal(t, 0, updated.TotalQuota)
+	})
+
+	t.Run("rejects unsupported negative total quota", func(t *testing.T) {
+		repo := newQuotaPolicyRepoStub()
+		existing := &aiModels.QuotaPolicy{
+			ID:              primitive.NewObjectID(),
+			UserRole:        aiModels.UserRoleAdmin,
+			MembershipLevel: aiModels.MembershipLevelNormal,
+		}
+		repo.policiesByID[existing.ID.Hex()] = existing
+		repo.policiesByRoleAndLevel[policyRepoKey(existing.UserRole, existing.MembershipLevel)] = existing
+
+		service := NewQuotaPolicyService(repo)
+		err := service.UpdatePolicy(context.Background(), &aiModels.QuotaPolicy{
+			ID:              existing.ID,
+			UserRole:        existing.UserRole,
+			MembershipLevel: existing.MembershipLevel,
+			DailyQuota:      10,
+			MonthlyQuota:    100,
+			TotalQuota:      -2,
+		})
+
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "总配额不能为负数")
+		assert.Empty(t, repo.updatePolicies)
+	})
+}
+
 func TestQuotaPolicyServiceInitializeDefaultPoliciesCreatesAllRoleLevelCombinations(t *testing.T) {
 	previousConfig := config.GlobalConfig
 	config.GlobalConfig = &config.Config{
@@ -190,6 +293,36 @@ func TestQuotaPolicyServiceInitializeDefaultPoliciesCreatesAllRoleLevelCombinati
 	assert.Equal(t, 240, policies[policyRepoKey(aiModels.UserRoleReader, aiModels.MembershipLevelVipYearly)].DailyQuota)
 	assert.Equal(t, 360, policies[policyRepoKey(aiModels.UserRoleWriter, aiModels.MembershipLevelSuperVip)].DailyQuota)
 	assert.Equal(t, 480, policies[policyRepoKey(aiModels.UserRoleAdmin, aiModels.MembershipLevelNormal)].DailyQuota)
+}
+
+func TestQuotaPolicyServiceInitializeDefaultPoliciesSkipsExistingPolicies(t *testing.T) {
+	previousConfig := config.GlobalConfig
+	config.GlobalConfig = &config.Config{
+		AIQuota: &config.AIQuotaConfig{
+			DefaultQuotas: &config.DefaultQuotasConfig{
+				Reader: map[string]int{"normal": 120},
+				Writer: map[string]int{"novice": 360},
+				Admin:  map[string]int{"normal": 480},
+			},
+		},
+	}
+	t.Cleanup(func() {
+		config.GlobalConfig = previousConfig
+	})
+
+	repo := newQuotaPolicyRepoStub()
+	repo.listPolicies = []*aiModels.QuotaPolicy{
+		{
+			ID:              primitive.NewObjectID(),
+			UserRole:        aiModels.UserRoleReader,
+			MembershipLevel: aiModels.MembershipLevelNormal,
+		},
+	}
+
+	service := NewQuotaPolicyService(repo)
+	err := service.InitializeDefaultPolicies(context.Background())
+	require.NoError(t, err)
+	assert.Empty(t, repo.createPolicies)
 }
 
 func TestQuotaPolicyServiceGetEffectiveDailyQuotaUsesActivePolicyConfigAndModelFallbacks(t *testing.T) {
@@ -304,5 +437,20 @@ func TestQuotaPolicyServiceRejectsInvalidInputsAndProtectedDefaults(t *testing.T
 		err := service.DeletePolicy(context.Background(), defaultPolicy.ID.Hex())
 		require.Error(t, err)
 		assert.Contains(t, err.Error(), "不能删除默认策略")
+	})
+
+	t.Run("deletes non-default policy", func(t *testing.T) {
+		repo := newQuotaPolicyRepoStub()
+		policy := &aiModels.QuotaPolicy{
+			ID:        primitive.NewObjectID(),
+			IsDefault: false,
+		}
+		repo.policiesByID[policy.ID.Hex()] = policy
+
+		service := NewQuotaPolicyService(repo)
+
+		err := service.DeletePolicy(context.Background(), policy.ID.Hex())
+		require.NoError(t, err)
+		assert.Equal(t, []string{policy.ID.Hex()}, repo.deletedIDs)
 	})
 }

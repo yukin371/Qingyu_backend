@@ -381,3 +381,29 @@ func TestQuotaDashboardAPIRefreshCacheAndConsistencyCheckTailErrors(t *testing.T
 		assert.Contains(t, w.Body.String(), "执行一致性检查失败")
 	})
 }
+
+func TestQuotaDashboardAPIGetReconciliationSummarySurfacesReaderFailure(t *testing.T) {
+	repo := &quotaDashboardRepoForAPITest{
+		consumption: &aiModels.QuotaConsumptionSummary{
+			GroupBy:      "user",
+			TotalGroups:  1,
+			TotalTokens:  100,
+			TotalRecords: 1,
+			Items: []aiModels.QuotaConsumptionSummaryItem{
+				{GroupKey: "user-1", TotalTokens: 100, TotalRecords: 1},
+			},
+		},
+	}
+	reader := &quotaDashboardSummaryReaderForAPITest{
+		err: errors.New("ai service down"),
+	}
+	router := setupQuotaDashboardAPITestRouter(repo, &quotaDashboardAlertRepoForAPITest{}, reader, nil)
+
+	req, _ := http.NewRequest("GET", "/statistics/reconciliation?timeRange=day&groupBy=user", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Contains(t, w.Body.String(), "获取对账摘要失败")
+	assert.Contains(t, w.Body.String(), "获取AI服务消费聚合摘要失败")
+}

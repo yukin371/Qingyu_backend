@@ -3,6 +3,7 @@ package admin
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -26,6 +27,7 @@ type quotaAlertRepoForAPITest struct {
 	lastStatus    string
 	lastPage      int
 	lastLimit     int
+	listErr       error
 }
 
 func (s *quotaAlertRepoForAPITest) Create(ctx context.Context, alert *aiModels.QuotaAlert) error {
@@ -47,6 +49,9 @@ func (s *quotaAlertRepoForAPITest) List(ctx context.Context, alertType, level, s
 	s.lastStatus = status
 	s.lastPage = page
 	s.lastLimit = limit
+	if s.listErr != nil {
+		return nil, 0, s.listErr
+	}
 
 	items := make([]*aiModels.QuotaAlert, 0, len(s.alerts))
 	for _, alert := range s.alerts {
@@ -372,4 +377,19 @@ func TestQuotaAlertAPIActionHandlersRejectMissingIDAndMalformedJSON(t *testing.T
 			})
 		}
 	})
+}
+
+func TestQuotaAlertAPIListAlertsSurfacesRepositoryErrors(t *testing.T) {
+	repo := &quotaAlertRepoForAPITest{
+		listErr: errors.New("query failed"),
+	}
+	router := setupQuotaAlertAPITestRouterWithRepo(repo)
+
+	req, _ := http.NewRequest("GET", "/alerts?status=open", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Contains(t, w.Body.String(), "获取告警列表失败")
+	assert.Contains(t, w.Body.String(), "query failed")
 }

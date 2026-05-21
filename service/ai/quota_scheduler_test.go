@@ -12,6 +12,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"google.golang.org/grpc"
 )
 
 func TestDetermineConsistencyAlertLevel(t *testing.T) {
@@ -251,5 +252,97 @@ func TestQuotaSchedulerConsistencyChecksHandleMissingDependenciesAndDownstreamEr
 
 		err := scheduler.checkAggregatedConsistency(context.Background())
 		assert.NoError(t, err)
+	})
+}
+
+type quotaSchedulerAIClientConnStub struct {
+	invokeCount int
+	batchResp   *pb.QuotaConsumptionBatchResponse
+	invokeErr   error
+}
+
+func (s *quotaSchedulerAIClientConnStub) Invoke(ctx context.Context, method string, args interface{}, reply interface{}, opts ...grpc.CallOption) error {
+	s.invokeCount++
+	if s.invokeErr != nil {
+		return s.invokeErr
+	}
+	if resp, ok := reply.(*pb.QuotaConsumptionBatchResponse); ok && s.batchResp != nil {
+		*resp = *s.batchResp
+	}
+	return nil
+}
+
+func (s *quotaSchedulerAIClientConnStub) NewStream(ctx context.Context, desc *grpc.StreamDesc, method string, opts ...grpc.CallOption) (grpc.ClientStream, error) {
+	return nil, errors.New("not implemented")
+}
+
+func TestQuotaSchedulerCheckUserLevelConsistencySkipsInvalidConsumersAndSurfacesBatchFailures(t *testing.T) {
+	t.Run("skips when top consumers are invalid", func(t *testing.T) {
+		conn := &quotaSchedulerAIClientConnStub{}
+		scheduler := &QuotaScheduler{
+			dashboardService: &QuotaDashboardService{
+				quotaRepo: &quotaDashboardRepoStub{
+					topConsumers: []aiModels.UserQuotaRanking{
+						{UserID: "", UsedQuota: 100},
+						{UserID: "user-zero", UsedQuota: 0},
+					},
+				},
+			},
+			phase3Client: &Phase3Client{client: pb.NewAIServiceClient(conn)},
+			logger:       log.Default(),
+		}
+
+		err := scheduler.checkUserLevelConsistency(context.Background())
+		assert.NoError(t, err)
+		assert.Equal(t, 0, conn.invokeCount)
+	})
+
+	t.Run("surfaces unsuccessful ai batch response", func(t *testing.T) {
+		conn := &quotaSchedulerAIClientConnStub{
+			batchResp: &pb.QuotaConsumptionBatchResponse{
+				Success:      false,
+				ErrorMessage: "batch unavailable",
+			},
+		}
+		scheduler := &QuotaScheduler{
+			dashboardService: &QuotaDashboardService{
+				quotaRepo: &quotaDashboardRepoStub{
+					topConsumers: []aiModels.UserQuotaRanking{
+						{UserID: "user-1", UsedQuota: 100},
+					},
+				},
+			},
+			phase3Client: &Phase3Client{client: pb.NewAIServiceClient(conn)},
+			logger:       log.Default(),
+		}
+
+		err := scheduler.checkUserLevelConsistency(context.Background())
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "AI service batch quota query failed")
+		assert.Contains(t, err.Error(), "batch unavailable")
+		assert.Equal(t, 1, conn.invokeCount)
+	})
+
+	t.Run("surfaces ai batch rpc errors", func(t *testing.T) {
+		conn := &quotaSchedulerAIClientConnStub{
+			invokeErr: errors.New("rpc down"),
+		}
+		scheduler := &QuotaScheduler{
+			dashboardService: &QuotaDashboardService{
+				quotaRepo: &quotaDashboardRepoStub{
+					topConsumers: []aiModels.UserQuotaRanking{
+						{UserID: "user-1", UsedQuota: 100},
+					},
+				},
+			},
+			phase3Client: &Phase3Client{client: pb.NewAIServiceClient(conn)},
+			logger:       log.Default(),
+		}
+
+		err := scheduler.checkUserLevelConsistency(context.Background())
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "load AI service quota summaries failed")
+		assert.Contains(t, err.Error(), "rpc down")
+		assert.Equal(t, 1, conn.invokeCount)
 	})
 }
