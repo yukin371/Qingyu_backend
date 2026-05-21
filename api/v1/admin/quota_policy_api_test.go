@@ -333,6 +333,50 @@ func TestQuotaPolicyAPIUpdatePolicyRejectsMalformedJSON(t *testing.T) {
 	assert.Contains(t, w.Body.String(), "参数错误")
 }
 
+func TestQuotaPolicyAPIUpdatePolicySurfacesGetFailure(t *testing.T) {
+	repo := newQuotaPolicyAPITestRepo()
+	policyID := primitive.NewObjectID()
+	repo.getByIDErr = errors.New("get failed")
+	router := setupQuotaPolicyAPITestRouter(repo)
+
+	reqBody := `{"name":"reader-updated","userRole":"reader","membershipLevel":"normal","dailyQuota":222,"monthlyQuota":6666,"totalQuota":-1,"description":"updated"}`
+	req, err := http.NewRequest(http.MethodPut, "/policies/"+policyID.Hex(), strings.NewReader(reqBody))
+	require.NoError(t, err)
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Contains(t, w.Body.String(), "获取策略失败")
+	assert.Contains(t, w.Body.String(), "get failed")
+}
+
+func TestQuotaPolicyAPIUpdatePolicySurfacesUpdateFailure(t *testing.T) {
+	repo := newQuotaPolicyAPITestRepo()
+	policyID := primitive.NewObjectID()
+	repo.policiesByID[policyID.Hex()] = &aiModels.QuotaPolicy{
+		ID:              policyID,
+		Name:            "reader-normal",
+		UserRole:        aiModels.UserRoleReader,
+		MembershipLevel: aiModels.MembershipLevelNormal,
+	}
+	repo.updateErr = errors.New("update failed")
+	router := setupQuotaPolicyAPITestRouter(repo)
+
+	reqBody := `{"name":"reader-updated","userRole":"reader","membershipLevel":"normal","dailyQuota":222,"monthlyQuota":6666,"totalQuota":-1,"description":"updated"}`
+	req, err := http.NewRequest(http.MethodPut, "/policies/"+policyID.Hex(), strings.NewReader(reqBody))
+	require.NoError(t, err)
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Contains(t, w.Body.String(), "更新策略失败")
+	assert.Contains(t, w.Body.String(), "update failed")
+}
+
 func TestQuotaPolicyAPIDeletePolicySurfacesDeleteFailure(t *testing.T) {
 	repo := newQuotaPolicyAPITestRepo()
 	policyID := primitive.NewObjectID()
