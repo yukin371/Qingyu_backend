@@ -29,6 +29,7 @@ type quotaAdminAPITestRepo struct {
 	lastListSearch string
 	lastListPage   int
 	lastListLimit  int
+	listErr        error
 
 	quotasByKey   map[string]*aiModels.UserQuota
 	quotasByUser  map[string][]*aiModels.UserQuota
@@ -148,6 +149,9 @@ func (s *quotaAdminAPITestRepo) ListUserQuotas(ctx context.Context, role, status
 	s.lastListSearch = search
 	s.lastListPage = page
 	s.lastListLimit = limit
+	if s.listErr != nil {
+		return nil, 0, s.listErr
+	}
 	return s.listItems, s.listTotal, nil
 }
 
@@ -256,6 +260,20 @@ func TestQuotaAdminAPIListUserQuotasNormalizesPagingAndForwardsFilters(t *testin
 	assert.Equal(t, 20, resp.Size)
 	assert.Equal(t, int64(1), resp.Total)
 	require.Len(t, resp.Data, 1)
+}
+
+func TestQuotaAdminAPIListUserQuotasSurfacesServiceError(t *testing.T) {
+	repo := newQuotaAdminAPITestRepo()
+	repo.listErr = errors.New("list failed")
+	_, router := setupQuotaAdminAPITestHarness(repo, nil)
+
+	req, _ := http.NewRequest(http.MethodGet, "/users", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Contains(t, w.Body.String(), "获取用户配额列表失败")
+	assert.Contains(t, w.Body.String(), "list failed")
 }
 
 func TestQuotaAdminAPIGetUserQuotaDetailsSurfacesServiceError(t *testing.T) {
@@ -438,6 +456,22 @@ func TestQuotaAdminAPIGetUserQuotaReconciliationRejectsMissingUserID(t *testing.
 
 	require.Equal(t, http.StatusBadRequest, w.Code)
 	assert.Contains(t, w.Body.String(), "用户ID不能为空")
+}
+
+func TestQuotaAdminAPIGetUserQuotaReconciliationSurfacesServiceError(t *testing.T) {
+	repo := newQuotaAdminAPITestRepo()
+	reader := &quotaConsumptionReaderStub{
+		err: errors.New("reconciliation failed"),
+	}
+	_, router := setupQuotaAdminAPITestHarness(repo, reader)
+
+	req, _ := http.NewRequest(http.MethodGet, "/users/user-1/reconciliation", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Contains(t, w.Body.String(), "获取配额对账结果失败")
+	assert.Contains(t, w.Body.String(), "reconciliation failed")
 }
 
 func TestQuotaAdminAPIRechargeUserQuotaRejectsMissingUserID(t *testing.T) {
