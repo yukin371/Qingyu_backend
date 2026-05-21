@@ -11,7 +11,7 @@ func GetJWTConfigEnhanced() *JWTConfigEnhanced {
 	} else {
 		// 默认配置
 		baseJWT = &JWTConfig{
-			Secret:          "qingyu-secret-key-change-in-production",
+			Secret:          "",
 			ExpirationHours: 24,
 		}
 	}

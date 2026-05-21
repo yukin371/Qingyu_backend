@@ -3,12 +3,11 @@ package recommendation
 import (
 	recModel "Qingyu_backend/models/recommendation"
 	sharedtypes "Qingyu_backend/models/shared/types"
+	recoRepo "Qingyu_backend/repository/interfaces/recommendation"
 	"context"
 	"fmt"
 	"sort"
 	"time"
-
-	sharedRepo "Qingyu_backend/repository/interfaces/shared"
 )
 
 // TODO: 完善推荐算法
@@ -21,7 +20,7 @@ import (
 
 // RecommendationServiceImpl 推荐服务实现
 type RecommendationServiceImpl struct {
-	recRepo     sharedRepo.RecommendationRepository
+	recRepo     recoRepo.RecommendationRepository
 	cacheClient CacheClient // Redis缓存客户端
 	cacheTTL    time.Duration
 	initialized bool // 初始化标志
@@ -35,7 +34,7 @@ type CacheClient interface {
 }
 
 // NewRecommendationService 创建推荐服务
-func NewRecommendationService(recRepo sharedRepo.RecommendationRepository, cacheClient CacheClient) RecommendationService {
+func NewRecommendationService(recRepo recoRepo.RecommendationRepository, cacheClient CacheClient) RecommendationService {
 	return &RecommendationServiceImpl{
 		recRepo:     recRepo,
 		cacheClient: cacheClient,

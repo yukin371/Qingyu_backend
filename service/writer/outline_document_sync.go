@@ -3,7 +3,6 @@ package writer
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 
 	"Qingyu_backend/models/writer"
@@ -80,29 +79,23 @@ func (s *OutlineDocumentSyncService) findOrCreateGlobalOutline(ctx context.Conte
 	lockKey := fmt.Sprintf("global_outline:%s", projectID)
 	lockID, err := s.distLock.AcquireWithRetry(ctx, lockKey, 5*time.Second, 3, 500*time.Millisecond)
 	if err != nil {
-		log.Printf("[OutlineDocSync] 获取分布式锁失败: %v", err)
 		return s.findOrCreateGlobalOutlineWithUpsert(ctx, projectID)
 	}
 	defer func() {
-		if releaseErr := s.distLock.Release(ctx, lockKey, lockID); releaseErr != nil {
-			log.Printf("[OutlineDocSync] 释放分布式锁失败: %v", releaseErr)
-		}
+		_ = s.distLock.Release(ctx, lockKey, lockID)
 	}()
 
 	// 临界区内使用原子性 upsert
 	projectOID, _ := primitive.ObjectIDFromHex(projectID)
 	existing, err := s.outlineRepo.FindByGlobalOutline(ctx, projectOID)
 	if err != nil {
-		log.Printf("[OutlineDocSync] FindByGlobalOutline 失败: %v", err)
 		return "", err
 	}
 
 	if existing != nil {
-		log.Printf("[OutlineDocSync] 找到已有全局总纲: project=%s outline=%s", projectID, existing.ID.Hex())
 		return existing.ID.Hex(), nil
 	}
 
-	log.Printf("[OutlineDocSync] 严重错误: FindByGlobalOutline 应该原子性创建全局总纲，但返回了 nil")
 	return "", fmt.Errorf("findOrCreateGlobalOutline 失败: FindByGlobalOutline 返回 nil")
 }
 
@@ -112,24 +105,20 @@ func (s *OutlineDocumentSyncService) findOrCreateGlobalOutlineWithUpsert(ctx con
 
 	existing, err := s.outlineRepo.FindByGlobalOutline(ctx, projectOID)
 	if err != nil {
-		log.Printf("[OutlineDocSync] FindByGlobalOutline 失败: %v", err)
 		return "", err
 	}
 
 	if existing != nil {
-		log.Printf("[OutlineDocSync] 找到已有全局总纲: project=%s outline=%s", projectID, existing.ID.Hex())
 		return existing.ID.Hex(), nil
 	}
 
 	// 如果返回 nil 但没有错误，说明 FindByGlobalOutline 没有正确实现 upsert
 	// 这不应该发生，但如果发生了，我们尝试最后一次查找
-	log.Printf("[OutlineDocSync] FindByGlobalOutline 返回 nil，尝试再次查找...")
 	existing, err = s.outlineRepo.FindByGlobalOutline(ctx, projectOID)
 	if err == nil && existing != nil {
 		return existing.ID.Hex(), nil
 	}
 
-	log.Printf("[OutlineDocSync] 严重错误: FindByGlobalOutline 应该原子性创建全局总纲，但返回了 nil")
 	return "", fmt.Errorf("findOrCreateGlobalOutline 失败: FindByGlobalOutline 返回 nil")
 }
 
@@ -140,7 +129,6 @@ func (s *OutlineDocumentSyncService) docTypeToOutlineParentID(ctx context.Contex
 		// 卷的父节点是全局总纲
 		globalOutlineID, err := s.findOrCreateGlobalOutline(ctx, projectID)
 		if err != nil {
-			log.Printf("[OutlineDocSync] 获取全局总纲失败: %v", err)
 			return ""
 		}
 		return globalOutlineID
@@ -191,17 +179,12 @@ func (s *OutlineDocumentSyncService) SyncFromOutlineCreation(
 
 	// 持久化文档到数据库
 	if err := s.documentRepo.Create(ctx, doc); err != nil {
-		log.Printf("[OutlineDocSync] 自动创建文档失败: %v", err)
 		return nil, err
 	}
 
 	// 回写大纲节点的 document_id 引用
 	outlineNode.DocumentID = doc.ID.Hex()
-	if err := s.outlineRepo.Update(ctx, outlineNode); err != nil {
-		log.Printf("[OutlineDocSync] 回写大纲document_id失败: %v", err)
-	}
-
-	log.Printf("[OutlineDocSync] 自动创建文档: outline=%s → doc=%s type=%s level=%d", outlineNode.ID.Hex(), doc.ID.Hex(), docType, docLevel)
+	_ = s.outlineRepo.Update(ctx, outlineNode)
 	return doc, nil
 }
 
@@ -224,10 +207,8 @@ func (s *OutlineDocumentSyncService) SyncFromDocumentCreation(
 			"outline_node_id": existingOutline.ID.Hex(),
 		}
 		if updateErr := s.documentRepo.Update(ctx, doc.ID.Hex(), updates); updateErr != nil {
-			log.Printf("[OutlineDocSync] 回写文档outline_node_id失败: %v", updateErr)
 			return nil, updateErr
 		}
-		log.Printf("[OutlineDocSync] 复用已有大纲: doc=%s → outline=%s", doc.ID.Hex(), existingOutline.ID.Hex())
 		return existingOutline, nil
 	}
 
@@ -239,15 +220,9 @@ func (s *OutlineDocumentSyncService) SyncFromDocumentCreation(
 	case "volume":
 		outlineParentID = s.docTypeToOutlineParentID(ctx, doc, projectID)
 		outlineType = "arc"
-		if outlineParentID == "" {
-			log.Printf("[OutlineDocSync] 警告: volume 文档 %s 无法找到全局总纲", doc.ID.Hex())
-		}
 	case "chapter":
 		outlineParentID = s.docTypeToOutlineParentID(ctx, doc, projectID)
 		outlineType = "scene"
-		if outlineParentID == "" {
-			log.Printf("[OutlineDocSync] 警告: chapter 文档 %s 无法找到父卷对应的大纲节点", doc.ID.Hex())
-		}
 	default:
 		return nil, nil
 	}
@@ -265,7 +240,6 @@ func (s *OutlineDocumentSyncService) SyncFromDocumentCreation(
 
 	// 持久化大纲节点到数据库
 	if err := s.outlineRepo.Create(ctx, outlineNode); err != nil {
-		log.Printf("[OutlineDocSync] 自动创建大纲失败: %v", err)
 		return nil, err
 	}
 
@@ -273,11 +247,7 @@ func (s *OutlineDocumentSyncService) SyncFromDocumentCreation(
 	updates := map[string]interface{}{
 		"outline_node_id": outlineNode.ID.Hex(),
 	}
-	if err := s.documentRepo.Update(ctx, doc.ID.Hex(), updates); err != nil {
-		log.Printf("[OutlineDocSync] 回写文档outline_node_id失败: %v", err)
-	}
-
-	log.Printf("[OutlineDocSync] 自动创建大纲: doc=%s → outline=%s type=%s parent=%s", doc.ID.Hex(), outlineNode.ID.Hex(), outlineType, outlineParentID)
+	_ = s.documentRepo.Update(ctx, doc.ID.Hex(), updates)
 	return outlineNode, nil
 }
 
@@ -295,10 +265,8 @@ func (s *OutlineDocumentSyncService) SyncTitleToDocument(ctx context.Context, ou
 		"title": newTitle,
 	}
 	if err := s.documentRepo.Update(ctx, outlineNode.DocumentID, updates); err != nil {
-		log.Printf("[OutlineDocSync] 同步标题到文档失败: %v", err)
 		return err
 	}
-	log.Printf("[OutlineDocSync] 标题同步: outline=%s → doc=%s title=%s", outlineNodeID, outlineNode.DocumentID, newTitle)
 	return nil
 }
 
@@ -319,10 +287,8 @@ func (s *OutlineDocumentSyncService) SyncTitleToOutline(ctx context.Context, doc
 
 	outlineNode.Title = newTitle
 	if err := s.outlineRepo.Update(ctx, outlineNode); err != nil {
-		log.Printf("[OutlineDocSync] 同步标题到大纲失败: %v", err)
 		return err
 	}
-	log.Printf("[OutlineDocSync] 标题同步: doc=%s → outline=%s title=%s", documentID, doc.OutlineNodeID, newTitle)
 	return nil
 }
 
@@ -337,10 +303,8 @@ func (s *OutlineDocumentSyncService) HandleOutlineDeletion(ctx context.Context, 
 		"outline_node_id": "",
 	}
 	if err := s.documentRepo.Update(ctx, outlineNode.DocumentID, updates); err != nil {
-		log.Printf("[OutlineDocSync] 清除文档大纲引用失败: %v", err)
 		return err
 	}
-	log.Printf("[OutlineDocSync] 大纲删除，解除文档关联: outline=%s doc=%s", outlineNode.ID.Hex(), outlineNode.DocumentID)
 	return nil
 }
 
@@ -357,10 +321,8 @@ func (s *OutlineDocumentSyncService) HandleDocumentDeletion(ctx context.Context,
 	}
 	outlineNode.DocumentID = ""
 	if err := s.outlineRepo.Update(ctx, outlineNode); err != nil {
-		log.Printf("[OutlineDocSync] 清除大纲文档引用失败: %v", err)
 		return err
 	}
-	log.Printf("[OutlineDocSync] 文档删除，解除大纲关联: doc=%s outline=%s", doc.ID.Hex(), doc.OutlineNodeID)
 	return nil
 }
 
@@ -370,10 +332,8 @@ func (s *OutlineDocumentSyncService) syncOutlineToDocument(ctx context.Context, 
 		"outline_node_id": outlineNodeID,
 	}
 	if err := s.documentRepo.Update(ctx, documentID, updates); err != nil {
-		log.Printf("[OutlineDocSync] 回写文档outline_node_id失败: %v", err)
 		return err
 	}
-	log.Printf("[OutlineDocSync] 大纲创建后同步文档引用: outline=%s → doc=%s", outlineNodeID, documentID)
 	return nil
 }
 
@@ -397,10 +357,7 @@ func (s *OutlineDocumentSyncService) SyncLevelChangeToDocument(ctx context.Conte
 		updates := map[string]interface{}{
 			"outline_node_id": "",
 		}
-		if err := s.documentRepo.Update(ctx, outlineNode.DocumentID, updates); err != nil {
-			log.Printf("[OutlineDocSync] 清除文档关联失败: %v", err)
-		}
-		log.Printf("[OutlineDocSync] 大纲层级变为非映射层级，清除文档关联: outline=%s doc=%s newLevel=%d", outlineNodeID, outlineNode.DocumentID, newLevel)
+		_ = s.documentRepo.Update(ctx, outlineNode.DocumentID, updates)
 		return nil
 	}
 
@@ -410,10 +367,7 @@ func (s *OutlineDocumentSyncService) SyncLevelChangeToDocument(ctx context.Conte
 		"type":  newDocType,
 	}
 	if err := s.documentRepo.Update(ctx, outlineNode.DocumentID, updates); err != nil {
-		log.Printf("[OutlineDocSync] 同步层级变化到文档失败: %v", err)
 		return err
 	}
-
-	log.Printf("[OutlineDocSync] 层级变化同步: outline=%s doc=%s newLevel=%d newType=%s", outlineNodeID, outlineNode.DocumentID, newLevel, newDocType)
 	return nil
 }

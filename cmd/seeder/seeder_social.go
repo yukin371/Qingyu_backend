@@ -6,10 +6,12 @@ import (
 	"fmt"
 	"math"
 	"math/rand"
+	"strings"
 	"time"
 
 	"Qingyu_backend/cmd/seeder/config"
 	"Qingyu_backend/cmd/seeder/utils"
+	socialModel "Qingyu_backend/models/social"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -20,6 +22,23 @@ type SocialSeeder struct {
 	db       *utils.Database
 	config   *config.Config
 	inserter *utils.BulkInserter
+}
+
+type socialSeedUser struct {
+	ID       primitive.ObjectID `bson:"_id"`
+	Username string             `bson:"username"`
+	Nickname string             `bson:"nickname"`
+	Avatar   string             `bson:"avatar"`
+}
+
+type socialSeedBook struct {
+	ID           primitive.ObjectID `bson:"_id"`
+	Title        string             `bson:"title"`
+	Author       string             `bson:"author"`
+	Introduction string             `bson:"introduction"`
+	Cover        string             `bson:"cover"`
+	Categories   []string           `bson:"categories"`
+	Tags         []string           `bson:"tags"`
 }
 
 // NewSocialSeeder 创建社交数据填充器
@@ -35,12 +54,12 @@ func (s *SocialSeeder) SeedSocialData() error {
 	ctx := context.Background()
 
 	// 获取用户和书籍
-	users, err := s.getUserIDs(ctx)
+	users, err := s.getUsers(ctx)
 	if err != nil {
 		return fmt.Errorf("获取用户列表失败: %w", err)
 	}
 
-	books, err := s.getBookIDs(ctx)
+	books, err := s.getBooks(ctx)
 	if err != nil {
 		return fmt.Errorf("获取书籍列表失败: %w", err)
 	}
@@ -55,11 +74,18 @@ func (s *SocialSeeder) SeedSocialData() error {
 		return nil
 	}
 
+	userIDs := socialSeedUserIDs(users)
+	bookIDs := socialSeedBookIDs(books)
+
+	if err := s.seedPosts(ctx, users, books); err != nil {
+		return err
+	}
+
 	// 用于收集每本书的评分
 	bookRatings := make(map[string][]float64)
 
 	// 创建评论
-	if err := s.seedComments(ctx, users, books, bookRatings); err != nil {
+	if err := s.seedComments(ctx, userIDs, bookIDs, bookRatings); err != nil {
 		return err
 	}
 
@@ -69,70 +95,233 @@ func (s *SocialSeeder) SeedSocialData() error {
 	}
 
 	// 创建点赞
-	if err := s.seedLikes(ctx, users, books); err != nil {
+	if err := s.seedLikes(ctx, userIDs, bookIDs); err != nil {
 		return err
 	}
 
 	// 创建收藏
-	if err := s.seedCollections(ctx, users, books); err != nil {
+	if err := s.seedCollections(ctx, userIDs, bookIDs); err != nil {
 		return err
 	}
 
 	// 创建关注
-	if err := s.seedFollows(ctx, users); err != nil {
+	if err := s.seedFollows(ctx, userIDs); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-// getUserIDs 获取用户ID列表
-func (s *SocialSeeder) getUserIDs(ctx context.Context) ([]string, error) {
+// getUsers 获取用户列表
+func (s *SocialSeeder) getUsers(ctx context.Context) ([]socialSeedUser, error) {
 	cursor, err := s.db.Collection("users").Find(ctx, bson.M{})
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
 
-	var users []struct {
-		ID string `bson:"_id"`
-	}
+	var users []socialSeedUser
 	if err := cursor.All(ctx, &users); err != nil {
 		return nil, err
 	}
-
-	userIDs := make([]string, len(users))
-	for i, u := range users {
-		userIDs[i] = u.ID
-	}
-	return userIDs, nil
+	return users, nil
 }
 
-// getBookIDs 获取书籍ID列表
-func (s *SocialSeeder) getBookIDs(ctx context.Context) ([]string, error) {
+// getBooks 获取书籍列表
+func (s *SocialSeeder) getBooks(ctx context.Context) ([]socialSeedBook, error) {
 	cursor, err := s.db.Collection("books").Find(ctx, bson.M{})
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(ctx)
 
-	var books []struct {
-		ID string `bson:"_id"`
-	}
+	var books []socialSeedBook
 	if err := cursor.All(ctx, &books); err != nil {
 		return nil, err
 	}
+	return books, nil
+}
 
-	bookIDs := make([]string, len(books))
-	for i, b := range books {
-		bookIDs[i] = b.ID
+func socialSeedUserIDs(users []socialSeedUser) []string {
+	userIDs := make([]string, 0, len(users))
+	for _, user := range users {
+		if user.ID.IsZero() {
+			continue
+		}
+		userIDs = append(userIDs, user.ID.Hex())
 	}
-	return bookIDs, nil
+	return userIDs
+}
+
+func socialSeedBookIDs(books []socialSeedBook) []string {
+	bookIDs := make([]string, 0, len(books))
+	for _, book := range books {
+		if book.ID.IsZero() {
+			continue
+		}
+		bookIDs = append(bookIDs, book.ID.Hex())
+	}
+	return bookIDs
+}
+
+func (s *SocialSeeder) seedPosts(ctx context.Context, users []socialSeedUser, books []socialSeedBook) error {
+	collection := s.db.Collection("posts")
+
+	existing, err := collection.CountDocuments(ctx, bson.M{})
+	if err != nil {
+		return fmt.Errorf("统计动态数量失败: %w", err)
+	}
+	if existing > 0 {
+		fmt.Printf("  动态集合已有 %d 条数据，跳过帖子播种\n", existing)
+		return nil
+	}
+
+	posts := buildSeedPosts(users, books)
+	if len(posts) == 0 {
+		fmt.Println("  没有可用于生成动态的用户或书籍，跳过帖子播种")
+		return nil
+	}
+
+	if _, err := collection.InsertMany(ctx, posts); err != nil {
+		return fmt.Errorf("插入社区动态失败: %w", err)
+	}
+
+	fmt.Printf("  创建了 %d 条社区动态\n", len(posts))
+	return nil
+}
+
+func buildSeedPosts(users []socialSeedUser, books []socialSeedBook) []interface{} {
+	if len(users) == 0 || len(books) == 0 {
+		return nil
+	}
+
+	limit := len(books)
+	if limit > 12 {
+		limit = 12
+	}
+
+	posts := make([]interface{}, 0, limit)
+	for i := 0; i < limit; i++ {
+		user := users[i%len(users)]
+		book := books[i]
+		topics := buildPostTopics(book)
+		createdAt := time.Now().Add(-time.Duration(i*6+rand.Intn(6)) * time.Hour)
+
+		post := bson.M{
+			"_id":           primitive.NewObjectID(),
+			"user_id":       user.ID.Hex(),
+			"user_name":     firstNonEmpty(strings.TrimSpace(user.Nickname), strings.TrimSpace(user.Username), "测试读者"),
+			"user_avatar":   strings.TrimSpace(user.Avatar),
+			"user_level":    1 + (i % 20),
+			"type":          socialModel.PostTypeBookRecommendation,
+			"content":       buildPostContent(book, topics),
+			"images":        []string{},
+			"book_id":       book.ID.Hex(),
+			"book_title":    book.Title,
+			"book_cover":    book.Cover,
+			"book_author":   book.Author,
+			"chapter_id":    "",
+			"chapter_title": "",
+			"progress":      0,
+			"topics":        topics,
+			"like_count":    24 + rand.Intn(180),
+			"comment_count": 3 + rand.Intn(36),
+			"share_count":   rand.Intn(18),
+			"created_at":    createdAt,
+			"updated_at":    createdAt,
+		}
+
+		if i%3 == 1 {
+			post["type"] = socialModel.PostTypeReadingProgress
+			post["content"] = fmt.Sprintf("追读《%s》到最新章节了，节奏比我预期还稳，准备继续蹲更新。", book.Title)
+			post["chapter_id"] = fmt.Sprintf("seed-chapter-%02d", i+1)
+			post["chapter_title"] = fmt.Sprintf("第%d章 精彩延续", 30+i)
+			post["progress"] = 40 + (i*7)%55
+		}
+		if i%4 == 3 {
+			post["type"] = socialModel.PostTypeText
+			post["content"] = fmt.Sprintf("最近在补《%s》，%s 这个话题真的越聊越上头，有同好吗？", book.Title, firstNonEmpty(firstString(topics), "推荐"))
+		}
+
+		posts = append(posts, post)
+	}
+
+	return posts
+}
+
+func buildPostTopics(book socialSeedBook) []string {
+	topics := make([]string, 0, 4)
+	topics = appendIfMissing(topics, "推荐")
+	for _, category := range book.Categories {
+		topics = appendIfMissing(topics, category)
+		if len(topics) >= 3 {
+			break
+		}
+	}
+	for _, tag := range book.Tags {
+		topics = appendIfMissing(topics, tag)
+		if len(topics) >= 4 {
+			break
+		}
+	}
+	if len(topics) == 1 {
+		topics = append(topics, "书评")
+	}
+	return topics
+}
+
+func buildPostContent(book socialSeedBook, topics []string) string {
+	lead := firstNonEmpty(book.Introduction, fmt.Sprintf("这本 %s 题材作品最近讨论度很高。", firstNonEmpty(firstString(topics), "小说")))
+	lead = strings.TrimSpace(lead)
+	runes := []rune(lead)
+	if len(runes) > 40 {
+		lead = string(runes[:40]) + "..."
+	}
+	return fmt.Sprintf("刚刷到《%s》，%s 写得很有记忆点。%s 这个方向值得继续聊。%s", book.Title, book.Author, firstNonEmpty(firstString(topics), "推荐", "书评"), lead)
+}
+
+func appendIfMissing(values []string, value string) []string {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return values
+	}
+	for _, existing := range values {
+		if existing == value {
+			return values
+		}
+	}
+	return append(values, value)
+}
+
+func firstString(values []string) string {
+	for _, value := range values {
+		if strings.TrimSpace(value) != "" {
+			return strings.TrimSpace(value)
+		}
+	}
+	return ""
+}
+
+func firstNonEmpty(values ...string) string {
+	for _, value := range values {
+		if strings.TrimSpace(value) != "" {
+			return strings.TrimSpace(value)
+		}
+	}
+	return ""
 }
 
 // seedComments 创建评论
 func (s *SocialSeeder) seedComments(ctx context.Context, users, books []string, bookRatings map[string][]float64) error {
 	collection := s.db.Collection("comments")
+	existing, err := collection.CountDocuments(ctx, bson.M{})
+	if err != nil {
+		return fmt.Errorf("统计评论数量失败: %w", err)
+	}
+	if existing > 0 {
+		fmt.Printf("  评论集合已有 %d 条数据，跳过评论播种\n", existing)
+		return nil
+	}
 
 	var comments []interface{}
 
@@ -177,6 +366,14 @@ func (s *SocialSeeder) seedComments(ctx context.Context, users, books []string, 
 // seedLikes 创建点赞
 func (s *SocialSeeder) seedLikes(ctx context.Context, users, books []string) error {
 	collection := s.db.Collection("likes")
+	existing, err := collection.CountDocuments(ctx, bson.M{})
+	if err != nil {
+		return fmt.Errorf("统计点赞数量失败: %w", err)
+	}
+	if existing > 0 {
+		fmt.Printf("  点赞集合已有 %d 条数据，跳过点赞播种\n", existing)
+		return nil
+	}
 
 	var likes []interface{}
 
@@ -216,6 +413,14 @@ func (s *SocialSeeder) seedLikes(ctx context.Context, users, books []string) err
 // seedCollections 创建收藏
 func (s *SocialSeeder) seedCollections(ctx context.Context, users, books []string) error {
 	collection := s.db.Collection("collections")
+	existing, err := collection.CountDocuments(ctx, bson.M{})
+	if err != nil {
+		return fmt.Errorf("统计收藏数量失败: %w", err)
+	}
+	if existing > 0 {
+		fmt.Printf("  收藏集合已有 %d 条数据，跳过收藏播种\n", existing)
+		return nil
+	}
 
 	var collections []interface{}
 
@@ -257,6 +462,14 @@ func (s *SocialSeeder) seedCollections(ctx context.Context, users, books []strin
 // seedFollows 创建关注
 func (s *SocialSeeder) seedFollows(ctx context.Context, users []string) error {
 	collection := s.db.Collection("follows")
+	existing, err := collection.CountDocuments(ctx, bson.M{})
+	if err != nil {
+		return fmt.Errorf("统计关注数量失败: %w", err)
+	}
+	if existing > 0 {
+		fmt.Printf("  关注集合已有 %d 条数据，跳过关注播种\n", existing)
+		return nil
+	}
 
 	var follows []interface{}
 
@@ -327,6 +540,10 @@ func (s *SocialSeeder) updateBookRatings(ctx context.Context, bookRatings map[st
 		if len(ratings) == 0 {
 			continue
 		}
+		bookObjectID, err := primitive.ObjectIDFromHex(bookID)
+		if err != nil {
+			return fmt.Errorf("书籍ID格式无效 (书籍ID: %s): %w", bookID, err)
+		}
 
 		// 计算平均评分
 		sum := 0.0
@@ -336,9 +553,9 @@ func (s *SocialSeeder) updateBookRatings(ctx context.Context, bookRatings map[st
 		avgRating := sum / float64(len(ratings))
 
 		// 更新书籍
-		_, err := booksCollection.UpdateOne(
+		_, err = booksCollection.UpdateOne(
 			ctx,
-			bson.M{"_id": bookID},
+			bson.M{"_id": bookObjectID},
 			bson.M{
 				"$set": bson.M{
 					"rating":       roundToOneDecimal(avgRating),
@@ -365,7 +582,7 @@ func roundToOneDecimal(n float64) float64 {
 func (s *SocialSeeder) Clean() error {
 	ctx := context.Background()
 
-	collections := []string{"comments", "likes", "collections", "follows"}
+	collections := []string{"post_likes", "posts", "comments", "likes", "collections", "follows"}
 
 	for _, collName := range collections {
 		_, err := s.db.Collection(collName).DeleteMany(ctx, bson.M{})

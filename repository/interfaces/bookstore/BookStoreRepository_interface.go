@@ -35,6 +35,7 @@ type BookRepository interface {
 	// 统计方法 - 用于列表计数
 	CountByCategory(ctx context.Context, categoryID string) (int64, error)
 	CountByAuthor(ctx context.Context, author string) (int64, error)
+	CountByAuthorID(ctx context.Context, authorID string) (int64, error)
 	CountByStatus(ctx context.Context, status bookstore2.BookStatus) (int64, error)
 	CountByFilter(ctx context.Context, filter *bookstore2.BookFilter) (int64, error)
 

@@ -5,15 +5,19 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
+	aiApi "Qingyu_backend/api/v1/ai"
+	discoveryAPI "Qingyu_backend/api/v1/discovery"
 	internalAPI "Qingyu_backend/api/v1/internalapi/ai"
 	searchRouter "Qingyu_backend/api/v1/search"
 	adminRouter "Qingyu_backend/router/admin"
 	aiRouter "Qingyu_backend/router/ai"
-	aiApi "Qingyu_backend/api/v1/ai"
 	announcementsRouter "Qingyu_backend/router/announcements"
 	bookstoreRouter "Qingyu_backend/router/bookstore"
+	communityRouter "Qingyu_backend/router/community"
+	discoveryRouter "Qingyu_backend/router/discovery"
 	financeRouter "Qingyu_backend/router/finance"
 	internalAPIRouter "Qingyu_backend/router/internalapi"
 	notificationsRouter "Qingyu_backend/router/notifications"
@@ -26,34 +30,39 @@ import (
 	userRouter "Qingyu_backend/router/user"
 	writerRouter "Qingyu_backend/router/writer"
 
+	readerRepo "Qingyu_backend/repository/interfaces/reader"
 	socialRepo "Qingyu_backend/repository/interfaces/social"
 	userRepo "Qingyu_backend/repository/interfaces/user"
 	adminrep "Qingyu_backend/repository/mongodb/admin"
+	mongoAIRepo "Qingyu_backend/repository/mongodb/ai"
 	authRep "Qingyu_backend/repository/mongodb/auth"
 	bookstoreRepo "Qingyu_backend/repository/mongodb/bookstore"
-	recommendationRepo "Qingyu_backend/repository/mongodb/recommendation"
+	mongoDiscoveryRepo "Qingyu_backend/repository/mongodb/discovery"
 	mongoReaderRepo "Qingyu_backend/repository/mongodb/reader"
+	recommendationRepo "Qingyu_backend/repository/mongodb/recommendation"
 	mongoSocialRepo "Qingyu_backend/repository/mongodb/social"
 	mongoWriterRepo "Qingyu_backend/repository/mongodb/writer"
-	readerRepo "Qingyu_backend/repository/interfaces/reader"
 	"Qingyu_backend/service"
-	baseService "Qingyu_backend/service/base"
 	adminservice "Qingyu_backend/service/admin"
+	aiService "Qingyu_backend/service/ai"
+	baseService "Qingyu_backend/service/base"
 	bookstore "Qingyu_backend/service/bookstore"
-	serviceInterfaces "Qingyu_backend/service/interfaces"
-	eventservice "Qingyu_backend/service/events"
 	"Qingyu_backend/service/container"
+	discoveryService "Qingyu_backend/service/discovery"
+	eventservice "Qingyu_backend/service/events"
+	serviceInterfaces "Qingyu_backend/service/interfaces"
 	internalAPIService "Qingyu_backend/service/internalapi"
 	recommendationService "Qingyu_backend/service/recommendation"
 	searchService "Qingyu_backend/service/search"
 	searchengine "Qingyu_backend/service/search/engine"
 	searchprovider "Qingyu_backend/service/search/provider"
 	sharedService "Qingyu_backend/service/shared"
-	statsService "Qingyu_backend/service/shared/stats"
 	sharedStorage "Qingyu_backend/service/shared/storage"
+	userDomainService "Qingyu_backend/service/user"
 	writerservice "Qingyu_backend/service/writer"
 
 	versionAPI "Qingyu_backend/api/v1"
+	communityApi "Qingyu_backend/api/v1/community"
 	financeApi "Qingyu_backend/api/v1/finance"
 	messagesApi "Qingyu_backend/api/v1/messages"
 	notificationsAPI "Qingyu_backend/api/v1/notifications"
@@ -74,6 +83,9 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
+
+var quotaSchedulerOnce sync.Once
+var rankingSchedulerOnce sync.Once
 
 // RegisterRoutes 注册所有路由
 func RegisterRoutes(r *gin.Engine) {
@@ -213,6 +225,18 @@ func RegisterRoutes(r *gin.Engine) {
 			logger.Info("✓ SearchService 已注入到 BookstoreService")
 		}
 
+		rankingScheduler := bookstore.NewRankingScheduler(
+			bookstoreSvc,
+			log.New(os.Stdout, "[ranking-scheduler] ", log.LstdFlags),
+		)
+		rankingSchedulerOnce.Do(func() {
+			if err := rankingScheduler.Start(); err != nil {
+				logger.Warn("启动 ranking scheduler 失败", zap.Error(err))
+				return
+			}
+			logger.Info("✓ Ranking scheduler 已启动")
+		})
+
 		// 初始化其他书店服务
 		bookDetailSvc, _ := serviceContainer.GetBookDetailService()
 		ratingSvc, _ := serviceContainer.GetBookRatingService()
@@ -224,8 +248,11 @@ func RegisterRoutes(r *gin.Engine) {
 			chapterSvc = svc
 		}
 
-		// 获取章节购买服务（当前容器未提供 Getter，保持 nil）
+		// 获取章节购买服务
 		var chapterPurchaseSvc bookstore.ChapterPurchaseService
+		if svc, err := serviceContainer.GetChapterPurchaseService(); err == nil {
+			chapterPurchaseSvc = svc
+		}
 
 		// 注册书店路由，传入搜索服务
 		bookstoreRouter.InitBookstoreRouter(v1, bookstoreSvc, bookDetailSvc, ratingSvc, statisticsSvc, chapterSvc, chapterPurchaseSvc, searchSvc, logger)
@@ -491,6 +518,47 @@ func RegisterRoutes(r *gin.Engine) {
 		logger.Info("✓ 书单公开路由已注册到: /api/v1/booklists/")
 	}
 
+	// ============ 注册社区动态路由 (/api/v1/community) ============
+	// 获取 MongoDB 数据库
+	mongoDB := serviceContainer.GetMongoDB()
+	var discoveryPostService serviceInterfaces.PostService
+	if mongoDB != nil {
+		// 创建 Post Repository
+		postRepo := mongoSocialRepo.NewMongoPostRepository(mongoDB)
+
+		// 创建 EventBus
+		var eventBus baseService.EventBus
+		if rawEventBus := serviceContainer.GetEventBus(); rawEventBus != nil {
+			if typedEventBus, ok := rawEventBus.(baseService.EventBus); ok {
+				eventBus = typedEventBus
+			}
+		}
+		if eventBus == nil {
+			eventBus = baseService.NewSimpleEventBus()
+		}
+
+		// 创建 Post Service
+		postSvc := socialService.NewPostService(postRepo, eventBus)
+		discoveryPostService = postSvc
+
+		// 创建 Post API
+		postAPI := communityApi.NewPostAPI(postSvc)
+
+		// 注册社区路由
+		communityRouter.RegisterCommunityRoutes(v1, postAPI)
+
+		logger.Info("✓ 社区动态路由已注册到: /api/v1/community/")
+		logger.Info("  - GET /api/v1/community/posts (获取动态列表-公开)")
+		logger.Info("  - GET /api/v1/community/posts/:id (获取动态详情-公开)")
+		logger.Info("  - POST /api/v1/community/posts (创建动态-需认证)")
+		logger.Info("  - PUT /api/v1/community/posts/:id (更新动态-需认证)")
+		logger.Info("  - DELETE /api/v1/community/posts/:id (删除动态-需认证)")
+		logger.Info("  - POST /api/v1/community/posts/:id/like (点赞-需认证)")
+		logger.Info("  - DELETE /api/v1/community/posts/:id/like (取消点赞-需认证)")
+	} else {
+		logger.Warn("⚠ MongoDB未配置，跳过社区动态路由注册")
+	}
+
 	// ============ 注册评分路由 ============
 	// 获取Redis客户端
 	var redisClient cache.RedisClient
@@ -553,10 +621,10 @@ func RegisterRoutes(r *gin.Engine) {
 			recommendationApi.WithTableService(tableSvc)
 
 			// 注入书籍仓储用于获取书籍详情
-		if mongoClient := serviceContainer.GetMongoClient(); mongoClient != nil {
-			bookRepo := bookstoreRepo.NewMongoBookRepository(mongoClient, mongoDB.Name())
-			recommendationApi.WithBookRepository(bookRepo)
-		}
+			if mongoClient := serviceContainer.GetMongoClient(); mongoClient != nil {
+				bookRepo := bookstoreRepo.NewMongoBookRepository(mongoClient, mongoDB.Name())
+				recommendationApi.WithBookRepository(bookRepo)
+			}
 		}
 		recommendationRouter.RegisterRecommendationRoutes(v1, recommendationApi)
 
@@ -567,6 +635,27 @@ func RegisterRoutes(r *gin.Engine) {
 		logger.Info("  - /api/v1/recommendation/homepage (首页推荐)")
 		logger.Info("  - /api/v1/recommendation/hot (热门推荐)")
 		logger.Info("  - /api/v1/recommendation/category (分类推荐)")
+	}
+
+	// ============ 注册发现页路由 ============
+	discoveryBookstoreSvc, bookstoreErrForDiscovery := serviceContainer.GetBookstoreService()
+	if bookstoreErrForDiscovery != nil {
+		logger.Warn("获取书店服务失败，跳过发现页路由注册", zap.Error(bookstoreErrForDiscovery))
+	} else {
+		discoverySvc := discoveryService.NewDiscoveryService(discoveryBookstoreSvc, recommendationSvc).
+			WithPostService(discoveryPostService)
+		if mongoDB != nil {
+			discoverySvc = discoverySvc.WithPreferenceRepository(mongoDiscoveryRepo.NewPreferenceRepository(mongoDB))
+		} else {
+			logger.Warn("MongoDB 不可用，发现页偏好持久化将降级为仅回显")
+		}
+		discoveryApi := discoveryAPI.NewDiscoveryAPI(discoverySvc)
+		discoveryRouter.RegisterDiscoveryRoutes(v1, discoveryApi)
+
+		logger.Info("✓ 发现页路由已注册到: /api/v1/discovery/")
+		logger.Info("  - /api/v1/discovery/personalized (发现页个性化推荐 - 匿名可访问)")
+		logger.Info("  - /api/v1/discovery/new-releases (发现页新书上架)")
+		logger.Info("  - /api/v1/discovery/editors-pick (发现页编辑推荐)")
 	}
 
 	// ============ 注册Announcements路由 ============
@@ -763,8 +852,13 @@ func RegisterRoutes(r *gin.Engine) {
 		logger.Fatal("获取用户服务失败", zap.Error(err))
 	}
 
-	// 获取 MongoDB 数据库
-	mongoDB := serviceContainer.GetMongoDB()
+	// 获取 MongoDB 数据库（已在社区路由部分初始化）
+	mongoDB = serviceContainer.GetMongoDB()
+	quotaRedisClient := serviceContainer.GetRedisClient()
+	quotaPhase3Client, quotaPhase3Err := serviceContainer.GetPhase3Client()
+	if quotaPhase3Err != nil {
+		quotaPhase3Client = nil
+	}
 
 	var publicationSvc serviceInterfaces.PublishService
 	repositoryFactory := serviceContainer.GetRepositoryFactory()
@@ -779,6 +873,47 @@ func RegisterRoutes(r *gin.Engine) {
 			writerservice.NewLocalBookstoreClient(mongoDB),
 			writerservice.NewPublishEventBusAdapter(serviceContainer.GetEventBus()),
 		)
+	}
+
+	var quotaAdminSvc *aiService.QuotaAdminService
+	var quotaDashboardSvc *aiService.QuotaDashboardService
+	var quotaPolicySvc *aiService.QuotaPolicyService
+	var quotaAlertSvc *aiService.QuotaAlertService
+
+	if mongoDB != nil && repositoryFactory != nil && quotaService != nil {
+		quotaRepo := repositoryFactory.CreateQuotaRepository()
+		quotaPolicyRepo := mongoAIRepo.NewMongoQuotaPolicyRepository(mongoDB)
+		quotaAlertRepo := mongoAIRepo.NewMongoQuotaAlertRepository(mongoDB)
+
+		quotaAdminSvc = aiService.NewQuotaAdminService(quotaRepo, quotaAlertRepo)
+		quotaAdminSvc.SetConsumptionReader(quotaPhase3Client)
+		quotaDashboardSvc = aiService.NewQuotaDashboardService(quotaRepo, quotaAlertRepo, quotaRedisClient)
+		quotaDashboardSvc.SetConsumptionSummaryReader(quotaPhase3Client)
+		quotaPolicySvc = aiService.NewQuotaPolicyService(quotaPolicyRepo)
+		quotaAlertSvc = aiService.NewQuotaAlertService(quotaAlertRepo)
+		quotaService.SetPolicyService(quotaPolicySvc)
+
+		var rawRedisClient interface{}
+		if quotaRedisClient != nil {
+			rawRedisClient = quotaRedisClient.GetClient()
+		}
+		quotaAnomalyDetector := aiService.NewQuotaAnomalyDetector(quotaRepo, quotaAlertSvc, rawRedisClient)
+		quotaScheduler := aiService.NewQuotaScheduler(
+			quotaAnomalyDetector,
+			quotaDashboardSvc,
+			quotaAlertSvc,
+			quotaPhase3Client,
+			log.New(os.Stdout, "[quota-scheduler] ", log.LstdFlags),
+		)
+		quotaDashboardSvc.SetConsistencyRunner(quotaScheduler)
+
+		quotaSchedulerOnce.Do(func() {
+			if err := quotaScheduler.Start(); err != nil {
+				logger.Warn("启动 quota scheduler 失败", zap.Error(err))
+				return
+			}
+			logger.Info("✓ Quota scheduler 已启动")
+		})
 	}
 
 	// 创建用户管理服务（UserAdminService - 管理员专用）
@@ -808,10 +943,10 @@ func RegisterRoutes(r *gin.Engine) {
 		}
 
 		// 注册管理员路由（包含用户管理和权限管理）
-		adminRouter.RegisterAdminRoutes(v1, userSvc, quotaService, auditSvc, adminSvc, configSvc, announcementSvc, userAdminSvc, permissionSvc, serviceContainer.GetPersistedEventBus(), categorySvc, publicationSvc, bannerSvc)
+		adminRouter.RegisterAdminRoutes(v1, userSvc, quotaService, auditSvc, adminSvc, configSvc, announcementSvc, userAdminSvc, permissionSvc, serviceContainer.GetPersistedEventBus(), categorySvc, publicationSvc, bannerSvc, quotaAdminSvc, quotaDashboardSvc, quotaPolicySvc, quotaAlertSvc)
 	} else {
 		// 如果 MongoDB 不可用，不注册用户管理和权限管理路由
-		adminRouter.RegisterAdminRoutes(v1, userSvc, quotaService, auditSvc, adminSvc, configSvc, announcementSvc, nil, nil, serviceContainer.GetPersistedEventBus(), nil, publicationSvc, nil)
+		adminRouter.RegisterAdminRoutes(v1, userSvc, quotaService, auditSvc, adminSvc, configSvc, announcementSvc, nil, nil, serviceContainer.GetPersistedEventBus(), nil, publicationSvc, nil, quotaAdminSvc, quotaDashboardSvc, quotaPolicySvc, quotaAlertSvc)
 	}
 
 	logger.Info("✓ 管理员路由已注册到: /api/v1/admin/")
@@ -837,22 +972,22 @@ func RegisterRoutes(r *gin.Engine) {
 	}
 
 	// 获取统计服务（用于用户统计功能）
-	var statsSvc statsService.StatsPort
+	var userStatsSvc userDomainService.UserStatsService
+	var contentStatsSvc writerservice.ContentStatsService
 	var userRepoForUM userRepo.UserRepository // 用于用户路由
 	if repositoryFactory != nil {
 		// 创建统计服务所需的 Repository
 		userRepoForUM = repositoryFactory.CreateUserRepository()
-		bookRepo := repositoryFactory.CreateBookRepository()
 		projectRepo := repositoryFactory.CreateProjectRepository()
-		chapterRepo := repositoryFactory.CreateBookstoreChapterRepository()
 
-		if userRepoForUM != nil && bookRepo != nil && projectRepo != nil && chapterRepo != nil {
-			statsSvc = statsService.NewPlatformStatsService(userRepoForUM, bookRepo, projectRepo, chapterRepo)
+		if userRepoForUM != nil && projectRepo != nil {
+			userStatsSvc = userDomainService.NewUserStatsService(userRepoForUM, projectRepo)
+			contentStatsSvc = writerservice.NewContentStatsService(userRepoForUM, projectRepo)
 		}
 	}
 
 	// 注册新的 user 路由
-	userRouter.RegisterUserRoutes(v1, userSvc, userRepoForUM, bookstoreSvcForUM, storageSvcForUM, statsSvc)
+	userRouter.RegisterUserRoutes(v1, authSvc, userSvc, userRepoForUM, bookstoreSvcForUM, storageSvcForUM, userStatsSvc, contentStatsSvc)
 
 	logger.Info("✓ 用户路由已注册到: /api/v1/user/")
 	logger.Info("  - /api/v1/user/auth/register (用户注册)")

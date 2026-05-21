@@ -12,6 +12,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	progressSync "Qingyu_backend/pkg/sync"
@@ -259,6 +260,58 @@ func TestSyncAPI_MergeOfflineProgresses_Success(t *testing.T) {
 	mockService.AssertExpectations(t)
 }
 
+func TestSyncAPI_MergeOfflineProgresses_ConvertsTimestampsAndUserID(t *testing.T) {
+	mockService := new(MockProgressSyncService)
+	userID := primitive.NewObjectID().Hex()
+	router := setupSyncTestRouter(mockService, userID)
+
+	firstTimestamp := time.Now().Add(-2 * time.Minute).UTC().Truncate(time.Second)
+	secondTimestamp := time.Now().UTC().Truncate(time.Second)
+	bookID := primitive.NewObjectID().Hex()
+	chapterID := primitive.NewObjectID().Hex()
+
+	reqBody := MergeProgressRequest{
+		Progresses: []OfflineProgressItem{
+			{
+				BookID:    bookID,
+				ChapterID: chapterID,
+				Progress:  0.25,
+				Timestamp: firstTimestamp.Format(time.RFC3339),
+				DeviceID:  "device-1",
+			},
+			{
+				BookID:    bookID,
+				ChapterID: chapterID,
+				Progress:  0.8,
+				Timestamp: secondTimestamp.Format(time.RFC3339),
+				DeviceID:  "device-2",
+			},
+		},
+	}
+
+	mockService.On(
+		"MergeOfflineProgresses",
+		mock.Anything,
+		userID,
+		mock.MatchedBy(func(items []progressSync.OfflineProgress) bool {
+			require.Len(t, items, 2)
+			return items[0].UserID == userID &&
+				items[0].Timestamp.Equal(firstTimestamp) &&
+				items[1].UserID == userID &&
+				items[1].Timestamp.Equal(secondTimestamp)
+		}),
+	).Return(nil)
+
+	jsonBody, _ := json.Marshal(reqBody)
+	req, _ := http.NewRequest("POST", "/api/v1/reader/progress/merge", bytes.NewBuffer(jsonBody))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	mockService.AssertExpectations(t)
+}
+
 func TestSyncAPI_MergeOfflineProgresses_Unauthorized(t *testing.T) {
 	// Given
 	mockService := new(MockProgressSyncService)
@@ -306,6 +359,35 @@ func TestSyncAPI_MergeOfflineProgresses_InvalidTimestamp(t *testing.T) {
 
 	// Then
 	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestSyncAPI_MergeOfflineProgresses_ServiceError(t *testing.T) {
+	mockService := new(MockProgressSyncService)
+	userID := primitive.NewObjectID().Hex()
+	router := setupSyncTestRouter(mockService, userID)
+
+	reqBody := MergeProgressRequest{
+		Progresses: []OfflineProgressItem{
+			{
+				BookID:    primitive.NewObjectID().Hex(),
+				ChapterID: primitive.NewObjectID().Hex(),
+				Progress:  0.5,
+				Timestamp: time.Now().UTC().Format(time.RFC3339),
+				DeviceID:  "device-1",
+			},
+		},
+	}
+
+	mockService.On("MergeOfflineProgresses", mock.Anything, userID, mock.Anything).Return(assert.AnError)
+
+	jsonBody, _ := json.Marshal(reqBody)
+	req, _ := http.NewRequest("POST", "/api/v1/reader/progress/merge", bytes.NewBuffer(jsonBody))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	mockService.AssertExpectations(t)
 }
 
 func TestSyncAPI_GetSyncStatus_Success(t *testing.T) {

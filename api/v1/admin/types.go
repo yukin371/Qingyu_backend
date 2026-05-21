@@ -151,3 +151,38 @@ type BatchReviewAuditRequest struct {
 	Action     string   `json:"action" binding:"required,oneof=approve reject"`
 	ReviewNote string   `json:"reviewNote"`
 }
+
+// ===========================
+// 配额管理扩展DTO
+// ===========================
+
+// AdminRechargeRequest 管理员充值请求
+type AdminRechargeRequest struct {
+	Amount    int    `json:"amount" binding:"required,min=1"`
+	QuotaType string `json:"quotaType" binding:"required"`
+	Reason    string `json:"reason" binding:"required"`
+}
+
+// BatchQuotaRequest 批量配额操作请求
+type BatchQuotaRequest struct {
+	UserIDs   []string `json:"userIds" binding:"required,min=1"`
+	Amount    int      `json:"amount"`
+	QuotaType string   `json:"quotaType"`
+	Reason    string   `json:"reason"`
+}
+
+// PolicyRequest 策略创建/更新请求
+type PolicyRequest struct {
+	Name            string `json:"name" binding:"required"`
+	UserRole        string `json:"userRole" binding:"required"`
+	MembershipLevel string `json:"membershipLevel" binding:"required"`
+	DailyQuota      int    `json:"dailyQuota"`
+	MonthlyQuota    int    `json:"monthlyQuota"`
+	TotalQuota      int    `json:"totalQuota"`
+	Description     string `json:"description"`
+}
+
+// AlertActionRequest 告警操作请求
+type AlertActionRequest struct {
+	OperatorID string `json:"operatorId"`
+}

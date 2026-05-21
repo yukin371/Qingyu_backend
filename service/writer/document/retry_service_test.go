@@ -4,6 +4,9 @@ import (
 	"errors"
 	"testing"
 	"time"
+
+	pkgErrors "Qingyu_backend/pkg/errors"
+	baseInterfaces "Qingyu_backend/service/interfaces/base"
 )
 
 func TestRetryService_ShouldRetry_WithRetryableErrors(t *testing.T) {
@@ -204,6 +207,28 @@ func TestRetryService_extractErrorCode(t *testing.T) {
 
 	if errorCode != "TEST_ERROR" {
 		t.Errorf("expected error code 'TEST_ERROR', got '%s'", errorCode)
+	}
+}
+
+func TestRetryService_extractErrorCode_FromServiceError(t *testing.T) {
+	svc := NewRetryService()
+
+	err := pkgErrors.NewServiceError("writer", pkgErrors.ServiceErrorTimeout, "timeout", "", nil)
+	errorCode := svc.extractErrorCode(err)
+
+	if errorCode != string(pkgErrors.ServiceErrorTimeout) {
+		t.Errorf("expected error code '%s', got '%s'", pkgErrors.ServiceErrorTimeout, errorCode)
+	}
+}
+
+func TestRetryService_extractErrorCode_FromBaseServiceError(t *testing.T) {
+	svc := NewRetryService()
+
+	err := baseInterfaces.NewServiceError("writer", baseInterfaces.ErrorTypeTimeout, "timeout", nil)
+	errorCode := svc.extractErrorCode(err)
+
+	if errorCode != baseInterfaces.ErrorTypeTimeout {
+		t.Errorf("expected error code '%s', got '%s'", baseInterfaces.ErrorTypeTimeout, errorCode)
 	}
 }
 

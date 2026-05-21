@@ -15,14 +15,17 @@ import (
 	"Qingyu_backend/service/base"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.uber.org/zap"
 )
 
 // QuotaService 配额服务（增强版，支持Redis缓存和预警）
 type QuotaService struct {
-	quotaRepo   aiRepo.QuotaRepository
-	redisClient cache.RedisClient // Redis客户端用于缓存
-	eventBus    base.EventBus     // 事件总线用于预警通知
-	cacheTTL    time.Duration     // 缓存过期时间（默认5分钟）
+	quotaRepo       aiRepo.QuotaRepository
+	redisClient     cache.RedisClient   // Redis客户端用于缓存
+	eventBus        base.EventBus       // 事件总线用于预警通知
+	cacheTTL        time.Duration       // 缓存过期时间（默认5分钟）
+	policyService   *QuotaPolicyService // 策略服务（可选）
+	profileResolver *QuotaProfileResolver
 
 	// 预警阈值配置
 	warningThreshold  float64 // 预警阈值（默认20%）
@@ -57,20 +60,16 @@ func NewQuotaServiceWithCache(
 
 // InitializeUserQuota 初始化用户配额
 func (s *QuotaService) InitializeUserQuota(ctx context.Context, userID, userRole, membershipLevel string) error {
+	profile := s.resolveQuotaProfile(ctx, userID, userRole, membershipLevel)
+
 	// 检查是否已存在日配额
 	existing, err := s.quotaRepo.GetQuotaByUserID(ctx, userID, ai.QuotaTypeDaily)
 	if err == nil && existing != nil {
 		return nil // 已存在，不需要初始化
 	}
 
-	// 优先从配置文件获取默认配额
-	var defaultQuota int
-	if config.GlobalConfig != nil && config.GlobalConfig.AIQuota != nil {
-		defaultQuota = config.GlobalConfig.AIQuota.GetDefaultQuota(userRole, membershipLevel)
-	} else {
-		// 配置不存在时使用模型中的默认值
-		defaultQuota = ai.GetDefaultQuota(userRole, membershipLevel)
-	}
+	// 如果策略服务已加载，从策略获取配额
+	defaultQuota := s.resolveEffectiveDailyQuota(ctx, profile.UserRole, profile.MembershipLevel)
 
 	// 创建日配额
 	quota := &ai.UserQuota{
@@ -82,10 +81,13 @@ func (s *QuotaService) InitializeUserQuota(ctx context.Context, userID, userRole
 		Status:         ai.QuotaStatusActive,
 		ResetAt:        time.Now().AddDate(0, 0, 1), // 明天重置
 		Metadata: &ai.QuotaMetadata{
-			UserRole:          userRole,
-			MembershipLevel:   membershipLevel,
+			UserRole:          profile.UserRole,
+			MembershipLevel:   profile.MembershipLevel,
 			TotalConsumptions: 0,
 			AveragePerDay:     0,
+			CustomFields: map[string]interface{}{
+				quotaCustomFieldProfileManaged: true,
+			},
 		},
 	}
 
@@ -117,7 +119,7 @@ func (s *QuotaService) CheckQuota(ctx context.Context, userID string, amount int
 	if err != nil {
 		if err == ai.ErrQuotaNotFound {
 			// 配额不存在，尝试初始化
-			if initErr := s.InitializeUserQuota(ctx, userID, "reader", "normal"); initErr != nil {
+			if initErr := s.InitializeUserQuota(ctx, userID, "", ""); initErr != nil {
 				return fmt.Errorf("初始化配额失败: %w", initErr)
 			}
 			// 重新获取
@@ -161,7 +163,12 @@ func (s *QuotaService) CheckQuota(ctx context.Context, userID string, amount int
 			// 更新到数据库
 			if updateErr := s.quotaRepo.UpdateQuota(ctx, quota); updateErr != nil {
 				// 升级失败不影响检查，继续使用旧值
-				fmt.Printf("警告: 配额升级失败: %v\n", updateErr)
+				zap.L().Warn("配额升级失败，继续使用旧配额",
+					zap.String("user_id", userID),
+					zap.String("user_role", userRole),
+					zap.String("membership_level", membershipLevel),
+					zap.Error(updateErr),
+				)
 			}
 		}
 	}
@@ -334,6 +341,7 @@ func (s *QuotaService) UpdateUserQuota(ctx context.Context, userID string, quota
 			case ai.QuotaTypeMonthly:
 				newQuota.ResetAt = now.AddDate(0, 1, 0)
 			}
+			setQuotaManualOverride(newQuota, true)
 
 			return s.quotaRepo.CreateQuota(ctx, newQuota)
 		}
@@ -343,6 +351,7 @@ func (s *QuotaService) UpdateUserQuota(ctx context.Context, userID string, quota
 	// 更新配额
 	quota.TotalQuota = totalQuota
 	quota.RemainingQuota = totalQuota - quota.UsedQuota
+	setQuotaManualOverride(quota, true)
 
 	if err := s.quotaRepo.UpdateQuota(ctx, quota); err != nil {
 		return err
@@ -362,6 +371,7 @@ func (s *QuotaService) SuspendUserQuota(ctx context.Context, userID string) erro
 	}
 
 	for _, quota := range quotas {
+		setQuotaManualOverride(quota, true)
 		quota.Status = ai.QuotaStatusSuspended
 		if err := s.quotaRepo.UpdateQuota(ctx, quota); err != nil {
 			return err
@@ -381,6 +391,7 @@ func (s *QuotaService) ActivateUserQuota(ctx context.Context, userID string) err
 	}
 
 	for _, quota := range quotas {
+		setQuotaManualOverride(quota, true)
 		quota.Status = ai.QuotaStatusActive
 		if err := s.quotaRepo.UpdateQuota(ctx, quota); err != nil {
 			return err
@@ -408,6 +419,7 @@ func (s *QuotaService) RechargeQuota(ctx context.Context, userID string, amount 
 	// 增加配额
 	quota.TotalQuota += amount
 	quota.RemainingQuota += amount
+	setQuotaManualOverride(quota, true)
 
 	// 更新数据库
 	if err := s.quotaRepo.UpdateQuota(ctx, quota); err != nil {
@@ -446,12 +458,19 @@ func (s *QuotaService) cacheQuota(ctx context.Context, quota *ai.UserQuota) {
 	data, err := json.Marshal(quota)
 	if err != nil {
 		// 缓存失败不影响业务，仅记录日志
-		fmt.Printf("缓存配额失败: %v\n", err)
+		zap.L().Warn("缓存配额失败",
+			zap.String("user_id", quota.UserID),
+			zap.String("quota_type", string(quota.QuotaType)),
+			zap.Error(err),
+		)
 		return
 	}
 
 	if err := s.redisClient.Set(ctx, cacheKey, string(data), s.cacheTTL); err != nil {
-		fmt.Printf("写入Redis失败: %v\n", err)
+		zap.L().Warn("写入配额缓存失败",
+			zap.String("cache_key", cacheKey),
+			zap.Error(err),
+		)
 	}
 }
 
@@ -463,7 +482,10 @@ func (s *QuotaService) invalidateQuotaCache(ctx context.Context, userID string, 
 
 	cacheKey := fmt.Sprintf("quota:user:%s:%s", userID, quotaType)
 	if err := s.redisClient.Delete(ctx, cacheKey); err != nil {
-		fmt.Printf("清除缓存失败: %v\n", err)
+		zap.L().Warn("清除配额缓存失败",
+			zap.String("cache_key", cacheKey),
+			zap.Error(err),
+		)
 	}
 }
 
@@ -502,7 +524,12 @@ func (s *QuotaService) checkAndPublishWarning(ctx context.Context, quota *ai.Use
 
 		// 异步发布事件
 		if err := s.eventBus.PublishAsync(ctx, event); err != nil {
-			fmt.Printf("发布配额预警事件失败: %v\n", err)
+			zap.L().Warn("发布配额预警事件失败",
+				zap.String("user_id", quota.UserID),
+				zap.String("quota_type", string(quota.QuotaType)),
+				zap.String("level", level),
+				zap.Error(err),
+			)
 		}
 	}
 }
@@ -537,4 +564,105 @@ func (e *QuotaWarningEvent) GetTimestamp() time.Time {
 // GetSource 实现Event接口
 func (e *QuotaWarningEvent) GetSource() string {
 	return "QuotaService"
+}
+
+// SetPolicyService 设置策略服务
+func (s *QuotaService) SetPolicyService(ps *QuotaPolicyService) {
+	s.policyService = ps
+}
+
+// SetProfileResolver 设置用户配额画像解析器。
+func (s *QuotaService) SetProfileResolver(resolver *QuotaProfileResolver) {
+	s.profileResolver = resolver
+}
+
+// RefreshUserQuotaProfile 刷新用户配额画像并同步默认配额。
+func (s *QuotaService) RefreshUserQuotaProfile(ctx context.Context, userID string) error {
+	profile := s.resolveQuotaProfile(ctx, userID, "", "")
+	quotas, err := s.quotaRepo.GetAllQuotasByUserID(ctx, userID)
+	if err != nil {
+		return err
+	}
+
+	if len(quotas) == 0 {
+		return s.InitializeUserQuota(ctx, userID, profile.UserRole, profile.MembershipLevel)
+	}
+
+	resolvedDailyQuota := s.resolveEffectiveDailyQuota(ctx, profile.UserRole, profile.MembershipLevel)
+
+	for _, quota := range quotas {
+		metadata := ensureQuotaMetadata(quota)
+		metadata.UserRole = profile.UserRole
+		metadata.MembershipLevel = profile.MembershipLevel
+		metadata.CustomFields[quotaCustomFieldProfileManaged] = true
+
+		if quota.QuotaType == ai.QuotaTypeDaily && !isQuotaManualOverride(quota) {
+			quota.TotalQuota = resolvedDailyQuota
+			quota.RemainingQuota = resolvedDailyQuota - quota.UsedQuota
+			if quota.RemainingQuota < 0 {
+				quota.RemainingQuota = 0
+			}
+		}
+
+		previousStatus := quota.Status
+		quota.BeforeUpdate()
+		if previousStatus == ai.QuotaStatusSuspended {
+			quota.Status = previousStatus
+		}
+
+		if err := s.quotaRepo.UpdateQuota(ctx, quota); err != nil {
+			return err
+		}
+		s.invalidateQuotaCache(ctx, userID, quota.QuotaType)
+	}
+
+	return nil
+}
+
+func (s *QuotaService) resolveQuotaProfile(ctx context.Context, userID, fallbackRole, fallbackMembershipLevel string) *QuotaProfile {
+	profile := &QuotaProfile{
+		UserID:          userID,
+		UserRole:        normalizeQuotaUserRole([]string{fallbackRole}),
+		MembershipLevel: normalizeQuotaMembershipLevel(fallbackMembershipLevel),
+	}
+
+	if fallbackRole == "" {
+		profile.UserRole = string(ai.UserRoleReader)
+	}
+	if fallbackMembershipLevel == "" {
+		profile.MembershipLevel = "normal"
+	}
+
+	if s.profileResolver == nil {
+		return profile
+	}
+
+	resolvedProfile, err := s.profileResolver.Resolve(ctx, userID)
+	if err != nil || resolvedProfile == nil {
+		return profile
+	}
+
+	if resolvedProfile.UserRole != "" {
+		profile.UserRole = resolvedProfile.UserRole
+	}
+	if resolvedProfile.MembershipLevel != "" {
+		profile.MembershipLevel = resolvedProfile.MembershipLevel
+	}
+
+	return profile
+}
+
+func (s *QuotaService) resolveEffectiveDailyQuota(ctx context.Context, userRole, membershipLevel string) int {
+	if s.policyService != nil {
+		policyQuota, err := s.policyService.GetEffectiveDailyQuota(ctx, userRole, membershipLevel)
+		if err == nil && policyQuota != 0 {
+			return policyQuota
+		}
+	}
+
+	if config.GlobalConfig != nil && config.GlobalConfig.AIQuota != nil {
+		return config.GlobalConfig.AIQuota.GetDefaultQuota(userRole, membershipLevel)
+	}
+
+	return ai.GetDefaultQuota(userRole, membershipLevel)
 }

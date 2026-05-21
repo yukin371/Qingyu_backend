@@ -2,10 +2,10 @@ package mongodb
 
 import (
 	"Qingyu_backend/models/bookstore"
+	pkgtransaction "Qingyu_backend/pkg/transaction"
 	"Qingyu_backend/repository/mongodb/base"
 	"context"
 	"errors"
-	"log"
 	"strings"
 	"time"
 
@@ -66,12 +66,8 @@ func (r *MongoBookRepository) Create(ctx context.Context, book *bookstore.Book) 
 
 // GetByID 根据ID获取书籍
 func (r *MongoBookRepository) GetByID(ctx context.Context, id string) (*bookstore.Book, error) {
-	log.Printf("[DEBUG] GetByID(%s) database: %s, collection: %s\n",
-		id, r.GetDB().Name(), r.GetCollection().Name())
-
 	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
-		log.Printf("[DEBUG] GetByID(%s) invalid object id: %v\n", id, err)
 		return nil, nil
 	}
 
@@ -79,14 +75,11 @@ func (r *MongoBookRepository) GetByID(ctx context.Context, id string) (*bookstor
 	err = r.GetCollection().FindOne(ctx, bson.M{"_id": objectID}).Decode(&book)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			log.Printf("[DEBUG] GetByID(%s) no documents found for query: {_id: %s}\n", id, id)
 			return nil, nil
 		}
-		log.Printf("[DEBUG] GetByID(%s) decode error: %v\n", id, err)
 		return nil, err
 	}
 
-	log.Printf("[DEBUG] GetByID(%s) found book: %s, status: %s\n", id, book.Title, book.Status)
 	normalizeBookEntity(&book)
 	return &book, nil
 }
@@ -329,19 +322,16 @@ func (r *MongoBookRepository) GetHotBooks(ctx context.Context, limit, offset int
 		"status": bson.M{"$in": bookstore.PublicBookStatusQueryValues()},
 	}, opts)
 	if err != nil {
-		log.Printf("[DEBUG] GetHotBooks failed: %v\n", err)
 		return nil, err
 	}
 	defer cursor.Close(ctx)
 
 	var books []*bookstore.Book
 	if err = cursor.All(ctx, &books); err != nil {
-		log.Printf("[DEBUG] GetHotBooks decode failed: %v\n", err)
 		return nil, err
 	}
 	normalizeBookEntities(books)
 
-	log.Printf("[DEBUG] GetHotBooks found %d books, IDs: %v\n", len(books), getHotBookIDs(books))
 	return books, nil
 }
 
@@ -612,7 +602,6 @@ func (r *MongoBookRepository) SearchWithFilter(ctx context.Context, filter *book
 	// 如果有关键词，使用正则表达式进行搜索
 	if filter.Keyword != nil && *filter.Keyword != "" {
 		keyword := *filter.Keyword
-		log.Printf("[DEBUG] 搜索关键词: %s (字节: %v)", keyword, []byte(keyword))
 
 		// 直接在Go代码中构建原始的BSON正则表达式
 		// 使用bson.RawValue来避免编码问题
@@ -622,7 +611,6 @@ func (r *MongoBookRepository) SearchWithFilter(ctx context.Context, filter *book
 			{"introduction": bson.M{"$regex": keyword, "$options": "i"}},
 		}
 		query["$or"] = orConditions
-		log.Printf("[DEBUG] MongoDB正则查询条件已添加: %s (长度: %d)", keyword, len(keyword))
 	}
 
 	// 没有关键词，直接查询
@@ -676,7 +664,25 @@ func (r *MongoBookRepository) CountByCategory(ctx context.Context, categoryID st
 
 // CountByAuthor 统计作者的书籍数量
 func (r *MongoBookRepository) CountByAuthor(ctx context.Context, author string) (int64, error) {
+	if author == "" {
+		return 0, nil
+	}
+
 	return r.GetCollection().CountDocuments(ctx, bson.M{"author": author})
+}
+
+// CountByAuthorID 根据作者 ID 统计书籍数量
+func (r *MongoBookRepository) CountByAuthorID(ctx context.Context, authorID string) (int64, error) {
+	if authorID == "" {
+		return 0, nil
+	}
+
+	objectID, err := primitive.ObjectIDFromHex(authorID)
+	if err != nil {
+		return 0, err
+	}
+
+	return r.GetCollection().CountDocuments(ctx, bson.M{"author_id": objectID})
 }
 
 // CountByStatus 统计指定状态的书籍数量
@@ -957,16 +963,7 @@ func (r *MongoBookRepository) BatchUpdateCategory(ctx context.Context, bookIDs [
 
 // Transaction 执行事务
 func (r *MongoBookRepository) Transaction(ctx context.Context, fn func(ctx context.Context) error) error {
-	session, err := r.client.StartSession() // 启动会话
-	if err != nil {
-		return err
-	}
-	defer session.EndSession(ctx) // 确保会话结束
-
-	_, err = session.WithTransaction(ctx, func(sc mongo.SessionContext) (interface{}, error) {
-		return nil, fn(sc)
-	})
-	return err
+	return pkgtransaction.RunMongoTransaction(ctx, r.client, fn)
 }
 
 // List 实现基础接口的List

@@ -129,7 +129,7 @@ cat test/service/reading/reader_service_enhanced_test.go | head -200
 1. **UserService** - 学习从 `test/service/user/password_reset_test.go`
 2. **ProjectService** - 学习从 `test/service/project/version_service_enhanced_test.go`
 3. **DocumentService** - 学习从 `test/service/document/document_version_test.go`
-4. **AuthService** - 学习从 `test/service/shared/auth/` 下的测试
+4. **AuthService** - 学习从 `service/auth/` 下的测试，并参考 `service/user/password_validator.go`
 
 ### 3️⃣ 团队协作方案
 分配任务给不同的开发者：

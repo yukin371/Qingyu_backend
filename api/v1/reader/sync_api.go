@@ -1,15 +1,14 @@
 package reader
 
 import (
-	"net/http"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	gorilla_websocket "github.com/gorilla/websocket"
 
 	"Qingyu_backend/pkg/response"
 	progressSync "Qingyu_backend/pkg/sync"
 	ws "Qingyu_backend/pkg/websocket"
+	realtimews "Qingyu_backend/realtime/websocket"
 	"Qingyu_backend/service/interfaces"
 )
 
@@ -26,13 +25,7 @@ func NewSyncAPI(syncService interfaces.ProgressSyncService) *SyncAPI {
 }
 
 // WebSocketUpgrader WebSocket升级器
-var WebSocketUpgrader = gorilla_websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-	CheckOrigin: func(r *http.Request) bool {
-		return true // 生产环境应该验证Origin
-	},
-}
+var WebSocketUpgrader = realtimews.NewUpgrader(nil)
 
 // SyncWebSocket WebSocket同步连接
 //

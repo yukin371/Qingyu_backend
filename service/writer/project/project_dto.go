@@ -8,8 +8,8 @@ package project
 // 为了保持向后兼容，这里重新导出新定义
 //
 // 迁移指南：
-// - 将 import "Qingyu_backend/service/writer/project" 改为 "Qingyu_backend/models/dto"
-// - 或者直接使用 project.CreateProjectRequest（它会自动指向 dto.CreateProjectRequest）
+// - 将请求 DTO 的 import 从 "Qingyu_backend/service/writer/project" 改为 "Qingyu_backend/models/dto"
+// - 本文件仅保留项目模块特定响应类型与少量兼容别名
 //
 // 废弃时间：2026-02-26
 // 计划移除时间：2026-06-01
@@ -19,21 +19,9 @@ import (
 	"Qingyu_backend/models/writer"
 )
 
-// CreateProjectRequest 创建项目请求
-// Deprecated: 使用 dto.CreateProjectRequest 替代
-type CreateProjectRequest = dto.CreateProjectRequest
-
 // CreateProjectResponse 创建项目响应
 // Deprecated: 使用 dto.CreateProjectResponse 替代
 type CreateProjectResponse = dto.CreateProjectResponse
-
-// UpdateProjectRequest 更新项目请求
-// Deprecated: 使用 dto.UpdateProjectRequest 替代
-type UpdateProjectRequest = dto.UpdateProjectRequest
-
-// ListProjectsRequest 项目列表请求
-// Deprecated: 使用 dto.ListProjectsRequest 替代
-type ListProjectsRequest = dto.ListProjectsRequest
 
 // ListProjectsResponse 项目列表响应
 // Deprecated: 保留项目模块特定响应类型

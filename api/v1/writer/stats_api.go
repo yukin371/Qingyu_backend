@@ -1,8 +1,8 @@
 package writer
 
 import (
+	"context"
 	"math"
-	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -34,6 +34,74 @@ func NewStatsApi(statsService *readingStats.ReadingStatsService, bookRepo bookst
 		statsService: statsService,
 		bookRepo:     bookRepo,
 	}
+}
+
+// ListMyBooks 获取当前作者的作品列表。
+// @Summary 获取当前作者作品列表
+// @Description 获取当前登录作者的书籍列表，用于统计与收入页筛选
+// @Tags Stats
+// @Accept json
+// @Produce json
+// @Param page query int false "页码" default(1)
+// @Param pageSize query int false "每页数量" default(20)
+// @Success 200 {object} response.APIResponse
+// @Failure 401 {object} response.APIResponse
+// @Failure 500 {object} response.APIResponse
+// @Router /api/v1/writer/books [get]
+func (api *StatsApi) ListMyBooks(c *gin.Context) {
+	userID, ok := shared.GetUserID(c)
+	if !ok {
+		return
+	}
+
+	if api.bookRepo == nil {
+		response.Success(c, gin.H{
+			"items":    []gin.H{},
+			"list":     []gin.H{},
+			"total":    0,
+			"page":     1,
+			"pageSize": 20,
+		})
+		return
+	}
+
+	pagination := shared.GetPaginationParamsWithSizeKeys(c, 1, 20, 100, "pageSize", "size", "page_size")
+	books, err := api.bookRepo.GetByAuthorID(c.Request.Context(), userID, pagination.PageSize, pagination.Offset)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	total, err := api.countBooksByAuthor(c.Request.Context(), userID)
+	if err != nil {
+		c.Error(err)
+		return
+	}
+
+	items := make([]gin.H, 0, len(books))
+	for _, book := range books {
+		items = append(items, gin.H{
+			"id":           book.ID.Hex(),
+			"bookId":       book.ID.Hex(),
+			"title":        book.Title,
+			"status":       book.Status,
+			"chapterCount": book.ChapterCount,
+			"wordCount":    book.WordCount,
+		})
+	}
+
+	response.Success(c, gin.H{
+		"items":    items,
+		"list":     items,
+		"total":    total,
+		"page":     pagination.Page,
+		"pageSize": pagination.PageSize,
+	})
+}
+
+func (api *StatsApi) countBooksByAuthor(ctx context.Context, userID string) (int, error) {
+	total, err := api.bookRepo.CountByAuthorID(ctx, userID)
+	return int(total), err
 }
 
 func (api *StatsApi) resolveBookID(c *gin.Context) (string, bool) {
@@ -237,6 +305,11 @@ func (api *StatsApi) GetBookRevenue(c *gin.Context) {
 		endDate = time.Now()
 	}
 
+	if startDate.After(endDate) {
+		response.BadRequest(c, "参数错误", "开始日期不能晚于结束日期")
+		return
+	}
+
 	// 获取收入细分
 	revenueBreakdown, err := api.statsService.GetRevenueBreakdown(c.Request.Context(), bookID, startDate, endDate)
 	if err != nil {
@@ -264,9 +337,8 @@ func (api *StatsApi) GetTopChapters(c *gin.Context) {
 		return
 	}
 
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
-	topChapters, total, err := api.statsService.GetChapterRankings(c.Request.Context(), bookID, page, size)
+	pagination := shared.GetPaginationParamsStandard(c)
+	topChapters, total, err := api.statsService.GetChapterRankings(c.Request.Context(), bookID, pagination.Page, pagination.PageSize)
 	if err != nil {
 		c.Error(err)
 		return
@@ -314,10 +386,8 @@ func (api *StatsApi) GetDailyStats(c *gin.Context) {
 		return
 	}
 
-	// 解析天数参数
-	daysStr := c.DefaultQuery("days", "7")
-	days, err := strconv.Atoi(daysStr)
-	if err != nil || days < 1 || days > 365 {
+	days, ok := shared.GetIntQueryInRange(c, "days", 7, 1, 365)
+	if !ok {
 		response.BadRequest(c, "参数错误", "天数必须在1-365之间")
 		return
 	}
@@ -421,10 +491,8 @@ func (api *StatsApi) GetRetentionRate(c *gin.Context) {
 		return
 	}
 
-	// 解析天数参数
-	daysStr := c.DefaultQuery("days", "7")
-	days, err := strconv.Atoi(daysStr)
-	if err != nil || days < 1 || days > 90 {
+	days, ok := shared.GetIntQueryInRange(c, "days", 7, 1, 90)
+	if !ok {
 		response.BadRequest(c, "参数错误", "天数必须在1-90之间")
 		return
 	}
@@ -452,8 +520,8 @@ func (api *StatsApi) GetSubscribersTrend(c *gin.Context) {
 		return
 	}
 
-	days, err := strconv.Atoi(c.DefaultQuery("days", "30"))
-	if err != nil || days < 1 || days > 365 {
+	days, ok := shared.GetIntQueryInRange(c, "days", 30, 1, 365)
+	if !ok {
 		response.BadRequest(c, "参数错误", "天数必须在1-365之间")
 		return
 	}

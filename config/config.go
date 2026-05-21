@@ -8,6 +8,7 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 
 	authModel "Qingyu_backend/models/auth"
 )
@@ -135,11 +136,12 @@ type ProviderConfig struct {
 
 // AIQuotaConfig AI配额配置
 type AIQuotaConfig struct {
-	DefaultQuotas    *DefaultQuotasConfig `mapstructure:"default_quotas"`
-	Reset            *QuotaResetConfig    `mapstructure:"reset"`
-	WarningThreshold float64              `mapstructure:"warning_threshold"`
-	AllowOverdraft   bool                 `mapstructure:"allow_overdraft"`
-	OverdraftLimit   int                  `mapstructure:"overdraft_limit"`
+	DefaultQuotas         *DefaultQuotasConfig              `mapstructure:"default_quotas"`
+	Reset                 *QuotaResetConfig                 `mapstructure:"reset"`
+	WarningThreshold      float64                           `mapstructure:"warning_threshold"`
+	AllowOverdraft        bool                              `mapstructure:"allow_overdraft"`
+	OverdraftLimit        int                               `mapstructure:"overdraft_limit"`
+	ConsistencyThresholds *QuotaConsistencyThresholdsConfig `mapstructure:"consistency_thresholds"`
 }
 
 // DefaultQuotasConfig 默认配额配置
@@ -153,6 +155,63 @@ type DefaultQuotasConfig struct {
 type QuotaResetConfig struct {
 	DailyResetHour  int  `mapstructure:"daily_reset_hour"`
 	EnableAutoReset bool `mapstructure:"enable_auto_reset"`
+}
+
+// QuotaConsistencyThresholdsConfig 一致性对账阈值配置。
+type QuotaConsistencyThresholdsConfig struct {
+	User     *QuotaConsistencyThresholdConfig `mapstructure:"user"`
+	Workflow *QuotaConsistencyThresholdConfig `mapstructure:"workflow"`
+	Global   *QuotaConsistencyThresholdConfig `mapstructure:"global"`
+}
+
+// QuotaConsistencyThresholdConfig 单类一致性阈值配置。
+type QuotaConsistencyThresholdConfig struct {
+	WarningTokens  int     `mapstructure:"warning_tokens"`
+	CriticalTokens int     `mapstructure:"critical_tokens"`
+	WarningRatio   float64 `mapstructure:"warning_ratio"`
+	CriticalRatio  float64 `mapstructure:"critical_ratio"`
+}
+
+// GetConsistencyThreshold 获取某类一致性阈值配置。
+func (c *AIQuotaConfig) GetConsistencyThreshold(scope string) *QuotaConsistencyThresholdConfig {
+	defaultThreshold := &QuotaConsistencyThresholdConfig{
+		WarningTokens:  200,
+		CriticalTokens: 1000,
+		WarningRatio:   0.1,
+		CriticalRatio:  0.2,
+	}
+	if c == nil || c.ConsistencyThresholds == nil {
+		return defaultThreshold
+	}
+
+	var threshold *QuotaConsistencyThresholdConfig
+	switch scope {
+	case "workflow":
+		threshold = c.ConsistencyThresholds.Workflow
+	case "global":
+		threshold = c.ConsistencyThresholds.Global
+	default:
+		threshold = c.ConsistencyThresholds.User
+	}
+
+	if threshold == nil {
+		return defaultThreshold
+	}
+
+	result := *defaultThreshold
+	if threshold.WarningTokens > 0 {
+		result.WarningTokens = threshold.WarningTokens
+	}
+	if threshold.CriticalTokens > 0 {
+		result.CriticalTokens = threshold.CriticalTokens
+	}
+	if threshold.WarningRatio > 0 {
+		result.WarningRatio = threshold.WarningRatio
+	}
+	if threshold.CriticalRatio > 0 {
+		result.CriticalRatio = threshold.CriticalRatio
+	}
+	return &result
 }
 
 // EmailConfig 邮件配置
@@ -241,6 +300,11 @@ func (c *AIQuotaConfig) GetDefaultQuota(userRole, membershipLevel string) int {
 		if quota, ok := c.DefaultQuotas.Reader[membershipLevel]; ok {
 			return quota
 		}
+		if membershipLevel == "vip_monthly" || membershipLevel == "vip_yearly" || membershipLevel == "super_vip" {
+			if quota, ok := c.DefaultQuotas.Reader["vip"]; ok {
+				return quota
+			}
+		}
 		// 如果没有找到对应等级，尝试normal
 		if quota, ok := c.DefaultQuotas.Reader["normal"]; ok {
 			return quota
@@ -306,7 +370,7 @@ func LoadConfig(configPath string) (*Config, error) {
 			if _, err := os.Stat(testConfigFile); err == nil {
 				v.SetConfigFile(testConfigFile)
 				testConfigFound = true
-				fmt.Printf("[Config] Using test config: %s\n", testConfigFile)
+				zap.L().Debug("Using test config", zap.String("path", testConfigFile))
 				break
 			}
 		}
@@ -321,7 +385,7 @@ func LoadConfig(configPath string) (*Config, error) {
 			v.AddConfigPath("../../configs") // 从cmd/server运行时（新）
 			v.AddConfigPath("../../config")  // 从cmd/server运行时（兼容）
 			v.AddConfigPath(".")             // 当前目录
-			fmt.Println("[Config] Test config not found, using default config search")
+			zap.L().Debug("Test config not found, using default config search")
 		}
 	}
 
@@ -333,7 +397,7 @@ func LoadConfig(configPath string) (*Config, error) {
 	if err := v.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			// 配置文件未找到错误；如果有默认值，可以继续
-			fmt.Printf("Warning: Config file not found: %v\n", err)
+			zap.L().Warn("Config file not found, using defaults", zap.Error(err))
 		} else {
 			// 其他错误
 			return nil, fmt.Errorf("fatal error reading config file: %w", err)
@@ -433,11 +497,11 @@ func setDefaults() {
 	v.SetDefault("log.redact_keys", []string{"authorization", "password", "token", "cookie"})
 
 	// JWT默认配置
-	v.SetDefault("jwt.secret", "qingyu_secret_key")
+	v.SetDefault("jwt.secret", "")
 	v.SetDefault("jwt.expiration_hours", 24)
 
 	// AI默认配置
-	v.SetDefault("ai.api_key", "default_api_key")
+	v.SetDefault("ai.api_key", "")
 	v.SetDefault("ai.base_url", "https://api.openai.com/v1")
 	v.SetDefault("ai.max_tokens", 2000)
 	v.SetDefault("ai.temperature", 7)
@@ -457,6 +521,20 @@ func setDefaults() {
 	v.SetDefault("ai.ai_service.timeout", 30)
 	v.SetDefault("ai.ai_service.internal_api_key", "")
 	v.SetDefault("ai.ai_service.allowed_ips", []string{"127.0.0.1", "::1"})
+
+	// AI配额一致性阈值默认配置
+	v.SetDefault("ai_quota.consistency_thresholds.user.warning_tokens", 200)
+	v.SetDefault("ai_quota.consistency_thresholds.user.critical_tokens", 1000)
+	v.SetDefault("ai_quota.consistency_thresholds.user.warning_ratio", 0.1)
+	v.SetDefault("ai_quota.consistency_thresholds.user.critical_ratio", 0.2)
+	v.SetDefault("ai_quota.consistency_thresholds.workflow.warning_tokens", 200)
+	v.SetDefault("ai_quota.consistency_thresholds.workflow.critical_tokens", 1000)
+	v.SetDefault("ai_quota.consistency_thresholds.workflow.warning_ratio", 0.1)
+	v.SetDefault("ai_quota.consistency_thresholds.workflow.critical_ratio", 0.2)
+	v.SetDefault("ai_quota.consistency_thresholds.global.warning_tokens", 200)
+	v.SetDefault("ai_quota.consistency_thresholds.global.critical_tokens", 1000)
+	v.SetDefault("ai_quota.consistency_thresholds.global.warning_ratio", 0.1)
+	v.SetDefault("ai_quota.consistency_thresholds.global.critical_ratio", 0.2)
 
 	// Elasticsearch 默认配置
 	v.SetDefault("elasticsearch.enabled", false)
@@ -521,12 +599,12 @@ func WatchConfig(onChange func()) {
 	v.WatchConfig()
 	if onChange != nil {
 		v.OnConfigChange(func(e fsnotify.Event) {
-			fmt.Printf("Config file changed: %s\n", e.Name)
+			zap.L().Info("Config file changed", zap.String("path", e.Name))
 
 			// 重新加载配置
 			config := &Config{}
 			if err := v.Unmarshal(config); err != nil {
-				fmt.Printf("Error reloading config: %v\n", err)
+				zap.L().Error("Error reloading config", zap.Error(err))
 				return
 			}
 
@@ -535,7 +613,7 @@ func WatchConfig(onChange func()) {
 
 			// 验证配置
 			if err := ValidateConfig(config); err != nil {
-				fmt.Printf("Error validating reloaded config: %v\n", err)
+				zap.L().Error("Error validating reloaded config", zap.Error(err))
 				return
 			}
 

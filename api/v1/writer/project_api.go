@@ -1,8 +1,6 @@
 package writer
 
 import (
-	"strconv"
-
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
@@ -43,9 +41,7 @@ func (api *ProjectApi) CreateProject(c *gin.Context) {
 
 	ctx := shared.AddUserIDToContext(c)
 
-	// 将DTO转换为服务层请求类型（使用类型别名，兼容性处理）
-	serviceReq := project.CreateProjectRequest(req)
-	projectModel, err := api.projectService.CreateProject(ctx, &serviceReq)
+	projectModel, err := api.projectService.CreateProject(ctx, &req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -96,15 +92,14 @@ func (api *ProjectApi) GetProject(c *gin.Context) {
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/projects [get]
 func (api *ProjectApi) ListProjects(c *gin.Context) {
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "10"))
+	pagination := shared.GetPaginationParamsWithSizeKeys(c, 1, 10, 0, "pageSize", "size", "page_size")
 	status := c.Query("status")
 	sort := c.Query("sort")
 	order := c.Query("order")
 
 	req := &dto.ListProjectsRequest{
-		Page:     page,
-		PageSize: pageSize,
+		Page:     pagination.Page,
+		PageSize: pagination.PageSize,
 		Status:   status,
 		Sort:     sort,
 		Order:    order,
@@ -112,9 +107,7 @@ func (api *ProjectApi) ListProjects(c *gin.Context) {
 
 	ctx := shared.AddUserIDToContext(c)
 
-	// 将DTO转换为服务层请求类型
-	serviceReq := project.ListProjectsRequest(*req)
-	resp, err := api.projectService.ListMyProjects(ctx, &serviceReq)
+	resp, err := api.projectService.ListMyProjects(ctx, req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -145,7 +138,7 @@ func (api *ProjectApi) ListProjects(c *gin.Context) {
 func (api *ProjectApi) UpdateProject(c *gin.Context) {
 	projectID := c.Param("id")
 
-	var req project.UpdateProjectRequest
+	var req dto.UpdateProjectRequest
 	if !shared.BindJSON(c, &req) {
 		return
 	}

@@ -6,7 +6,6 @@ import (
 
 	"Qingyu_backend/config"
 	usersModel "Qingyu_backend/models/users"
-	sharedRepo "Qingyu_backend/repository/interfaces/shared"
 	repoInterfaces "Qingyu_backend/repository/interfaces/user"
 	"Qingyu_backend/service/channels"
 
@@ -17,19 +16,16 @@ import (
 type VerificationService struct {
 	emailService channels.EmailService // 邮件服务（可选，用于发送验证邮件）
 	userRepo     repoInterfaces.UserRepository
-	authRepo     sharedRepo.AuthRepository
 	tokenManager *EmailVerificationTokenManager
 }
 
 // NewVerificationService 创建验证服务
 func NewVerificationService(
 	userRepo repoInterfaces.UserRepository,
-	authRepo sharedRepo.AuthRepository,
 	emailService channels.EmailService,
 ) *VerificationService {
 	return &VerificationService{
 		userRepo:     userRepo,
-		authRepo:     authRepo,
 		emailService: emailService,
 		tokenManager: NewEmailVerificationTokenManager(),
 	}

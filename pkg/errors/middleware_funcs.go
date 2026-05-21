@@ -1,7 +1,6 @@
 package errors
 
 import (
-	"fmt"
 	"net/http"
 	"runtime/debug"
 	"strconv"
@@ -96,13 +95,14 @@ func (h *ErrorHandler) Handle(err *UnifiedError) (int, gin.H) {
 func (h *ErrorHandler) HandlePanic(c *gin.Context, r interface{}, service, path string) {
 	// 记录详细的panic信息
 	stack := debug.Stack()
-	errorMsg := fmt.Sprintf("PANIC in %s at %s: %v\nStack:\n%s", service, path, r, string(stack))
 
 	// 尝试记录日志
 	if h.enableLogging {
-		// 这里应该使用项目配置的logger
-		// 暂时使用简单的日志记录
-		fmt.Printf("[ERROR] %s\n", errorMsg)
+		zap.L().Error("PANIC recovered",
+			zap.String("service", service),
+			zap.String("path", path),
+			zap.Any("panic", r),
+			zap.String("stack", string(stack)))
 	}
 
 	c.JSON(http.StatusInternalServerError, gin.H{

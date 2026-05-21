@@ -58,13 +58,13 @@ else
     check_result "自动保存服务文件" "FAIL" "文件不存在"
 fi
 
-if [ -f "service/shared/auth/password_validator.go" ]; then
+if [ -f "service/user/password_validator.go" ]; then
     check_result "密码验证器文件" "PASS"
 else
     check_result "密码验证器文件" "FAIL" "文件不存在"
 fi
 
-if [ -f "service/shared/auth/session_service.go" ]; then
+if [ -f "service/auth/session_service.go" ]; then
     check_result "会话服务文件" "PASS"
 else
     check_result "会话服务文件" "FAIL" "文件不存在"

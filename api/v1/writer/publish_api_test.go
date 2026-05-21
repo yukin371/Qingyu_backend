@@ -126,6 +126,13 @@ func setupPublishTestRouter(publishService interfaces.PublishService, userID str
 
 	publishAPI := writer.NewPublishApi(publishService)
 	r.POST("/api/v1/writer/projects/:id/publish", publishAPI.PublishProject)
+	r.POST("/api/v1/writer/projects/:id/unpublish", publishAPI.UnpublishProject)
+	r.GET("/api/v1/writer/projects/:id/publication-status", publishAPI.GetProjectPublicationStatus)
+	r.POST("/api/v1/writer/documents/:id/publish", publishAPI.PublishDocument)
+	r.PUT("/api/v1/writer/documents/:id/publish-status", publishAPI.UpdateDocumentPublishStatus)
+	r.POST("/api/v1/writer/projects/:id/documents/batch-publish", publishAPI.BatchPublishDocuments)
+	r.GET("/api/v1/writer/projects/:id/publications", publishAPI.GetPublicationRecords)
+	r.GET("/api/v1/writer/publications/:id", publishAPI.GetPublicationRecord)
 
 	return r
 }
@@ -250,4 +257,144 @@ func TestPublishApi_PublishProject_InvalidJSON(t *testing.T) {
 
 	// Then
 	assert.Equal(t, http.StatusBadRequest, w.Code)
+}
+
+func TestPublishApi_GetProjectPublicationStatus_RejectsInvalidProjectID(t *testing.T) {
+	mockService := new(MockPublishService)
+	router := setupPublishTestRouter(mockService, "")
+
+	req, _ := http.NewRequest("GET", "/api/v1/writer/projects/project!bad/publication-status", nil)
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "项目ID格式不正确")
+	mockService.AssertNotCalled(t, "GetProjectPublicationStatus", mock.Anything, mock.Anything)
+}
+
+func TestPublishApi_PublishDocument_UsesOptionalProjectIDAndUserID(t *testing.T) {
+	mockService := new(MockPublishService)
+	documentID := primitive.NewObjectID().Hex()
+	projectID := primitive.NewObjectID().Hex()
+	userID := primitive.NewObjectID().Hex()
+	router := setupPublishTestRouter(mockService, userID)
+
+	reqBody := map[string]interface{}{
+		"chapterTitle":  "第一章",
+		"chapterNumber": 3,
+		"isFree":        true,
+		"authorNote":    "ready",
+	}
+	jsonBody, _ := json.Marshal(reqBody)
+	req, _ := http.NewRequest("POST", "/api/v1/writer/documents/"+documentID+"/publish?projectId="+projectID, bytes.NewBuffer(jsonBody))
+	req.Header.Set("Content-Type", "application/json")
+
+	expectedRecord := &interfaces.PublicationRecord{
+		ID:         primitive.NewObjectID().Hex(),
+		Type:       "document",
+		ResourceID: documentID,
+		Status:     "pending",
+	}
+	mockService.
+		On("PublishDocument", mock.Anything, documentID, projectID, userID, mock.Anything).
+		Return(expectedRecord, nil).
+		Once()
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), documentID)
+	mockService.AssertExpectations(t)
+}
+
+func TestPublishApi_UpdateDocumentPublishStatus_RequiresProjectID(t *testing.T) {
+	mockService := new(MockPublishService)
+	documentID := primitive.NewObjectID().Hex()
+	router := setupPublishTestRouter(mockService, "")
+
+	req, _ := http.NewRequest("PUT", "/api/v1/writer/documents/"+documentID+"/publish-status", bytes.NewBufferString(`{"isPublished":true}`))
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "documentId和projectId不能为空")
+	mockService.AssertNotCalled(t, "UpdateDocumentPublishStatus", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+}
+
+func TestPublishApi_BatchPublishDocuments_Success(t *testing.T) {
+	mockService := new(MockPublishService)
+	projectID := primitive.NewObjectID().Hex()
+	userID := primitive.NewObjectID().Hex()
+	router := setupPublishTestRouter(mockService, userID)
+
+	reqBody := map[string]interface{}{
+		"documentIds":   []string{"doc-1", "doc-2"},
+		"autoNumbering": true,
+		"startNumber":   1,
+		"isFree":        true,
+	}
+	jsonBody, _ := json.Marshal(reqBody)
+	req, _ := http.NewRequest("POST", "/api/v1/writer/projects/"+projectID+"/documents/batch-publish", bytes.NewBuffer(jsonBody))
+	req.Header.Set("Content-Type", "application/json")
+
+	expectedResult := &interfaces.BatchPublishResult{
+		SuccessCount: 2,
+		Results: []interfaces.BatchPublishItem{
+			{DocumentID: "doc-1", Success: true, RecordID: "record-1"},
+			{DocumentID: "doc-2", Success: true, RecordID: "record-2"},
+		},
+	}
+	mockService.
+		On("BatchPublishDocuments", mock.Anything, projectID, userID, mock.Anything).
+		Return(expectedResult, nil).
+		Once()
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), `"successCount":2`)
+	mockService.AssertExpectations(t)
+}
+
+func TestPublishApi_GetPublicationRecords_UsesSizeAliasPagination(t *testing.T) {
+	mockService := new(MockPublishService)
+	projectID := primitive.NewObjectID().Hex()
+	router := setupPublishTestRouter(mockService, "")
+
+	records := []*interfaces.PublicationRecord{
+		{ID: "record-1", Type: "project", ResourceID: projectID, Status: "published"},
+	}
+	mockService.
+		On("GetPublicationRecords", mock.Anything, projectID, 2, 5).
+		Return(records, int64(7), nil).
+		Once()
+
+	req, _ := http.NewRequest("GET", "/api/v1/writer/projects/"+projectID+"/publications?page=2&size=5", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), `"total":7`)
+	mockService.AssertExpectations(t)
+}
+
+func TestPublishApi_GetPublicationRecord_NotFound(t *testing.T) {
+	mockService := new(MockPublishService)
+	recordID := primitive.NewObjectID().Hex()
+	router := setupPublishTestRouter(mockService, "")
+
+	mockService.On("GetPublicationRecord", mock.Anything, recordID).Return(nil, errors.New("not found")).Once()
+
+	req, _ := http.NewRequest("GET", "/api/v1/writer/publications/"+recordID, nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusNotFound, w.Code)
+	assert.Contains(t, w.Body.String(), "发布记录不存在")
+	mockService.AssertExpectations(t)
 }

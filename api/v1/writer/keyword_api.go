@@ -1,13 +1,13 @@
 package writer
 
 import (
-	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/mozillazg/go-pinyin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/interfaces"
 )
@@ -40,10 +40,7 @@ type keywordSearchResponse struct {
 
 // SearchKeywords 按项目搜索角色/地点关键词（支持前缀补全）
 func (api *KeywordApi) SearchKeywords(c *gin.Context) {
-	projectID := c.Param("projectId")
-	if projectID == "" {
-		projectID = c.Param("id")
-	}
+	projectID := shared.GetFirstParam(c, "projectId", "id")
 	if projectID == "" {
 		response.BadRequest(c, "项目ID不能为空", "")
 		return
@@ -55,9 +52,13 @@ func (api *KeywordApi) SearchKeywords(c *gin.Context) {
 		return
 	}
 
-	query := strings.TrimSpace(c.Query("q"))
+	rawQuery, ok := shared.GetRequiredQuery(c, "q", "查询关键词")
+	if !ok {
+		return
+	}
+	query := strings.TrimSpace(rawQuery)
 	if query == "" {
-		response.BadRequest(c, "q 不能为空", "")
+		response.BadRequest(c, "查询关键词不能为空", "")
 		return
 	}
 
@@ -68,11 +69,9 @@ func (api *KeywordApi) SearchKeywords(c *gin.Context) {
 		return
 	}
 
-	limit := 20
-	if l := c.Query("limit"); l != "" {
-		if parsed, err := strconv.Atoi(l); err == nil && parsed > 0 && parsed <= 100 {
-			limit = parsed
-		}
+	limit, ok := shared.GetIntQueryInRange(c, "limit", 20, 1, 100)
+	if !ok {
+		limit = 20
 	}
 
 	suggestions := make([]keywordSuggestion, 0, limit)

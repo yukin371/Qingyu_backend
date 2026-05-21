@@ -36,7 +36,6 @@ func countTipTapWords(tipTapJson string) int {
 	var doc map[string]interface{}
 	if err := json.Unmarshal([]byte(tipTapJson), &doc); err != nil {
 		// JSON解析失败，返回0
-		fmt.Printf("[countTipTapWords] JSON解析失败: %v\n", err)
 		return 0
 	}
 
@@ -112,6 +111,8 @@ type DocumentService struct {
 	OnDocumentCreated func(ctx context.Context, projectID string, doc *writer.Document)
 	// OnDocumentTitleUpdated 文档标题更新后的回调（用于双向同步）
 	OnDocumentTitleUpdated func(ctx context.Context, documentID string, newTitle string)
+	// OnDocumentContentSaved 文档内容手动保存后的回调（用于异步索引）
+	OnDocumentContentSaved func(ctx context.Context, documentID string)
 }
 
 // SetOnDocumentCreated 设置创建文档后的回调
@@ -122,6 +123,11 @@ func (s *DocumentService) SetOnDocumentCreated(fn func(ctx context.Context, proj
 // SetOnDocumentTitleUpdated 设置文档标题更新后的回调
 func (s *DocumentService) SetOnDocumentTitleUpdated(fn func(ctx context.Context, documentID string, newTitle string)) {
 	s.OnDocumentTitleUpdated = fn
+}
+
+// SetOnDocumentContentSaved 设置内容手动保存后的回调
+func (s *DocumentService) SetOnDocumentContentSaved(fn func(ctx context.Context, documentID string)) {
+	s.OnDocumentContentSaved = fn
 }
 
 // NewDocumentService 创建文档服务
@@ -297,30 +303,20 @@ func (s *DocumentService) GetDocument(ctx context.Context, documentID string) (*
 
 // GetDocumentTree 获取文档树
 func (s *DocumentService) GetDocumentTree(ctx context.Context, projectID string) (*DocumentTreeResponse, error) {
-	fmt.Printf("[DEBUG] GetDocumentTree called with projectID: %s\n", projectID)
-
 	// 1. 验证项目查看权限
 	_, _, err := s.authHelper.VerifyProjectView(ctx, projectID)
 	if err != nil {
-		fmt.Printf("[DEBUG] VerifyProjectView failed: %v\n", err)
 		return nil, err
 	}
 
 	// 2. 获取所有文档
 	documents, err := s.documentRepo.GetByProjectID(ctx, projectID, 1000, 0)
 	if err != nil {
-		fmt.Printf("[DEBUG] GetByProjectID failed: %v\n", err)
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询文档树失败", "", err)
-	}
-
-	fmt.Printf("[DEBUG] GetByProjectID returned %d documents\n", len(documents))
-	for i, doc := range documents {
-		fmt.Printf("[DEBUG]   Doc[%d]: ID=%s, Title=%s, Type=%s, ParentID=%s\n", i, doc.ID.Hex(), doc.Title, doc.Type, doc.ParentID.Hex())
 	}
 
 	// 3. 构建树形结构
 	tree := s.buildDocumentTree(documents)
-	fmt.Printf("[DEBUG] buildDocumentTree returned %d root nodes\n", len(tree))
 
 	return &DocumentTreeResponse{
 		ProjectID: projectID,
@@ -598,7 +594,7 @@ func (s *DocumentService) GetVersion() string {
 }
 
 // ListDocuments 获取文档列表
-func (s *DocumentService) ListDocuments(ctx context.Context, req *ListDocumentsRequest) (*dto.DocumentListResponse, error) {
+func (s *DocumentService) ListDocuments(ctx context.Context, req *dto.ListDocumentsRequest) (*dto.DocumentListResponse, error) {
 	// 1. 参数验证
 	if req.ProjectID == "" {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "项目ID不能为空", "", nil)
@@ -865,11 +861,16 @@ func (s *DocumentService) AutoSaveDocument(ctx context.Context, req *dto.AutoSav
 		"updated_at": time.Now(),
 	}
 
-	if err := s.documentRepo.Update(ctx, req.DocumentID, updates); err != nil {
-		// 内容已保存，但元数据更新失败，记录错误但不返回失败
-		// 下次获取文档时会自动同步
-		fmt.Printf("警告：更新文档元数据失败: %v\n", err)
-	}
+	// 内容已保存；元数据更新失败不阻断主流程，下次获取文档时会自动同步。
+	_ = s.documentRepo.Update(ctx, req.DocumentID, updates)
+
+	// 更新项目统计（异步）
+	go func() {
+		doc, err := s.documentRepo.GetByID(context.Background(), req.DocumentID)
+		if err == nil && doc != nil {
+			s.updateProjectStatistics(context.Background(), doc.ProjectID.Hex())
+		}
+	}()
 
 	// 7. 发布事件
 	if s.eventBus != nil {
@@ -913,23 +914,41 @@ func (s *DocumentService) GetSaveStatus(ctx context.Context, documentID string) 
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorNotFound, "文档不存在", "", nil)
 	}
 
-	// 3. 获取文档版本号
-	// TODO:注意：完整的版本控制系统应该使用 VersionService
-	// 当前实现：基于文档创建和更新时间差来估算版本号
+	// 3. 优先从内容记录获取真实保存状态；缺失时再回退到文档级估算
 	currentVersion := s.calculateDocumentVersion(doc)
+	lastSavedAt := doc.UpdatedAt
+	wordCount := doc.WordCount
+
+	content, err := s.documentContentRepo.GetByDocumentID(ctx, documentID)
+	if err != nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "查询文档内容失败", "", err)
+	}
+	if content != nil {
+		if content.Version > 0 {
+			currentVersion = content.Version
+		}
+		if content.WordCount > 0 {
+			wordCount = content.WordCount
+		}
+		if !content.LastSavedAt.IsZero() {
+			lastSavedAt = content.LastSavedAt
+		} else if !content.UpdatedAt.IsZero() {
+			lastSavedAt = content.UpdatedAt
+		}
+	}
 
 	// 4. 返回保存状态
 	return &SaveStatusResponse{
 		DocumentID:     documentID,
-		LastSavedAt:    doc.UpdatedAt,
+		LastSavedAt:    lastSavedAt,
 		CurrentVersion: currentVersion,
 		IsSaving:       false,
-		WordCount:      doc.WordCount,
+		WordCount:      wordCount,
 	}, nil
 }
 
 // calculateDocumentVersion 计算文档版本号
-// 注意：这是简化实现。生产环境应该使用 VersionService 管理真实的版本控制
+// 注意：这是内容记录缺失时的兼容兜底；真实版本应优先来自 DocumentContent.Version
 func (s *DocumentService) calculateDocumentVersion(doc *writer.Document) int {
 	// 方案1：基于时间差估算版本号（每次更新视为一个新版本）
 	// 假设平均每5分钟保存一次
@@ -946,7 +965,7 @@ func (s *DocumentService) calculateDocumentVersion(doc *writer.Document) int {
 
 	return estimatedVersion
 
-	// TODO(Production): 使用 VersionService 获取真实版本号
+	// TODO(Production): 若后续补齐统一 VersionService，再以其作为最终兜底来源
 	// if s.versionService != nil {
 	// 	version, err := s.versionService.GetCurrentVersion(ctx, doc.ID)
 	// 	if err == nil && version > 0 {
@@ -1025,7 +1044,7 @@ func (s *DocumentService) UpdateDocumentContent(ctx context.Context, req *dto.Up
 	}
 
 	// 4. 验证文档编辑权限
-	_, _, _, err := s.authHelper.VerifyDocumentEdit(ctx, req.DocumentID)
+	_, doc, _, err := s.authHelper.VerifyDocumentEdit(ctx, req.DocumentID)
 	if err != nil {
 		return err
 	}
@@ -1087,10 +1106,11 @@ func (s *DocumentService) UpdateDocumentContent(ctx context.Context, req *dto.Up
 		"updated_at": time.Now(),
 	}
 
-	if err := s.documentRepo.Update(ctx, req.DocumentID, updates); err != nil {
-		// 内容已保存，但元数据更新失败，记录错误但不返回失败
-		fmt.Printf("警告：更新文档元数据失败: %v\n", err)
-	}
+	// 内容已保存；元数据更新失败不阻断主流程。
+	_ = s.documentRepo.Update(ctx, req.DocumentID, updates)
+
+	// 更新项目统计（异步）
+	go s.updateProjectStatistics(context.Background(), doc.ProjectID.Hex())
 
 	// 8. 发布事件
 	if s.eventBus != nil {
@@ -1103,6 +1123,10 @@ func (s *DocumentService) UpdateDocumentContent(ctx context.Context, req *dto.Up
 			Timestamp: time.Now(),
 			Source:    s.serviceName,
 		})
+	}
+
+	if s.OnDocumentContentSaved != nil {
+		go s.OnDocumentContentSaved(context.Background(), req.DocumentID)
 	}
 
 	return nil
@@ -1272,12 +1296,10 @@ func (s *DocumentService) ReplaceDocumentContents(ctx context.Context, req *dto.
 	}
 
 	now := time.Now()
-	if err := s.documentRepo.Update(ctx, req.DocumentID, map[string]interface{}{
+	_ = s.documentRepo.Update(ctx, req.DocumentID, map[string]interface{}{
 		"word_count": totalWordCount,
 		"updated_at": now,
-	}); err != nil {
-		fmt.Printf("警告：更新文档字数失败: %v\n", err)
-	}
+	})
 
 	if s.eventBus != nil {
 		s.eventBus.PublishAsync(ctx, &serviceBase.BaseEvent{
@@ -1290,6 +1312,10 @@ func (s *DocumentService) ReplaceDocumentContents(ctx context.Context, req *dto.
 			Timestamp: now,
 			Source:    s.serviceName,
 		})
+	}
+
+	if s.OnDocumentContentSaved != nil {
+		go s.OnDocumentContentSaved(context.Background(), req.DocumentID)
 	}
 
 	return &ReplaceDocumentContentsResponse{
@@ -1426,7 +1452,7 @@ func (s *DocumentService) DuplicateDocument(ctx context.Context, documentID stri
 
 	// 3. 将 dto.DuplicateRequest 转换为 DuplicateRequest
 	duplicateReq := &DuplicateRequest{
-		TargetParentID: nil, // 暂不支持复制到其他父文档
+		TargetParentID: nil,     // 暂不支持复制到其他父文档
 		Position:       "inner", // 默认添加为子文档
 		CopyContent:    req.CopyContent,
 	}

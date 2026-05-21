@@ -2,6 +2,7 @@ package mongodb
 
 import (
 	"Qingyu_backend/models/bookstore"
+	pkgtransaction "Qingyu_backend/pkg/transaction"
 	"Qingyu_backend/repository/mongodb/base"
 	"context"
 	"errors"
@@ -752,24 +753,7 @@ func (r *MongoBookRatingRepository) DeleteByUserID(ctx context.Context, userID p
 
 // Transaction 执行事务
 func (r *MongoBookRatingRepository) Transaction(ctx context.Context, fn func(ctx context.Context) error) error {
-	session, err := r.client.StartSession()
-	if err != nil {
-		return err
-	}
-	defer session.EndSession(ctx)
-
-	return mongo.WithSession(ctx, session, func(sc mongo.SessionContext) error {
-		if err := session.StartTransaction(); err != nil {
-			return err
-		}
-
-		if err := fn(sc); err != nil {
-			session.AbortTransaction(sc)
-			return err
-		}
-
-		return session.CommitTransaction(sc)
-	})
+	return pkgtransaction.RunMongoTransaction(ctx, r.client, fn)
 }
 
 // Health 健康检查

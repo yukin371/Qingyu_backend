@@ -1,0 +1,259 @@
+package writer
+
+import (
+	"net/http"
+	"testing"
+
+	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
+
+	statsModels "Qingyu_backend/models/stats"
+	"Qingyu_backend/service/writer/document"
+)
+
+func TestTimelineApiGetTimeline_RequiresProjectIDQuery(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	api := NewTimelineApi(nil)
+	c, w := newWriterTestContext(http.MethodGet, "/api/v1/writer/timelines/timeline-1", "", gin.Params{
+		{Key: "timelineId", Value: "timeline-1"},
+	})
+
+	api.GetTimeline(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "项目ID不能为空")
+}
+
+func TestOutlineApiGetOutline_RequiresProjectIDQuery(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	api := NewOutlineApi(nil)
+	c, w := newWriterTestContext(http.MethodGet, "/api/v1/writer/outlines/outline-1", "", gin.Params{
+		{Key: "outlineId", Value: "outline-1"},
+	})
+
+	api.GetOutline(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "项目ID不能为空")
+}
+
+func TestVersionApiCompareVersions_RequiresFromVersionQuery(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	api := NewVersionApi(nil)
+	c, w := newWriterTestContext(http.MethodGet, "/api/v1/writer/documents/doc-1/versions/compare?toVersion=v2", "", gin.Params{
+		{Key: "documentId", Value: "doc-1"},
+	})
+
+	api.CompareVersions(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "源版本ID不能为空")
+}
+
+func TestVersionApiCompareVersions_RequiresToVersionQuery(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	api := NewVersionApi(nil)
+	c, w := newWriterTestContext(http.MethodGet, "/api/v1/writer/documents/doc-1/versions/compare?fromVersion=v1", "", gin.Params{
+		{Key: "documentId", Value: "doc-1"},
+	})
+
+	api.CompareVersions(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "目标版本ID不能为空")
+}
+
+func TestKeywordApiSearchKeywords_RequiresQuery(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	api := NewKeywordApi(nil, nil)
+	c, w := newWriterTestContext(http.MethodGet, "/api/v1/writer/projects/507f1f77bcf86cd799439011/keywords/search", "", gin.Params{
+		{Key: "id", Value: "507f1f77bcf86cd799439011"},
+	})
+
+	api.SearchKeywords(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "查询关键词不能为空")
+}
+
+func TestStatsApiGetDailyStats_RejectsInvalidDaysQuery(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	api := NewStatsApi(nil, nil)
+	c, w := newWriterTestContext(http.MethodGet, "/api/v1/writer/books/book-1/daily-stats?days=abc", "", gin.Params{
+		{Key: "book_id", Value: "book-1"},
+	})
+
+	api.GetDailyStats(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "天数必须在1-365之间")
+}
+
+func TestStatsApiGetRetentionRate_RejectsOutOfRangeDaysQuery(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	api := NewStatsApi(nil, nil)
+	c, w := newWriterTestContext(http.MethodGet, "/api/v1/writer/books/book-1/retention?days=91", "", gin.Params{
+		{Key: "book_id", Value: "book-1"},
+	})
+
+	api.GetRetentionRate(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "天数必须在1-90之间")
+}
+
+func TestStatsApiGetBookRevenue_RejectsReversedDateRange(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	api := NewStatsApi(nil, nil)
+	c, w := newWriterTestContext(http.MethodGet, "/api/v1/writer/books/book-1/revenue?start_date=2026-05-08&end_date=2026-05-07", "", gin.Params{
+		{Key: "book_id", Value: "book-1"},
+	})
+
+	api.GetBookRevenue(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "开始日期不能晚于结束日期")
+}
+
+func TestWriterStatsAggregateAPIGetViews_RejectsInvalidDaysQuery(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	api := NewWriterStatsAggregateAPI(nil, nil)
+	c, w := newWriterTestContext(http.MethodGet, "/api/v1/writer/stats/views?bookId=book-1&days=0", "", nil)
+
+	api.GetViews(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "天数必须在1-365之间")
+}
+
+func TestWriterStatsAggregateAPIResolveAggregateBookID_UsesBookIDQuery(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	api := NewWriterStatsAggregateAPI(nil, nil)
+	c, _ := newWriterTestContext(http.MethodGet, "/api/v1/writer/stats/overview?bookId=book-123", "", nil)
+
+	bookID, ok := api.resolveAggregateBookID(c)
+
+	assert.True(t, ok)
+	assert.Equal(t, "book-123", bookID)
+}
+
+func TestWriterStatsAggregateAPIResolveAggregateBookID_UsesProjectIDFallbackWithoutBookRepo(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	api := NewWriterStatsAggregateAPI(nil, nil)
+	c, _ := newWriterTestContext(http.MethodGet, "/api/v1/writer/stats/overview?projectId=project-123", "", nil)
+
+	bookID, ok := api.resolveAggregateBookID(c)
+
+	assert.True(t, ok)
+	assert.Equal(t, "project-123", bookID)
+}
+
+func TestWriterStatsAggregateAPIGetOverview_RequiresLoginWhenNoBookOrProject(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	api := NewWriterStatsAggregateAPI(nil, nil)
+	c, w := newWriterTestContext(http.MethodGet, "/api/v1/writer/stats/overview", "", nil)
+
+	api.GetOverview(c)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+	assert.Contains(t, w.Body.String(), "请先登录")
+}
+
+func TestSumViewMetricsAggregatesDailyStats(t *testing.T) {
+	items := []*statsModels.BookStatsDaily{
+		{DailyViews: 12, DailySubscribers: 3},
+		{DailyViews: 8, DailySubscribers: 2},
+		{DailyViews: 0, DailySubscribers: 1},
+	}
+
+	views, subscribers := sumViewMetrics(items)
+
+	assert.Equal(t, int64(20), views)
+	assert.Equal(t, int64(6), subscribers)
+}
+
+func TestStoryHarnessApiGetChapterContext_RequiresChapterIDParam(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	api := NewStoryHarnessApi(nil, nil, nil)
+	c, w := newWriterTestContext(http.MethodGet, "/api/v1/writer/projects/project-1/chapters/context", "", gin.Params{
+		{Key: "id", Value: "project-1"},
+	})
+
+	api.GetChapterContext(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "章节ID不能为空")
+}
+
+func TestChangeRequestApiListChangeRequests_RequiresChapterIDParam(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	api := NewChangeRequestApi(nil)
+	c, w := newWriterTestContext(http.MethodGet, "/api/v1/writer/projects/project-1/chapters/change-requests", "", gin.Params{
+		{Key: "id", Value: "project-1"},
+	})
+
+	api.ListChangeRequests(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "章节ID不能为空")
+}
+
+func TestBatchOperationApiSubmit_RejectsUnsupportedOperationType(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	api := NewBatchOperationAPI(document.BatchOperationService{})
+	c, w := newWriterTestContext(http.MethodPost, "/api/v1/writer/batch-operations", `{
+		"projectId":"507f1f77bcf86cd799439011",
+		"type":"move",
+		"targetIds":["doc-1"]
+	}`, nil)
+
+	api.SubmitBatchOperation(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "当前仅支持 delete 批量操作")
+}
+
+func TestEditorApiUpdateUserShortcuts_RejectsUnsupportedPersistence(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	api := NewEditorApi(nil)
+	c, w := newWriterTestContext(http.MethodPut, "/api/v1/writer/user/shortcuts", `{
+		"shortcuts":{
+			"save":{"action":"save","key":"Ctrl+S"}
+		}
+	}`, nil)
+	c.Set("user_id", "user-1")
+
+	api.UpdateUserShortcuts(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "当前暂不支持持久化自定义快捷键")
+}
+
+func TestEditorApiResetUserShortcuts_RejectsUnsupportedPersistence(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	api := NewEditorApi(nil)
+	c, w := newWriterTestContext(http.MethodPost, "/api/v1/writer/user/shortcuts/reset", "", nil)
+	c.Set("user_id", "user-1")
+
+	api.ResetUserShortcuts(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "当前暂不支持持久化自定义快捷键")
+}

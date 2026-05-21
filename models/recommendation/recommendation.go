@@ -45,6 +45,7 @@ type RecommendedItem struct {
 const (
 	ActionTypeView     = string(sharedtypes.RecommendationBehaviorView)    // 浏览
 	ActionTypeClick    = string(sharedtypes.RecommendationBehaviorClick)   // 点击
+	ActionTypeDislike  = string(sharedtypes.RecommendationBehaviorDislike) // 不喜欢
 	ActionTypeFavorite = "favorite"                                        // 旧别名，规范值为 collect
 	ActionTypeCollect  = string(sharedtypes.RecommendationBehaviorCollect) // 收藏
 	ActionTypeRead     = string(sharedtypes.RecommendationBehaviorRead)    // 阅读

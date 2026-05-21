@@ -2,6 +2,7 @@ package project
 
 import (
 	"Qingyu_backend/models/writer"
+	pkgtransaction "Qingyu_backend/pkg/transaction"
 	"Qingyu_backend/repository"
 	"context"
 	"errors"
@@ -36,6 +37,10 @@ func objectIDFromHex(id, resource string) (primitive.ObjectID, error) {
 		return primitive.NilObjectID, fmt.Errorf("invalid %s id: %w", resource, err)
 	}
 	return objectID, nil
+}
+
+func calculateSnapshotWordCount(content string) int {
+	return len([]rune(content))
 }
 
 // getDocumentContent 获取文档内容（辅助函数）
@@ -469,12 +474,6 @@ func (s *VersionService) CreateCommit(ctx context.Context, projectID, authorID, 
 	}
 
 	// 使用MongoDB事务确保原子性
-	session, err := s.db.Client().StartSession()
-	if err != nil {
-		return nil, fmt.Errorf("failed to start session: %w", err)
-	}
-	defer session.EndSession(ctx)
-
 	callback := func(sessCtx mongo.SessionContext) (interface{}, error) {
 		// 插入提交记录
 		_, err := s.commitCol().InsertOne(sessCtx, commit)
@@ -537,7 +536,9 @@ func (s *VersionService) CreateCommit(ctx context.Context, projectID, authorID, 
 		return commit, nil
 	}
 
-	result, err := session.WithTransaction(ctx, callback)
+	result, err := pkgtransaction.RunMongoSessionWithResult(ctx, s.db.Client(), func(_ mongo.Session, sessCtx mongo.SessionContext) (interface{}, error) {
+		return callback(sessCtx)
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -780,13 +781,18 @@ func (s *VersionService) GetVersionHistory(ctx context.Context, documentID strin
 	// 转换为响应格式
 	versions := make([]*VersionInfo, 0, len(revisions))
 	for _, rev := range revisions {
+		wordCount := 0
+		if rev.StorageRef == "" {
+			wordCount = calculateSnapshotWordCount(rev.Snapshot)
+		}
+
 		versions = append(versions, &VersionInfo{
 			VersionID: rev.ID.Hex(),
 			Version:   rev.Version,
 			Message:   rev.Message,
 			CreatedAt: rev.CreatedAt,
 			CreatedBy: rev.AuthorID,
-			WordCount: 0, // TODO: 从快照中获取字数
+			WordCount: wordCount,
 		})
 	}
 
@@ -828,7 +834,7 @@ func (s *VersionService) GetVersion(ctx context.Context, documentID, versionID s
 		Message:    revision.Message,
 		CreatedAt:  revision.CreatedAt,
 		CreatedBy:  revision.AuthorID,
-		WordCount:  len(content), // 简单字数统计
+		WordCount:  calculateSnapshotWordCount(content),
 	}, nil
 }
 

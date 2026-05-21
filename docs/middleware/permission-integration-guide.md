@@ -250,12 +250,12 @@ package handlers
 
 import (
     "github.com/gin-gonic/gin"
-    "Qingyu_backend/internal/middleware/auth"
-    "Qingyu_backend/service/shared/auth"
+    mwAuth "Qingyu_backend/internal/middleware/auth"
+    authService "Qingyu_backend/service/auth"
 )
 
 type BookHandler struct {
-    permService auth.PermissionService
+    permService authService.PermissionService
 }
 
 func (h *BookHandler) UpdateBook(c *gin.Context) {
@@ -292,9 +292,9 @@ import (
     "context"
     "go.uber.org/zap"
 
-    "Qingyu_backend/internal/middleware/auth"
+    mwAuth "Qingyu_backend/internal/middleware/auth"
     "Qingyu_backend/repository/mongodb/auth"
-    authService "Qingyu_backend/service/shared/auth"
+    authService "Qingyu_backend/service/auth"
 )
 
 func setupPermissionService() {
@@ -307,7 +307,7 @@ func setupPermissionService() {
     permService := authService.NewPermissionService(roleRepo, nil, logger)
 
     // 3. 创建RBAC检查器
-    checker, _ := auth.NewRBACChecker(nil)
+    checker, _ := mwAuth.NewRBACChecker(nil)
 
     // 4. 设置检查器到服务
     permService.SetChecker(checker)
@@ -318,12 +318,12 @@ func setupPermissionService() {
     }
 
     // 6. 使用checker创建权限中间件
-    permConfig := &auth.PermissionConfig{
+    permConfig := &mwAuth.PermissionConfig{
         Enabled:  true,
         Strategy: "rbac",
         Checker:  checker,
     }
-    permMW, _ := auth.NewPermissionMiddleware(permConfig, logger)
+    permMW, _ := mwAuth.NewPermissionMiddleware(permConfig, logger)
 
     // 7. 应用到路由
     router.Use(permMW.Handler())
@@ -337,11 +337,11 @@ package api
 
 import (
     "github.com/gin-gonic/gin"
-    "Qingyu_backend/service/shared/auth"
+    authService "Qingyu_backend/service/auth"
 )
 
 type PermissionAPI struct {
-    permService auth.PermissionService
+    permService authService.PermissionService
 }
 
 // ReloadPermissions 重新加载权限

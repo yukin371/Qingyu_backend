@@ -43,7 +43,7 @@ Block 3 数据库优化项目分为三个阶段，当前实施情况如下：
 
 #### 缺失的索引清单
 
-根据设计文档 `docs/plans/2026-01-27-block3-database-optimization-design-v1.2.md`，以下索引尚未创建：
+根据设计文档 [Block 3 数据库优化设计 v1.2](../../../docs/plans/submodules/backend/architecture/2026-01-27-block3-database-optimization-design-v1.2.md)，以下索引尚未创建：
 
 **Comments 集合（P0 索引）**：
 ```go
@@ -618,7 +618,7 @@ config := &cache.CacheConfig{
 ### A. 相关文件清单
 
 #### 设计文档
-- `docs/plans/2026-01-27-block3-database-optimization-design-v1.2.md`
+- [Block 3 数据库优化设计 v1.2](../../../docs/plans/submodules/backend/architecture/2026-01-27-block3-database-optimization-design-v1.2.md)
 
 #### 索引迁移文件
 - `migration/mongodb/002_create_users_indexes.go`

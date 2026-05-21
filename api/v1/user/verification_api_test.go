@@ -131,38 +131,6 @@ func (m *MockVerificationUserService) ListUsers(ctx context.Context, req *userSe
 	return args.Get(0).(*userServiceInterface.ListUsersResponse), args.Error(1)
 }
 
-func (m *MockVerificationUserService) RegisterUser(ctx context.Context, req *userServiceInterface.RegisterUserRequest) (*userServiceInterface.RegisterUserResponse, error) {
-	args := m.Called(ctx, req)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*userServiceInterface.RegisterUserResponse), args.Error(1)
-}
-
-func (m *MockVerificationUserService) LoginUser(ctx context.Context, req *userServiceInterface.LoginUserRequest) (*userServiceInterface.LoginUserResponse, error) {
-	args := m.Called(ctx, req)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*userServiceInterface.LoginUserResponse), args.Error(1)
-}
-
-func (m *MockVerificationUserService) LogoutUser(ctx context.Context, req *userServiceInterface.LogoutUserRequest) (*userServiceInterface.LogoutUserResponse, error) {
-	args := m.Called(ctx, req)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*userServiceInterface.LogoutUserResponse), args.Error(1)
-}
-
-func (m *MockVerificationUserService) ValidateToken(ctx context.Context, req *userServiceInterface.ValidateTokenRequest) (*userServiceInterface.ValidateTokenResponse, error) {
-	args := m.Called(ctx, req)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*userServiceInterface.ValidateTokenResponse), args.Error(1)
-}
-
 func (m *MockVerificationUserService) UpdatePassword(ctx context.Context, req *userServiceInterface.UpdatePasswordRequest) (*userServiceInterface.UpdatePasswordResponse, error) {
 	args := m.Called(ctx, req)
 	if args.Get(0) == nil {
@@ -221,36 +189,12 @@ func (m *MockVerificationUserService) ConfirmPasswordReset(ctx context.Context, 
 	return args.Get(0).(*userServiceInterface.ConfirmPasswordResetResponse), args.Error(1)
 }
 
-func (m *MockVerificationUserService) AssignRole(ctx context.Context, req *userServiceInterface.AssignRoleRequest) (*userServiceInterface.AssignRoleResponse, error) {
+func (m *MockVerificationUserService) DowngradeRole(ctx context.Context, req *userServiceInterface.DowngradeRoleRequest) (*userServiceInterface.DowngradeRoleResponse, error) {
 	args := m.Called(ctx, req)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*userServiceInterface.AssignRoleResponse), args.Error(1)
-}
-
-func (m *MockVerificationUserService) RemoveRole(ctx context.Context, req *userServiceInterface.RemoveRoleRequest) (*userServiceInterface.RemoveRoleResponse, error) {
-	args := m.Called(ctx, req)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*userServiceInterface.RemoveRoleResponse), args.Error(1)
-}
-
-func (m *MockVerificationUserService) GetUserRoles(ctx context.Context, req *userServiceInterface.GetUserRolesRequest) (*userServiceInterface.GetUserRolesResponse, error) {
-	args := m.Called(ctx, req)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*userServiceInterface.GetUserRolesResponse), args.Error(1)
-}
-
-func (m *MockVerificationUserService) GetUserPermissions(ctx context.Context, req *userServiceInterface.GetUserPermissionsRequest) (*userServiceInterface.GetUserPermissionsResponse, error) {
-	args := m.Called(ctx, req)
-	if args.Get(0) == nil {
-		return nil, args.Error(1)
-	}
-	return args.Get(0).(*userServiceInterface.GetUserPermissionsResponse), args.Error(1)
+	return args.Get(0).(*userServiceInterface.DowngradeRoleResponse), args.Error(1)
 }
 
 // 实现BaseService接口

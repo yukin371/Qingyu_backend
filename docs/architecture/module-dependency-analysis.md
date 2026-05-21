@@ -1,22 +1,27 @@
 # 模块依赖分析
 
-**分析日期**: 2026-02-09
-**目的**: 为模块迁移准备依赖关系图谱，识别迁移风险
+**初始分析日期**: 2026-02-09
+**最后更新**: 2026-04-19
+**目的**: 记录 shared 相关模块迁移中的关键依赖关系，并标记哪些结论仍然有效
 
 ---
 
 ## 概述
 
-本文档分析 `service/shared/auth` 和 `service/shared/messaging` 模块的依赖关系，为模块迁移提供决策依据。
+本文档最初用于分析 `service/shared/auth` 和 `service/shared/messaging` 的迁移风险。
+
+当前口径：
+- Auth 相关内容已按 2026-04-19 的运行态更新
+- Messaging 相关内容主要保留历史迁移背景，不作为新增 owner 的依据
 
 ---
 
-## 1. Auth模块依赖分析
+## 1. Auth 模块依赖分析（当前运行态）
 
-### 1.1 模块结构
+### 1.1 当前模块结构
 
 ```
-service/shared/auth/
+service/auth/
 ├── auth_service.go              # 核心认证服务
 ├── interfaces.go                # 接口定义
 ├── jwt_service.go               # JWT服务
@@ -30,35 +35,36 @@ service/shared/auth/
 └── *_test.go                    # 测试文件
 ```
 
-### 1.2 Auth模块的依赖（输入）
+### 1.2 Auth 模块的依赖（输入）
 
 ```
-service/shared/auth 依赖:
-├── Qingyu_backend/service/interfaces/user  ← userServiceInterface
-├── Qingyu_backend/models/auth              ← authModel
-├── Qingyu_backend/models/users             ← usersModel
-├── Qingyu_backend/repository/interfaces/auth   ← authRepo
-├── Qingyu_backend/repository/interfaces/shared  ← sharedRepo
-├── Qingyu_backend/config                   ← JWT配置
-├── Qingyu_backend/internal/middleware/auth  ← 权限定义
-├── Qingyu_backend/pkg/cache                ← Redis客户端
-├── golang.org/x/oauth2                     ← OAuth库
-└── github.com/golang-jwt/jwt/v4            ← JWT库
+service/auth 依赖:
+├── Qingyu_backend/repository/interfaces/user     ← userRepo
+├── Qingyu_backend/repository/interfaces/auth     ← authRepo
+├── Qingyu_backend/models/auth                    ← authModel
+├── Qingyu_backend/models/users                   ← usersModel
+├── Qingyu_backend/config                         ← JWT配置
+├── Qingyu_backend/internal/middleware/auth       ← 权限定义/RBAC
+├── Qingyu_backend/pkg/cache                      ← Redis客户端
+├── golang.org/x/oauth2                           ← OAuth库
+└── github.com/golang-jwt/jwt/v4                  ← JWT库
 ```
 
-### 1.3 依赖Auth的模块（输出）
+### 1.3 依赖 Auth 的模块（输出）
 
 ```
-以下模块依赖 service/shared/auth:
-├── api/v1/auth/auth_api.go          ← 认证API
-├── api/v1/auth/oauth_api.go         ← OAuth API
-├── api/v1/shared/auth_api.go        ← 共享认证API
-├── api/v1/shared/oauth_api.go       ← 共享OAuth API
-├── realtime/websocket/messaging_hub.go    ← 消息中心
-├── realtime/websocket/notification_hub.go ← 通知中心
-├── router/shared/shared_router.go    ← 路由
-├── service/container/service_container.go ← 服务容器
-└── service/interfaces/shared/adapters.go  ← 适配器
+以下模块依赖 service/auth:
+├── api/v1/shared/auth_api.go                 ← 标准认证 HTTP owner
+├── api/v1/shared/oauth_api.go                ← 标准 OAuth HTTP owner
+├── api/v1/shared/auth_helpers.go             ← 共享认证 helper
+├── api/v1/user/handler/auth_handler.go       ← 用户域兼容认证入口
+├── api/v1/admin/permission_template_api.go   ← 管理端权限模板 API
+├── realtime/websocket/messaging_hub.go       ← 消息中心
+├── realtime/websocket/notification_hub.go    ← 通知中心
+├── router/shared/shared_router.go            ← shared 路由注册
+├── router/user/user_router.go                ← user 路由注册
+├── service/container/service_container.go    ← 服务容器
+└── service/interfaces/shared/adapters.go     ← 适配器
 ```
 
 ### 1.4 依赖关系图
@@ -75,7 +81,7 @@ graph TD
         G[pkg/cache]
     end
 
-    subgraph "service/shared/auth"
+    subgraph "service/auth"
         Auth[AuthService]
         JWT[JWTService]
         OAuth[OAuthService]
@@ -85,8 +91,8 @@ graph TD
     end
 
     subgraph "依赖Auth的模块"
-        API1[api/v1/auth/*]
-        API2[api/v1/shared/*]
+        API1[api/v1/shared/*]
+        API2[api/v1/user/handler/auth_handler.go]
         WS1[realtime/websocket/*]
         Router[router/shared]
         Container[service/container]
@@ -106,6 +112,13 @@ graph TD
     Auth --> WS1
     Auth --> Router
 ```
+
+### 1.5 当前边界结论
+
+- `api/v1/auth/` 历史包已删除，不再是 Go 包 owner
+- 标准认证/OAuth HTTP owner 已收敛到 `api/v1/shared/*`
+- `api/v1/user/handler/auth_handler.go` 只保留用户域兼容入口，不能机械合并到 shared
+- `service/auth` 已直接依赖 `UserRepository`，不再通过 `UserService` 形成循环依赖
 
 ---
 
@@ -188,10 +201,10 @@ graph TD
 
 | 风险 | 影响 | 缓解措施 |
 |------|------|---------|
-| **API层直接依赖** | api/v1/* 直接导入shared路径 | 使用兼容层重新导出 |
-| **服务容器依赖** | service_container.go 注册服务 | 更新注册路径，保持接口不变 |
-| **循环依赖风险** | auth ↔ user → auth | 通过Port接口解耦 |
-| **WebSocket实时功能** | messaging_hub依赖auth | 保持兼容层直到迁移完成 |
+| **兼容入口语义差异** | `api/v1/user/handler/auth_handler.go` 与 `api/v1/shared/*` 不完全等价 | 先统一响应/错误口径，再考虑收薄 |
+| **脚本/文档误恢复旧 owner** | 历史文档仍可能指向 `api/v1/auth` | 持续清理活跃文档和检查脚本 |
+| **WebSocket实时功能** | messaging_hub / notification_hub 依赖 auth | 调整时必须补 compile-only 与定向验证 |
+| **历史说明漂移** | 部分文档/说明仍可能把 `verification_service` 视为持有 auth 侧依赖 | 与活跃 roadmap、模块分析和实现同步收口，避免旧说明误导后续改动 |
 
 ### 3.2 中风险项
 
@@ -212,31 +225,24 @@ graph TD
 
 ## 4. 迁移影响范围
 
-### 4.1 Auth模块迁移影响
+### 4.1 Auth 模块迁移影响（已完成主链收口）
 
-**需要更新的文件数量**: 约10个
+**当前仍需关注的文件数量**: 少量文档/兼容入口
 
 **关键更新点**:
-1. **api/v1/auth/** (2个文件)
-   - `auth_api.go`: 更新import路径
-   - `oauth_api.go`: 更新import路径
+1. **api/v1/shared/**
+   - 标准认证/OAuth HTTP owner
+   - 共享 helper 的唯一归口
 
-2. **api/v1/shared/** (2个文件)
-   - `auth_api.go`: 更新import路径
-   - `oauth_api.go`: 更新import路径
+2. **api/v1/user/handler/**
+   - 保留兼容入口
+   - 不得直接按 shared 语义替换
 
-3. **service/container/** (1个文件)
-   - `service_container.go`: 更新服务注册路径
+3. **service/container/**
+   - 维持 `service/auth` 注入链
 
-4. **service/interfaces/shared/** (1个文件)
-   - `adapters.go`: 更新适配器import路径
-
-5. **realtime/websocket/** (2个文件)
-   - `messaging_hub.go`: 更新import路径
-   - `notification_hub.go`: 更新import路径
-
-6. **router/shared/** (1个文件)
-   - `shared_router.go`: 更新import路径
+4. **文档与检查脚本**
+   - 不再将 `api/v1/auth/` 写成活跃 owner
 
 ### 4.2 Messaging模块迁移影响
 
@@ -256,16 +262,16 @@ graph TD
 
 ## 5. 关键依赖路径
 
-### 5.1 Auth关键路径
+### 5.1 Auth 关键路径
 
 ```
-api/v1/auth/auth_api.go
-  → service/shared/auth.AuthService
+api/v1/shared/auth_api.go
+  → service/auth.AuthService
     → repository/interfaces/auth.AuthRepository
-    → models/auth.User
+    → repository/interfaces/user.UserRepository
 
 service/container/service_container.go
-  → service/shared/auth.AuthService
+  → service/auth.AuthService
     → config.JWTConfigEnhanced
 ```
 
@@ -282,27 +288,26 @@ api/v1/shared/notification_api.go
 
 ## 6. 循环依赖分析
 
-### 6.1 潜在循环依赖
+### 6.1 当前仍需关注的耦合点
 
 ```
-service/shared/auth
-  → service/interfaces/user  (依赖注入)
-    → service/shared/auth    (可能循环)
+service/auth
+  → repository/interfaces/user
+  → repository/interfaces/auth
 
-service/shared/messaging
-  → service/user/verification_service (直接导入)
-    → service/shared/messaging (可能循环)
+api/v1/user/handler/auth_handler.go
+  → service/auth
+  ↔ 与 api/v1/shared/* 存在兼容语义差异
 ```
 
 ### 6.2 解决方案
 
-1. **使用Port接口解耦**
-   - 创建 `service/interfaces/user` Port接口
-   - Auth模块通过接口依赖User，而非直接导入
+1. **兼容入口继续隔离**
+   - `user` 兼容入口只做兼容语义，不承担标准 owner 角色
 
-2. **事件驱动解耦**
-   - Messaging使用消息队列而非直接调用
-   - User服务监听消息而非导入Messaging
+2. **文档与检查脚本持续收口**
+   - 先清理活跃文档、README、白名单
+   - archive/历史报告保持留痕，不做批量重写
 
 ---
 
@@ -310,7 +315,7 @@ service/shared/messaging
 
 ### 7.1 迁移顺序
 
-**推荐顺序**: Auth → Messaging
+**推荐顺序**: 活跃文档/脚本 → 兼容入口设计 → 历史归档按需整理
 
 **理由**:
 1. Auth是核心模块，影响最广

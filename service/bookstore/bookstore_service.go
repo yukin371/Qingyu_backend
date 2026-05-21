@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"Qingyu_backend/repository"
+	"go.uber.org/zap"
 )
 
 // BookstoreService 书城服务接口 - 专注于书城列表展示和首页聚合
@@ -140,33 +141,29 @@ func (s *BookstoreServiceImpl) GetBookByID(ctx context.Context, id string) (*boo
 	// Repository 层现在接受 string 类型的 ID
 	book, err := s.bookRepo.GetByID(ctx, id)
 	if err != nil {
-		fmt.Printf("[DEBUG] GetBookByID(%s) repository error: %v\n", id, err) // codeql[go/log-injection]
 		return nil, fmt.Errorf("failed to get book: %w", err)
 	}
 
 	if book == nil {
-		fmt.Printf("[DEBUG] GetBookByID(%s) book not found (nil)\n", id) // codeql[go/log-injection]
 		return nil, errors.New("book not found")
 	}
 
-	fmt.Printf("[DEBUG] GetBookByID(%s) found book: %s, status: %s\n", id, book.Title, book.Status) // codeql[go/log-injection]
-
 	// 只有连载中和已完结的书籍可以访问
 	if book.Status != bookstore2.BookStatusOngoing && book.Status != bookstore2.BookStatusCompleted {
-		fmt.Printf("[DEBUG] GetBookByID(%s) book status check failed: %s not in [ongoing, completed]\n", id, book.Status) // codeql[go/log-injection]
 		return nil, errors.New("book not available")
 	}
 
 	if s.collectionRepo != nil {
 		collectCount, countErr := s.collectionRepo.CountBookCollections(ctx, id)
 		if countErr != nil {
-			fmt.Printf("[WARN] GetBookByID(%s) failed to count collections: %v\n", id, countErr) // codeql[go/log-injection]
+			zap.L().Warn("Failed to count book collections",
+				zap.String("book_id", id),
+				zap.Error(countErr))
 		} else {
 			book.CollectCount = collectCount
 		}
 	}
 
-	fmt.Printf("[DEBUG] GetBookByID(%s) returning book successfully\n", id) // codeql[go/log-injection]
 	return book, nil
 }
 
@@ -210,7 +207,7 @@ func (s *BookstoreServiceImpl) GetBooksByAuthorID(ctx context.Context, authorID 
 	}
 
 	// 获取总数
-	total, err := s.bookRepo.CountByAuthor(ctx, authorID)
+	total, err := s.bookRepo.CountByAuthorID(ctx, authorID)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to count books by author: %w", err)
 	}
@@ -383,22 +380,14 @@ func (s *BookstoreServiceImpl) SearchBooksWithFilter(ctx context.Context, filter
 			return nil, 0, fmt.Errorf("failed to search books: %w", err)
 		}
 
-		fmt.Printf("[DEBUG] 获取到 %d 本书籍，搜索关键词: %s\n", len(allBooks), *filter.Keyword) // codeql[go/log-injection]
-
 		// 在Go代码中过滤关键词和其他条件
 		keyword := *filter.Keyword // 不使用ToLower，因为中文没有大小写
 		filteredBooks := make([]*bookstore2.Book, 0)
-		matchCount := 0
 		for _, book := range allBooks {
 			// 检查关键词匹配（不区分大小写）
 			keywordMatch := strings.Contains(strings.ToLower(book.Title), strings.ToLower(keyword)) ||
 				strings.Contains(strings.ToLower(book.Author), strings.ToLower(keyword)) ||
 				strings.Contains(strings.ToLower(book.Introduction), strings.ToLower(keyword))
-
-			if keywordMatch {
-				matchCount++
-				fmt.Printf("[DEBUG] 匹配到书籍: %s (作者: %s)\n", book.Title, book.Author)
-			}
 
 			if !keywordMatch {
 				continue
@@ -757,7 +746,7 @@ func (s *BookstoreServiceImpl) GetHomepageData(ctx context.Context) (*HomepageDa
 	for i := 0; i < 8; i++ {
 		if err := <-errChan; err != nil {
 			// 记录错误但不中断，让其他goroutine继续
-			fmt.Printf("[WARNING] GetHomepageData部分数据获取失败: %v\n", err)
+			zap.L().Warn("GetHomepageData部分数据获取失败", zap.Error(err))
 			if firstError == nil {
 				firstError = err
 			}
@@ -780,8 +769,44 @@ func (s *BookstoreServiceImpl) GetRealtimeRanking(ctx context.Context, limit int
 		return []*bookstore2.RankingItem{}, nil
 	}
 
-	period := bookstore2.GetPeriodString(bookstore2.RankingTypeRealtime, time.Now())
-	return s.rankingRepo.GetByTypeWithBooks(ctx, bookstore2.RankingTypeRealtime, period, limit, 0)
+	// 实时榜按天分桶；如果当天数据尚未生成，则向前回看最近 7 天的最近一期可用数据，
+	// 避免首页和排行榜页面直接出现空榜。
+	const fallbackDays = 7
+	now := time.Now()
+
+	for dayOffset := 0; dayOffset <= fallbackDays; dayOffset++ {
+		period := bookstore2.GetPeriodString(bookstore2.RankingTypeRealtime, now.AddDate(0, 0, -dayOffset))
+		items, err := s.rankingRepo.GetByTypeWithBooks(ctx, bookstore2.RankingTypeRealtime, period, limit, 0)
+		if err != nil {
+			return nil, err
+		}
+		if len(items) > 0 {
+			return items, nil
+		}
+	}
+
+	return []*bookstore2.RankingItem{}, nil
+}
+
+func (s *BookstoreServiceImpl) getLatestAvailableRanking(
+	ctx context.Context,
+	rankingType bookstore2.RankingType,
+	limit int,
+	fallbackWindow int,
+	periodBuilder func(offset int) string,
+) ([]*bookstore2.RankingItem, error) {
+	for offset := 0; offset <= fallbackWindow; offset++ {
+		period := periodBuilder(offset)
+		items, err := s.rankingRepo.GetByTypeWithBooks(ctx, rankingType, period, limit, 0)
+		if err != nil {
+			return nil, err
+		}
+		if len(items) > 0 {
+			return items, nil
+		}
+	}
+
+	return []*bookstore2.RankingItem{}, nil
 }
 
 // GetWeeklyRanking 获取周榜
@@ -791,10 +816,17 @@ func (s *BookstoreServiceImpl) GetWeeklyRanking(ctx context.Context, period stri
 		return []*bookstore2.RankingItem{}, nil
 	}
 
-	if period == "" {
-		period = bookstore2.GetPeriodString(bookstore2.RankingTypeWeekly, time.Now())
+	if period != "" {
+		return s.rankingRepo.GetByTypeWithBooks(ctx, bookstore2.RankingTypeWeekly, period, limit, 0)
 	}
-	return s.rankingRepo.GetByTypeWithBooks(ctx, bookstore2.RankingTypeWeekly, period, limit, 0)
+
+	// 周榜按周分桶；如果本周数据尚未生成，则向前回看最近 8 周的最近一期可用数据，
+	// 避免首页首屏和周榜页直接出现空榜。
+	const fallbackWeeks = 8
+	now := time.Now()
+	return s.getLatestAvailableRanking(ctx, bookstore2.RankingTypeWeekly, limit, fallbackWeeks, func(offset int) string {
+		return bookstore2.GetPeriodString(bookstore2.RankingTypeWeekly, now.AddDate(0, 0, -7*offset))
+	})
 }
 
 // GetMonthlyRanking 获取月榜
@@ -804,10 +836,17 @@ func (s *BookstoreServiceImpl) GetMonthlyRanking(ctx context.Context, period str
 		return []*bookstore2.RankingItem{}, nil
 	}
 
-	if period == "" {
-		period = bookstore2.GetPeriodString(bookstore2.RankingTypeMonthly, time.Now())
+	if period != "" {
+		return s.rankingRepo.GetByTypeWithBooks(ctx, bookstore2.RankingTypeMonthly, period, limit, 0)
 	}
-	return s.rankingRepo.GetByTypeWithBooks(ctx, bookstore2.RankingTypeMonthly, period, limit, 0)
+
+	// 月榜按月分桶；如果当月榜单尚未生成，则向前回看最近 6 个月的最近一期可用数据，
+	// 避免月初重启或调度未执行时首页直接空白。
+	const fallbackMonths = 6
+	now := time.Now()
+	return s.getLatestAvailableRanking(ctx, bookstore2.RankingTypeMonthly, limit, fallbackMonths, func(offset int) string {
+		return bookstore2.GetPeriodString(bookstore2.RankingTypeMonthly, now.AddDate(0, -offset, 0))
+	})
 }
 
 // GetNewbieRanking 获取新人榜
@@ -1036,41 +1075,98 @@ func ConvertSearchResponseToBooks(items []searchModels.SearchItem) []*bookstore2
 	for _, item := range items {
 		book := &bookstore2.Book{}
 
-		// 从 Data 中提取字段
-		if id, ok := item.Data["id"].(string); ok {
+		// 搜索引擎会把真实文档 ID 放在 SearchItem.ID 中，而不是 Data["id"]。
+		if item.ID != "" {
+			if objectID, err := repository.ParseID(item.ID); err == nil {
+				book.ID = objectID
+			}
+		} else if id, ok := asSearchString(item.Data["id"]); ok {
 			if objectID, err := repository.ParseID(id); err == nil {
 				book.ID = objectID
 			}
 		}
-		if title, ok := item.Data["title"].(string); ok {
+		if title, ok := asSearchString(item.Data["title"]); ok {
 			book.Title = title
 		}
-		if author, ok := item.Data["author"].(string); ok {
+		if author, ok := asSearchString(item.Data["author"]); ok {
 			book.Author = author
 		}
-		if intro, ok := item.Data["introduction"].(string); ok {
+		if authorID, ok := asSearchString(item.Data["author_id"]); ok {
+			book.AuthorID = authorID
+		}
+		if intro, ok := asSearchString(item.Data["introduction"]); ok {
 			book.Introduction = intro
 		}
-		if coverURL, ok := item.Data["cover_url"].(string); ok {
+		if coverURL, ok := asSearchString(item.Data["cover"]); ok {
+			book.Cover = coverURL
+		} else if coverURL, ok := asSearchString(item.Data["cover_url"]); ok {
 			book.Cover = coverURL
 		}
-		if viewCount, ok := item.Data["view_count"].(int64); ok {
+		if viewCount, ok := asSearchInt64(item.Data["view_count"]); ok {
 			book.ViewCount = viewCount
 		}
-		if rating, ok := item.Data["rating"].(float64); ok {
+		if rating, ok := asSearchFloat64(item.Data["rating"]); ok {
 			book.Rating = types.Rating(rating)
 		}
-		if wordCount, ok := item.Data["word_count"].(int64); ok {
+		if wordCount, ok := asSearchInt64(item.Data["word_count"]); ok {
 			book.WordCount = wordCount
 		}
-		if status, ok := item.Data["status"].(string); ok {
-			book.Status = bookstore2.BookStatus(status)
+		if chapterCount, ok := asSearchInt64(item.Data["chapter_count"]); ok {
+			book.ChapterCount = int(chapterCount)
+		}
+		if status, ok := asSearchString(item.Data["status"]); ok {
+			book.Status = bookstore2.NormalizeBookStatus(bookstore2.BookStatus(status))
 		}
 
 		books = append(books, book)
 	}
 
 	return books
+}
+
+func asSearchString(value interface{}) (string, bool) {
+	switch v := value.(type) {
+	case string:
+		return v, true
+	case []byte:
+		return string(v), true
+	default:
+		return "", false
+	}
+}
+
+func asSearchInt64(value interface{}) (int64, bool) {
+	switch v := value.(type) {
+	case int:
+		return int64(v), true
+	case int32:
+		return int64(v), true
+	case int64:
+		return v, true
+	case float32:
+		return int64(v), true
+	case float64:
+		return int64(v), true
+	default:
+		return 0, false
+	}
+}
+
+func asSearchFloat64(value interface{}) (float64, bool) {
+	switch v := value.(type) {
+	case float32:
+		return float64(v), true
+	case float64:
+		return v, true
+	case int:
+		return float64(v), true
+	case int32:
+		return float64(v), true
+	case int64:
+		return float64(v), true
+	default:
+		return 0, false
+	}
 }
 
 // SearchSimilarBooks 搜索相似书籍
@@ -1219,7 +1315,7 @@ func (s *BookstoreServiceImpl) searchViaService(ctx context.Context, query strin
 		} `json:"results"`
 	}
 	type searchResponse struct {
-		Success bool         `json:"success"`
+		Success bool        `json:"success"`
 		Data    *searchData `json:"data"`
 	}
 

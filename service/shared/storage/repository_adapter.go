@@ -1,17 +1,17 @@
 package storage
 
 import (
-	sharedRepo "Qingyu_backend/repository/interfaces/shared"
+	storageInterface "Qingyu_backend/repository/interfaces/storage"
 	"context"
 )
 
 // RepositoryAdapter 将 StorageRepository 适配到 FileRepository 接口
 type RepositoryAdapter struct {
-	repo sharedRepo.StorageRepository
+	repo storageInterface.StorageRepository
 }
 
 // NewRepositoryAdapter 创建 Repository 适配器
-func NewRepositoryAdapter(repo sharedRepo.StorageRepository) FileRepository {
+func NewRepositoryAdapter(repo storageInterface.StorageRepository) FileRepository {
 	return &RepositoryAdapter{repo: repo}
 }
 
@@ -38,7 +38,7 @@ func (a *RepositoryAdapter) Delete(ctx context.Context, fileID string) error {
 // List 查询文件列表
 func (a *RepositoryAdapter) List(ctx context.Context, userID, category string, page, pageSize int) ([]*FileInfo, error) {
 	// 构建过滤器
-	filter := &sharedRepo.FileFilter{
+	filter := &storageInterface.FileFilter{
 		UserID:   userID,
 		Category: category,
 		Page:     page,

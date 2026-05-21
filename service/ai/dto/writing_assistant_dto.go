@@ -70,36 +70,43 @@ type CharacterMention struct {
 
 // ProofreadRequest 校对请求
 type ProofreadRequest struct {
-	Content     string   `json:"content" binding:"required"` // 要校对的内容
-	ProjectID   string   `json:"projectId,omitempty"`        // 项目ID（可选）
-	ChapterID   string   `json:"chapterId,omitempty"`        // 章节ID（可选）
-	CheckTypes  []string `json:"checkTypes,omitempty"`       // 检查类型: spelling, grammar, punctuation, style
-	Language    string   `json:"language,omitempty"`         // 语言（自动检测）
-	Suggestions bool     `json:"suggestions,omitempty"`      // 是否提供修改建议
+	Content       string   `json:"content" binding:"required"` // 要校对的内容
+	ProjectID     string   `json:"projectId,omitempty"`        // 项目ID（可选）
+	ChapterID     string   `json:"chapterId,omitempty"`        // 章节ID（可选）
+	CheckTypes    []string `json:"checkTypes,omitempty"`       // 检查类型: spelling/typo, grammar, punctuation, style, readability
+	Language      string   `json:"language,omitempty"`         // 语言（自动检测）
+	Genre         string   `json:"genre,omitempty"`            // 题材（可选）
+	ReaderProfile string   `json:"readerProfile,omitempty"`    // 读者画像（可选）
+	Mode          string   `json:"mode,omitempty"`             // 审校模式: chapter/selection
+	Suggestions   bool     `json:"suggestions,omitempty"`      // 是否提供修改建议
 }
 
 // ProofreadResponse 校对响应
 type ProofreadResponse struct {
-	OriginalContent string         `json:"originalContent"` // 原始内容
-	Issues          []Issue        `json:"issues"`          // 问题列表
-	Score           float64        `json:"score"`           // 整体评分 (0-100)
-	Statistics      ProofreadStats `json:"statistics"`      // 统计信息
-	TokensUsed      int            `json:"tokensUsed"`      // 使用的Token数
-	Model           string         `json:"model"`           // 使用的模型
-	ProcessedAt     time.Time      `json:"processedAt"`     // 处理时间
+	ReviewID        string                 `json:"reviewId"`        // 审校ID
+	ContentHash     string                 `json:"contentHash"`     // 正文hash
+	OriginalContent string                 `json:"originalContent"` // 原始内容
+	Issues          []Issue                `json:"issues"`          // 问题列表
+	Score           float64                `json:"score"`           // 整体评分 (0-100)
+	Statistics      ProofreadStats         `json:"statistics"`      // 统计信息
+	PreviewWarnings []MobilePreviewWarning `json:"previewWarnings"` // 移动端预览风险
+	TokensUsed      int                    `json:"tokensUsed"`      // 使用的Token数
+	Model           string                 `json:"model"`           // 使用的模型
+	ProcessedAt     time.Time              `json:"processedAt"`     // 处理时间
 }
 
 // Issue 问题详情
 type Issue struct {
-	ID           string       `json:"id"`                    // 问题ID
-	Type         string       `json:"type"`                  // 问题类型: spelling, grammar, punctuation, style
-	Severity     string       `json:"severity"`              // 严重程度: error, warning, suggestion
-	Message      string       `json:"message"`               // 问题描述
-	Position     TextPosition `json:"position"`              // 位置信息
-	OriginalText string       `json:"originalText"`          // 原文
-	Suggestions  []string     `json:"suggestions,omitempty"` // 修改建议
-	Category     string       `json:"category,omitempty"`    // 问题分类
-	Rule         string       `json:"rule,omitempty"`        // 违反的规则
+	ID                string           `json:"id"`                          // 问题ID
+	Type              string           `json:"type"`                        // 问题类型: spelling, grammar, punctuation, style
+	Severity          string           `json:"severity"`                    // 严重程度: error, warning, suggestion
+	Message           string           `json:"message"`                     // 问题描述
+	Position          TextPosition     `json:"position"`                    // 位置信息
+	OriginalText      string           `json:"originalText"`                // 原文
+	Suggestions       []string         `json:"suggestions,omitempty"`       // 修改建议
+	SuggestionDetails []SuggestionItem `json:"suggestionDetails,omitempty"` // 结构化修改建议
+	Category          string           `json:"category,omitempty"`          // 问题分类
+	Rule              string           `json:"rule,omitempty"`              // 违反的规则
 }
 
 // TextPosition 文本位置
@@ -120,6 +127,16 @@ type ProofreadStats struct {
 	IssuesByType    map[string]int `json:"issuesByType"`    // 按类型统计
 	WordCount       int            `json:"wordCount"`       // 词数
 	CharacterCount  int            `json:"characterCount"`  // 字符数
+}
+
+// MobilePreviewWarning 移动端阅读预览风险
+type MobilePreviewWarning struct {
+	ID             string       `json:"id"`                       // 风险ID
+	Type           string       `json:"type"`                     // 风险类型
+	Severity       string       `json:"severity"`                 // 严重程度
+	Message        string       `json:"message"`                  // 风险说明
+	ParagraphIndex int          `json:"paragraphIndex,omitempty"` // 段落序号
+	Position       TextPosition `json:"position,omitempty"`       // 位置信息
 }
 
 // ProofreadSuggestion 校对建议详情

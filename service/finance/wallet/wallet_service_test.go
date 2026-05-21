@@ -84,13 +84,12 @@ func TestWalletService_GetWallet(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:   "钱包不存在",
+			name:   "钱包不存在时自动创建",
 			userID: "user_not_exist",
 			setup: func(m *MockWalletRepositoryV2) {
 				// 不创建钱包
 			},
-			wantErr: true,
-			errMsg:  "钱包不存在",
+			wantErr: false,
 		},
 	}
 
@@ -110,6 +109,10 @@ func TestWalletService_GetWallet(t *testing.T) {
 				require.NoError(t, err)
 				assert.NotNil(t, result)
 				assert.Equal(t, tt.userID, result.UserID)
+				if tt.userID == "user_not_exist" {
+					assert.Equal(t, int64(0), result.Balance)
+					assert.False(t, result.Frozen)
+				}
 			}
 		})
 	}
@@ -137,13 +140,13 @@ func TestWalletService_GetBalance(t *testing.T) {
 			wantAmount: 1000,
 		},
 		{
-			name:   "钱包不存在",
+			name:   "钱包不存在时自动创建",
 			userID: "user_not_exist",
 			setup: func(m *MockWalletRepositoryV2) {
 				// 不创建钱包
 			},
-			wantErr: true,
-			errMsg:  "钱包不存在",
+			wantErr:    false,
+			wantAmount: 0,
 		},
 		{
 			name:   "零余额",

@@ -369,7 +369,7 @@ func (c *CachedBookstoreService) GetHomepageData(ctx context.Context) (interface
 type RepositoryFactory interface {
     CreateUserRepository() UserRepository
     CreateBookRepository() BookRepository
-    CreateAuthRepository() AuthRepository
+    CreateAuthRepository() RoleRepository
     // ... 更多工厂方法
 }
 
@@ -584,8 +584,8 @@ sequenceDiagram
 func (c *ServiceContainer) SetupDefaultServices() error {
     // ============ 1. 创建用户服务 ============
     userRepo := c.repositoryFactory.CreateUserRepository()
-    authRepo := c.repositoryFactory.CreateAuthRepository()
-    c.userService = userService.NewUserService(userRepo, authRepo)
+    roleRepo := c.repositoryFactory.CreateAuthRepository()
+    c.userService = userService.NewUserService(userRepo, roleRepo)
     c.RegisterService("UserService", c.userService)
 
     // ============ 2. 创建书城服务（带缓存装饰器）============

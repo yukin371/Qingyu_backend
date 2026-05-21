@@ -79,10 +79,11 @@ func setupTestEnv(t *testing.T) (context.Context, *documentService.BatchOperatio
 	// 创建仓储
 	batchOpRepo := writerRepo.NewMongoBatchOperationRepository(global.DB)
 	docRepo := writerRepo.NewMongoDocumentRepository(global.DB)
+	contentRepo := writerRepo.NewMongoDocumentContentRepository(global.DB)
 	projectRepo := writerRepo.NewMongoProjectRepository(global.DB)
 
 	// 创建服务
-	batchOpService := documentService.NewBatchOperationService(batchOpRepo, docRepo, projectRepo, nil)
+	batchOpService := documentService.NewBatchOperationService(batchOpRepo, docRepo, contentRepo, projectRepo, nil)
 
 	return ctx, batchOpService, batchOpRepo, docRepo, projectID
 }

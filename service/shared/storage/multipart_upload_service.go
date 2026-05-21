@@ -2,7 +2,7 @@ package storage
 
 import (
 	storageModel "Qingyu_backend/models/storage"
-	"Qingyu_backend/repository/interfaces/shared"
+	storageInterface "Qingyu_backend/repository/interfaces/storage"
 	"bytes"
 	"context"
 	"crypto/md5"
@@ -31,14 +31,14 @@ const (
 // MultipartUploadService 分片上传服务
 type MultipartUploadService struct {
 	backend      StorageBackend
-	storageRepo  shared.StorageRepository
+	storageRepo  storageInterface.StorageRepository
 	chunkSize    int64 // 默认分片大小（字节）
 	maxChunkSize int64 // 最大分片大小
 	minChunkSize int64 // 最小分片大小
 }
 
 // NewMultipartUploadService 创建分片上传服务
-func NewMultipartUploadService(backend StorageBackend, storageRepo shared.StorageRepository) *MultipartUploadService {
+func NewMultipartUploadService(backend StorageBackend, storageRepo storageInterface.StorageRepository) *MultipartUploadService {
 	return &MultipartUploadService{
 		backend:      backend,
 		storageRepo:  storageRepo,

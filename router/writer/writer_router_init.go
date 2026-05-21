@@ -8,6 +8,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
+	"Qingyu_backend/internal/middleware/auth"
 	"Qingyu_backend/models/dto"
 	writerModel "Qingyu_backend/models/writer"
 	"Qingyu_backend/pkg/distlock"
@@ -20,6 +21,7 @@ import (
 	writerservice "Qingyu_backend/service/writer"
 	documentService "Qingyu_backend/service/writer/document"
 	projectService "Qingyu_backend/service/writer/project"
+	storyharness "Qingyu_backend/service/writer/storyharness"
 )
 
 // RegisterWriterRoutes 注册所有写作相关路由到 /api/v1/writer
@@ -56,6 +58,19 @@ func RegisterWriterRoutes(r *gin.RouterGroup, searchSvc *searchservice.SearchSer
 
 	// 创建DocumentService
 	documentSvc := documentService.NewDocumentService(documentRepo, documentContentRepo, projectRepoForDoc, eventBus)
+
+	// 创建BatchOperationService
+	var batchOpSvc *documentService.BatchOperationService
+	if mongoDB := serviceContainer.GetMongoDB(); mongoDB != nil {
+		batchOpRepo := mongoWriterRepo.NewMongoBatchOperationRepository(mongoDB)
+		batchOpSvc = documentService.NewBatchOperationService(
+			batchOpRepo,
+			documentRepo,
+			documentContentRepo,
+			projectRepoForDoc,
+			eventBus,
+		)
+	}
 
 	// 获取MongoDB数据库连接用于VersionService
 	mongoDB := serviceContainer.GetMongoDB()
@@ -194,11 +209,49 @@ func RegisterWriterRoutes(r *gin.RouterGroup, searchSvc *searchservice.SearchSer
 	bookRepo := repositoryFactory.CreateBookRepository()
 	var dashboardSvc *writerservice.DashboardService
 	if projectRepo != nil && publishSvc != nil {
-		dashboardSvc = writerservice.NewDashboardService(projectRepo, publishSvc)
+		dashboardSvc = writerservice.NewDashboardService(projectRepo, bookRepo, publishSvc)
 	}
 
 	// 调用InitWriterRouter初始化文档编辑相关路由
-	InitWriterRouter(r, projectSvc, documentSvc, versionSvc, searchSvc, exportSvc, publishSvc, lockSvc, commentSvc, templateSvc, statsSvc, bookRepo, characterSvc, locationSvc, dashboardSvc)
+	InitWriterRouter(r, projectSvc, documentSvc, batchOpSvc, versionSvc, searchSvc, exportSvc, publishSvc, lockSvc, commentSvc, templateSvc, statsSvc, bookRepo, characterSvc, locationSvc, dashboardSvc)
+
+	// 创建 Story Harness 服务
+	var contextSvc *storyharness.ContextService
+	var indexerSvc *storyharness.IndexerService
+	var crSvc *storyharness.ChangeRequestService
+	if mongoDB != nil {
+		crRepo := writerrepo.NewChangeRequestRepository(mongoDB)
+		projectionRepo := writerrepo.NewProjectionRepository(mongoDB)
+		contextSvc = storyharness.NewContextService(characterRepo, crRepo, projectionRepo)
+		indexerSvc = storyharness.NewIndexerService(documentRepo, documentContentRepo, characterRepo, crRepo, nil)
+		crSvc = storyharness.NewChangeRequestService(crRepo, projectionRepo, characterRepo)
+
+		documentSvc.SetOnDocumentContentSaved(func(ctx context.Context, documentID string) {
+			if _, err := indexerSvc.TriggerChapterIndexByDocument(ctx, documentID); err != nil {
+				zap.L().Warn("RegisterWriterRoutes: 章节索引触发失败",
+					zap.String("documentID", documentID),
+					zap.Error(err),
+				)
+			}
+		})
+	}
+
+	// 注册 Story Harness 路由
+	if contextSvc != nil && indexerSvc != nil && crSvc != nil {
+		// Story Harness 属于 writer 模块能力，路由必须挂在 /api/v1/writer/* 下，
+		// 否则会与前端约定路径和 swagger 注释不一致。
+		writerGroup := r.Group("/writer")
+		writerGroup.Use(auth.JWTAuth())
+		InitStoryHarnessRoutes(writerGroup, contextSvc, indexerSvc, crSvc)
+		zap.L().Info("RegisterWriterRoutes: Story Harness 路由注册完成")
+	}
+
+	// 创建EntityService（统一实体服务）
+	var entitySvc interfaces.EntityService
+	if mongoDB != nil {
+		entitySvc = writerservice.NewEntityService(characterSvc, locationSvc, mongoDB)
+		zap.L().Info("RegisterWriterRoutes: EntityService创建成功")
+	}
 
 	// 调用InitWriterRoutes初始化设定百科路由（角色、地点、时间线、大纲）
 	zap.L().Info("RegisterWriterRoutes: 调用InitWriterRoutes注册设定百科路由",
@@ -207,7 +260,7 @@ func RegisterWriterRoutes(r *gin.RouterGroup, searchSvc *searchservice.SearchSer
 		zap.Bool("timelineSvc", timelineSvc != nil),
 		zap.Bool("outlineSvc", outlineSvc != nil),
 	)
-	InitWriterRoutes(r, characterSvc, locationSvc, timelineSvc, outlineSvc)
+	InitWriterRoutes(r, characterSvc, locationSvc, timelineSvc, outlineSvc, entitySvc)
 	zap.L().Info("RegisterWriterRoutes: 设定百科路由注册完成")
 }
 

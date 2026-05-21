@@ -2,7 +2,7 @@
 // versions:
 // - protoc-gen-go-grpc v1.6.0
 // - protoc             v6.33.0--rc2
-// source: qingyu/ai/v1/ai_service.proto
+// source: ai_service.proto
 
 package pb
 
@@ -19,17 +19,22 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	AIService_GenerateContent_FullMethodName         = "/qingyu.ai.AIService/GenerateContent"
-	AIService_QueryKnowledge_FullMethodName          = "/qingyu.ai.AIService/QueryKnowledge"
-	AIService_GetContext_FullMethodName              = "/qingyu.ai.AIService/GetContext"
-	AIService_ExecuteAgent_FullMethodName            = "/qingyu.ai.AIService/ExecuteAgent"
-	AIService_ExecuteCreativeWorkflow_FullMethodName = "/qingyu.ai.AIService/ExecuteCreativeWorkflow"
-	AIService_GenerateOutline_FullMethodName         = "/qingyu.ai.AIService/GenerateOutline"
-	AIService_GenerateCharacters_FullMethodName      = "/qingyu.ai.AIService/GenerateCharacters"
-	AIService_GeneratePlot_FullMethodName            = "/qingyu.ai.AIService/GeneratePlot"
-	AIService_StoryWrite_FullMethodName              = "/qingyu.ai.AIService/StoryWrite"
-	AIService_EmbedText_FullMethodName               = "/qingyu.ai.AIService/EmbedText"
-	AIService_HealthCheck_FullMethodName             = "/qingyu.ai.AIService/HealthCheck"
+	AIService_GenerateContent_FullMethodName            = "/qingyu.ai.AIService/GenerateContent"
+	AIService_QueryKnowledge_FullMethodName             = "/qingyu.ai.AIService/QueryKnowledge"
+	AIService_GetContext_FullMethodName                 = "/qingyu.ai.AIService/GetContext"
+	AIService_ExecuteAgent_FullMethodName               = "/qingyu.ai.AIService/ExecuteAgent"
+	AIService_ExecuteCreativeWorkflow_FullMethodName    = "/qingyu.ai.AIService/ExecuteCreativeWorkflow"
+	AIService_GenerateOutline_FullMethodName            = "/qingyu.ai.AIService/GenerateOutline"
+	AIService_GenerateCharacters_FullMethodName         = "/qingyu.ai.AIService/GenerateCharacters"
+	AIService_GeneratePlot_FullMethodName               = "/qingyu.ai.AIService/GeneratePlot"
+	AIService_StoryWrite_FullMethodName                 = "/qingyu.ai.AIService/StoryWrite"
+	AIService_EmbedText_FullMethodName                  = "/qingyu.ai.AIService/EmbedText"
+	AIService_HealthCheck_FullMethodName                = "/qingyu.ai.AIService/HealthCheck"
+	AIService_ConsumeQuota_FullMethodName               = "/qingyu.ai.AIService/ConsumeQuota"
+	AIService_GetQuotaConsumption_FullMethodName        = "/qingyu.ai.AIService/GetQuotaConsumption"
+	AIService_GetQuotaConsumptionBatch_FullMethodName   = "/qingyu.ai.AIService/GetQuotaConsumptionBatch"
+	AIService_GetQuotaConsumptionSummary_FullMethodName = "/qingyu.ai.AIService/GetQuotaConsumptionSummary"
+	AIService_SyncQuotaToBackend_FullMethodName         = "/qingyu.ai.AIService/SyncQuotaToBackend"
 )
 
 // AIServiceClient is the client API for AIService service.
@@ -60,6 +65,16 @@ type AIServiceClient interface {
 	EmbedText(ctx context.Context, in *EmbedRequest, opts ...grpc.CallOption) (*EmbedResponse, error)
 	// 健康检查
 	HealthCheck(ctx context.Context, in *HealthCheckRequest, opts ...grpc.CallOption) (*HealthCheckResponse, error)
+	// 配额消费记录
+	ConsumeQuota(ctx context.Context, in *QuotaConsumptionRequest, opts ...grpc.CallOption) (*QuotaConsumptionResponse, error)
+	// 查询配额消费
+	GetQuotaConsumption(ctx context.Context, in *QuotaConsumptionQuery, opts ...grpc.CallOption) (*QuotaConsumptionResponse, error)
+	// 批量查询配额消费
+	GetQuotaConsumptionBatch(ctx context.Context, in *QuotaConsumptionBatchQuery, opts ...grpc.CallOption) (*QuotaConsumptionBatchResponse, error)
+	// 聚合查询配额消费
+	GetQuotaConsumptionSummary(ctx context.Context, in *QuotaConsumptionSummaryQuery, opts ...grpc.CallOption) (*QuotaConsumptionSummaryResponse, error)
+	// 同步配额到账后端
+	SyncQuotaToBackend(ctx context.Context, in *QuotaSyncRequest, opts ...grpc.CallOption) (*QuotaSyncResponse, error)
 }
 
 type aIServiceClient struct {
@@ -180,6 +195,56 @@ func (c *aIServiceClient) HealthCheck(ctx context.Context, in *HealthCheckReques
 	return out, nil
 }
 
+func (c *aIServiceClient) ConsumeQuota(ctx context.Context, in *QuotaConsumptionRequest, opts ...grpc.CallOption) (*QuotaConsumptionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(QuotaConsumptionResponse)
+	err := c.cc.Invoke(ctx, AIService_ConsumeQuota_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *aIServiceClient) GetQuotaConsumption(ctx context.Context, in *QuotaConsumptionQuery, opts ...grpc.CallOption) (*QuotaConsumptionResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(QuotaConsumptionResponse)
+	err := c.cc.Invoke(ctx, AIService_GetQuotaConsumption_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *aIServiceClient) GetQuotaConsumptionBatch(ctx context.Context, in *QuotaConsumptionBatchQuery, opts ...grpc.CallOption) (*QuotaConsumptionBatchResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(QuotaConsumptionBatchResponse)
+	err := c.cc.Invoke(ctx, AIService_GetQuotaConsumptionBatch_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *aIServiceClient) GetQuotaConsumptionSummary(ctx context.Context, in *QuotaConsumptionSummaryQuery, opts ...grpc.CallOption) (*QuotaConsumptionSummaryResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(QuotaConsumptionSummaryResponse)
+	err := c.cc.Invoke(ctx, AIService_GetQuotaConsumptionSummary_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *aIServiceClient) SyncQuotaToBackend(ctx context.Context, in *QuotaSyncRequest, opts ...grpc.CallOption) (*QuotaSyncResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(QuotaSyncResponse)
+	err := c.cc.Invoke(ctx, AIService_SyncQuotaToBackend_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // AIServiceServer is the server API for AIService service.
 // All implementations must embed UnimplementedAIServiceServer
 // for forward compatibility.
@@ -208,6 +273,16 @@ type AIServiceServer interface {
 	EmbedText(context.Context, *EmbedRequest) (*EmbedResponse, error)
 	// 健康检查
 	HealthCheck(context.Context, *HealthCheckRequest) (*HealthCheckResponse, error)
+	// 配额消费记录
+	ConsumeQuota(context.Context, *QuotaConsumptionRequest) (*QuotaConsumptionResponse, error)
+	// 查询配额消费
+	GetQuotaConsumption(context.Context, *QuotaConsumptionQuery) (*QuotaConsumptionResponse, error)
+	// 批量查询配额消费
+	GetQuotaConsumptionBatch(context.Context, *QuotaConsumptionBatchQuery) (*QuotaConsumptionBatchResponse, error)
+	// 聚合查询配额消费
+	GetQuotaConsumptionSummary(context.Context, *QuotaConsumptionSummaryQuery) (*QuotaConsumptionSummaryResponse, error)
+	// 同步配额到账后端
+	SyncQuotaToBackend(context.Context, *QuotaSyncRequest) (*QuotaSyncResponse, error)
 	mustEmbedUnimplementedAIServiceServer()
 }
 
@@ -250,6 +325,21 @@ func (UnimplementedAIServiceServer) EmbedText(context.Context, *EmbedRequest) (*
 }
 func (UnimplementedAIServiceServer) HealthCheck(context.Context, *HealthCheckRequest) (*HealthCheckResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method HealthCheck not implemented")
+}
+func (UnimplementedAIServiceServer) ConsumeQuota(context.Context, *QuotaConsumptionRequest) (*QuotaConsumptionResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method ConsumeQuota not implemented")
+}
+func (UnimplementedAIServiceServer) GetQuotaConsumption(context.Context, *QuotaConsumptionQuery) (*QuotaConsumptionResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetQuotaConsumption not implemented")
+}
+func (UnimplementedAIServiceServer) GetQuotaConsumptionBatch(context.Context, *QuotaConsumptionBatchQuery) (*QuotaConsumptionBatchResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetQuotaConsumptionBatch not implemented")
+}
+func (UnimplementedAIServiceServer) GetQuotaConsumptionSummary(context.Context, *QuotaConsumptionSummaryQuery) (*QuotaConsumptionSummaryResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method GetQuotaConsumptionSummary not implemented")
+}
+func (UnimplementedAIServiceServer) SyncQuotaToBackend(context.Context, *QuotaSyncRequest) (*QuotaSyncResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method SyncQuotaToBackend not implemented")
 }
 func (UnimplementedAIServiceServer) mustEmbedUnimplementedAIServiceServer() {}
 func (UnimplementedAIServiceServer) testEmbeddedByValue()                   {}
@@ -470,6 +560,96 @@ func _AIService_HealthCheck_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _AIService_ConsumeQuota_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QuotaConsumptionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AIServiceServer).ConsumeQuota(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AIService_ConsumeQuota_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AIServiceServer).ConsumeQuota(ctx, req.(*QuotaConsumptionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AIService_GetQuotaConsumption_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QuotaConsumptionQuery)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AIServiceServer).GetQuotaConsumption(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AIService_GetQuotaConsumption_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AIServiceServer).GetQuotaConsumption(ctx, req.(*QuotaConsumptionQuery))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AIService_GetQuotaConsumptionBatch_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QuotaConsumptionBatchQuery)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AIServiceServer).GetQuotaConsumptionBatch(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AIService_GetQuotaConsumptionBatch_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AIServiceServer).GetQuotaConsumptionBatch(ctx, req.(*QuotaConsumptionBatchQuery))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AIService_GetQuotaConsumptionSummary_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QuotaConsumptionSummaryQuery)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AIServiceServer).GetQuotaConsumptionSummary(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AIService_GetQuotaConsumptionSummary_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AIServiceServer).GetQuotaConsumptionSummary(ctx, req.(*QuotaConsumptionSummaryQuery))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _AIService_SyncQuotaToBackend_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QuotaSyncRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(AIServiceServer).SyncQuotaToBackend(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: AIService_SyncQuotaToBackend_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(AIServiceServer).SyncQuotaToBackend(ctx, req.(*QuotaSyncRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // AIService_ServiceDesc is the grpc.ServiceDesc for AIService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -521,7 +701,27 @@ var AIService_ServiceDesc = grpc.ServiceDesc{
 			MethodName: "HealthCheck",
 			Handler:    _AIService_HealthCheck_Handler,
 		},
+		{
+			MethodName: "ConsumeQuota",
+			Handler:    _AIService_ConsumeQuota_Handler,
+		},
+		{
+			MethodName: "GetQuotaConsumption",
+			Handler:    _AIService_GetQuotaConsumption_Handler,
+		},
+		{
+			MethodName: "GetQuotaConsumptionBatch",
+			Handler:    _AIService_GetQuotaConsumptionBatch_Handler,
+		},
+		{
+			MethodName: "GetQuotaConsumptionSummary",
+			Handler:    _AIService_GetQuotaConsumptionSummary_Handler,
+		},
+		{
+			MethodName: "SyncQuotaToBackend",
+			Handler:    _AIService_SyncQuotaToBackend_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: "qingyu/ai/v1/ai_service.proto",
+	Metadata: "ai_service.proto",
 }

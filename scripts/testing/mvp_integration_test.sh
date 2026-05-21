@@ -82,7 +82,7 @@ else
 fi
 
 # 编译认证服务
-if go build ./service/shared/auth/... 2>/dev/null; then
+if go build ./service/auth/... 2>/dev/null; then
     test_result "认证服务编译" "PASS"
 else
     test_result "认证服务编译" "FAIL"
@@ -103,7 +103,7 @@ echo "3. 单元测试（MVP新增功能）"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 
 # 测试密码验证器
-if go test ./service/shared/auth/ -run TestMVP_PasswordValidation -v 2>/dev/null; then
+if go test ./service/user/ -run TestMVP_PasswordValidation -v 2>/dev/null; then
     test_result "密码验证器单元测试" "PASS"
 else
     test_result "密码验证器单元测试" "FAIL"

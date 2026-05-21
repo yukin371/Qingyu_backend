@@ -8,7 +8,7 @@ import (
 	"Qingyu_backend/models/shared/types"
 	"Qingyu_backend/service/admin"
 	"Qingyu_backend/service/finance/wallet"
-	"Qingyu_backend/service/shared/auth"
+	"Qingyu_backend/service/auth"
 	"Qingyu_backend/service/shared/storage"
 
 	"github.com/stretchr/testify/assert"

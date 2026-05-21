@@ -14,6 +14,10 @@ API Handler → MembershipServiceImpl → WalletRepository → MongoDB
          AuthorRevenueServiceImpl   AuthorRevenueRepository
               ↓
          ensureWalletCanPay → applyWalletMembershipCharge（钱包扣款）
+
+Reader / Bookstore 购章 → ChapterPurchaseService → WalletService 扣款
+                                         ↓
+                                AuthorRevenueServiceImpl 记录作者收益
 ```
 
 ## 约定 & 陷阱
@@ -21,5 +25,6 @@ API Handler → MembershipServiceImpl → WalletRepository → MongoDB
 - **钱包扣款原子性**：`ensureWalletCanPay` + `applyWalletMembershipCharge` 必须在同一个事务中，否则会出现余额不一致
 - **会员等级映射**：`getLevelFromType` 将会员类型映射为 VIP 等级，新增类型必须同步更新
 - **作者收益结算**：收益记录通过 `CalculateEarning` 计算，需注意精度问题（建议用分而非元）
+- **购章收益 owner**：章节购买产生的作者收益统一进入 `finance` 结算域；`reader/bookstore` 只负责触发扣款与购买记录，不能在其他模块再维护平行收益账本
 - **提现流程**：`CreateWithdrawalRequest` 创建提现请求，需要审核后才会实际打款
 - **会员卡激活**：`ActivateCard` 激活会员卡，同一张卡不能重复激活

@@ -1,8 +1,6 @@
 package writer
 
 import (
-	"strconv"
-
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
@@ -258,8 +256,8 @@ func (api *WriterStatsAggregateAPI) GetViews(c *gin.Context) {
 		return
 	}
 
-	days, err := strconv.Atoi(c.DefaultQuery("days", "30"))
-	if err != nil || days < 1 || days > 365 {
+	days, ok := shared.GetIntQueryInRange(c, "days", 30, 1, 365)
+	if !ok {
 		response.BadRequest(c, "参数错误", "天数必须在1-365之间")
 		return
 	}
@@ -311,8 +309,8 @@ func (api *WriterStatsAggregateAPI) GetSubscribers(c *gin.Context) {
 		return
 	}
 
-	days, err := strconv.Atoi(c.DefaultQuery("days", "30"))
-	if err != nil || days < 1 || days > 365 {
+	days, ok := shared.GetIntQueryInRange(c, "days", 30, 1, 365)
+	if !ok {
 		response.BadRequest(c, "参数错误", "天数必须在1-365之间")
 		return
 	}

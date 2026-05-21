@@ -3,6 +3,7 @@ package shared
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -102,6 +103,215 @@ func TestGetUserIDOptional(t *testing.T) {
 	}
 }
 
+func TestGetUserIDWithMessage(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	t.Run("用户ID不存在时使用自定义文案", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+
+		userID, ok := GetUserIDWithMessage(c, "未认证")
+
+		assert.False(t, ok)
+		assert.Equal(t, "", userID)
+		assert.Equal(t, http.StatusUnauthorized, w.Code)
+		assert.Contains(t, w.Body.String(), "未认证")
+	})
+
+	t.Run("用户ID类型错误时保持统一错误", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Set("user_id", 123)
+
+		userID, ok := GetUserIDWithMessage(c, "未认证")
+
+		assert.False(t, ok)
+		assert.Equal(t, "", userID)
+		assert.Equal(t, http.StatusUnauthorized, w.Code)
+		assert.Contains(t, w.Body.String(), "用户信息格式错误")
+	})
+}
+
+func TestGetBearerToken(t *testing.T) {
+	tests := []struct {
+		name          string
+		headerValue   string
+		expectedToken string
+		expectedOk    bool
+		expectedCode  int
+	}{
+		{
+			name:          "Bearer token",
+			headerValue:   "Bearer token-123",
+			expectedToken: "token-123",
+			expectedOk:    true,
+		},
+		{
+			name:          "plain token",
+			headerValue:   "token-123",
+			expectedToken: "token-123",
+			expectedOk:    true,
+		},
+		{
+			name:          "missing token",
+			headerValue:   "",
+			expectedToken: "",
+			expectedOk:    false,
+			expectedCode:  http.StatusUnauthorized,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gin.SetMode(gin.TestMode)
+			w := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(w)
+			c.Request = httptest.NewRequest(http.MethodPost, "/", nil)
+			if tt.headerValue != "" {
+				c.Request.Header.Set("Authorization", tt.headerValue)
+			}
+
+			token, ok := GetBearerToken(c)
+
+			assert.Equal(t, tt.expectedToken, token)
+			assert.Equal(t, tt.expectedOk, ok)
+			if !tt.expectedOk {
+				assert.Equal(t, tt.expectedCode, w.Code)
+			}
+		})
+	}
+}
+
+func TestGetBearerTokenOptional(t *testing.T) {
+	tests := []struct {
+		name          string
+		headerValue   string
+		expectedToken string
+	}{
+		{
+			name:          "Bearer token",
+			headerValue:   "Bearer token-123",
+			expectedToken: "token-123",
+		},
+		{
+			name:          "plain token",
+			headerValue:   "token-123",
+			expectedToken: "token-123",
+		},
+		{
+			name:          "missing token",
+			headerValue:   "",
+			expectedToken: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gin.SetMode(gin.TestMode)
+			w := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(w)
+			c.Request = httptest.NewRequest(http.MethodPost, "/", nil)
+			if tt.headerValue != "" {
+				c.Request.Header.Set("Authorization", tt.headerValue)
+			}
+
+			token := GetBearerTokenOptional(c)
+
+			assert.Equal(t, tt.expectedToken, token)
+			assert.Equal(t, http.StatusOK, w.Code)
+		})
+	}
+}
+
+func TestBindJSONWithMessage(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	t.Run("bind success", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Request = httptest.NewRequest(http.MethodPost, "/", strings.NewReader(`{"name":"tester"}`))
+		c.Request.Header.Set("Content-Type", "application/json")
+
+		var req struct {
+			Name string `json:"name"`
+		}
+
+		ok := BindJSONWithMessage(c, &req, "请求参数错误: ")
+
+		assert.True(t, ok)
+		assert.Equal(t, "tester", req.Name)
+	})
+
+	t.Run("bind failed", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Request = httptest.NewRequest(http.MethodPost, "/", strings.NewReader(`{"name":`))
+		c.Request.Header.Set("Content-Type", "application/json")
+
+		var req struct {
+			Name string `json:"name"`
+		}
+
+		ok := BindJSONWithMessage(c, &req, "请求参数错误: ")
+
+		assert.False(t, ok)
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		assert.Contains(t, w.Body.String(), "请求参数错误")
+	})
+}
+
+func TestBindJSONOptional(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	t.Run("bind success", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Request = httptest.NewRequest(http.MethodPost, "/", strings.NewReader(`{"name":"tester"}`))
+		c.Request.Header.Set("Content-Type", "application/json")
+
+		var req struct {
+			Name string `json:"name"`
+		}
+
+		BindJSONOptional(c, &req)
+
+		assert.Equal(t, "tester", req.Name)
+		assert.Equal(t, http.StatusOK, w.Code)
+	})
+
+	t.Run("empty body ignored", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Request = httptest.NewRequest(http.MethodPost, "/", nil)
+		c.Request.Header.Set("Content-Type", "application/json")
+
+		var req struct {
+			Name string `json:"name"`
+		}
+
+		BindJSONOptional(c, &req)
+
+		assert.Empty(t, req.Name)
+		assert.Equal(t, http.StatusOK, w.Code)
+	})
+
+	t.Run("invalid body ignored", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Request = httptest.NewRequest(http.MethodPost, "/", strings.NewReader(`{"name":`))
+		c.Request.Header.Set("Content-Type", "application/json")
+
+		var req struct {
+			Name string `json:"name"`
+		}
+
+		BindJSONOptional(c, &req)
+
+		assert.Empty(t, req.Name)
+		assert.Equal(t, http.StatusOK, w.Code)
+	})
+}
+
 func TestGetRequiredParam(t *testing.T) {
 	tests := []struct {
 		name         string
@@ -145,6 +355,48 @@ func TestGetRequiredParam(t *testing.T) {
 			} else {
 				assert.Equal(t, tt.expectedCode, w.Code)
 			}
+		})
+	}
+}
+
+func TestGetFirstParam(t *testing.T) {
+	tests := []struct {
+		name     string
+		params   gin.Params
+		expected string
+	}{
+		{
+			name: "返回第一个非空参数",
+			params: gin.Params{
+				{Key: "projectId", Value: "project-1"},
+				{Key: "id", Value: "legacy-1"},
+			},
+			expected: "project-1",
+		},
+		{
+			name: "第一个参数为空时回退到后续参数",
+			params: gin.Params{
+				{Key: "id", Value: "legacy-1"},
+			},
+			expected: "legacy-1",
+		},
+		{
+			name:     "全部缺失时返回空字符串",
+			params:   gin.Params{},
+			expected: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gin.SetMode(gin.TestMode)
+			w := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(w)
+			c.Params = tt.params
+
+			result := GetFirstParam(c, "projectId", "id")
+
+			assert.Equal(t, tt.expected, result)
 		})
 	}
 }
@@ -283,6 +535,54 @@ func TestGetPaginationParamsStandard(t *testing.T) {
 	}
 }
 
+func TestGetPaginationParamsWithSizeKeysAliases(t *testing.T) {
+	tests := []struct {
+		name             string
+		rawQuery         string
+		sizeKeys         []string
+		expectedPage     int
+		expectedPageSize int
+	}{
+		{
+			name:             "支持pageSize别名",
+			rawQuery:         "page=3&pageSize=15",
+			sizeKeys:         []string{"pageSize", "size", "page_size"},
+			expectedPage:     3,
+			expectedPageSize: 15,
+		},
+		{
+			name:             "支持page_size别名",
+			rawQuery:         "page=2&page_size=25",
+			sizeKeys:         []string{"page_size", "size", "pageSize"},
+			expectedPage:     2,
+			expectedPageSize: 25,
+		},
+		{
+			name:             "按调用方指定顺序选择别名",
+			rawQuery:         "page=2&size=12&pageSize=50&page_size=60",
+			sizeKeys:         []string{"pageSize", "size", "page_size"},
+			expectedPage:     2,
+			expectedPageSize: 50,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gin.SetMode(gin.TestMode)
+			w := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(w)
+			c.Request = httptest.NewRequest("GET", "/?"+tt.rawQuery, nil)
+
+			params := GetPaginationParamsWithSizeKeys(c, 1, 20, 100, tt.sizeKeys...)
+
+			assert.Equal(t, tt.expectedPage, params.Page)
+			assert.Equal(t, tt.expectedPageSize, params.PageSize)
+			assert.Equal(t, tt.expectedPageSize, params.Limit)
+			assert.Equal(t, (tt.expectedPage-1)*tt.expectedPageSize, params.Offset)
+		})
+	}
+}
+
 func TestGetIntParam(t *testing.T) {
 	tests := []struct {
 		name         string
@@ -345,6 +645,64 @@ func TestGetIntParam(t *testing.T) {
 			}
 
 			result := GetIntParam(c, "limit", false, tt.defaultValue, tt.min, tt.max)
+			assert.Equal(t, tt.expected, result)
+		})
+	}
+}
+
+func TestGetIntQueryInRange(t *testing.T) {
+	tests := []struct {
+		name       string
+		rawQuery   string
+		expected   int
+		expectedOk bool
+	}{
+		{
+			name:       "正常值",
+			rawQuery:   "days=30",
+			expected:   30,
+			expectedOk: true,
+		},
+		{
+			name:       "缺失时使用默认值",
+			rawQuery:   "",
+			expected:   7,
+			expectedOk: true,
+		},
+		{
+			name:       "格式非法",
+			rawQuery:   "days=abc",
+			expected:   0,
+			expectedOk: false,
+		},
+		{
+			name:       "小于最小值",
+			rawQuery:   "days=0",
+			expected:   0,
+			expectedOk: false,
+		},
+		{
+			name:       "大于最大值",
+			rawQuery:   "days=366",
+			expected:   0,
+			expectedOk: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gin.SetMode(gin.TestMode)
+			w := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(w)
+			target := "/"
+			if tt.rawQuery != "" {
+				target += "?" + tt.rawQuery
+			}
+			c.Request = httptest.NewRequest("GET", target, nil)
+
+			result, ok := GetIntQueryInRange(c, "days", 7, 1, 365)
+
+			assert.Equal(t, tt.expectedOk, ok)
 			assert.Equal(t, tt.expected, result)
 		})
 	}

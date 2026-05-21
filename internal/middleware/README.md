@@ -2003,7 +2003,7 @@ sensitiveOperationConfig := &ratelimit.RateLimitConfig{
 - [设计文档](../../docs/design/middleware/README_中间件设计文档.md)
 - [API架构文档](../../docs/architecture/api_architecture.md)
 - [API v1文档](../../api/v1/README.md)
-- [实施计划](../../docs/plans/api_refactor_plan.md)
+- [实施计划](../../../docs/plans/submodules/backend/api-governance/api_refactor_plan.md)
 
 ---
 

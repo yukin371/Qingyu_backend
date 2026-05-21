@@ -15,9 +15,8 @@ import (
 // TestNewPasswordService 测试创建密码服务
 func TestNewPasswordService(t *testing.T) {
 	mockUserRepo := new(mocks.MockUserRepository)
-	mockAuthRepo := new(mocks.MockAuthRepository)
 
-	verificationService := NewVerificationService(mockUserRepo, mockAuthRepo, nil)
+	verificationService := NewVerificationService(mockUserRepo, nil)
 	service := NewPasswordService(verificationService, mockUserRepo)
 
 	assert.NotNil(t, service, "密码服务创建失败")
@@ -28,9 +27,8 @@ func TestNewPasswordService(t *testing.T) {
 // TestPasswordService_SendResetCode 测试发送重置验证码
 func TestPasswordService_SendResetCode(t *testing.T) {
 	mockUserRepo := new(mocks.MockUserRepository)
-	mockAuthRepo := new(mocks.MockAuthRepository)
 
-	verificationService := NewVerificationService(mockUserRepo, mockAuthRepo, nil)
+	verificationService := NewVerificationService(mockUserRepo, nil)
 	service := NewPasswordService(verificationService, mockUserRepo)
 
 	ctx := context.Background()
@@ -57,9 +55,8 @@ func TestPasswordService_SendResetCode(t *testing.T) {
 // TestPasswordService_ResetPassword 测试重置密码
 func TestPasswordService_ResetPassword(t *testing.T) {
 	mockUserRepo := new(mocks.MockUserRepository)
-	mockAuthRepo := new(mocks.MockAuthRepository)
 
-	verificationService := NewVerificationService(mockUserRepo, mockAuthRepo, nil)
+	verificationService := NewVerificationService(mockUserRepo, nil)
 	service := NewPasswordService(verificationService, mockUserRepo)
 
 	ctx := context.Background()
@@ -103,9 +100,8 @@ func TestPasswordService_ResetPassword(t *testing.T) {
 // TestPasswordService_UpdatePassword 测试修改密码
 func TestPasswordService_UpdatePassword(t *testing.T) {
 	mockUserRepo := new(mocks.MockUserRepository)
-	mockAuthRepo := new(mocks.MockAuthRepository)
 
-	verificationService := NewVerificationService(mockUserRepo, mockAuthRepo, nil)
+	verificationService := NewVerificationService(mockUserRepo, nil)
 	service := NewPasswordService(verificationService, mockUserRepo)
 
 	ctx := context.Background()
@@ -155,9 +151,8 @@ func TestPasswordService_UpdatePassword(t *testing.T) {
 // TestPasswordService_GetUserByEmail 测试根据邮箱获取用户
 func TestPasswordService_GetUserByEmail(t *testing.T) {
 	mockUserRepo := new(mocks.MockUserRepository)
-	mockAuthRepo := new(mocks.MockAuthRepository)
 
-	verificationService := NewVerificationService(mockUserRepo, mockAuthRepo, nil)
+	verificationService := NewVerificationService(mockUserRepo, nil)
 	service := NewPasswordService(verificationService, mockUserRepo)
 
 	ctx := context.Background()

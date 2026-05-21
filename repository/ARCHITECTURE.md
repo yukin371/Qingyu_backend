@@ -78,7 +78,6 @@ graph TB
 | `notification/` | 通知推送 | NotificationRepository |
 | `reader/` | 阅读功能 | ReadingProgressRepository, BookmarkRepository |
 | `recommendation/` | 推荐系统 | BehaviorRepository, ProfileRepository |
-| `shared/` | 共享接口 | AuthRepository, RecommendationRepository (兼容层) |
 | `social/` | 社交功能 | FollowRepository, LikeRepository, BookListRepository |
 | `stats/` | 统计分析 | ChapterStatsRepository, BookStatsRepository |
 | `storage/` | 文件存储 | StorageRepository |
@@ -264,19 +263,7 @@ type CacheConfig struct {
 }
 ```
 
-### 4. Redis 实现 (redis/)
-
-用于需要 Redis 特性的场景，如 Token 黑名单：
-
-```go
-type TokenBlacklistRepository interface {
-    Add(ctx context.Context, tokenID string, expiration time.Duration) error
-    Exists(ctx context.Context, tokenID string) (bool, error)
-    Remove(ctx context.Context, tokenID string) error
-}
-```
-
-### 5. ID 转换工具 (id_converter.go)
+### 4. ID 转换工具 (id_converter.go)
 
 提供 string ID 与 MongoDB ObjectID 之间的转换：
 
@@ -297,7 +284,7 @@ func ObjectIDSliceToStringSlice(ids []primitive.ObjectID) []string
 func IsIDError(err error) bool
 ```
 
-### 6. 错误定义 (errors.go)
+### 5. 错误定义 (errors.go)
 
 ```go
 var (
@@ -306,7 +293,7 @@ var (
 )
 ```
 
-### 7. 查询构建器 (querybuilder/)
+### 6. 查询构建器 (querybuilder/)
 
 用于构建复杂的 MongoDB 查询条件：
 

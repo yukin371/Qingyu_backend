@@ -10,7 +10,6 @@ import (
 	pkgtransaction "Qingyu_backend/pkg/transaction"
 	"Qingyu_backend/repository"
 	"Qingyu_backend/repository/interfaces/finance"
-	sharedRepo "Qingyu_backend/repository/interfaces/shared"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -42,9 +41,10 @@ type MembershipService interface {
 
 // MembershipServiceImpl 会员服务实现
 type MembershipServiceImpl struct {
-	membershipRepo finance.MembershipRepository
-	walletRepo     sharedRepo.WalletRepository
-	txRunner       pkgtransaction.Runner
+	membershipRepo      finance.MembershipRepository
+	walletRepo          finance.WalletRepository
+	txRunner            pkgtransaction.Runner
+	quotaRefreshHandler func(ctx context.Context, userID string) error
 }
 
 // NewMembershipService 创建会员服务
@@ -53,7 +53,7 @@ func NewMembershipService(membershipRepo finance.MembershipRepository) Membershi
 }
 
 // NewMembershipServiceWithDependencies 创建带钱包与事务依赖的会员服务。
-func NewMembershipServiceWithDependencies(membershipRepo finance.MembershipRepository, walletRepo sharedRepo.WalletRepository, txRunner pkgtransaction.Runner) MembershipService {
+func NewMembershipServiceWithDependencies(membershipRepo finance.MembershipRepository, walletRepo finance.WalletRepository, txRunner pkgtransaction.Runner) MembershipService {
 	return &MembershipServiceImpl{
 		membershipRepo: membershipRepo,
 		walletRepo:     walletRepo,
@@ -154,6 +154,7 @@ func (s *MembershipServiceImpl) Subscribe(ctx context.Context, userID string, pl
 		if err != nil {
 			return nil, fmt.Errorf("创建会员失败: %w", err)
 		}
+		s.triggerQuotaRefresh(ctx, userID)
 		return membership, nil
 	}
 
@@ -172,6 +173,7 @@ func (s *MembershipServiceImpl) Subscribe(ctx context.Context, userID string, pl
 		return nil, err
 	}
 
+	s.triggerQuotaRefresh(ctx, userID)
 	return membership, nil
 }
 
@@ -253,7 +255,11 @@ func (s *MembershipServiceImpl) RenewMembership(ctx context.Context, userID stri
 		if err != nil {
 			return nil, fmt.Errorf("续费失败: %w", err)
 		}
-		return s.membershipRepo.GetMembership(ctx, userID)
+		updatedMembership, getErr := s.membershipRepo.GetMembership(ctx, userID)
+		if getErr == nil {
+			s.triggerQuotaRefresh(ctx, userID)
+		}
+		return updatedMembership, getErr
 	}
 
 	if err := s.txRunner.Run(ctx, func(txCtx context.Context) error {
@@ -273,7 +279,11 @@ func (s *MembershipServiceImpl) RenewMembership(ctx context.Context, userID stri
 	}
 
 	// 重新获取更新后的会员信息
-	return s.membershipRepo.GetMembership(ctx, userID)
+	updatedMembership, err := s.membershipRepo.GetMembership(ctx, userID)
+	if err == nil {
+		s.triggerQuotaRefresh(ctx, userID)
+	}
+	return updatedMembership, err
 }
 
 // ============ 会员权益 ============
@@ -390,6 +400,7 @@ func (s *MembershipServiceImpl) ActivateCard(ctx context.Context, userID string,
 		return nil, fmt.Errorf("更新会员卡状态失败: %w", err)
 	}
 
+	s.triggerQuotaRefresh(ctx, userID)
 	return membership, nil
 }
 
@@ -505,4 +516,18 @@ func (s *MembershipServiceImpl) applyWalletMembershipCharge(ctx context.Context,
 	}
 
 	return nil
+}
+
+// SetQuotaRefreshHandler 设置会员权益变更后的配额刷新回调。
+func (s *MembershipServiceImpl) SetQuotaRefreshHandler(handler func(ctx context.Context, userID string) error) {
+	s.quotaRefreshHandler = handler
+}
+
+func (s *MembershipServiceImpl) triggerQuotaRefresh(ctx context.Context, userID string) {
+	if s == nil || s.quotaRefreshHandler == nil {
+		return
+	}
+	if err := s.quotaRefreshHandler(ctx, userID); err != nil {
+		fmt.Printf("警告: 刷新用户%s的AI配额画像失败: %v\n", userID, err)
+	}
 }

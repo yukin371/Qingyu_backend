@@ -8,6 +8,7 @@ import (
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"
+	"go.uber.org/zap"
 )
 
 // ViperConfigManager viper配置管理器
@@ -26,15 +27,15 @@ func NewViperConfigManager() *ViperConfigManager {
 func (m *ViperConfigManager) LoadFromFile(configPath string) error {
 	// 检查是否指定了完整的配置文件路径
 	configFile := os.Getenv("CONFIG_FILE")
-	fmt.Printf("[Config] CONFIG_FILE environment variable: '%s'\n", configFile)
+	zap.L().Debug("CONFIG_FILE environment variable loaded", zap.String("value", configFile))
 
 	if configFile != "" {
 		// 使用指定的配置文件
-		fmt.Printf("[Config] Loading config from specified file: %s\n", configFile)
+		zap.L().Debug("Loading config from specified file", zap.String("path", configFile))
 		m.viper.SetConfigFile(configFile)
 	} else {
 		// 使用默认配置文件查找
-		fmt.Println("[Config] CONFIG_FILE not set, using default search")
+		zap.L().Debug("CONFIG_FILE not set, using default search")
 		m.viper.SetConfigName("config")
 		m.viper.SetConfigType("yaml")
 
@@ -142,13 +143,27 @@ func (m *ViperConfigManager) setViperDefaults() {
 	m.viper.SetDefault("server.mode", "debug")
 
 	// JWT配置
-	m.viper.SetDefault("jwt.secret", "qingyu_secret_key")
+	m.viper.SetDefault("jwt.secret", "")
 	m.viper.SetDefault("jwt.expiration_hours", 24)
 
 	// AI配置
 	m.viper.SetDefault("ai.base_url", "https://api.openai.com/v1")
 	m.viper.SetDefault("ai.max_tokens", 2000)
 	m.viper.SetDefault("ai.temperature", 7)
+
+	// AI配额一致性阈值
+	m.viper.SetDefault("ai_quota.consistency_thresholds.user.warning_tokens", 200)
+	m.viper.SetDefault("ai_quota.consistency_thresholds.user.critical_tokens", 1000)
+	m.viper.SetDefault("ai_quota.consistency_thresholds.user.warning_ratio", 0.1)
+	m.viper.SetDefault("ai_quota.consistency_thresholds.user.critical_ratio", 0.2)
+	m.viper.SetDefault("ai_quota.consistency_thresholds.workflow.warning_tokens", 200)
+	m.viper.SetDefault("ai_quota.consistency_thresholds.workflow.critical_tokens", 1000)
+	m.viper.SetDefault("ai_quota.consistency_thresholds.workflow.warning_ratio", 0.1)
+	m.viper.SetDefault("ai_quota.consistency_thresholds.workflow.critical_ratio", 0.2)
+	m.viper.SetDefault("ai_quota.consistency_thresholds.global.warning_tokens", 200)
+	m.viper.SetDefault("ai_quota.consistency_thresholds.global.critical_tokens", 1000)
+	m.viper.SetDefault("ai_quota.consistency_thresholds.global.warning_ratio", 0.1)
+	m.viper.SetDefault("ai_quota.consistency_thresholds.global.critical_ratio", 0.2)
 }
 
 // applyDatabaseEnvOverrides 应用数据库环境变量覆盖
@@ -202,12 +217,12 @@ func (m *ViperConfigManager) applyDatabaseEnvOverrides(config *DatabaseConfig) e
 func (m *ViperConfigManager) WatchConfig(onChange func(*Config)) {
 	m.viper.WatchConfig()
 	m.viper.OnConfigChange(func(e fsnotify.Event) {
-		fmt.Printf("配置文件变更: %s\n", e.Name)
+		zap.L().Info("配置文件变更", zap.String("path", e.Name))
 
 		// 重新加载配置
 		config, err := m.LoadAppConfig()
 		if err != nil {
-			fmt.Printf("重新加载配置失败: %v\n", err)
+			zap.L().Error("重新加载配置失败", zap.Error(err))
 			return
 		}
 

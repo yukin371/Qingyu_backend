@@ -43,11 +43,12 @@ func (api *TimelineApi) CreateTimeline(c *gin.Context) {
 
 // GetTimeline 获取时间线详情
 func (api *TimelineApi) GetTimeline(c *gin.Context) {
-	timelineID := c.Param("timelineId")
-	projectID := c.Query("projectId")
-
-	if timelineID == "" || projectID == "" {
-		response.BadRequest(c, "参数错误", "timelineId和projectId不能为空")
+	timelineID, ok := shared.GetRequiredParam(c, "timelineId", "时间线ID")
+	if !ok {
+		return
+	}
+	projectID, ok := shared.GetRequiredQuery(c, "projectId", "项目ID")
+	if !ok {
 		return
 	}
 
@@ -78,11 +79,12 @@ func (api *TimelineApi) ListTimelines(c *gin.Context) {
 
 // DeleteTimeline 删除时间线
 func (api *TimelineApi) DeleteTimeline(c *gin.Context) {
-	timelineID := c.Param("timelineId")
-	projectID := c.Query("projectId")
-
-	if timelineID == "" || projectID == "" {
-		response.BadRequest(c, "参数错误", "timelineId和projectId不能为空")
+	timelineID, ok := shared.GetRequiredParam(c, "timelineId", "时间线ID")
+	if !ok {
+		return
+	}
+	projectID, ok := shared.GetRequiredQuery(c, "projectId", "项目ID")
+	if !ok {
 		return
 	}
 
@@ -97,11 +99,12 @@ func (api *TimelineApi) DeleteTimeline(c *gin.Context) {
 
 // CreateTimelineEvent 创建时间线事件
 func (api *TimelineApi) CreateTimelineEvent(c *gin.Context) {
-	timelineID := c.Param("timelineId")
-	projectID := c.Query("projectId")
-
-	if timelineID == "" || projectID == "" {
-		response.BadRequest(c, "参数错误", "timelineId和projectId不能为空")
+	timelineID, ok := shared.GetRequiredParam(c, "timelineId", "时间线ID")
+	if !ok {
+		return
+	}
+	projectID, ok := shared.GetRequiredQuery(c, "projectId", "项目ID")
+	if !ok {
 		return
 	}
 
@@ -124,11 +127,12 @@ func (api *TimelineApi) CreateTimelineEvent(c *gin.Context) {
 
 // GetTimelineEvent 获取事件详情
 func (api *TimelineApi) GetTimelineEvent(c *gin.Context) {
-	eventID := c.Param("eventId")
-	projectID := c.Query("projectId")
-
-	if eventID == "" || projectID == "" {
-		response.BadRequest(c, "参数错误", "eventId和projectId不能为空")
+	eventID, ok := shared.GetRequiredParam(c, "eventId", "事件ID")
+	if !ok {
+		return
+	}
+	projectID, ok := shared.GetRequiredQuery(c, "projectId", "项目ID")
+	if !ok {
 		return
 	}
 
@@ -159,11 +163,12 @@ func (api *TimelineApi) ListTimelineEvents(c *gin.Context) {
 
 // UpdateTimelineEvent 更新时间线事件
 func (api *TimelineApi) UpdateTimelineEvent(c *gin.Context) {
-	eventID := c.Param("eventId")
-	projectID := c.Query("projectId")
-
-	if eventID == "" || projectID == "" {
-		response.BadRequest(c, "参数错误", "eventId和projectId不能为空")
+	eventID, ok := shared.GetRequiredParam(c, "eventId", "事件ID")
+	if !ok {
+		return
+	}
+	projectID, ok := shared.GetRequiredQuery(c, "projectId", "项目ID")
+	if !ok {
 		return
 	}
 
@@ -183,11 +188,12 @@ func (api *TimelineApi) UpdateTimelineEvent(c *gin.Context) {
 
 // DeleteTimelineEvent 删除时间线事件
 func (api *TimelineApi) DeleteTimelineEvent(c *gin.Context) {
-	eventID := c.Param("eventId")
-	projectID := c.Query("projectId")
-
-	if eventID == "" || projectID == "" {
-		response.BadRequest(c, "参数错误", "eventId和projectId不能为空")
+	eventID, ok := shared.GetRequiredParam(c, "eventId", "事件ID")
+	if !ok {
+		return
+	}
+	projectID, ok := shared.GetRequiredQuery(c, "projectId", "项目ID")
+	if !ok {
 		return
 	}
 

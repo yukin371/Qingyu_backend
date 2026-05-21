@@ -32,6 +32,7 @@ func TestBatchOperation_DeleteDocuments(t *testing.T) {
 
 	// 初始化repositories
 	docRepo := writer.NewMongoDocumentRepository(db)
+	contentRepo := writer.NewMongoDocumentContentRepository(db)
 
 	// 1. 创建测试用户和项目
 	userID := primitive.NewObjectID()
@@ -70,6 +71,7 @@ func TestBatchOperation_DeleteDocuments(t *testing.T) {
 	batchOpSvc := document.NewBatchOperationService(
 		batchOpRepo,
 		docRepo,
+		contentRepo,
 		projectRepo,
 		eventBus,
 	)
@@ -157,6 +159,7 @@ func TestBatchOperation_Undo(t *testing.T) {
 
 	// 初始化repositories
 	docRepo := writer.NewMongoDocumentRepository(db)
+	contentRepo := writer.NewMongoDocumentContentRepository(db)
 
 	// 创建测试用户和项目
 	userID := primitive.NewObjectID()
@@ -195,6 +198,7 @@ func TestBatchOperation_Undo(t *testing.T) {
 	batchOpSvc := document.NewBatchOperationService(
 		batchOpRepo,
 		docRepo,
+		contentRepo,
 		projectRepo,
 		eventBus,
 	)

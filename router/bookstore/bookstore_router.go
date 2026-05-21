@@ -161,8 +161,9 @@ func InitBookstoreRouter(
 				// 这些路由需要购买服务支持（VIP章节、价格、购买记录等）
 				public.GET("/books/:id/trial-chapters", chapterCatalogApiHandler.GetTrialChapters)     // 获取试读章节
 				public.GET("/books/:id/vip-chapters", chapterCatalogApiHandler.GetVIPChapters)         // 获取VIP章节列表
-				public.GET("/chapters/:chapterId/price", chapterCatalogApiHandler.GetChapterPrice)     // 获取章节价格
-				public.GET("/chapters/:chapterId/access", chapterCatalogApiHandler.CheckChapterAccess) // 检查章节访问权限
+				// 统一使用 :id，避免与已存在的 /chapters/:id 路由发生 Gin wildcard 冲突
+				public.GET("/chapters/:id/price", chapterCatalogApiHandler.GetChapterPrice)     // 获取章节价格
+				public.GET("/chapters/:id/access", chapterCatalogApiHandler.CheckChapterAccess) // 检查章节访问权限
 			}
 
 			// 兼容旧版前端的评分摘要接口

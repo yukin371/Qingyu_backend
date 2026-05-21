@@ -45,12 +45,6 @@ func TestUserServicePort_Integration_EndToEnd(t *testing.T) {
 			DeleteUser(ctx context.Context, req *user.DeleteUserRequest) (*user.DeleteUserResponse, error)
 			ListUsers(ctx context.Context, req *user.ListUsersRequest) (*user.ListUsersResponse, error)
 
-			// 用户认证方法
-			RegisterUser(ctx context.Context, req *user.RegisterUserRequest) (*user.RegisterUserResponse, error)
-			LoginUser(ctx context.Context, req *user.LoginUserRequest) (*user.LoginUserResponse, error)
-			LogoutUser(ctx context.Context, req *user.LogoutUserRequest) (*user.LogoutUserResponse, error)
-			ValidateToken(ctx context.Context, req *user.ValidateTokenRequest) (*user.ValidateTokenResponse, error)
-
 			// 其他方法...
 		}
 
@@ -129,17 +123,6 @@ func TestUserServicePort_DTOValidation(t *testing.T) {
 		assert.Equal(t, 5, resp.TotalPages)
 	})
 
-	t.Run("LoginUserRequest结构验证", func(t *testing.T) {
-		req := &user.LoginUserRequest{
-			Username: "testuser",
-			Password: "password123",
-			ClientIP: "127.0.0.1",
-		}
-		assert.Equal(t, "testuser", req.Username)
-		assert.Equal(t, "password123", req.Password)
-		assert.Equal(t, "127.0.0.1", req.ClientIP)
-	})
-
 	t.Run("UpdatePasswordRequest结构验证", func(t *testing.T) {
 		userID := primitive.NewObjectID().Hex()
 		req := &user.UpdatePasswordRequest{
@@ -150,15 +133,6 @@ func TestUserServicePort_DTOValidation(t *testing.T) {
 		assert.Equal(t, userID, req.ID)
 		assert.Equal(t, "oldpassword", req.OldPassword)
 		assert.Equal(t, "newpassword", req.NewPassword)
-	})
-
-	t.Run("AssignRoleRequest结构验证", func(t *testing.T) {
-		req := &user.AssignRoleRequest{
-			UserID: "user123",
-			RoleID: "role123",
-		}
-		assert.Equal(t, "user123", req.UserID)
-		assert.Equal(t, "role123", req.RoleID)
 	})
 
 	t.Run("DowngradeRoleRequest结构验证", func(t *testing.T) {
@@ -203,31 +177,6 @@ func TestUserServicePort_ResponseValidation(t *testing.T) {
 			Updated: true,
 		}
 		assert.True(t, resp.Updated)
-	})
-
-	t.Run("AssignRoleResponse验证", func(t *testing.T) {
-		resp := &user.AssignRoleResponse{
-			Assigned: true,
-		}
-		assert.True(t, resp.Assigned)
-	})
-
-	t.Run("GetUserRolesResponse验证", func(t *testing.T) {
-		resp := &user.GetUserRolesResponse{
-			Roles: []string{"reader", "author"},
-		}
-		assert.Len(t, resp.Roles, 2)
-		assert.Contains(t, resp.Roles, "reader")
-		assert.Contains(t, resp.Roles, "author")
-	})
-
-	t.Run("GetUserPermissionsResponse验证", func(t *testing.T) {
-		resp := &user.GetUserPermissionsResponse{
-			Permissions: []string{"read:books", "write:books"},
-		}
-		assert.Len(t, resp.Permissions, 2)
-		assert.Contains(t, resp.Permissions, "read:books")
-		assert.Contains(t, resp.Permissions, "write:books")
 	})
 }
 

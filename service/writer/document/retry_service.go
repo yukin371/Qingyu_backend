@@ -1,6 +1,12 @@
 package document
 
-import "time"
+import (
+	"errors"
+	"time"
+
+	pkgErrors "Qingyu_backend/pkg/errors"
+	baseInterfaces "Qingyu_backend/service/interfaces/base"
+)
 
 // RetryConfig 重试配置
 type RetryConfig struct {
@@ -59,9 +65,16 @@ func (s *RetryService) ShouldRetry(err error, config *RetryConfig) bool {
 
 // extractErrorCode 从错误中提取错误码
 func (s *RetryService) extractErrorCode(err error) string {
-	// TODO: 从具体错误类型中提取错误码
-	// 当前简化实现：返回错误消息的某些部分
-	// 后续可以根据实际错误类型实现
+	var layerServiceErr *pkgErrors.ServiceError
+	if errors.As(err, &layerServiceErr) {
+		return string(layerServiceErr.Type)
+	}
+
+	var baseServiceErr *baseInterfaces.ServiceError
+	if errors.As(err, &baseServiceErr) {
+		return baseServiceErr.Type
+	}
+
 	return err.Error()
 }
 

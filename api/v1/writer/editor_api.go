@@ -1,6 +1,7 @@
 package writer
 
 import (
+	"Qingyu_backend/models/dto"
 	documentModel "Qingyu_backend/models/writer"
 
 	"github.com/gin-gonic/gin"
@@ -40,7 +41,7 @@ func NewEditorApi(documentService *document.DocumentService) *EditorApi {
 func (api *EditorApi) AutoSaveDocument(c *gin.Context) {
 	documentID := c.Param("id")
 
-	var req document.AutoSaveRequest
+	var req dto.AutoSaveRequest
 	if !shared.BindJSON(c, &req) {
 		return
 	}
@@ -128,7 +129,7 @@ func (api *EditorApi) UpdateDocumentContent(c *gin.Context) {
 	c.Header("X-API-Deprecated", "true")
 	c.Header("X-API-Replacement", "/api/v1/writer/documents/{id}/contents")
 
-	var req document.UpdateContentRequest
+	var req dto.UpdateContentRequest
 	if !shared.BindJSON(c, &req) {
 		return
 	}
@@ -164,7 +165,7 @@ func (api *EditorApi) GetDocumentContents(c *gin.Context) {
 func (api *EditorApi) ReplaceDocumentContents(c *gin.Context) {
 	documentID := c.Param("id")
 
-	var req document.ReplaceDocumentContentsRequest
+	var req dto.ReplaceDocumentContentsRequest
 	if !shared.BindJSON(c, &req) {
 		return
 	}
@@ -209,7 +210,7 @@ func (api *EditorApi) ReindexDocumentContents(c *gin.Context) {
 func (api *EditorApi) CalculateWordCount(c *gin.Context) {
 	var req WordCountRequest
 	// 允许空请求体，不传则自动从文档获取内容
-	_ = c.ShouldBindJSON(&req)
+	shared.BindJSONOptional(c, &req)
 
 	content := req.Content
 	if content == "" {
@@ -283,7 +284,7 @@ func (api *EditorApi) UpdateUserShortcuts(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, nil)
+	response.BadRequest(c, "参数错误", "当前暂不支持持久化自定义快捷键")
 }
 
 // ResetUserShortcuts 重置用户快捷键配置
@@ -295,18 +296,12 @@ func (api *EditorApi) UpdateUserShortcuts(c *gin.Context) {
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/writer/user/shortcuts/reset [post]
 func (api *EditorApi) ResetUserShortcuts(c *gin.Context) {
-	userID, ok := shared.GetUserID(c)
-	if !ok {
+	if _, ok := shared.GetUserID(c); !ok {
 		response.Unauthorized(c, "未授权")
 		return
 	}
 
-	if err := api.shortcutService.ResetUserShortcuts(c.Request.Context(), userID); err != nil {
-		c.Error(err)
-		return
-	}
-
-	response.Success(c, nil)
+	response.BadRequest(c, "参数错误", "当前暂不支持持久化自定义快捷键")
 }
 
 // GetShortcutHelp 获取快捷键帮助
@@ -343,4 +338,3 @@ type WordCountRequest struct {
 type UpdateShortcutsRequest struct {
 	Shortcuts map[string]documentModel.Shortcut `json:"shortcuts" validate:"required"`
 }
-

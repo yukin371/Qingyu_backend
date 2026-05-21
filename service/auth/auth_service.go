@@ -1,7 +1,7 @@
 package auth
 
 import (
-	userServiceInterface "Qingyu_backend/service/interfaces/user"
+	serviceInterfaces "Qingyu_backend/service/interfaces/base"
 	userPassword "Qingyu_backend/service/user"
 	"context"
 	"crypto/rand"
@@ -12,7 +12,7 @@ import (
 	authModel "Qingyu_backend/models/auth"
 	usersModel "Qingyu_backend/models/users"
 	authRepo "Qingyu_backend/repository/interfaces/auth"
-	sharedRepo "Qingyu_backend/repository/interfaces/shared"
+	userRepo "Qingyu_backend/repository/interfaces/user"
 
 	"go.uber.org/zap"
 )
@@ -22,12 +22,12 @@ type AuthServiceImpl struct {
 	jwtService        JWTService
 	roleService       RoleService
 	permissionService PermissionService
-	authRepo          sharedRepo.AuthRepository
-	oauthRepo         authRepo.OAuthRepository         // OAuth仓储
-	userService       userServiceInterface.UserService // 依赖User服务
-	sessionService    SessionService                   // MVP: 会话管理（多端登录限制）
-	passwordValidator *userPassword.PasswordValidator  // MVP: 密码强度验证（使用 user 包统一实现）
-	initialized       bool                             // 初始化标志
+	authRepo          authRepo.RoleRepository
+	oauthRepo         authRepo.OAuthRepository        // OAuth仓储
+	userRepo          userRepo.UserRepository         // 直接访问用户数据，避免 Auth ↔ UserService 循环依赖
+	sessionService    SessionService                  // MVP: 会话管理（多端登录限制）
+	passwordValidator *userPassword.PasswordValidator // MVP: 密码强度验证（使用 user 包统一实现）
+	initialized       bool                            // 初始化标志
 }
 
 // NewAuthService 创建Auth服务
@@ -35,9 +35,9 @@ func NewAuthService(
 	jwtService JWTService,
 	roleService RoleService,
 	permissionService PermissionService,
-	authRepo sharedRepo.AuthRepository,
+	authRepo authRepo.RoleRepository,
 	oauthRepo authRepo.OAuthRepository,
-	userService userServiceInterface.UserService,
+	userRepo userRepo.UserRepository,
 	sessionService SessionService,
 ) AuthService {
 	return &AuthServiceImpl{
@@ -46,7 +46,7 @@ func NewAuthService(
 		permissionService: permissionService,
 		authRepo:          authRepo,
 		oauthRepo:         oauthRepo,
-		userService:       userService,
+		userRepo:          userRepo,
 		sessionService:    sessionService,
 		passwordValidator: userPassword.NewPasswordValidator(), // 使用 user 包的统一密码验证器
 	}
@@ -56,30 +56,27 @@ func NewAuthService(
 
 // Register 用户注册
 func (s *AuthServiceImpl) Register(ctx context.Context, req *RegisterRequest) (*RegisterResponse, error) {
+	if req == nil {
+		return nil, serviceInterfaces.NewServiceError("AuthService", serviceInterfaces.ErrorTypeValidation, "注册请求不能为空", nil)
+	}
+
 	// 0. MVP: 验证密码强度
 	if err := s.passwordValidator.ValidatePassword(req.Password); err != nil {
-		return nil, fmt.Errorf("密码不符合要求: %w", err)
+		return nil, serviceInterfaces.NewServiceError("AuthService", serviceInterfaces.ErrorTypeValidation, "密码不符合要求: "+err.Error(), err)
 	}
 
-	// 1. 调用User服务创建用户
-	createUserReq := &userServiceInterface.CreateUserRequest{
-		Username: req.Username,
-		Email:    req.Email,
-		Password: req.Password,
-	}
-
-	userResp, err := s.userService.CreateUser(ctx, createUserReq)
-	if err != nil {
-		return nil, fmt.Errorf("创建用户失败: %w", err)
-	}
-
-	// 2. 分配默认角色
+	// 1. 确定默认角色并直接创建用户，避免再经由 UserService 回流。
 	defaultRole := req.Role
 	if defaultRole == "" {
 		defaultRole = "reader" // 默认为reader角色
 	}
 
-	// 查找角色
+	user, err := s.createUser(ctx, req.Username, req.Email, req.Password, []string{defaultRole})
+	if err != nil {
+		return nil, err
+	}
+
+	// 2. 同步 auth 侧角色映射（历史兼容）。
 	role, err := s.authRepo.GetRoleByName(ctx, defaultRole)
 	if err != nil {
 		// 如果角色不存在，使用默认角色
@@ -87,78 +84,67 @@ func (s *AuthServiceImpl) Register(ctx context.Context, req *RegisterRequest) (*
 	}
 
 	if role != nil {
-		_ = s.authRepo.AssignUserRole(ctx, userResp.User.ID, role.ID.Hex())
+		_ = s.authRepo.AssignUserRole(ctx, user.ID.Hex(), role.ID.Hex())
 	}
 
 	// 3. 生成JWT Token
-	roles := []string{defaultRole}
-	token, err := s.jwtService.GenerateToken(ctx, userResp.User.ID, roles)
+	roles := user.Roles
+	if len(roles) == 0 {
+		roles = []string{defaultRole}
+	}
+	token, err := s.jwtService.GenerateToken(ctx, user.ID.Hex(), roles)
 	if err != nil {
-		return nil, fmt.Errorf("生成Token失败: %w", err)
+		return nil, serviceInterfaces.NewServiceError("AuthService", serviceInterfaces.ErrorTypeInternal, "生成Token失败", err)
 	}
 
 	// 4. 返回响应
 	return &RegisterResponse{
-		User: &UserInfo{
-			ID:       userResp.User.ID,
-			Username: userResp.User.Username,
-			Email:    userResp.User.Email,
-			Roles:    roles,
-		},
+		User:  convertUserToUserInfo(user, roles),
 		Token: token,
 	}, nil
 }
 
 // Login 用户登录
 func (s *AuthServiceImpl) Login(ctx context.Context, req *LoginRequest) (*LoginResponse, error) {
-	// 1. 调用User服务登录
-	loginReq := &userServiceInterface.LoginUserRequest{
-		Username: req.Username,
-		Password: req.Password,
+	if req == nil {
+		return nil, serviceInterfaces.NewServiceError("AuthService", serviceInterfaces.ErrorTypeValidation, "登录请求不能为空", nil)
+	}
+	if req.Username == "" || req.Password == "" {
+		return nil, serviceInterfaces.NewServiceError("AuthService", serviceInterfaces.ErrorTypeValidation, "用户名和密码不能为空", nil)
 	}
 
-	loginResp, err := s.userService.LoginUser(ctx, loginReq)
+	user, err := s.authenticateUser(ctx, req.Username, req.Password, req.ClientIP)
 	if err != nil {
-		return nil, fmt.Errorf("登录失败: %w", err)
+		return nil, err
 	}
 
 	// 2. 获取用户角色
-	userRoles, err := s.authRepo.GetUserRoles(ctx, loginResp.User.ID)
+	roleNames, err := s.resolveUserRoles(ctx, user)
 	if err != nil {
-		return nil, fmt.Errorf("获取用户角色失败: %w", err)
-	}
-
-	roleNames := make([]string, len(userRoles))
-	for i, role := range userRoles {
-		roleNames[i] = role.Name
-	}
-
-	// 如果没有角色，分配默认角色
-	if len(roleNames) == 0 {
-		roleNames = []string{"reader"}
+		return nil, serviceInterfaces.NewServiceError("AuthService", serviceInterfaces.ErrorTypeInternal, "获取用户角色失败", err)
 	}
 
 	// 2.5. MVP: 强制执行多端登录限制（最多5台设备，超限自动踢出最老设备）
-	if err := s.sessionService.EnforceDeviceLimit(ctx, loginResp.User.ID, 5); err != nil {
+	if err := s.sessionService.EnforceDeviceLimit(ctx, user.ID.Hex(), 5); err != nil {
 		// 记录错误但不中断登录（宽松策略）
 		zap.L().Warn("设备限制执行失败，允许登录",
-			zap.String("user_id", loginResp.User.ID),
+			zap.String("user_id", user.ID.Hex()),
 			zap.Error(err),
 		)
 	}
 
 	// 3. 生成JWT Token
-	token, err := s.jwtService.GenerateToken(ctx, loginResp.User.ID, roleNames)
+	token, err := s.jwtService.GenerateToken(ctx, user.ID.Hex(), roleNames)
 	if err != nil {
-		return nil, fmt.Errorf("生成Token失败: %w", err)
+		return nil, serviceInterfaces.NewServiceError("AuthService", serviceInterfaces.ErrorTypeInternal, "生成Token失败", err)
 	}
 
 	// 3.5. MVP: 创建会话
-	session, err := s.sessionService.CreateSession(ctx, loginResp.User.ID)
+	session, err := s.sessionService.CreateSession(ctx, user.ID.Hex())
 	if err != nil {
 		// 会话创建失败不影响登录（降级处理）
 		zap.L().Warn("创建会话失败",
-			zap.String("user_id", loginResp.User.ID),
+			zap.String("user_id", user.ID.Hex()),
 			zap.Error(err),
 		)
 	}
@@ -166,12 +152,7 @@ func (s *AuthServiceImpl) Login(ctx context.Context, req *LoginRequest) (*LoginR
 
 	// 4. 返回响应
 	return &LoginResponse{
-		User: &UserInfo{
-			ID:       loginResp.User.ID,
-			Username: loginResp.User.Username,
-			Email:    loginResp.User.Email,
-			Roles:    roleNames,
-		},
+		User:  convertUserToUserInfo(user, roleNames),
 		Token: token,
 	}, nil
 }
@@ -186,9 +167,7 @@ func (s *AuthServiceImpl) OAuthLogin(ctx context.Context, req *OAuthLoginRequest
 
 	// 2. 如果OAuth账号已存在，直接登录
 	if oauthAccount != nil {
-		// 获取用户信息
-		getUserReq := &userServiceInterface.GetUserRequest{ID: oauthAccount.UserID}
-		userResp, err := s.userService.GetUser(ctx, getUserReq)
+		user, err := s.userRepo.GetByID(ctx, oauthAccount.UserID)
 		if err != nil {
 			return nil, fmt.Errorf("获取用户信息失败: %w", err)
 		}
@@ -197,34 +176,19 @@ func (s *AuthServiceImpl) OAuthLogin(ctx context.Context, req *OAuthLoginRequest
 		_ = s.oauthRepo.UpdateLastLogin(ctx, oauthAccount.ID.Hex())
 
 		// 获取用户角色
-		userRoles, err := s.authRepo.GetUserRoles(ctx, userResp.User.ID)
+		roleNames, err := s.resolveUserRoles(ctx, user)
 		if err != nil {
 			return nil, fmt.Errorf("获取用户角色失败: %w", err)
 		}
 
-		roleNames := make([]string, len(userRoles))
-		for i, role := range userRoles {
-			roleNames[i] = role.Name
-		}
-
-		// 如果没有角色，分配默认角色
-		if len(roleNames) == 0 {
-			roleNames = []string{"reader"}
-		}
-
 		// 生成JWT Token
-		token, err := s.jwtService.GenerateToken(ctx, userResp.User.ID, roleNames)
+		token, err := s.jwtService.GenerateToken(ctx, user.ID.Hex(), roleNames)
 		if err != nil {
 			return nil, fmt.Errorf("生成Token失败: %w", err)
 		}
 
 		return &LoginResponse{
-			User: &UserInfo{
-				ID:       userResp.User.ID,
-				Username: userResp.User.Username,
-				Email:    userResp.User.Email,
-				Roles:    roleNames,
-			},
+			User:  convertUserToUserInfo(user, roleNames),
 			Token: token,
 		}, nil
 	}
@@ -240,13 +204,7 @@ func (s *AuthServiceImpl) OAuthLogin(ctx context.Context, req *OAuthLoginRequest
 	}
 
 	// 创建用户
-	createUserReq := &userServiceInterface.CreateUserRequest{
-		Username: username,
-		Email:    req.Email,
-		Password: randomPassword,
-	}
-
-	userResp, err := s.userService.CreateUser(ctx, createUserReq)
+	user, err := s.createUser(ctx, username, req.Email, randomPassword, []string{"reader"})
 	if err != nil {
 		return nil, fmt.Errorf("创建用户失败: %w", err)
 	}
@@ -255,12 +213,12 @@ func (s *AuthServiceImpl) OAuthLogin(ctx context.Context, req *OAuthLoginRequest
 	defaultRole := "reader"
 	role, err := s.authRepo.GetRoleByName(ctx, defaultRole)
 	if err == nil && role != nil {
-		_ = s.authRepo.AssignUserRole(ctx, userResp.User.ID, role.ID.Hex())
+		_ = s.authRepo.AssignUserRole(ctx, user.ID.Hex(), role.ID.Hex())
 	}
 
 	// 5. 创建OAuth账号记录
 	oauthAccount = &authModel.OAuthAccount{
-		UserID:         userResp.User.ID,
+		UserID:         user.ID.Hex(),
 		Provider:       req.Provider,
 		ProviderUserID: req.ProviderID,
 		Email:          req.Email,
@@ -277,19 +235,14 @@ func (s *AuthServiceImpl) OAuthLogin(ctx context.Context, req *OAuthLoginRequest
 
 	// 6. 生成JWT Token
 	roles := []string{defaultRole}
-	token, err := s.jwtService.GenerateToken(ctx, userResp.User.ID, roles)
+	token, err := s.jwtService.GenerateToken(ctx, user.ID.Hex(), roles)
 	if err != nil {
 		return nil, fmt.Errorf("生成Token失败: %w", err)
 	}
 
 	// 7. 返回响应
 	return &LoginResponse{
-		User: &UserInfo{
-			ID:       userResp.User.ID,
-			Username: userResp.User.Username,
-			Email:    userResp.User.Email,
-			Roles:    roles,
-		},
+		User:  convertUserToUserInfo(user, roles),
 		Token: token,
 	}, nil
 }
@@ -455,8 +408,8 @@ func (s *AuthServiceImpl) Initialize(ctx context.Context) error {
 	if s.authRepo == nil {
 		return fmt.Errorf("authRepo is nil")
 	}
-	if s.userService == nil {
-		return fmt.Errorf("userService is nil")
+	if s.userRepo == nil {
+		return fmt.Errorf("userRepo is nil")
 	}
 	if s.sessionService == nil {
 		return fmt.Errorf("sessionService is nil")
@@ -499,6 +452,109 @@ func (s *AuthServiceImpl) GetVersion() string {
 
 // ============ 辅助函数 ============
 
+func (s *AuthServiceImpl) createUser(ctx context.Context, username, email, password string, roles []string) (*usersModel.User, error) {
+	if username == "" || email == "" || password == "" {
+		return nil, serviceInterfaces.NewServiceError("AuthService", serviceInterfaces.ErrorTypeValidation, "用户名、邮箱和密码不能为空", nil)
+	}
+
+	exists, err := s.userRepo.ExistsByUsername(ctx, username)
+	if err != nil {
+		return nil, serviceInterfaces.NewServiceError("AuthService", serviceInterfaces.ErrorTypeInternal, "检查用户名失败", err)
+	}
+	if exists {
+		return nil, serviceInterfaces.NewServiceError("AuthService", serviceInterfaces.ErrorTypeBusiness, "用户名已存在", nil)
+	}
+
+	exists, err = s.userRepo.ExistsByEmail(ctx, email)
+	if err != nil {
+		return nil, serviceInterfaces.NewServiceError("AuthService", serviceInterfaces.ErrorTypeInternal, "检查邮箱失败", err)
+	}
+	if exists {
+		return nil, serviceInterfaces.NewServiceError("AuthService", serviceInterfaces.ErrorTypeBusiness, "邮箱已存在", nil)
+	}
+
+	user := &usersModel.User{
+		Username: username,
+		Email:    email,
+		Password: password,
+		Roles:    roles,
+		Status:   usersModel.UserStatusActive,
+	}
+	if len(user.Roles) == 0 {
+		user.Roles = []string{"reader"}
+	}
+
+	if err := user.SetPassword(password); err != nil {
+		return nil, serviceInterfaces.NewServiceError("AuthService", serviceInterfaces.ErrorTypeInternal, "设置密码失败", err)
+	}
+
+	if err := s.userRepo.Create(ctx, user); err != nil {
+		return nil, serviceInterfaces.NewServiceError("AuthService", serviceInterfaces.ErrorTypeInternal, "创建用户失败", err)
+	}
+
+	return user, nil
+}
+
+func (s *AuthServiceImpl) authenticateUser(ctx context.Context, username, password, clientIP string) (*usersModel.User, error) {
+	user, err := s.userRepo.GetByUsername(ctx, username)
+	if err != nil {
+		if userRepo.IsNotFoundError(err) {
+			return nil, serviceInterfaces.NewServiceError("AuthService", serviceInterfaces.ErrorTypeNotFound, "用户不存在", err)
+		}
+		return nil, serviceInterfaces.NewServiceError("AuthService", serviceInterfaces.ErrorTypeInternal, "获取用户失败", err)
+	}
+
+	if !user.ValidatePassword(password) {
+		return nil, serviceInterfaces.NewServiceError("AuthService", serviceInterfaces.ErrorTypeUnauthorized, "密码错误", nil)
+	}
+
+	switch user.Status {
+	case usersModel.UserStatusInactive:
+		return nil, serviceInterfaces.NewServiceError("AuthService", serviceInterfaces.ErrorTypeUnauthorized, "账号未激活，请先验证邮箱", nil)
+	case usersModel.UserStatusBanned:
+		return nil, serviceInterfaces.NewServiceError("AuthService", serviceInterfaces.ErrorTypeUnauthorized, "账号已被封禁，请联系管理员", nil)
+	case usersModel.UserStatusDeleted:
+		return nil, serviceInterfaces.NewServiceError("AuthService", serviceInterfaces.ErrorTypeUnauthorized, "账号已删除", nil)
+	case usersModel.UserStatusActive:
+	default:
+		return nil, serviceInterfaces.NewServiceError("AuthService", serviceInterfaces.ErrorTypeInternal, "未知的用户状态", nil)
+	}
+
+	if clientIP == "" {
+		clientIP = "unknown"
+	}
+	if err := s.userRepo.UpdateLastLogin(ctx, user.ID.Hex(), clientIP); err != nil {
+		zap.L().Warn("更新最后登录时间失败", // codeql[go/log-injection]
+			zap.String("user_id", user.ID.Hex()),
+			zap.String("ip", clientIP),
+			zap.Error(err),
+		)
+	}
+
+	return user, nil
+}
+
+func (s *AuthServiceImpl) resolveUserRoles(ctx context.Context, user *usersModel.User) ([]string, error) {
+	userRoles, err := s.authRepo.GetUserRoles(ctx, user.ID.Hex())
+	if err != nil {
+		return nil, err
+	}
+
+	roleNames := make([]string, 0, len(userRoles))
+	for _, role := range userRoles {
+		roleNames = append(roleNames, role.Name)
+	}
+
+	if len(roleNames) == 0 {
+		if len(user.Roles) > 0 {
+			return append([]string(nil), user.Roles...), nil
+		}
+		return []string{"reader"}, nil
+	}
+
+	return roleNames, nil
+}
+
 // convertUserToUserInfo 转换User为UserInfo
 func convertUserToUserInfo(user *usersModel.User, roles []string) *UserInfo {
 	return &UserInfo{
@@ -506,6 +562,7 @@ func convertUserToUserInfo(user *usersModel.User, roles []string) *UserInfo {
 		Username: user.Username,
 		Email:    user.Email,
 		Roles:    roles,
+		Status:   string(user.Status),
 	}
 }
 

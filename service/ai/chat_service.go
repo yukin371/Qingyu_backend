@@ -7,11 +7,10 @@ import (
 	"time"
 
 	aiModels "Qingyu_backend/models/ai"
-	"Qingyu_backend/service/ai/adapter"
 	"Qingyu_backend/service/ai/dto"
-	aiInterfaces "Qingyu_backend/service/interfaces/ai"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.uber.org/zap"
 )
 
 // ChatRepositoryInterface 聊天仓库接口
@@ -29,38 +28,17 @@ type ChatRepositoryInterface interface {
 	GetSessionStatistics(ctx context.Context, projectID string) (*ChatStatistics, error)                                             // 获取会话统计信息
 }
 
-// AIServiceInterface AI服务接口
-type AIServiceInterface interface {
-	GenerateContent(ctx context.Context, req *aiInterfaces.GenerateContentRequest) (*aiInterfaces.GenerateContentResponse, error)
-	GenerateContentStream(ctx context.Context, req *aiInterfaces.GenerateContentRequest) (<-chan *aiInterfaces.GenerateContentResponse, error)
-}
-
-// serviceAdapter 服务适配器，将本地 Service 适配到 AIServiceInterface
-type serviceAdapter struct {
-	service *Service
-}
-
-func (a *serviceAdapter) GenerateContent(ctx context.Context, req *aiInterfaces.GenerateContentRequest) (*aiInterfaces.GenerateContentResponse, error) {
-	return a.service.GenerateContent(ctx, req)
-}
-
-func (a *serviceAdapter) GenerateContentStream(ctx context.Context, req *aiInterfaces.GenerateContentRequest) (<-chan *aiInterfaces.GenerateContentResponse, error) {
-	return a.service.GenerateContentStreamWithInterface(ctx, req)
-}
-
 // ChatService AI聊天服务
 type ChatService struct {
-	aiService      AIServiceInterface
-	adapterManager *adapter.AdapterManager
-	repository     ChatRepositoryInterface
+	textGenerator TextGenerator
+	repository    ChatRepositoryInterface
 }
 
 // NewChatService 创建聊天服务
-func NewChatService(aiService *Service, repository ChatRepositoryInterface) *ChatService {
+func NewChatService(textGenerator TextGenerator, repository ChatRepositoryInterface) *ChatService {
 	return &ChatService{
-		aiService:      &serviceAdapter{service: aiService},
-		adapterManager: aiService.adapterManager,
-		repository:     repository,
+		textGenerator: textGenerator,
+		repository:    repository,
 	}
 }
 
@@ -134,17 +112,13 @@ func (s *ChatService) StartChat(ctx context.Context, req *ChatRequest) (*ChatRes
 	// 调用AI生成响应
 	startTime := time.Now()
 
-	// 准备AI请求 - 使用GenerateContentRequest
-	aiRequest := &aiInterfaces.GenerateContentRequest{
-		Model:  "gpt-4", // 使用默认模型，后续可以从配置读取
-		Prompt: req.Message,
-		Stream: false,
-		Context: map[string]string{
-			"project_id": req.ProjectID,
-			"session_id": req.SessionID,
-		},
-		UserID:    "", // TODO: 从请求中获取用户ID
-		SessionID: req.SessionID,
+	// 准备AI请求
+	aiRequest := &TextGenerateRequest{
+		Model:       "gpt-4", // 使用默认模型，后续可以从配置读取
+		Prompt:      req.Message,
+		ProjectID:   req.ProjectID,
+		MaxTokens:   2000,
+		Temperature: 0.7,
 	}
 
 	// 如果有选项，设置相关参数
@@ -161,7 +135,7 @@ func (s *ChatService) StartChat(ctx context.Context, req *ChatRequest) (*ChatRes
 		// 注意：GenerateOptions 没有 Stop 字段，需要时可以扩展
 	}
 
-	aiResponse, err := s.aiService.GenerateContent(ctx, aiRequest)
+	aiResponse, err := s.generateText(ctx, aiRequest)
 	if err != nil {
 		return nil, fmt.Errorf("生成AI响应失败: %w", err)
 	}
@@ -173,7 +147,7 @@ func (s *ChatService) StartChat(ctx context.Context, req *ChatRequest) (*ChatRes
 		ID:        primitive.NewObjectID(),
 		SessionID: session.SessionID, // 使用SessionID字段
 		Role:      "assistant",
-		Content:   aiResponse.Content,
+		Content:   aiResponse.Text,
 		TokenUsed: aiResponse.TokensUsed,
 		Timestamp: time.Now(),
 	}
@@ -246,16 +220,12 @@ func (s *ChatService) StartChatStream(ctx context.Context, req *ChatRequest) (<-
 		startTime := time.Now()
 
 		// 准备AI请求
-		aiRequest := &aiInterfaces.GenerateContentRequest{
-			Model:  "gpt-4", // 使用默认模型
-			Prompt: req.Message,
-			Stream: true, // 流式生成
-			Context: map[string]string{
-				"project_id": req.ProjectID,
-				"session_id": req.SessionID,
-			},
-			UserID:    "", // TODO: 从请求中获取用户ID
-			SessionID: req.SessionID,
+		aiRequest := &TextGenerateRequest{
+			Model:       "gpt-4", // 使用默认模型
+			Prompt:      req.Message,
+			ProjectID:   req.ProjectID,
+			MaxTokens:   2000,
+			Temperature: 0.7,
 		}
 
 		// 如果有选项，设置相关参数
@@ -271,8 +241,7 @@ func (s *ChatService) StartChatStream(ctx context.Context, req *ChatRequest) (<-
 			}
 		}
 
-		// 调用流式AI生成
-		streamChan, err := s.aiService.GenerateContentStream(ctx, aiRequest)
+		aiResponse, err := s.generateText(ctx, aiRequest)
 		if err != nil {
 			// 发送错误响应
 			select {
@@ -292,37 +261,25 @@ func (s *ChatService) StartChatStream(ctx context.Context, req *ChatRequest) (<-
 			return
 		}
 
-		var fullContent string
-		var totalTokens int
-		var model string
+		fullContent := aiResponse.Text
+		totalTokens := aiResponse.TokensUsed
+		model := aiResponse.Model
 		messageID := primitive.NewObjectID().Hex()
 
-		// 处理流式响应
-		for aiResponse := range streamChan {
-			if aiResponse == nil {
-				continue
-			}
-
-			fullContent += aiResponse.Content
-			totalTokens = aiResponse.TokensUsed
-			model = aiResponse.Model
-
-			// 发送流式响应
-			select {
-			case responseChan <- &StreamChatResponse{
-				SessionID:    session.SessionID,
-				MessageID:    messageID,
-				Content:      fullContent,
-				Delta:        aiResponse.Content,
-				TokensUsed:   totalTokens,
-				Model:        model,
-				ContextUsed:  len(context) > 1,
-				IsComplete:   false,
-				ResponseTime: time.Since(startTime),
-			}:
-			case <-ctx.Done():
-				return
-			}
+		select {
+		case responseChan <- &StreamChatResponse{
+			SessionID:    session.SessionID,
+			MessageID:    messageID,
+			Content:      fullContent,
+			Delta:        fullContent,
+			TokensUsed:   totalTokens,
+			Model:        model,
+			ContextUsed:  len(context) > 1,
+			IsComplete:   false,
+			ResponseTime: time.Since(startTime),
+		}:
+		case <-ctx.Done():
+			return
 		}
 
 		// 发送完成响应
@@ -355,18 +312,31 @@ func (s *ChatService) StartChatStream(ctx context.Context, req *ChatRequest) (<-
 		// 保存AI消息
 		if err := s.repository.CreateMessage(ctx, assistantMessage); err != nil {
 			// 记录错误但不中断流式响应
-			fmt.Printf("保存AI消息失败: %v\n", err)
+			zap.L().Warn("保存AI消息失败",
+				zap.String("session_id", session.SessionID),
+				zap.Error(err),
+			)
 		}
 
 		// 更新会话
 		session.UpdatedAt = time.Now()
 		if err := s.repository.UpdateSession(ctx, session); err != nil {
 			// 记录错误但不中断流式响应
-			fmt.Printf("保存会话失败: %v\n", err)
+			zap.L().Warn("保存会话失败",
+				zap.String("session_id", session.SessionID),
+				zap.Error(err),
+			)
 		}
 	}()
 
 	return responseChan, nil
+}
+
+func (s *ChatService) generateText(ctx context.Context, req *TextGenerateRequest) (*TextGenerateResponse, error) {
+	if s == nil || s.textGenerator == nil {
+		return nil, fmt.Errorf("AI text generator is not configured")
+	}
+	return s.textGenerator.GenerateText(ctx, req)
 }
 
 // buildChatContext 构建对话上下文

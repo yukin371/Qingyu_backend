@@ -28,6 +28,14 @@ type QuotaRepository interface {
 	GetQuotaStatistics(ctx context.Context, userID string) (*QuotaStatistics, error)
 	GetTotalConsumption(ctx context.Context, userID string, quotaType aiModels.QuotaType, startTime, endTime time.Time) (int, error)
 
+	// 仪表盘查询
+	GetDashboardSummary(ctx context.Context) (*aiModels.DashboardSummary, error)
+	GetQuotaDistribution(ctx context.Context) (*aiModels.QuotaDistribution, error)
+	GetTopConsumers(ctx context.Context, limit int) ([]aiModels.UserQuotaRanking, error)
+	GetConsumptionTrend(ctx context.Context, days int) ([]aiModels.TrendPoint, error)
+	GetConsumptionSummary(ctx context.Context, startTime, endTime time.Time, workflowType, groupBy string, page, pageSize int) (*aiModels.QuotaConsumptionSummary, error)
+	ListUserQuotas(ctx context.Context, role, status, search string, page, limit int) ([]*aiModels.UserQuotaListItem, int64, error)
+
 	// Health 健康检查
 	Health(ctx context.Context) error
 }

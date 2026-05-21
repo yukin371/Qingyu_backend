@@ -17,7 +17,6 @@ func InitDB() error {
 	// 可选：为了兼容性，设置全局变量指向ServiceContainer的连接
 	// 但这需要在InitServices之后调用，所以这里暂时返回nil
 
-	fmt.Println("InitDB: MongoDB初始化已迁移到ServiceContainer")
 	return nil
 }
 
@@ -33,6 +32,5 @@ func InitServices() error {
 		return fmt.Errorf("初始化服务失败: %w", err)
 	}
 
-	fmt.Println("Successfully initialized all services")
 	return nil
 }

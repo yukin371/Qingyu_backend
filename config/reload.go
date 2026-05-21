@@ -1,8 +1,9 @@
 package config
 
 import (
-	"fmt"
 	"sync"
+
+	"go.uber.org/zap"
 )
 
 var (
@@ -35,7 +36,9 @@ func handleConfigReload() {
 		func() {
 			defer func() {
 				if r := recover(); r != nil {
-					fmt.Printf("Error executing reload handler %s: %v\n", name, r)
+					zap.L().Error("Error executing reload handler",
+						zap.String("handler", name),
+						zap.Any("panic", r))
 				}
 			}()
 			handler()
@@ -46,7 +49,7 @@ func handleConfigReload() {
 // EnableHotReload 启用配置热重载
 func EnableHotReload() {
 	WatchConfig(func() {
-		fmt.Println("Configuration changed, reloading...")
+		zap.L().Info("Configuration changed, reloading")
 		handleConfigReload()
 	})
 }

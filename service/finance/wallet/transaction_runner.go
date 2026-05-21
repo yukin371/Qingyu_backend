@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	pkgtransaction "Qingyu_backend/pkg/transaction"
-	sharedRepo "Qingyu_backend/repository/interfaces/shared"
+	financeRepo "Qingyu_backend/repository/interfaces/finance"
 )
 
 // TransactionRunner 定义钱包域的事务入口，屏蔽底层仓储事务实现细节。
@@ -14,7 +14,7 @@ type TransactionRunner interface {
 }
 
 type repositoryTransactionRunner struct {
-	walletRepo sharedRepo.WalletRepository
+	walletRepo financeRepo.WalletRepository
 }
 
 type genericTransactionRunner struct {
@@ -22,7 +22,7 @@ type genericTransactionRunner struct {
 }
 
 // NewRepositoryTransactionRunner 使用钱包仓储提供事务执行能力。
-func NewRepositoryTransactionRunner(walletRepo sharedRepo.WalletRepository) TransactionRunner {
+func NewRepositoryTransactionRunner(walletRepo financeRepo.WalletRepository) TransactionRunner {
 	return &repositoryTransactionRunner{walletRepo: walletRepo}
 }
 

@@ -1,6 +1,7 @@
 package project
 
 import (
+	"Qingyu_backend/models/dto"
 	"Qingyu_backend/models/writer"
 	"context"
 	"fmt"
@@ -34,16 +35,27 @@ func NewProjectService(
 	}
 }
 
+const contextUserIDKey = "userId"
+
+func userIDFromContext(ctx context.Context) (string, bool) {
+	userID, ok := ctx.Value(contextUserIDKey).(string)
+	return userID, ok && userID != ""
+}
+
+func contextWithUserID(ctx context.Context, userID string) context.Context {
+	return context.WithValue(ctx, contextUserIDKey, userID)
+}
+
 // CreateProject 创建项目
-func (s *ProjectService) CreateProject(ctx context.Context, req *CreateProjectRequest) (*writer.Project, error) {
+func (s *ProjectService) CreateProject(ctx context.Context, req *dto.CreateProjectRequest) (*writer.Project, error) {
 	// 1. 参数验证
 	if err := s.validateCreateProjectRequest(req); err != nil {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "参数验证失败", err.Error(), err)
 	}
 
 	// 2. 获取用户ID
-	userID, ok := ctx.Value("userId").(string)
-	if !ok || userID == "" {
+	userID, ok := userIDFromContext(ctx)
+	if !ok {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorUnauthorized, "用户未登录", "", nil)
 	}
 
@@ -97,8 +109,8 @@ func (s *ProjectService) GetProject(ctx context.Context, projectID string) (*wri
 	}
 
 	// 2. 权限检查
-	userID, ok := ctx.Value("userId").(string)
-	if !ok || userID == "" {
+	userID, ok := userIDFromContext(ctx)
+	if !ok {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorUnauthorized, "用户未登录", "", nil)
 	}
 
@@ -110,10 +122,10 @@ func (s *ProjectService) GetProject(ctx context.Context, projectID string) (*wri
 }
 
 // ListMyProjects 获取我的项目列表
-func (s *ProjectService) ListMyProjects(ctx context.Context, req *ListProjectsRequest) (*ListProjectsResponse, error) {
+func (s *ProjectService) ListMyProjects(ctx context.Context, req *dto.ListProjectsRequest) (*ListProjectsResponse, error) {
 	// 1. 获取用户ID
-	userID, ok := ctx.Value("userId").(string)
-	if !ok || userID == "" {
+	userID, ok := userIDFromContext(ctx)
+	if !ok {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorUnauthorized, "用户未登录", "", nil)
 	}
 
@@ -161,7 +173,7 @@ func (s *ProjectService) ListMyProjects(ctx context.Context, req *ListProjectsRe
 }
 
 // UpdateProject 更新项目
-func (s *ProjectService) UpdateProject(ctx context.Context, projectID string, req *UpdateProjectRequest) error {
+func (s *ProjectService) UpdateProject(ctx context.Context, projectID string, req *dto.UpdateProjectRequest) error {
 	// 1. 查询项目
 	project, err := s.projectRepo.GetByID(ctx, projectID)
 	if err != nil {
@@ -173,8 +185,8 @@ func (s *ProjectService) UpdateProject(ctx context.Context, projectID string, re
 	}
 
 	// 2. 权限检查
-	userID, ok := ctx.Value("userId").(string)
-	if !ok || userID == "" {
+	userID, ok := userIDFromContext(ctx)
+	if !ok {
 		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorUnauthorized, "用户未登录", "", nil)
 	}
 
@@ -243,8 +255,8 @@ func (s *ProjectService) DeleteProject(ctx context.Context, projectID string) er
 	}
 
 	// 2. 权限检查（只有所有者可以删除）
-	userID, ok := ctx.Value("userId").(string)
-	if !ok || userID == "" {
+	userID, ok := userIDFromContext(ctx)
+	if !ok {
 		return pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorUnauthorized, "用户未登录", "", nil)
 	}
 
@@ -330,14 +342,14 @@ func (s *ProjectService) GetByIDWithoutAuth(ctx context.Context, projectID strin
 // GetProjectList 获取项目列表（兼容API层调用）
 func (s *ProjectService) GetProjectList(ctx context.Context, userID, status string, limit, offset int64) ([]*writer.Project, error) {
 	// 构建请求
-	req := &ListProjectsRequest{
+	req := &dto.ListProjectsRequest{
 		Page:     int(offset/limit) + 1,
 		PageSize: int(limit),
 		Status:   status,
 	}
 
 	// 使用上下文注入用户ID
-	ctxWithUser := context.WithValue(ctx, "userId", userID)
+	ctxWithUser := contextWithUserID(ctx, userID)
 
 	// 调用ListMyProjects
 	resp, err := s.ListMyProjects(ctxWithUser, req)
@@ -358,7 +370,7 @@ func (s *ProjectService) UpdateProjectByID(ctx context.Context, projectID, userI
 	status := string(req.Status)
 	tags := req.Tags
 
-	updateReq := &UpdateProjectRequest{
+	updateReq := &dto.UpdateProjectRequest{
 		Title:    &title,
 		Summary:  &summary,
 		CoverURL: &coverURL,
@@ -368,7 +380,7 @@ func (s *ProjectService) UpdateProjectByID(ctx context.Context, projectID, userI
 	}
 
 	// 使用上下文注入用户ID
-	ctxWithUser := context.WithValue(ctx, "userId", userID)
+	ctxWithUser := contextWithUserID(ctx, userID)
 
 	return s.UpdateProject(ctxWithUser, projectID, updateReq)
 }
@@ -376,7 +388,7 @@ func (s *ProjectService) UpdateProjectByID(ctx context.Context, projectID, userI
 // DeleteProjectByID 删除项目（兼容API层调用）
 func (s *ProjectService) DeleteProjectByID(ctx context.Context, projectID, userID string) error {
 	// 使用上下文注入用户ID
-	ctxWithUser := context.WithValue(ctx, "userId", userID)
+	ctxWithUser := contextWithUserID(ctx, userID)
 
 	return s.DeleteProject(ctxWithUser, projectID)
 }
@@ -485,7 +497,7 @@ func (s *ProjectService) SetProjectDefaults(project *writer.Project) {
 }
 
 // 私有方法
-func (s *ProjectService) validateCreateProjectRequest(req *CreateProjectRequest) error {
+func (s *ProjectService) validateCreateProjectRequest(req *dto.CreateProjectRequest) error {
 	if req.Title == "" {
 		return fmt.Errorf("项目标题不能为空")
 	}

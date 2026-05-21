@@ -90,28 +90,29 @@ type ServiceContainer struct {
 	serviceMetrics map[string]*metrics.ServiceMetrics
 
 	// 业务服务
-	userService           userInterface.UserService
-	aiService             *aiService.Service
-	bookstoreService      bookstoreService.BookstoreService
-	chapterService        bookstoreService.ChapterService
-	bookDetailService     bookstoreService.BookDetailService
-	bookRatingService     bookstoreService.BookRatingService
-	bookStatisticsService bookstoreService.BookStatisticsService
-	readerService         *readingService.ReaderService
-	readingStatsService   *readingStatsService.ReadingStatsService
-	commentService        *socialService.CommentService
-	likeService           *socialService.LikeService
-	collectionService     *socialService.CollectionService
-	followService         *socialService.FollowService
-	readingHistoryService *readingService.ReadingHistoryService
-	bookmarkService       readingService.BookmarkService
-	projectService        *projectService.ProjectService
+	userService            userInterface.UserService
+	aiService              *aiService.Service
+	bookstoreService       bookstoreService.BookstoreService
+	chapterService         bookstoreService.ChapterService
+	chapterPurchaseService bookstoreService.ChapterPurchaseService
+	bookDetailService      bookstoreService.BookDetailService
+	bookRatingService      bookstoreService.BookRatingService
+	bookStatisticsService  bookstoreService.BookStatisticsService
+	readerService          *readingService.ReaderService
+	readingStatsService    *readingStatsService.ReadingStatsService
+	commentService         *socialService.CommentService
+	likeService            *socialService.LikeService
+	collectionService      *socialService.CollectionService
+	followService          *socialService.FollowService
+	readingHistoryService  *readingService.ReadingHistoryService
+	bookmarkService        readingService.BookmarkService
+	projectService         *projectService.ProjectService
 
 	// AI 相关服务
-	quotaService  *aiService.QuotaService
-	chatService   *aiService.ChatService
-	phase3Client  *aiService.Phase3Client
-	unifiedClient *aiService.UnifiedClient
+	quotaService       *aiService.QuotaService
+	chatService        *aiService.ChatService
+	phase3Client       *aiService.Phase3Client
+	unifiedClient      *aiService.UnifiedClient
 	storyContextEngine *aiService.StoryContextEngine
 
 	// Shared services
@@ -251,6 +252,14 @@ func (c *ServiceContainer) GetChapterService() (bookstoreService.ChapterService,
 		return nil, fmt.Errorf("ChapterService未初始化")
 	}
 	return c.chapterService, nil
+}
+
+// GetChapterPurchaseService 获取章节购买服务
+func (c *ServiceContainer) GetChapterPurchaseService() (bookstoreService.ChapterPurchaseService, error) {
+	if c.chapterPurchaseService == nil {
+		return nil, fmt.Errorf("ChapterPurchaseService未初始化")
+	}
+	return c.chapterPurchaseService, nil
 }
 
 // getChapterService 内部方法：获取章节服务（简化版，用于依赖注入）
@@ -747,7 +756,7 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 		fmt.Println("缓存配置已启用，但Redis客户端未初始化")
 	}
 
-	c.userService = userService.NewUserService(userRepo, authRepo)
+	c.userService = userService.NewUserService(userRepo)
 	// 用户服务实现了BaseService接口，可以注册
 	if err := c.RegisterService("UserService", c.userService); err != nil {
 		return fmt.Errorf("注册用户服务失败: %w", err)
@@ -915,11 +924,6 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	c.quotaService = aiService.NewQuotaService(quotaRepo)
 	// 注意：QuotaService 不完全实现 BaseService，不注册到 services map
 
-	// 创建聊天服务（使用临时内存存储）
-	chatRepo := aiService.NewInMemoryChatRepository()
-	c.chatService = aiService.NewChatService(c.aiService, chatRepo)
-	// 注意：ChatService 不完全实现 BaseService，不注册到 services map
-
 	// ============ 5.1 初始化 Phase3 gRPC 客户端 ============
 	aiCfg := config.GlobalConfig.AI
 	if aiCfg != nil && aiCfg.AIService != nil && aiCfg.AIService.Endpoint != "" {
@@ -934,6 +938,11 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	} else {
 		fmt.Println("警告: AI服务配置为空，跳过Phase3Client初始化")
 	}
+
+	// 创建聊天服务（使用临时内存存储）
+	chatRepo := aiService.NewInMemoryChatRepository()
+	c.chatService = aiService.NewChatService(aiService.NewPhase3TextGenerator(c.phase3Client), chatRepo)
+	// 注意：ChatService 不完全实现 BaseService，不注册到 services map
 
 	// ============ 5.2 初始化统一 gRPC 客户端 ============
 	if aiCfg != nil && aiCfg.AIService != nil && aiCfg.AIService.Endpoint != "" {
@@ -1067,7 +1076,7 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 		permissionService,
 		authRepo,
 		oauthRepo,
-		c.userService,
+		userRepo,
 		sessionService,
 	)
 
@@ -1274,9 +1283,26 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 		return fmt.Errorf("mongoTransactionRunner 类型不正确")
 	}
 	c.membershipService = financeService.NewMembershipServiceWithDependencies(membershipRepo, walletRepo, mongoTxRunner)
+	if c.quotaService != nil {
+		c.quotaService.SetProfileResolver(aiService.NewQuotaProfileResolver(userRepo, c.membershipService))
+	}
+	if membershipImpl, ok := c.membershipService.(*financeService.MembershipServiceImpl); ok && c.quotaService != nil {
+		membershipImpl.SetQuotaRefreshHandler(func(ctx context.Context, userID string) error {
+			return c.quotaService.RefreshUserQuotaProfile(ctx, userID)
+		})
+	}
 
 	authorRevenueRepo = c.repositoryFactory.CreateAuthorRevenueRepository()
 	c.authorRevenueService = financeService.NewAuthorRevenueServiceWithDependencies(authorRevenueRepo, walletRepo, mongoTxRunner)
+	chapterPurchaseRepo := c.repositoryFactory.CreateChapterPurchaseRepository()
+	c.chapterPurchaseService = bookstoreService.NewChapterPurchaseServiceWithRevenue(
+		chapterRepo,
+		chapterPurchaseRepo,
+		bookRepo,
+		c.walletService,
+		c.authorRevenueService,
+		bookstoreCacheService,
+	)
 
 	fmt.Println("  ✓ Finance服务初始化完成")
 
@@ -1660,10 +1686,10 @@ type ServiceHealthStatus struct {
 
 // InfrastructureHealthResult 基础设施健康检查结果
 type InfrastructureHealthResult struct {
-	Status        string                       `json:"status"` // "healthy", "degraded", "unhealthy"
+	Status        string                          `json:"status"` // "healthy", "degraded", "unhealthy"
 	Services      map[string]*ServiceHealthStatus `json:"services"`
-	Version       string                       `json:"version"`
-	UptimeSeconds int64                        `json:"uptime_seconds"`
+	Version       string                          `json:"version"`
+	UptimeSeconds int64                           `json:"uptime_seconds"`
 }
 
 // startTime 记录服务启动时间
@@ -1673,8 +1699,8 @@ var startTime = time.Now()
 // 包括 MongoDB、Redis、Milvus、AI gRPC 服务
 func (c *ServiceContainer) GetInfrastructureHealth(ctx context.Context) *InfrastructureHealthResult {
 	result := &InfrastructureHealthResult{
-		Services: make(map[string]*ServiceHealthStatus),
-		Version:  "1.0.0",
+		Services:      make(map[string]*ServiceHealthStatus),
+		Version:       "1.0.0",
 		UptimeSeconds: int64(time.Since(startTime).Seconds()),
 	}
 

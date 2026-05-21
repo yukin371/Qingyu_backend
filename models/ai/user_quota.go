@@ -68,7 +68,7 @@ type QuotaTransaction struct {
 
 // CollectionName 指定集合名
 func (UserQuota) CollectionName() string {
-	return "ai_user_quotas"
+	return "ai_quotas"
 }
 
 // CollectionName 指定集合名
@@ -238,10 +238,12 @@ func GetDefaultQuota(userRole, membershipLevel string) int {
 
 	switch userRole {
 	case "reader":
-		if membershipLevel == "vip" {
+		switch membershipLevel {
+		case "vip", "vip_monthly", "vip_yearly", "super_vip":
 			return config.VIPReaderDailyQuota
+		default:
+			return config.ReaderDailyQuota
 		}
-		return config.ReaderDailyQuota
 
 	case "writer":
 		switch membershipLevel {

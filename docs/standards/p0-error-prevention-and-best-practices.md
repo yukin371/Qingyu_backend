@@ -675,7 +675,7 @@ jobs:
 
 ## 十二、相关文档
 
-- [实施路线图](../plans/2026-03-06-p0-implementation-roadmap.md)
+- [实施路线图](../../../docs/plans/submodules/backend/architecture/2026-03-06-p0-implementation-roadmap.md)
 - [代码规范](./coding/)
 - [API设计规范](./api/)
 - [测试规范](./testing/)

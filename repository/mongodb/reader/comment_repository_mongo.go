@@ -2,6 +2,7 @@ package reader
 
 import (
 	"Qingyu_backend/models/social"
+	pkgtransaction "Qingyu_backend/pkg/transaction"
 	"context"
 	"fmt"
 	"time"
@@ -805,15 +806,7 @@ func (r *MongoCommentRepository) Health(ctx context.Context) error {
 
 // RunInTransaction 在事务中执行评论相关操作
 func (r *MongoCommentRepository) RunInTransaction(ctx context.Context, fn func(context.Context) error) error {
-	session, err := r.collection.Database().Client().StartSession()
-	if err != nil {
-		return fmt.Errorf("failed to start comment transaction session: %w", err)
-	}
-	defer session.EndSession(ctx)
-
-	_, err = session.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
-		return nil, fn(sessCtx)
-	})
+	err := pkgtransaction.RunMongoTransaction(ctx, r.collection.Database().Client(), fn)
 	if err != nil {
 		return fmt.Errorf("comment transaction failed: %w", err)
 	}

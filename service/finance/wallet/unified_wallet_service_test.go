@@ -96,14 +96,15 @@ func TestUnifiedWalletService_Recharge(t *testing.T) {
 	assert.Equal(t, int64(1500), int64(repo.wallets["user123"].Balance))
 }
 
-func TestUnifiedWalletService_Recharge_WalletNotFound(t *testing.T) {
+func TestUnifiedWalletService_Recharge_AutoCreatesWalletWhenMissing(t *testing.T) {
 	repo := NewMockWalletRepositoryV2()
 	svc := NewUnifiedWalletService(repo)
 
 	tx, err := svc.Recharge(context.Background(), "user_not_exist", 500, "alipay")
-	require.Error(t, err)
-	assert.Nil(t, tx)
-	assert.Contains(t, err.Error(), "获取钱包失败")
+	require.NoError(t, err)
+	require.NotNil(t, tx)
+	require.Contains(t, repo.wallets, "user_not_exist")
+	assert.Equal(t, int64(500), int64(repo.wallets["user_not_exist"].Balance))
 }
 
 func TestUnifiedWalletService_Consume(t *testing.T) {
@@ -128,7 +129,9 @@ func TestUnifiedWalletService_Consume_WalletNotFound(t *testing.T) {
 	tx, err := svc.Consume(context.Background(), "user_not_exist", 300, "购买书籍")
 	require.Error(t, err)
 	assert.Nil(t, tx)
-	assert.Contains(t, err.Error(), "获取钱包失败")
+	assert.Contains(t, err.Error(), "余额不足")
+	require.Contains(t, repo.wallets, "user_not_exist")
+	assert.Equal(t, int64(0), int64(repo.wallets["user_not_exist"].Balance))
 }
 
 func TestUnifiedWalletService_Transfer(t *testing.T) {
@@ -163,10 +166,12 @@ func TestUnifiedWalletService_Transfer_SourceWalletNotFound(t *testing.T) {
 	tx, err := svc.Transfer(context.Background(), "user_from_not_exist", "user_to", 300, "转账")
 	require.Error(t, err)
 	assert.Nil(t, tx)
-	assert.Contains(t, err.Error(), "获取源钱包失败")
+	assert.Contains(t, err.Error(), "余额不足")
+	require.Contains(t, repo.wallets, "user_from_not_exist")
+	assert.Equal(t, int64(0), int64(repo.wallets["user_from_not_exist"].Balance))
 }
 
-func TestUnifiedWalletService_Transfer_TargetWalletNotFound(t *testing.T) {
+func TestUnifiedWalletService_Transfer_AutoCreatesTargetWalletWhenMissing(t *testing.T) {
 	repo := NewMockWalletRepositoryV2()
 	repo.wallets["user_from"] = &financeModel.Wallet{
 		UserID:  "user_from",
@@ -176,9 +181,11 @@ func TestUnifiedWalletService_Transfer_TargetWalletNotFound(t *testing.T) {
 	svc := NewUnifiedWalletService(repo)
 
 	tx, err := svc.Transfer(context.Background(), "user_from", "user_to_not_exist", 300, "转账")
-	require.Error(t, err)
-	assert.Nil(t, tx)
-	assert.Contains(t, err.Error(), "获取目标钱包失败")
+	require.NoError(t, err)
+	require.NotNil(t, tx)
+	require.Contains(t, repo.wallets, "user_to_not_exist")
+	assert.Equal(t, int64(700), int64(repo.wallets["user_from"].Balance))
+	assert.Equal(t, int64(300), int64(repo.wallets["user_to_not_exist"].Balance))
 }
 
 func TestUnifiedWalletService_GetTransaction(t *testing.T) {

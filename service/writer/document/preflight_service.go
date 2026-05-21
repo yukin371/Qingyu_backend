@@ -3,6 +3,7 @@ package document
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"Qingyu_backend/models/writer"
 	"Qingyu_backend/repository"
@@ -64,13 +65,18 @@ type InvalidTarget struct {
 
 // PreflightServiceImpl 预检查服务实现
 type PreflightServiceImpl struct {
-	docRepo writerInterface.DocumentRepository
+	docRepo     writerInterface.DocumentRepository
+	contentRepo writerInterface.DocumentContentRepository
 }
 
 // NewPreflightService 创建预检查服务
-func NewPreflightService(docRepo writerInterface.DocumentRepository) PreflightService {
+func NewPreflightService(
+	docRepo writerInterface.DocumentRepository,
+	contentRepo writerInterface.DocumentContentRepository,
+) PreflightService {
 	return &PreflightServiceImpl{
-		docRepo: docRepo,
+		docRepo:     docRepo,
+		contentRepo: contentRepo,
 	}
 }
 
@@ -86,6 +92,7 @@ func (s *PreflightServiceImpl) ValidateBatchOperation(
 	if options == nil {
 		options = &PreflightOptions{}
 	}
+	hasVersionConflict := false
 
 	result := &PreflightResult{
 		ValidIDs:    make([]string, 0),
@@ -138,20 +145,41 @@ func (s *PreflightServiceImpl) ValidateBatchOperation(
 		// 版本检查
 		if options.ExpectedVersions != nil {
 			if expectedVersion, ok := options.ExpectedVersions[id]; ok {
-				// TODO: 添加Version字段到Document模型后实现
-				// if doc.Version != expectedVersion {
-				// 	if options.ConflictPolicy == writer.ConflictPolicyAbort {
-				// 		result.InvalidIDs = append(result.InvalidIDs, InvalidTarget{
-				// 			ID:     id,
-				// 			Reason: "version conflict",
-				// 			Code:   "version_conflict",
-				// 		})
-				// 		continue
-				// 	}
-				// 	result.Warnings = append(result.Warnings,
-				// 		fmt.Sprintf("Document %s has version conflict, will overwrite", id))
-				// }
-				_ = expectedVersion // 占位，避免未使用变量错误
+				if s.contentRepo == nil {
+					return nil, nil, fmt.Errorf("expectedVersions 预检查依赖 DocumentContentRepository")
+				}
+
+				currentVersion := 1
+				content, err := s.contentRepo.GetByDocumentID(ctx, id)
+				if err != nil {
+					return nil, nil, fmt.Errorf("查询文档 %s 版本失败: %w", id, err)
+				}
+				if content != nil && content.Version > 0 {
+					currentVersion = content.Version
+				}
+
+				if currentVersion != expectedVersion {
+					switch options.ConflictPolicy {
+					case writer.ConflictPolicyOverwrite:
+						result.Warnings = append(result.Warnings,
+							fmt.Sprintf("Document %s has version conflict, will overwrite (expected=%d current=%d)",
+								id, expectedVersion, currentVersion))
+					case writer.ConflictPolicySkip:
+						result.SkippedIDs = append(result.SkippedIDs, id)
+						result.Warnings = append(result.Warnings,
+							fmt.Sprintf("Document %s has version conflict, skipped (expected=%d current=%d)",
+								id, expectedVersion, currentVersion))
+						continue
+					default:
+						hasVersionConflict = true
+						result.InvalidIDs = append(result.InvalidIDs, InvalidTarget{
+							ID:     id,
+							Reason: fmt.Sprintf("version conflict: expected=%d current=%d", expectedVersion, currentVersion),
+							Code:   "version_conflict",
+						})
+						continue
+					}
+				}
 			}
 		}
 
@@ -180,6 +208,9 @@ func (s *PreflightServiceImpl) ValidateBatchOperation(
 
 	// 4. 如果要求原子操作且有无效ID，返回错误
 	if len(result.InvalidIDs) > 0 && options.ConflictPolicy == writer.ConflictPolicyAbort {
+		if hasVersionConflict {
+			return summary, result, ErrVersionConflict
+		}
 		return summary, result, ErrInvalidTargetID
 	}
 

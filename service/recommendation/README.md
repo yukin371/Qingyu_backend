@@ -79,7 +79,7 @@ graph TB
 ### 依赖的模块
 - `models/recommendation` - 推荐数据模型
 - `models/shared/types` - 共享类型定义
-- `repository/interfaces/shared` - 推荐仓储接口
+- `repository/interfaces/recommendation` - 推荐仓储接口
 
 ### 被依赖的模块
 - `api/v1/bookstore` - 书城推荐API

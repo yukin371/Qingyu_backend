@@ -1,6 +1,7 @@
 package writer
 
 import (
+	"Qingyu_backend/models/writer/base"
 	"testing"
 )
 
@@ -114,4 +115,43 @@ func TestCharacterRelation_IsValidAtChapter_NonExistentChapter(t *testing.T) {
 // 辅助函数：返回字符串指针
 func strPtr(s string) *string {
 	return &s
+}
+
+func TestCharacterEntityTypeField(t *testing.T) {
+	c := Character{
+		NamedEntity: base.NamedEntity{Name: "测试角色"},
+		EntityType:  EntityTypeCharacter,
+		StateFields: map[string]StateValue{
+			"恐惧值": {Current: 30.0, Min: ptrFloat64(0), Max: ptrFloat64(100)},
+		},
+	}
+	if c.EntityType != EntityTypeCharacter {
+		t.Errorf("expected character, got %s", c.EntityType)
+	}
+	if c.StateFields["恐惧值"].Current != 30.0 {
+		t.Errorf("expected 30, got %v", c.StateFields["恐惧值"].Current)
+	}
+	if !EntityTypeCharacter.IsValid() {
+		t.Error("EntityTypeCharacter should be valid")
+	}
+	if EntityType("invalid").IsValid() {
+		t.Error("invalid EntityType should not be valid")
+	}
+}
+
+func ptrFloat64(v float64) *float64 { return &v }
+
+func TestCharacterRelationCrossType(t *testing.T) {
+	r := CharacterRelation{
+		FromID:   "char-1",
+		ToID:     "item-1",
+		FromType: EntityTypeCharacter,
+		ToType:   EntityTypeItem,
+	}
+	if r.FromType != EntityTypeCharacter {
+		t.Errorf("expected character, got %s", r.FromType)
+	}
+	if r.ToType != EntityTypeItem {
+		t.Errorf("expected item, got %s", r.ToType)
+	}
 }

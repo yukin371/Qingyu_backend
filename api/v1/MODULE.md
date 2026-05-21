@@ -1,6 +1,6 @@
 # API v1
 
-> 最后更新：2026-03-29
+> 最后更新：2026-05-05
 
 ## 职责
 
@@ -20,8 +20,9 @@ Gin Router → Middleware（Auth/CORS/RateLimit） → Handler → Service → R
 - **4 位错误码**：业务错误码为 4 位数字（1001 参数错误、2001 用户不存在等），禁止用 HTTP 状态码作为业务码
 - **前端前缀自动添加**：前端 HTTP 拦截器自动加 `/api/v1`，后端路由必须注册在此前缀下
 - **字段名转换**：后端返回 `snake_case`，前端拦截器自动转 `camelCase`，后端无需处理
-- **shared/ 公共层**：`api/v1/shared/` 包含通用的请求验证、响应构建、认证处理，新 API 模块应复用而非重写
+- **shared/ 公共层**：`api/v1/shared/` 包含通用的请求验证、响应构建、认证处理，新 API 模块应复用而非重写；其中标准认证/OAuth HTTP owner 已收敛到 `api/v1/shared/auth_api.go` 与 `api/v1/shared/oauth_api.go`
 - **Swagger 注解**：每个 API 端点必须有 Swagger 注解，用于自动生成文档和 Orval 前端类型
+- **运行时输出禁区**：handler 正常请求路径不得使用 `fmt.Print*`、`println` 或 JSON dump 写 stdout；已知 writer 输出点已在 2026-05-05 清理，后续排障应走 logger / middleware，并把临时输出作为风险尾项记录。
 
 ## 辅助函数使用规范（强制）
 
@@ -34,9 +35,38 @@ Gin Router → Middleware（Auth/CORS/RateLimit） → Handler → Service → R
 | 获取用户名 | `c.Get("username")` + 类型断言 | `shared.GetUserName(c)` |
 | 获取用户角色 | `c.Get("roles")` + 类型断言 | `shared.GetUserRoles(c)` |
 | JSON 绑定 | `c.ShouldBindJSON` + err 响应 | `shared.BindJSON(c, &req)` |
+| 可选 JSON 绑定 | 直接忽略 `c.ShouldBindJSON` 错误 | `shared.BindJSONOptional(c, &req)` |
+| 兼容 JSON 绑定文案 | 手写 `请求参数错误: ...` | `shared.BindJSONWithMessage(c, &req, prefix)` |
+| Bearer Token（必需） | `c.GetHeader("Authorization")` + 手动裁剪 | `shared.GetBearerToken(c)` |
+| Bearer Token（可选） | `c.GetHeader("Authorization")` + 静默返回 | `shared.GetBearerTokenOptional(c)` |
 | 路径参数 | `c.Param` + 空值校验 | `shared.GetRequiredParam(c, key, name)` |
-| 分页参数 | 手动 `strconv.Atoi` | `shared.GetPaginationParamsStandard(c)` |
+| 兼容路径参数别名 | 手写 `projectId` / `id` fallback | `shared.GetFirstParam(c, "projectId", "id")` 后保留业务层响应语义 |
+| 分页参数 | 手动 `strconv.Atoi` | `shared.GetPaginationParamsStandard(c)` 或指定默认值/参数别名的 `shared.GetPaginationParams...` |
+| 业务整数 query | 手动 `strconv.Atoi` + 范围判断 | `shared.GetIntQueryInRange(c, key, defaultValue, min, max)` 后按业务语义返回错误或默认值 |
 | 传递 userID 到 service | `context.WithValue(ctx, "userId", ...)` | `shared.AddUserIDToContext(c)` |
+
+标准分页 helper 默认只读取 `size`；若历史接口使用 `pageSize` 或 `page_size`，必须通过 `shared.GetPaginationParamsWithSizeKeys(c, ...)` 显式声明兼容参数名和优先级，禁止在 handler 内重复实现分页解析。
+
+`GetFirstParam` 与 `GetIntQueryInRange` 已用于收口 writer 的 `projectId/id` 兼容 path 与 `limit/days` 业务数值 query。后续新增 helper 前必须先确认该参数是否属于通用 API 规则；纯业务过滤条件可以保留在模块 handler，但需要避免非法值静默变成错误业务值。
+
+## Auth 边界
+
+- 标准认证/OAuth 路由 owner：`api/v1/shared/*`
+- 用户域兼容认证入口：`api/v1/user/handler/auth_handler.go`
+- `api/v1/auth/` 历史包已退场，不应再新增或恢复第二套 auth API owner
+
+### 当前已固化的兼容差异
+
+- `POST /api/v1/shared/auth/register`：标准入口，启用邮箱验证码后必须提供并通过 `verification_code`
+- `POST /api/v1/shared/auth/register`：用户名/邮箱重复时会返回明确的冲突响应，而不是兜底 500
+- `POST /api/v1/user/auth/register`：兼容入口，当前仍保持“不要求 `verification_code`”的旧语义
+- `POST /api/v1/shared/auth/login`：标准入口，统一返回 `登录失败: ...` 风格的未授权提示
+- `POST /api/v1/shared/auth/login`：请求体字段缺失等校验错误会在进入 service 前直接返回 400 `请求参数错误: ...`
+- `POST /api/v1/user/auth/login`：兼容入口，对账号不存在/密码错误统一返回 `用户名或密码错误`，并保留旧错误映射
+- `POST /api/v1/shared/auth/logout`：缺少 Bearer Token 时返回未认证错误
+- `POST /api/v1/user/auth/logout`：缺少 Bearer Token 时保持幂等成功，避免破坏旧前端/旧客户端流程
+
+以上差异已由 `test/api/auth_api_test.go` 与 `api/v1/user/handler/auth_handler_logout_test.go` 覆盖；后续若要继续收薄，必须先统一外部契约，再调整实现。
 
 ### Context Key 统一
 

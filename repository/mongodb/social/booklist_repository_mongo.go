@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"time"
 
+	pkgtransaction "Qingyu_backend/pkg/transaction"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -709,15 +710,7 @@ func (r *MongoBookListRepository) Health(ctx context.Context) error {
 
 // RunInTransaction 在事务中执行书单相关操作
 func (r *MongoBookListRepository) RunInTransaction(ctx context.Context, fn func(context.Context) error) error {
-	session, err := r.GetDB().Client().StartSession()
-	if err != nil {
-		return fmt.Errorf("failed to start booklist transaction session: %w", err)
-	}
-	defer session.EndSession(ctx)
-
-	_, err = session.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
-		return nil, fn(sessCtx)
-	})
+	err := pkgtransaction.RunMongoTransaction(ctx, r.GetDB().Client(), fn)
 	if err != nil {
 		return fmt.Errorf("booklist transaction failed: %w", err)
 	}

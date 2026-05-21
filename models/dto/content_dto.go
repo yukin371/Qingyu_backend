@@ -1,17 +1,20 @@
 package dto
 
-import "time"
+import (
+	"Qingyu_backend/models/writer"
+	"time"
+)
 
 // ============================================================================
 // 内容管理模块统一 DTO 定义
 // ============================================================================
 
 // 本文件包含内容管理模块（Writer模块）的所有DTO定义
-// 用于替代 service/interfaces/writer/dto.go 和 service/writer/*/project_dto.go 中的重复定义
+// 用于替代历史 writer service interface DTO 和 service/writer/*/project_dto.go 中的重复定义
 //
 // 迁移指南：
-// 1. 使用 dto.CreateProjectRequest 替代原 service/interfaces/writer.CreateProjectRequest
-// 2. 使用 dto.CreateDocumentRequest 替代原 service/interfaces/writer.CreateDocumentRequest
+// 1. 使用 dto.CreateProjectRequest 作为项目创建请求
+// 2. 使用 dto.CreateDocumentRequest 作为文档创建请求
 // 3. 其他DTO类似迁移
 //
 // 注意：
@@ -252,6 +255,7 @@ type CreateOutlineRequest struct {
 	Summary    string   `json:"summary,omitempty" validate:"max=1000"`
 	Type       string   `json:"type,omitempty" validate:"omitempty,oneof=volume arc chapter scene"`
 	Tension    int      `json:"tension,omitempty" validate:"min=0,max=10"`
+	Status     string   `json:"status,omitempty" validate:"omitempty,max=20"`
 	DocumentID string   `json:"documentId,omitempty"`
 	Characters []string `json:"characters,omitempty" validate:"max=50"`
 	Items      []string `json:"items,omitempty" validate:"max=100"`
@@ -265,6 +269,7 @@ type UpdateOutlineRequest struct {
 	Summary    *string   `json:"summary,omitempty" validate:"omitempty,max=1000"`
 	Type       *string   `json:"type,omitempty" validate:"omitempty,oneof=volume arc chapter scene"`
 	Tension    *int      `json:"tension,omitempty" validate:"omitempty,min=0,max=10"`
+	Status     *string   `json:"status,omitempty" validate:"omitempty,max=20"`
 	DocumentID *string   `json:"documentId,omitempty"`
 	Characters *[]string `json:"characters,omitempty" validate:"omitempty,max=50"`
 	Items      *[]string `json:"items,omitempty" validate:"omitempty,max=100"`
@@ -295,6 +300,8 @@ type CreateCharacterRequest struct {
 	PersonalityPrompt string   `json:"personalityPrompt,omitempty" validate:"max=1000"`
 	SpeechPattern     string   `json:"speechPattern,omitempty" validate:"max=500"`
 	CurrentState      string   `json:"currentState,omitempty" validate:"max=500"`
+	EntityType        *string                      `json:"entityType,omitempty"`
+	StateFields       map[string]writer.StateValue `json:"stateFields,omitempty"`
 }
 
 // UpdateCharacterRequest 更新角色请求
@@ -308,12 +315,16 @@ type UpdateCharacterRequest struct {
 	PersonalityPrompt *string   `json:"personalityPrompt,omitempty" validate:"omitempty,max=1000"`
 	SpeechPattern     *string   `json:"speechPattern,omitempty" validate:"omitempty,max=500"`
 	CurrentState      *string   `json:"currentState,omitempty" validate:"omitempty,max=500"`
+	EntityType        *string                       `json:"entityType,omitempty"`
+	StateFields       *map[string]writer.StateValue `json:"stateFields,omitempty"`
 }
 
 // CreateRelationRequest 创建关系请求
 type CreateRelationRequest struct {
 	FromID   string `json:"fromId" validate:"required"`
 	ToID     string `json:"toId" validate:"required"`
+	FromType string `json:"fromType,omitempty"`
+	ToType   string `json:"toType,omitempty"`
 	Type     string `json:"type" validate:"required,max=50"`
 	Strength int    `json:"strength" validate:"min=0,max=100"` // 关系强度 0-100，与模型层和前端保持一致
 	Notes    string `json:"notes,omitempty" validate:"max=500"`

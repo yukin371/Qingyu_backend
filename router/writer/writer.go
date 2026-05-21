@@ -20,6 +20,7 @@ func InitWriterRouter(
 	r *gin.RouterGroup,
 	projectService *projectService.ProjectService,
 	documentService *document.DocumentService,
+	batchOperationService *document.BatchOperationService,
 	versionService *projectService.VersionService,
 	searchSvc *searchservice.SearchService,
 	exportService interfaces.ExportService,
@@ -38,6 +39,10 @@ func InitWriterRouter(
 	documentApi := writer.NewDocumentApi(documentService)
 	versionApi := writer.NewVersionApi(versionService)
 	editorApi := writer.NewEditorApi(documentService)
+	var batchOperationAPI *writer.BatchOperationAPI
+	if batchOperationService != nil {
+		batchOperationAPI = writer.NewBatchOperationAPI(*batchOperationService)
+	}
 
 	// 仪表板统计API
 	var dashboardApi *writer.DashboardApi
@@ -79,6 +84,11 @@ func InitWriterRouter(
 
 		// 编辑器路由
 		InitEditorRouter(writerGroup, editorApi)
+
+		// 批量操作路由
+		if batchOperationAPI != nil {
+			batchOperationAPI.RegisterRoutes(writerGroup)
+		}
 
 		// 仪表板统计路由
 		if dashboardApi != nil {

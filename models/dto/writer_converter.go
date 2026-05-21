@@ -16,6 +16,10 @@ func ToProjectResponse(p *writer.Project) ProjectResponse {
 		Status:    string(p.Status),
 		CreatedAt: p.CreatedAt,
 		UpdatedAt: p.UpdatedAt,
+		// 新增统计字段映射
+		TotalWords:     p.Statistics.TotalWords,
+		ChapterCount:   p.Statistics.ChapterCount,
+		LastUpdateTime: p.Statistics.LastUpdateAt,
 	}
 }
 

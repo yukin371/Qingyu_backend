@@ -3,7 +3,6 @@ package mongodb
 import (
 	"context"
 	"errors"
-	"log"
 
 	"Qingyu_backend/models/bookstore"
 
@@ -163,7 +162,6 @@ func (r *BookStreamRepository) buildQuery(filter *bookstore.BookFilter) bson.M {
 		query["$or"] = orConditions
 	}
 
-	log.Printf("[DEBUG] StreamSearch query: %+v", query)
 	return query
 }
 

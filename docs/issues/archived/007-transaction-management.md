@@ -86,7 +86,7 @@ if err := s.walletRepo.UpdateBalance(ctx, toWalletID, amount); err != nil {
 
 ## 设计方案
 
-**设计文档**: [事务管理器实现设计方案](../../plans/2026-03-05-transaction-manager-design.md)
+**设计文档**: [事务管理器实现设计方案](../../../../docs/plans/submodules/backend/architecture/2026-03-05-transaction-manager-design.md)
 
 ### 设计要点
 

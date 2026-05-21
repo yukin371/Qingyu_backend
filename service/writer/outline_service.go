@@ -2,7 +2,6 @@ package writer
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"Qingyu_backend/models/writer"
@@ -71,6 +70,10 @@ func (s *OutlineService) Create(
 	outline.Summary = req.Summary
 	outline.Type = req.Type
 	outline.Tension = req.Tension
+	outline.Status = req.Status
+	if outline.Status == "" {
+		outline.Status = "draft"
+	}
 	outline.DocumentID = req.DocumentID
 	outline.Characters = req.Characters
 	outline.Items = req.Items
@@ -195,6 +198,9 @@ func (s *OutlineService) Update(
 	}
 	if req.Tension != nil {
 		outline.Tension = *req.Tension
+	}
+	if req.Status != nil {
+		outline.Status = *req.Status
 	}
 	if req.DocumentID != nil {
 		outline.DocumentID = *req.DocumentID
@@ -321,30 +327,18 @@ func (s *OutlineService) buildTree(
 	node *writer.OutlineNode,
 	projectID string,
 ) *serviceInterfaces.OutlineTreeNode {
-	// 自动填充 tags 字段（向后兼容旧数据）
-	// 如果节点有 documentId 但没有 tags，自动添加 chapter-binding 标签
-	if node.DocumentID != "" && len(node.Tags) == 0 {
-		node.Tags = []string{fmt.Sprintf("chapter-binding:%s", node.DocumentID)}
-	}
-
 	treeNode := &serviceInterfaces.OutlineTreeNode{
 		OutlineNode: node,
 	}
 
 	// 获取子节点
 	children, err := s.outlineRepo.FindByParentID(ctx, projectID, node.ID.Hex())
-	if err != nil {
-		fmt.Printf("[buildTree] 获取子节点失败: %v, nodeID: %s, title: %s\n", err, node.ID.Hex(), node.Title)
-	}
-	if len(children) > 0 {
-		fmt.Printf("[buildTree] 节点 %s 有 %d 个子节点\n", node.Title, len(children))
+	if err == nil && len(children) > 0 {
 		treeNode.Children = make([]*serviceInterfaces.OutlineTreeNode, 0, len(children))
 		for _, child := range children {
 			childTreeNode := s.buildTree(ctx, child, projectID)
 			treeNode.Children = append(treeNode.Children, childTreeNode)
 		}
-	} else {
-		fmt.Printf("[buildTree] 节点 %s 没有子节点 (children=%d, err=%v)\n", node.Title, len(children), err)
 	}
 
 	return treeNode

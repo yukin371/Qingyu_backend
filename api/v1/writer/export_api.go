@@ -35,11 +35,12 @@ func NewExportApi(exportService interfaces.ExportService) *ExportApi {
 // @Failure 404 {object} response.APIResponse
 // @Router /api/v1/writer/documents/{id}/export [post]
 func (api *ExportApi) ExportDocument(c *gin.Context) {
-	documentID := c.Param("id")
-	projectID := c.Query("projectId")
-
-	if documentID == "" || projectID == "" {
-		response.BadRequest(c, "参数错误", "documentId和projectId不能为空")
+	documentID, ok := shared.GetRequiredParam(c, "id", "文档ID")
+	if !ok {
+		return
+	}
+	projectID, ok := shared.GetRequiredQuery(c, "projectId", "项目ID")
+	if !ok {
 		return
 	}
 
@@ -73,10 +74,8 @@ func (api *ExportApi) ExportDocument(c *gin.Context) {
 // @Failure 404 {object} response.APIResponse
 // @Router /api/v1/writer/projects/{id}/export [post]
 func (api *ExportApi) ExportProject(c *gin.Context) {
-	projectID := c.Param("id")
-
-	if projectID == "" {
-		response.BadRequest(c, "参数错误", "项目ID不能为空")
+	projectID, ok := shared.GetRequiredParam(c, "id", "项目ID")
+	if !ok {
 		return
 	}
 
@@ -108,10 +107,8 @@ func (api *ExportApi) ExportProject(c *gin.Context) {
 // @Failure 404 {object} response.APIResponse
 // @Router /api/v1/writer/exports/{id} [get]
 func (api *ExportApi) GetExportTask(c *gin.Context) {
-	taskID := c.Param("id")
-
-	if taskID == "" {
-		response.BadRequest(c, "参数错误", "任务ID不能为空")
+	taskID, ok := shared.GetRequiredParam(c, "id", "任务ID")
+	if !ok {
 		return
 	}
 
@@ -135,10 +132,8 @@ func (api *ExportApi) GetExportTask(c *gin.Context) {
 // @Failure 404 {object} response.APIResponse
 // @Router /api/v1/writer/exports/{id}/download [get]
 func (api *ExportApi) DownloadExportFile(c *gin.Context) {
-	taskID := c.Param("id")
-
-	if taskID == "" {
-		response.BadRequest(c, "参数错误", "任务ID不能为空")
+	taskID, ok := shared.GetRequiredParam(c, "id", "任务ID")
+	if !ok {
 		return
 	}
 
@@ -175,9 +170,8 @@ func (api *ExportApi) DownloadExportFile(c *gin.Context) {
 // @Failure 400 {object} response.APIResponse
 // @Router /api/v1/writer/projects/{projectId}/exports [get]
 func (api *ExportApi) ListExportTasks(c *gin.Context) {
-	projectID := c.Param("id")
-	if projectID == "" {
-		response.BadRequest(c, "参数错误", "项目ID不能为空")
+	projectID, ok := shared.GetRequiredParam(c, "id", "项目ID")
+	if !ok {
 		return
 	}
 
@@ -206,10 +200,8 @@ func (api *ExportApi) ListExportTasks(c *gin.Context) {
 // @Failure 404 {object} response.APIResponse
 // @Router /api/v1/writer/exports/{id} [delete]
 func (api *ExportApi) DeleteExportTask(c *gin.Context) {
-	taskID := c.Param("id")
-
-	if taskID == "" {
-		response.BadRequest(c, "参数错误", "任务ID不能为空")
+	taskID, ok := shared.GetRequiredParam(c, "id", "任务ID")
+	if !ok {
 		return
 	}
 
@@ -237,10 +229,8 @@ func (api *ExportApi) DeleteExportTask(c *gin.Context) {
 // @Failure 404 {object} response.APIResponse
 // @Router /api/v1/writer/exports/{id}/cancel [post]
 func (api *ExportApi) CancelExportTask(c *gin.Context) {
-	taskID := c.Param("id")
-
-	if taskID == "" {
-		response.BadRequest(c, "参数错误", "任务ID不能为空")
+	taskID, ok := shared.GetRequiredParam(c, "id", "任务ID")
+	if !ok {
 		return
 	}
 

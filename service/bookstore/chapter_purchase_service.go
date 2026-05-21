@@ -2,15 +2,19 @@ package bookstore
 
 import (
 	"Qingyu_backend/models/bookstore"
+	financeModel "Qingyu_backend/models/finance"
+	"Qingyu_backend/models/shared/types"
 	"Qingyu_backend/repository"
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	BookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
+	financeService "Qingyu_backend/service/finance"
 	"Qingyu_backend/service/finance/wallet"
 )
 
@@ -45,11 +49,12 @@ type ChapterPurchaseService interface {
 
 // ChapterPurchaseServiceImpl 章节购买服务实现
 type ChapterPurchaseServiceImpl struct {
-	chapterRepo   BookstoreRepo.ChapterRepository
-	purchaseRepo  BookstoreRepo.ChapterPurchaseRepository
-	bookRepo      BookstoreRepo.BookRepository
-	walletService wallet.WalletService
-	cacheService  CacheService
+	chapterRepo          BookstoreRepo.ChapterRepository
+	purchaseRepo         BookstoreRepo.ChapterPurchaseRepository
+	bookRepo             BookstoreRepo.BookRepository
+	walletService        wallet.WalletService
+	authorRevenueService financeService.AuthorRevenueService
+	cacheService         CacheService
 }
 
 // NewChapterPurchaseService 创建章节购买服务实例
@@ -60,13 +65,124 @@ func NewChapterPurchaseService(
 	walletService wallet.WalletService,
 	cacheService CacheService,
 ) ChapterPurchaseService {
+	return NewChapterPurchaseServiceWithRevenue(chapterRepo, purchaseRepo, bookRepo, walletService, nil, cacheService)
+}
+
+// NewChapterPurchaseServiceWithRevenue 创建带作者收益依赖的章节购买服务。
+func NewChapterPurchaseServiceWithRevenue(
+	chapterRepo BookstoreRepo.ChapterRepository,
+	purchaseRepo BookstoreRepo.ChapterPurchaseRepository,
+	bookRepo BookstoreRepo.BookRepository,
+	walletService wallet.WalletService,
+	authorRevenueService financeService.AuthorRevenueService,
+	cacheService CacheService,
+) ChapterPurchaseService {
 	return &ChapterPurchaseServiceImpl{
-		chapterRepo:   chapterRepo,
-		purchaseRepo:  purchaseRepo,
-		bookRepo:      bookRepo,
-		walletService: walletService,
-		cacheService:  cacheService,
+		chapterRepo:          chapterRepo,
+		purchaseRepo:         purchaseRepo,
+		bookRepo:             bookRepo,
+		walletService:        walletService,
+		authorRevenueService: authorRevenueService,
+		cacheService:         cacheService,
 	}
+}
+
+func (s *ChapterPurchaseServiceImpl) recordAuthorEarning(
+	ctx context.Context,
+	userID string,
+	book *bookstore.Book,
+	chapter *bookstore.Chapter,
+	amountCents float64,
+) error {
+	if s.authorRevenueService == nil || book == nil || book.AuthorID == "" || amountCents <= 0 {
+		return nil
+	}
+
+	amountYuan := amountCents / 100
+	authorIncome, platformFee, err := s.authorRevenueService.CalculateEarning(
+		ctx,
+		financeModel.EarningTypeChapterPurchase,
+		amountYuan,
+		book.AuthorID,
+		book.ID,
+	)
+	if err != nil {
+		return fmt.Errorf("failed to calculate author earning: %w", err)
+	}
+
+	earning := &financeModel.AuthorEarning{
+		AuthorID:     book.AuthorID,
+		BookID:       book.ID,
+		BookTitle:    book.Title,
+		Type:         financeModel.EarningTypeChapterPurchase,
+		Amount:       types.NewMoneyFromYuan(amountYuan),
+		ReaderID:     userID,
+		PlatformFee:  types.NewMoneyFromYuan(platformFee),
+		AuthorIncome: types.NewMoneyFromYuan(authorIncome),
+		IsSettled:    false,
+	}
+	if chapter != nil {
+		earning.ChapterID = chapter.ID
+		earning.ChapterTitle = chapter.Title
+		earning.WordCount = chapter.WordCount
+	}
+
+	if err := s.authorRevenueService.CreateEarning(ctx, earning); err != nil {
+		return fmt.Errorf("failed to create author earning: %w", err)
+	}
+
+	return nil
+}
+
+func allocateBookPurchaseAmounts(chapters []*bookstore.Chapter, totalPaidCents int64) map[string]int64 {
+	allocated := make(map[string]int64, len(chapters))
+	if len(chapters) == 0 || totalPaidCents <= 0 {
+		return allocated
+	}
+
+	var originalTotal int64
+	for _, chapter := range chapters {
+		originalTotal += int64(chapter.Price)
+	}
+	if originalTotal <= 0 {
+		return allocated
+	}
+
+	type remainderItem struct {
+		chapterID  string
+		remainder  int64
+		chapterNum int
+	}
+
+	remainders := make([]remainderItem, 0, len(chapters))
+	var allocatedTotal int64
+	for _, chapter := range chapters {
+		chapterPrice := int64(chapter.Price)
+		share := chapterPrice * totalPaidCents / originalTotal
+		remainder := chapterPrice * totalPaidCents % originalTotal
+		allocated[chapter.ID.Hex()] = share
+		allocatedTotal += share
+		remainders = append(remainders, remainderItem{
+			chapterID:  chapter.ID.Hex(),
+			remainder:  remainder,
+			chapterNum: chapter.ChapterNum,
+		})
+	}
+
+	leftover := totalPaidCents - allocatedTotal
+	sort.SliceStable(remainders, func(i, j int) bool {
+		if remainders[i].remainder == remainders[j].remainder {
+			return remainders[i].chapterNum < remainders[j].chapterNum
+		}
+		return remainders[i].remainder > remainders[j].remainder
+	})
+
+	for i := int64(0); i < leftover && i < int64(len(remainders)); i++ {
+		chapterID := remainders[i].chapterID
+		allocated[chapterID]++
+	}
+
+	return allocated
 }
 
 // GetChapterCatalog 获取章节目录
@@ -259,7 +375,7 @@ func (s *ChapterPurchaseServiceImpl) PurchaseChapter(ctx context.Context, userID
 	var purchase *bookstore.ChapterPurchase
 	err = s.purchaseRepo.Transaction(ctx, func(txCtx context.Context) error {
 		// 扣除用户余额 (chapter.Price 是 float64，需要转为 int64)
-		_, err := s.walletService.Consume(ctx, userID, int64(chapter.Price), fmt.Sprintf("购买章节: %s", chapter.Title))
+		_, err := s.walletService.Consume(txCtx, userID, int64(chapter.Price), fmt.Sprintf("购买章节: %s", chapter.Title))
 		if err != nil {
 			return fmt.Errorf("failed to deduct balance: %w", err)
 		}
@@ -283,6 +399,10 @@ func (s *ChapterPurchaseServiceImpl) PurchaseChapter(ctx context.Context, userID
 
 		if err := s.purchaseRepo.Create(txCtx, purchase); err != nil {
 			return fmt.Errorf("failed to create purchase record: %w", err)
+		}
+
+		if err := s.recordAuthorEarning(txCtx, userID, book, chapter, chapter.Price); err != nil {
+			return err
 		}
 
 		return nil
@@ -367,7 +487,7 @@ func (s *ChapterPurchaseServiceImpl) PurchaseChapters(ctx context.Context, userI
 
 	err = s.purchaseRepo.Transaction(ctx, func(txCtx context.Context) error {
 		// 扣除用户余额 (totalPrice 是 float64，需要转为 int64)
-		_, err := s.walletService.Consume(ctx, userID, int64(totalPrice), fmt.Sprintf("批量购买章节: %d章", len(chapters)))
+		_, err := s.walletService.Consume(txCtx, userID, int64(totalPrice), fmt.Sprintf("批量购买章节: %d章", len(chapters)))
 		if err != nil {
 			return fmt.Errorf("failed to deduct balance: %w", err)
 		}
@@ -414,6 +534,9 @@ func (s *ChapterPurchaseServiceImpl) PurchaseChapters(ctx context.Context, userI
 
 			if err := s.purchaseRepo.Create(txCtx, purchase); err != nil {
 				return fmt.Errorf("failed to create purchase record: %w", err)
+			}
+			if err := s.recordAuthorEarning(txCtx, userID, book, chapter, chapter.Price); err != nil {
+				return err
 			}
 			purchasedChapterIDs = append(purchasedChapterIDs, chapter.ID.Hex())
 		}
@@ -481,10 +604,11 @@ func (s *ChapterPurchaseServiceImpl) PurchaseBook(ctx context.Context, userID, b
 	// 使用事务处理购买
 	var purchase *bookstore.BookPurchase
 	chapterIDs := make([]string, 0, len(chapters))
+	chapterAllocations := allocateBookPurchaseAmounts(chapters, discountedPrice)
 
 	err = s.purchaseRepo.Transaction(ctx, func(txCtx context.Context) error {
 		// 扣除用户余额
-		_, err := s.walletService.Consume(ctx, userID, discountedPrice, fmt.Sprintf("购买全书: %s", book.Title))
+		_, err := s.walletService.Consume(txCtx, userID, discountedPrice, fmt.Sprintf("购买全书: %s", book.Title))
 		if err != nil {
 			return fmt.Errorf("failed to deduct balance: %w", err)
 		}
@@ -511,11 +635,12 @@ func (s *ChapterPurchaseServiceImpl) PurchaseBook(ctx context.Context, userID, b
 		// 为每个付费章节创建购买记录
 		for _, chapter := range chapters {
 			chapterOID := chapter.ID
+			allocatedPrice := float64(chapterAllocations[chapter.ID.Hex()])
 			chapterPurchase := &bookstore.ChapterPurchase{
 				UserID:       userOID,
 				ChapterID:    chapterOID,
 				BookID:       bookOID,
-				Price:        0, // 全书购买后，章节单价为0
+				Price:        allocatedPrice,
 				PurchaseTime: time.Now(),
 				ChapterTitle: chapter.Title,
 				ChapterNum:   chapter.ChapterNum,
@@ -526,6 +651,9 @@ func (s *ChapterPurchaseServiceImpl) PurchaseBook(ctx context.Context, userID, b
 
 			if err := s.purchaseRepo.Create(txCtx, chapterPurchase); err != nil {
 				return fmt.Errorf("failed to create chapter purchase record: %w", err)
+			}
+			if err := s.recordAuthorEarning(txCtx, userID, book, chapter, allocatedPrice); err != nil {
+				return err
 			}
 			chapterIDs = append(chapterIDs, chapter.ID.Hex())
 		}

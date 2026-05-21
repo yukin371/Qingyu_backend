@@ -52,7 +52,7 @@
 
 ### BookStatus 枚举统一
 
-**设计文档**: [BookStatus 枚举统一设计方案](../plans/2026-03-05-book-status-unification-design.md)
+**设计文档**: [BookStatus 枚举统一设计方案](../../../docs/plans/submodules/backend/architecture/2026-03-05-book-status-unification-design.md)
 
 **选择**: 以 `internal/domain/book.go` 为唯一定义源（5个状态）
 
@@ -60,7 +60,7 @@
 
 ### CategoryIDs 类型统一
 
-**设计文档**: [CategoryIDs 类型统一设计方案](../plans/2026-03-05-category-ids-unification-design.md)
+**设计文档**: [CategoryIDs 类型统一设计方案](../../../docs/plans/submodules/backend/architecture/2026-03-05-category-ids-unification-design.md)
 
 **选择**:
 - 数据库: `[]primitive.ObjectID`

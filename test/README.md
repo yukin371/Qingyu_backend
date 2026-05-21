@@ -99,14 +99,14 @@ go test ./test/integration/
 go test ./test/api/
 ```
 
-#### 运行单个测试文件
+#### 运行认证服务测试
 ```bash
-go test ./test/service/shared/auth_service_test.go
+go test ./service/auth/...
 ```
 
 #### 运行特定测试用例
 ```bash
-go test -run TestAuthService_Register_Success ./test/service/shared/
+go test -run TestAuthService_Register_Success ./service/auth/
 ```
 
 #### 生成测试覆盖率报告
@@ -127,7 +127,7 @@ go tool cover -html=coverage.out -o coverage.html
 go test -bench=. ./...
 
 # 运行特定基准测试
-go test -bench=BenchmarkAuthService_Login ./test/service/shared/
+go test -bench=BenchmarkAuthService_Login ./test/integration/
 
 # 生成性能分析文件
 go test -bench=. -cpuprofile=cpu.prof -memprofile=mem.prof ./...

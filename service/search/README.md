@@ -43,9 +43,8 @@ service/search/
    - Engine: 搜索引擎抽象
 
 3. **Repository 层** (`repository/search/`)
-   - Elasticsearch Repository
    - Milvus Repository
-   - Cache Repository
+   - Elasticsearch / Cache repository 目前未落地，待后续按真实接线需求实现
 
 4. **Models 层** (`models/search/`)
    - 统一的请求/响应模型
@@ -148,4 +147,4 @@ search:
 
 ## 参考
 
-- [统一搜索模块设计文档](../../../docs/plans/2026-01-25-unified-search-design.md)
+- [统一搜索模块设计文档](../../../docs/plans/submodules/backend/legacy-phases/2026-01-25-unified-search-design.md)

@@ -9,7 +9,6 @@ import (
 	pkgtransaction "Qingyu_backend/pkg/transaction"
 	"Qingyu_backend/repository"
 	"Qingyu_backend/repository/interfaces/finance"
-	sharedRepo "Qingyu_backend/repository/interfaces/shared"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -42,7 +41,7 @@ type AuthorRevenueService interface {
 // AuthorRevenueServiceImpl 作者收入服务实现
 type AuthorRevenueServiceImpl struct {
 	revenueRepo finance.AuthorRevenueRepository
-	walletRepo  sharedRepo.WalletRepository
+	walletRepo  finance.WalletRepository
 	txRunner    pkgtransaction.Runner
 }
 
@@ -52,7 +51,7 @@ func NewAuthorRevenueService(revenueRepo finance.AuthorRevenueRepository) Author
 }
 
 // NewAuthorRevenueServiceWithDependencies 创建带钱包与事务依赖的作者收入服务。
-func NewAuthorRevenueServiceWithDependencies(revenueRepo finance.AuthorRevenueRepository, walletRepo sharedRepo.WalletRepository, txRunner pkgtransaction.Runner) AuthorRevenueService {
+func NewAuthorRevenueServiceWithDependencies(revenueRepo finance.AuthorRevenueRepository, walletRepo finance.WalletRepository, txRunner pkgtransaction.Runner) AuthorRevenueService {
 	return &AuthorRevenueServiceImpl{
 		revenueRepo: revenueRepo,
 		walletRepo:  walletRepo,

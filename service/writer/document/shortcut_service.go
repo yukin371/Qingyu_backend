@@ -3,6 +3,7 @@ package document
 import (
 	"Qingyu_backend/models/writer"
 	"context"
+	"strings"
 	"time"
 
 	pkgErrors "Qingyu_backend/pkg/errors"
@@ -132,9 +133,81 @@ func (s *ShortcutService) validateShortcuts(shortcuts map[string]writer.Shortcut
 			)
 		}
 
-		// TODO: 验证按键组合格式是否正确
-		// 例如：Ctrl+S, Alt+F4, Shift+Enter等
+		if err := validateShortcutKey(shortcut.Key); err != nil {
+			return pkgErrors.NewServiceError(
+				s.serviceName,
+				pkgErrors.ServiceErrorValidation,
+				"快捷键格式无效",
+				"操作 "+shortcut.Action+" 的快捷键无效: "+err.Error(),
+				nil,
+			)
+		}
 	}
 
 	return nil
+}
+
+func validateShortcutKey(key string) error {
+	parts := strings.Split(key, "+")
+	if len(parts) == 0 {
+		return pkgErrors.NewServiceError("ShortcutService", pkgErrors.ServiceErrorValidation, "快捷键不能为空", "", nil)
+	}
+
+	seenModifiers := make(map[string]struct{})
+	for i, rawPart := range parts {
+		part := strings.TrimSpace(rawPart)
+		if part == "" {
+			return pkgErrors.NewServiceError("ShortcutService", pkgErrors.ServiceErrorValidation, "快捷键存在空按键段", "", nil)
+		}
+
+		isLast := i == len(parts)-1
+		if !isLast {
+			if !isModifierKey(part) {
+				return pkgErrors.NewServiceError("ShortcutService", pkgErrors.ServiceErrorValidation, "修饰键无效: "+part, "", nil)
+			}
+			if _, exists := seenModifiers[part]; exists {
+				return pkgErrors.NewServiceError("ShortcutService", pkgErrors.ServiceErrorValidation, "修饰键重复: "+part, "", nil)
+			}
+			seenModifiers[part] = struct{}{}
+			continue
+		}
+
+		if isModifierKey(part) && len(parts) > 1 {
+			return pkgErrors.NewServiceError("ShortcutService", pkgErrors.ServiceErrorValidation, "缺少主按键", "", nil)
+		}
+		if !isValidPrimaryKey(part) {
+			return pkgErrors.NewServiceError("ShortcutService", pkgErrors.ServiceErrorValidation, "主按键无效: "+part, "", nil)
+		}
+	}
+
+	return nil
+}
+
+func isModifierKey(key string) bool {
+	switch key {
+	case "Ctrl", "Alt", "Shift", "Meta", "Cmd":
+		return true
+	default:
+		return false
+	}
+}
+
+func isValidPrimaryKey(key string) bool {
+	if len([]rune(key)) == 1 {
+		return true
+	}
+
+	switch key {
+	case "Tab", "Enter", "Esc", "Escape", "Space", "Backspace", "Delete", "Insert", "Home", "End", "PageUp", "PageDown", "Up", "Down", "Left", "Right":
+		return true
+	}
+
+	if len(key) >= 2 && key[0] == 'F' {
+		switch key {
+		case "F1", "F2", "F3", "F4", "F5", "F6", "F7", "F8", "F9", "F10", "F11", "F12":
+			return true
+		}
+	}
+
+	return false
 }

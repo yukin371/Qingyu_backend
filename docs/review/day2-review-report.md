@@ -134,7 +134,7 @@ Day 2任务完成情况优秀，两个子任务均超额完成：
 
 #### ✅ 补充报告完整
 
-`docs/plans/2026-01-30-error-code-supplement-report.md` 包含：
+[错误码补充实施报告](../../../docs/plans/submodules/backend/api-governance/2026-01-30-error-code-supplement-report.md) 包含：
 - ✅ 任务背景
 - ✅ 原有状态分析
 - ✅ 补充实施过程
@@ -504,7 +504,7 @@ bb471a3 feat(errors): 扩展错误码定义从28个到111个
 
 新增文档:
 - `docs/reviews/bookstore-interface-refactoring-report.md` ⚠️ 未找到
-- `docs/plans/2026-01-30-error-code-supplement-report.md` ✅
+- [错误码补充实施报告](../../../docs/plans/submodules/backend/api-governance/2026-01-30-error-code-supplement-report.md) ✅
 
 ---
 
@@ -773,7 +773,7 @@ bb471a3 feat(errors): 扩展错误码定义从28个到111个
 #### 错误码补充
 - `Qingyu_backend/pkg/errors/codes.go` ✅
 - `Qingyu_fronted/src/utils/errorCode.ts` ✅
-- `docs/plans/2026-01-30-error-code-supplement-report.md` ✅
+- [错误码补充实施报告](../../../docs/plans/submodules/backend/api-governance/2026-01-30-error-code-supplement-report.md) ✅
 
 #### 接口拆分
 - `repository/interfaces/bookstore/BookListQueryRepository_interface.go` ✅

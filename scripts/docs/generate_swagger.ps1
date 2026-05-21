@@ -10,8 +10,7 @@ $swaggerDirs = @(
     "models/dto",
     "service/interfaces",
     "service/ai/dto",
-    "service/shared/storage",
-    "service/shared/stats"
+    "service/shared/storage"
 ) -join ","
 
 Write-Host "Generating Swagger artifacts..."

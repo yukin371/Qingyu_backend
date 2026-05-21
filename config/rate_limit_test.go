@@ -23,6 +23,10 @@ func TestRateLimitConfig_LoadedFromTestYaml(t *testing.T) {
 	tmpDir := t.TempDir()
 	configFile := filepath.Join(tmpDir, "config.test.yaml")
 	yamlContent := `
+jwt:
+  secret: fixture-jwt-placeholder-0001
+  expiration_hours: 24
+
 rate_limit:
   enabled: false
   requests_per_sec: 10000

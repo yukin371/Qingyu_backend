@@ -180,10 +180,9 @@ func TestEmailVerificationTokenManager_ConcurrentAccess(t *testing.T) {
 func TestVerificationService_SendEmailCode_Success(t *testing.T) {
 	// 创建mock repositories
 	mockUserRepo := new(mocks.MockUserRepository)
-	mockAuthRepo := new(mocks.MockAuthRepository)
 
 	// 创建验证服务
-	service := NewVerificationService(mockUserRepo, mockAuthRepo, nil)
+	service := NewVerificationService(mockUserRepo, nil)
 
 	ctx := context.Background()
 	email := "test@example.com"
@@ -200,10 +199,9 @@ func TestVerificationService_SendEmailCode_Success(t *testing.T) {
 func TestVerificationService_SendEmailCode_ResetPassword_UserExists(t *testing.T) {
 	// 创建mock repositories
 	mockUserRepo := new(mocks.MockUserRepository)
-	mockAuthRepo := new(mocks.MockAuthRepository)
 
 	// 创建验证服务
-	service := NewVerificationService(mockUserRepo, mockAuthRepo, nil)
+	service := NewVerificationService(mockUserRepo, nil)
 
 	ctx := context.Background()
 	email := "test@example.com"
@@ -228,10 +226,9 @@ func TestVerificationService_SendEmailCode_ResetPassword_UserExists(t *testing.T
 func TestVerificationService_SendEmailCode_ResetPassword_UserNotExists(t *testing.T) {
 	// 创建mock repositories
 	mockUserRepo := new(mocks.MockUserRepository)
-	mockAuthRepo := new(mocks.MockAuthRepository)
 
 	// 创建验证服务
-	service := NewVerificationService(mockUserRepo, mockAuthRepo, nil)
+	service := NewVerificationService(mockUserRepo, nil)
 
 	ctx := context.Background()
 	email := "nonexistent@example.com"
@@ -253,10 +250,9 @@ func TestVerificationService_SendEmailCode_ResetPassword_UserNotExists(t *testin
 func TestVerificationService_SendPhoneCode_Success(t *testing.T) {
 	// 创建mock repositories
 	mockUserRepo := new(mocks.MockUserRepository)
-	mockAuthRepo := new(mocks.MockAuthRepository)
 
 	// 创建验证服务
-	service := NewVerificationService(mockUserRepo, mockAuthRepo, nil)
+	service := NewVerificationService(mockUserRepo, nil)
 
 	ctx := context.Background()
 	phone := "13800138000"
@@ -273,10 +269,9 @@ func TestVerificationService_SendPhoneCode_Success(t *testing.T) {
 func TestVerificationService_VerifyCode_Success(t *testing.T) {
 	// 创建mock repositories
 	mockUserRepo := new(mocks.MockUserRepository)
-	mockAuthRepo := new(mocks.MockAuthRepository)
 
 	// 创建验证服务
-	service := NewVerificationService(mockUserRepo, mockAuthRepo, nil)
+	service := NewVerificationService(mockUserRepo, nil)
 
 	ctx := context.Background()
 	email := "test@example.com"
@@ -297,10 +292,9 @@ func TestVerificationService_VerifyCode_Success(t *testing.T) {
 func TestVerificationService_VerifyCode_InvalidCode(t *testing.T) {
 	// 创建mock repositories
 	mockUserRepo := new(mocks.MockUserRepository)
-	mockAuthRepo := new(mocks.MockAuthRepository)
 
 	// 创建验证服务
-	service := NewVerificationService(mockUserRepo, mockAuthRepo, nil)
+	service := NewVerificationService(mockUserRepo, nil)
 
 	ctx := context.Background()
 	email := "test@example.com"
@@ -323,10 +317,9 @@ func TestVerificationService_VerifyCode_InvalidCode(t *testing.T) {
 func TestVerificationService_VerifyCode_CodeExpired(t *testing.T) {
 	// 创建mock repositories
 	mockUserRepo := new(mocks.MockUserRepository)
-	mockAuthRepo := new(mocks.MockAuthRepository)
 
 	// 创建验证服务
-	service := NewVerificationService(mockUserRepo, mockAuthRepo, nil)
+	service := NewVerificationService(mockUserRepo, nil)
 
 	ctx := context.Background()
 	email := "test@example.com"
@@ -355,10 +348,9 @@ func TestVerificationService_VerifyCode_CodeExpired(t *testing.T) {
 func TestVerificationService_VerifyCode_CodeUsed(t *testing.T) {
 	// 创建mock repositories
 	mockUserRepo := new(mocks.MockUserRepository)
-	mockAuthRepo := new(mocks.MockAuthRepository)
 
 	// 创建验证服务
-	service := NewVerificationService(mockUserRepo, mockAuthRepo, nil)
+	service := NewVerificationService(mockUserRepo, nil)
 
 	ctx := context.Background()
 	email := "test@example.com"
@@ -385,10 +377,9 @@ func TestVerificationService_VerifyCode_CodeUsed(t *testing.T) {
 func TestVerificationService_MarkCodeAsUsed_Success(t *testing.T) {
 	// 创建mock repositories
 	mockUserRepo := new(mocks.MockUserRepository)
-	mockAuthRepo := new(mocks.MockAuthRepository)
 
 	// 创建验证服务
-	service := NewVerificationService(mockUserRepo, mockAuthRepo, nil)
+	service := NewVerificationService(mockUserRepo, nil)
 
 	ctx := context.Background()
 	email := "test@example.com"
@@ -414,10 +405,9 @@ func TestVerificationService_MarkCodeAsUsed_Success(t *testing.T) {
 func TestVerificationService_MarkCodeAsUsed_CodeNotExists(t *testing.T) {
 	// 创建mock repositories
 	mockUserRepo := new(mocks.MockUserRepository)
-	mockAuthRepo := new(mocks.MockAuthRepository)
 
 	// 创建验证服务
-	service := NewVerificationService(mockUserRepo, mockAuthRepo, nil)
+	service := NewVerificationService(mockUserRepo, nil)
 
 	ctx := context.Background()
 	email := "nonexistent@example.com"
@@ -434,10 +424,9 @@ func TestVerificationService_MarkCodeAsUsed_CodeNotExists(t *testing.T) {
 func TestVerificationService_SetEmailVerified_Success(t *testing.T) {
 	// 创建mock repositories
 	mockUserRepo := new(mocks.MockUserRepository)
-	mockAuthRepo := new(mocks.MockAuthRepository)
 
 	// 创建验证服务
-	service := NewVerificationService(mockUserRepo, mockAuthRepo, nil)
+	service := NewVerificationService(mockUserRepo, nil)
 
 	ctx := context.Background()
 	userID := primitive.NewObjectID()
@@ -464,10 +453,9 @@ func TestVerificationService_SetEmailVerified_Success(t *testing.T) {
 func TestVerificationService_SetEmailVerified_EmailMismatch(t *testing.T) {
 	// 创建mock repositories
 	mockUserRepo := new(mocks.MockUserRepository)
-	mockAuthRepo := new(mocks.MockAuthRepository)
 
 	// 创建验证服务
-	service := NewVerificationService(mockUserRepo, mockAuthRepo, nil)
+	service := NewVerificationService(mockUserRepo, nil)
 
 	ctx := context.Background()
 	userID := primitive.NewObjectID()
@@ -493,10 +481,9 @@ func TestVerificationService_SetEmailVerified_EmailMismatch(t *testing.T) {
 func TestVerificationService_SetEmailVerified_UserNotFound(t *testing.T) {
 	// 创建mock repositories
 	mockUserRepo := new(mocks.MockUserRepository)
-	mockAuthRepo := new(mocks.MockAuthRepository)
 
 	// 创建验证服务
-	service := NewVerificationService(mockUserRepo, mockAuthRepo, nil)
+	service := NewVerificationService(mockUserRepo, nil)
 
 	ctx := context.Background()
 	userID := "nonexistent"
@@ -518,10 +505,9 @@ func TestVerificationService_SetEmailVerified_UserNotFound(t *testing.T) {
 func TestVerificationService_SetPhoneVerified_Success(t *testing.T) {
 	// 创建mock repositories
 	mockUserRepo := new(mocks.MockUserRepository)
-	mockAuthRepo := new(mocks.MockAuthRepository)
 
 	// 创建验证服务
-	service := NewVerificationService(mockUserRepo, mockAuthRepo, nil)
+	service := NewVerificationService(mockUserRepo, nil)
 
 	ctx := context.Background()
 	userID := primitive.NewObjectID()
@@ -548,10 +534,9 @@ func TestVerificationService_SetPhoneVerified_Success(t *testing.T) {
 func TestVerificationService_SetPhoneVerified_PhoneMismatch(t *testing.T) {
 	// 创建mock repositories
 	mockUserRepo := new(mocks.MockUserRepository)
-	mockAuthRepo := new(mocks.MockAuthRepository)
 
 	// 创建验证服务
-	service := NewVerificationService(mockUserRepo, mockAuthRepo, nil)
+	service := NewVerificationService(mockUserRepo, nil)
 
 	ctx := context.Background()
 	userID := primitive.NewObjectID()
@@ -577,10 +562,9 @@ func TestVerificationService_SetPhoneVerified_PhoneMismatch(t *testing.T) {
 func TestVerificationService_SetPhoneVerified_UserNotFound(t *testing.T) {
 	// 创建mock repositories
 	mockUserRepo := new(mocks.MockUserRepository)
-	mockAuthRepo := new(mocks.MockAuthRepository)
 
 	// 创建验证服务
-	service := NewVerificationService(mockUserRepo, mockAuthRepo, nil)
+	service := NewVerificationService(mockUserRepo, nil)
 
 	ctx := context.Background()
 	userID := "nonexistent"
@@ -602,10 +586,9 @@ func TestVerificationService_SetPhoneVerified_UserNotFound(t *testing.T) {
 func TestVerificationService_CheckPassword_Success(t *testing.T) {
 	// 创建mock repositories
 	mockUserRepo := new(mocks.MockUserRepository)
-	mockAuthRepo := new(mocks.MockAuthRepository)
 
 	// 创建验证服务
-	service := NewVerificationService(mockUserRepo, mockAuthRepo, nil)
+	service := NewVerificationService(mockUserRepo, nil)
 
 	ctx := context.Background()
 	userID := primitive.NewObjectID()
@@ -632,10 +615,9 @@ func TestVerificationService_CheckPassword_Success(t *testing.T) {
 func TestVerificationService_CheckPassword_WrongPassword(t *testing.T) {
 	// 创建mock repositories
 	mockUserRepo := new(mocks.MockUserRepository)
-	mockAuthRepo := new(mocks.MockAuthRepository)
 
 	// 创建验证服务
-	service := NewVerificationService(mockUserRepo, mockAuthRepo, nil)
+	service := NewVerificationService(mockUserRepo, nil)
 
 	ctx := context.Background()
 	userID := primitive.NewObjectID()
@@ -664,10 +646,9 @@ func TestVerificationService_CheckPassword_WrongPassword(t *testing.T) {
 func TestVerificationService_CheckPassword_UserNotFound(t *testing.T) {
 	// 创建mock repositories
 	mockUserRepo := new(mocks.MockUserRepository)
-	mockAuthRepo := new(mocks.MockAuthRepository)
 
 	// 创建验证服务
-	service := NewVerificationService(mockUserRepo, mockAuthRepo, nil)
+	service := NewVerificationService(mockUserRepo, nil)
 
 	ctx := context.Background()
 	userID := "nonexistent"
@@ -689,10 +670,9 @@ func TestVerificationService_CheckPassword_UserNotFound(t *testing.T) {
 func TestVerificationService_EmailExists_True(t *testing.T) {
 	// 创建mock repositories
 	mockUserRepo := new(mocks.MockUserRepository)
-	mockAuthRepo := new(mocks.MockAuthRepository)
 
 	// 创建验证服务
-	service := NewVerificationService(mockUserRepo, mockAuthRepo, nil)
+	service := NewVerificationService(mockUserRepo, nil)
 
 	ctx := context.Background()
 	email := "test@example.com"
@@ -713,10 +693,9 @@ func TestVerificationService_EmailExists_True(t *testing.T) {
 func TestVerificationService_EmailExists_False(t *testing.T) {
 	// 创建mock repositories
 	mockUserRepo := new(mocks.MockUserRepository)
-	mockAuthRepo := new(mocks.MockAuthRepository)
 
 	// 创建验证服务
-	service := NewVerificationService(mockUserRepo, mockAuthRepo, nil)
+	service := NewVerificationService(mockUserRepo, nil)
 
 	ctx := context.Background()
 	email := "nonexistent@example.com"
@@ -737,10 +716,9 @@ func TestVerificationService_EmailExists_False(t *testing.T) {
 func TestVerificationService_PhoneExists_True(t *testing.T) {
 	// 创建mock repositories
 	mockUserRepo := new(mocks.MockUserRepository)
-	mockAuthRepo := new(mocks.MockAuthRepository)
 
 	// 创建验证服务
-	service := NewVerificationService(mockUserRepo, mockAuthRepo, nil)
+	service := NewVerificationService(mockUserRepo, nil)
 
 	ctx := context.Background()
 	phone := "13800138000"
@@ -761,10 +739,9 @@ func TestVerificationService_PhoneExists_True(t *testing.T) {
 func TestVerificationService_PhoneExists_False(t *testing.T) {
 	// 创建mock repositories
 	mockUserRepo := new(mocks.MockUserRepository)
-	mockAuthRepo := new(mocks.MockAuthRepository)
 
 	// 创建验证服务
-	service := NewVerificationService(mockUserRepo, mockAuthRepo, nil)
+	service := NewVerificationService(mockUserRepo, nil)
 
 	ctx := context.Background()
 	phone := "13900139000"
@@ -785,10 +762,9 @@ func TestVerificationService_PhoneExists_False(t *testing.T) {
 func TestVerificationService_GetUserByEmail_Success(t *testing.T) {
 	// 创建mock repositories
 	mockUserRepo := new(mocks.MockUserRepository)
-	mockAuthRepo := new(mocks.MockAuthRepository)
 
 	// 创建验证服务
-	service := NewVerificationService(mockUserRepo, mockAuthRepo, nil)
+	service := NewVerificationService(mockUserRepo, nil)
 
 	ctx := context.Background()
 	email := "test@example.com"
@@ -814,10 +790,9 @@ func TestVerificationService_GetUserByEmail_Success(t *testing.T) {
 func TestVerificationService_GetUserByEmail_NotFound(t *testing.T) {
 	// 创建mock repositories
 	mockUserRepo := new(mocks.MockUserRepository)
-	mockAuthRepo := new(mocks.MockAuthRepository)
 
 	// 创建验证服务
-	service := NewVerificationService(mockUserRepo, mockAuthRepo, nil)
+	service := NewVerificationService(mockUserRepo, nil)
 
 	ctx := context.Background()
 	email := "nonexistent@example.com"

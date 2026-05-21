@@ -15,6 +15,7 @@ func InitWriterRoutes(
 	locationService interfaces.LocationService,
 	timelineService interfaces.TimelineService,
 	outlineService interfaces.OutlineService,
+	entityService interfaces.EntityService,
 ) {
 	zap.L().Info("InitWriterRoutes: 开始注册设定百科路由")
 
@@ -46,6 +47,12 @@ func InitWriterRoutes(
 		if outlineService != nil {
 			InitOutlineRoutes(writerGroup, outlineService)
 			zap.L().Info("InitWriterRoutes: 大纲路由注册完成")
+		}
+
+		// 统一实体路由
+		if entityService != nil {
+			InitEntityRoutes(writerGroup, entityService)
+			zap.L().Info("InitWriterRoutes: 实体路由注册完成")
 		}
 	}
 

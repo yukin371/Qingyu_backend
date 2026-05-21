@@ -18,6 +18,7 @@ import (
 type BatchOperationService struct {
 	batchOpRepo writerRepo.BatchOperationRepository
 	docRepo     writerRepo.DocumentRepository
+	contentRepo writerRepo.DocumentContentRepository
 	projectRepo writerRepo.ProjectRepository
 	retrySvc    *RetryService
 	eventBus    serviceBase.EventBus
@@ -29,12 +30,14 @@ type BatchOperationService struct {
 func NewBatchOperationService(
 	batchOpRepo writerRepo.BatchOperationRepository,
 	docRepo writerRepo.DocumentRepository,
+	contentRepo writerRepo.DocumentContentRepository,
 	projectRepo writerRepo.ProjectRepository,
 	eventBus serviceBase.EventBus,
 ) *BatchOperationService {
 	return &BatchOperationService{
 		batchOpRepo: batchOpRepo,
 		docRepo:     docRepo,
+		contentRepo: contentRepo,
 		projectRepo: projectRepo,
 		retrySvc:    NewRetryService(),
 		eventBus:    eventBus,
@@ -106,7 +109,7 @@ func (s *BatchOperationService) Submit(ctx context.Context, req *SubmitBatchOper
 	batchOp.TouchForCreate()
 
 	// 6. 预检查（Preflight）
-	preflightSummary, err := s.runPreflight(ctx, batchOp)
+	preflightSummary, err := s.runPreflight(ctx, batchOp, req.ExpectedVersions)
 	if err != nil {
 		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorInternal, "预检查失败", "", err)
 	}
@@ -519,13 +522,14 @@ func (s *BatchOperationService) validateSubmitRequest(req *SubmitBatchOperationR
 }
 
 // runPreflight 运行预检查
-func (s *BatchOperationService) runPreflight(ctx context.Context, batchOp *writer.BatchOperation) (*writer.PreflightSummary, error) {
+func (s *BatchOperationService) runPreflight(ctx context.Context, batchOp *writer.BatchOperation, expectedVersions map[string]int) (*writer.PreflightSummary, error) {
 	summary := &writer.PreflightSummary{
 		TotalCount:   len(batchOp.TargetIDs),
 		ValidCount:   0,
 		InvalidCount: 0,
 		SkippedCount: 0,
 	}
+	hasVersionConflict := false
 
 	// 批量查询所有目标文档
 	docs, err := s.docRepo.GetByIDs(ctx, batchOp.TargetIDs)
@@ -555,7 +559,52 @@ func (s *BatchOperationService) runPreflight(ctx context.Context, batchOp *write
 			continue
 		}
 
+		expectedVersion, hasExpectedVersion := expectedVersions[targetID]
+		if hasExpectedVersion {
+			if s.contentRepo == nil {
+				return nil, fmt.Errorf("expectedVersions 预检查依赖 DocumentContentRepository")
+			}
+
+			currentVersion := 1
+			content, err := s.contentRepo.GetByDocumentID(ctx, targetID)
+			if err != nil {
+				return nil, fmt.Errorf("查询文档 %s 版本失败: %w", targetID, err)
+			}
+			if content != nil && content.Version > 0 {
+				currentVersion = content.Version
+			}
+
+			if currentVersion != expectedVersion {
+				switch batchOp.ConflictPolicy {
+				case writer.ConflictPolicyOverwrite:
+					summary.Warnings = append(summary.Warnings,
+						fmt.Sprintf("目标 %s 版本冲突: expected=%d current=%d，将按 overwrite 继续",
+							targetID, expectedVersion, currentVersion))
+				case writer.ConflictPolicySkip:
+					summary.SkippedCount++
+					summary.Warnings = append(summary.Warnings,
+						fmt.Sprintf("目标 %s 版本冲突: expected=%d current=%d，已按 skip 跳过",
+							targetID, expectedVersion, currentVersion))
+					continue
+				default:
+					hasVersionConflict = true
+					summary.InvalidCount++
+					summary.Errors = append(summary.Errors,
+						fmt.Sprintf("目标 %s 版本冲突: expected=%d current=%d",
+							targetID, expectedVersion, currentVersion))
+					continue
+				}
+			}
+		}
+
 		summary.ValidCount++
+	}
+
+	if summary.InvalidCount > 0 && batchOp.ConflictPolicy == writer.ConflictPolicyAbort {
+		if hasVersionConflict {
+			return summary, ErrVersionConflict
+		}
+		return summary, ErrInvalidTargetID
 	}
 
 	return summary, nil

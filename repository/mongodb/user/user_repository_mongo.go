@@ -11,6 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	usersModel "Qingyu_backend/models/users"
+	pkgtransaction "Qingyu_backend/pkg/transaction"
 	"Qingyu_backend/repository/interfaces/infrastructure"
 	UserInterface "Qingyu_backend/repository/interfaces/user"
 	sharedrepo "Qingyu_backend/repository/mongodb/shared"
@@ -488,21 +489,9 @@ func (r *MongoUserRepository) SearchUsers(ctx context.Context, keyword string, l
 func (r *MongoUserRepository) Transaction(ctx context.Context,
 	user *usersModel.User,
 	fn func(ctx context.Context, repo UserInterface.UserRepository) error) error {
-	session, err := r.db.Client().StartSession()
-	if err != nil {
-		return UserInterface.NewUserRepositoryError(
-			UserInterface.ErrorTypeInternal,
-			"启动事务会话失败",
-			err,
-		)
-	}
-	defer session.EndSession(ctx)
-
-	// 执行事务
-	_, err = session.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
-		return nil, fn(sessCtx, r)
+	err := pkgtransaction.RunMongoTransaction(ctx, r.db.Client(), func(txCtx context.Context) error {
+		return fn(txCtx, r)
 	})
-
 	if err != nil {
 		return UserInterface.NewUserRepositoryError(
 			UserInterface.ErrorTypeInternal,

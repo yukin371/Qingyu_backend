@@ -1,9 +1,6 @@
 package writer
 
 import (
-	"encoding/json"
-	"fmt"
-
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
@@ -18,12 +15,7 @@ type OutlineApi struct {
 }
 
 func getOutlineProjectID(c *gin.Context) string {
-	projectID := c.Param("projectId")
-	if projectID != "" {
-		return projectID
-	}
-
-	return c.Param("id")
+	return shared.GetFirstParam(c, "projectId", "id")
 }
 
 // NewOutlineApi 创建OutlineApi实例
@@ -81,11 +73,12 @@ func (api *OutlineApi) CreateOutline(c *gin.Context) {
 // @Failure 404 {object} response.APIResponse
 // @Router /api/v1/writer/outlines/{outlineId} [get]
 func (api *OutlineApi) GetOutline(c *gin.Context) {
-	outlineID := c.Param("outlineId")
-	projectID := c.Query("projectId")
-
-	if outlineID == "" || projectID == "" {
-		response.BadRequest(c, "参数错误", "outlineId和projectId不能为空")
+	outlineID, ok := shared.GetRequiredParam(c, "outlineId", "大纲ID")
+	if !ok {
+		return
+	}
+	projectID, ok := shared.GetRequiredQuery(c, "projectId", "项目ID")
+	if !ok {
 		return
 	}
 
@@ -145,23 +138,6 @@ func (api *OutlineApi) GetOutlineTree(c *gin.Context) {
 		return
 	}
 
-	// 调试：输出tree的结构
-	fmt.Printf("[GetOutlineTree] tree长度: %d\n", len(tree))
-	if len(tree) > 0 {
-		fmt.Printf("[GetOutlineTree] 第一个节点标题: %s\n", tree[0].Title)
-		fmt.Printf("[GetOutlineTree] 第一个节点children长度: %d\n", len(tree[0].Children))
-		if len(tree[0].Children) > 0 {
-			fmt.Printf("[GetOutlineTree] 第一个子节点标题: %s\n", tree[0].Children[0].Title)
-		}
-	}
-
-	// 序列化为JSON查看
-	if jsonData, err := json.MarshalIndent(tree, "", "  "); err == nil {
-		fmt.Printf("[GetOutlineTree] tree JSON:\n%s\n", string(jsonData))
-	} else {
-		fmt.Printf("[GetOutlineTree] JSON序列化失败: %v\n", err)
-	}
-
 	response.Success(c, tree)
 }
 
@@ -179,11 +155,12 @@ func (api *OutlineApi) GetOutlineTree(c *gin.Context) {
 // @Failure 404 {object} response.APIResponse
 // @Router /api/v1/writer/outlines/{outlineId} [put]
 func (api *OutlineApi) UpdateOutline(c *gin.Context) {
-	outlineID := c.Param("outlineId")
-	projectID := c.Query("projectId")
-
-	if outlineID == "" || projectID == "" {
-		response.BadRequest(c, "参数错误", "outlineId和projectId不能为空")
+	outlineID, ok := shared.GetRequiredParam(c, "outlineId", "大纲ID")
+	if !ok {
+		return
+	}
+	projectID, ok := shared.GetRequiredQuery(c, "projectId", "项目ID")
+	if !ok {
 		return
 	}
 
@@ -213,11 +190,12 @@ func (api *OutlineApi) UpdateOutline(c *gin.Context) {
 // @Failure 404 {object} response.APIResponse
 // @Router /api/v1/writer/outlines/{outlineId} [delete]
 func (api *OutlineApi) DeleteOutline(c *gin.Context) {
-	outlineID := c.Param("outlineId")
-	projectID := c.Query("projectId")
-
-	if outlineID == "" || projectID == "" {
-		response.BadRequest(c, "参数错误", "outlineId和projectId不能为空")
+	outlineID, ok := shared.GetRequiredParam(c, "outlineId", "大纲ID")
+	if !ok {
+		return
+	}
+	projectID, ok := shared.GetRequiredQuery(c, "projectId", "项目ID")
+	if !ok {
 		return
 	}
 

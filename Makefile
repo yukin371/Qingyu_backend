@@ -147,7 +147,7 @@ test-unit:
 	go test -v -race -count=1 \
 		-coverprofile=coverage.out \
 		-covermode=atomic \
-		./service/... ./api/... ./pkg/... ./pkg/middleware/...
+		./service/... ./api/... ./pkg/... ./internal/middleware/...
 
 # 运行集成测试
 test-integration:
@@ -171,7 +171,7 @@ test-all: test-unit test-integration test-api
 # 架构关键包门禁（Phase 2）
 guard-arch:
 	@echo "运行架构关键包门禁测试..."
-	go test -v ./service/writer ./service/reader ./pkg/middleware ./pkg/quota
+	go test -v ./service/writer ./service/reader ./internal/middleware ./pkg/quota
 	@echo "架构门禁通过！"
 
 # 生成测试覆盖率报告

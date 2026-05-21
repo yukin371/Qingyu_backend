@@ -40,7 +40,16 @@ func NewJWTService(cfg *config.JWTConfigEnhanced, redisClient RedisClient) JWTSe
 }
 
 func (s *JWTServiceImpl) newJWTManager() (internalAuth.JWTManager, error) {
-	return internalAuth.NewJWTManager(s.config.SecretKey, s.config.Expiration, s.config.RefreshDuration)
+	cfg := s.config
+	if config.GlobalConfig != nil && config.GlobalConfig.JWT != nil && config.GlobalConfig.JWT.Secret != "" {
+		liveCfg := config.GetJWTConfigEnhanced()
+		if liveCfg != nil && liveCfg.SecretKey != "" {
+			cfg = liveCfg
+			s.config = liveCfg
+		}
+	}
+
+	return internalAuth.NewJWTManager(cfg.SecretKey, cfg.Expiration, cfg.RefreshDuration)
 }
 
 func (s *JWTServiceImpl) buildExtraClaims(roles []string) map[string]interface{} {

@@ -105,13 +105,15 @@ func (s *TestDataSeeder) seedTestUser() error {
 	}
 
 	// 创建测试用户（密码: 123456）
-	// 注意：这是一个示例，实际应用中应该使用bcrypt等哈希算法
-	// 为了简化，这里直接存储明文密码（仅用于测试环境）
+	hashedPassword, hashErr := utils.HashPassword("123456")
+	if hashErr != nil {
+		return fmt.Errorf("密码哈希失败: %w", hashErr)
+	}
 	user := models.User{
 		ID:        primitive.NewObjectID(),
 		Username:  "testuser",
 		Email:     "testuser@qingyu.com",
-		Password:  "123456", // ⚠️ 测试环境使用明文密码
+		Password:  hashedPassword,
 		Roles:     []string{"reader"},
 		Status:    models.UserStatusActive,
 		Nickname:  "测试用户",

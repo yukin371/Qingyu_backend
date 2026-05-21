@@ -21,7 +21,7 @@ import (
 // TestUserService_SendEmailVerification_Success 测试发送邮箱验证成功
 func TestUserService_SendEmailVerification_Success(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	testUserID := primitive.NewObjectID().Hex()
@@ -58,7 +58,7 @@ func TestUserService_SendEmailVerification_Success(t *testing.T) {
 // TestUserService_SendEmailVerification_UserNotFound 测试发送邮箱验证-用户不存在
 func TestUserService_SendEmailVerification_UserNotFound(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	testUserID := primitive.NewObjectID().Hex()
@@ -85,7 +85,7 @@ func TestUserService_SendEmailVerification_UserNotFound(t *testing.T) {
 // TestUserService_SendEmailVerification_EmptyUserID 测试发送邮箱验证-用户ID为空
 func TestUserService_SendEmailVerification_EmptyUserID(t *testing.T) {
 	// Arrange
-	service, _, _ := setupUserService()
+	service, _ := setupUserService()
 	ctx := context.Background()
 
 	req := &user2.SendEmailVerificationRequest{
@@ -105,7 +105,7 @@ func TestUserService_SendEmailVerification_EmptyUserID(t *testing.T) {
 // TestUserService_SendEmailVerification_EmptyEmail 测试发送邮箱验证-邮箱为空
 func TestUserService_SendEmailVerification_EmptyEmail(t *testing.T) {
 	// Arrange
-	service, _, _ := setupUserService()
+	service, _ := setupUserService()
 	ctx := context.Background()
 
 	req := &user2.SendEmailVerificationRequest{
@@ -125,7 +125,7 @@ func TestUserService_SendEmailVerification_EmptyEmail(t *testing.T) {
 // TestUserService_SendEmailVerification_EmailMismatch 测试发送邮箱验证-邮箱不匹配
 func TestUserService_SendEmailVerification_EmailMismatch(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	testUserID := primitive.NewObjectID().Hex()
@@ -161,7 +161,7 @@ func TestUserService_SendEmailVerification_EmailMismatch(t *testing.T) {
 // TestUserService_SendEmailVerification_AlreadyVerified 测试发送邮箱验证-已验证过
 func TestUserService_SendEmailVerification_AlreadyVerified(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	testUserID := primitive.NewObjectID().Hex()
@@ -202,7 +202,7 @@ func TestUserService_SendEmailVerification_AlreadyVerified(t *testing.T) {
 // TestUserService_VerifyEmail_Success 测试验证邮箱成功
 func TestUserService_VerifyEmail_Success(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	testUserID := primitive.NewObjectID().Hex()
@@ -243,7 +243,7 @@ func TestUserService_VerifyEmail_Success(t *testing.T) {
 // TestUserService_VerifyEmail_EmptyUserID 测试验证邮箱-用户ID为空
 func TestUserService_VerifyEmail_EmptyUserID(t *testing.T) {
 	// Arrange
-	service, _, _ := setupUserService()
+	service, _ := setupUserService()
 	ctx := context.Background()
 
 	req := &user2.VerifyEmailRequest{
@@ -263,7 +263,7 @@ func TestUserService_VerifyEmail_EmptyUserID(t *testing.T) {
 // TestUserService_VerifyEmail_EmptyCode 测试验证邮箱-验证码为空
 func TestUserService_VerifyEmail_EmptyCode(t *testing.T) {
 	// Arrange
-	service, _, _ := setupUserService()
+	service, _ := setupUserService()
 	ctx := context.Background()
 
 	req := &user2.VerifyEmailRequest{
@@ -283,7 +283,7 @@ func TestUserService_VerifyEmail_EmptyCode(t *testing.T) {
 // TestUserService_VerifyEmail_UserNotFound 测试验证邮箱-用户不存在
 func TestUserService_VerifyEmail_UserNotFound(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	testUserID := primitive.NewObjectID().Hex()
@@ -309,7 +309,7 @@ func TestUserService_VerifyEmail_UserNotFound(t *testing.T) {
 // TestUserService_VerifyEmail_InvalidCode 测试验证邮箱-验证码无效
 func TestUserService_VerifyEmail_InvalidCode(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	testUserID := primitive.NewObjectID().Hex()
@@ -344,7 +344,7 @@ func TestUserService_VerifyEmail_InvalidCode(t *testing.T) {
 // TestUserService_VerifyEmail_CodeExpired 测试验证邮箱-验证码过期
 func TestUserService_VerifyEmail_CodeExpired(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	testUserID := primitive.NewObjectID().Hex()
@@ -380,7 +380,7 @@ func TestUserService_VerifyEmail_CodeExpired(t *testing.T) {
 // TestUserService_VerifyEmail_UpdateError 测试验证邮箱-更新用户状态失败
 func TestUserService_VerifyEmail_UpdateError(t *testing.T) {
 	// Arrange
-	service, mockUserRepo, _ := setupUserService()
+	service, mockUserRepo := setupUserService()
 	ctx := context.Background()
 
 	testUserID := primitive.NewObjectID().Hex()

@@ -12,7 +12,7 @@
 
 ## 🎯 任务目标
 
-根据`docs/plans/2026-01-30-backend-comprehensive-improvement-plan-v2.md`的P0剩余任务Day 2计划：
+根据 [P0 剩余任务 Day 2 总计划](../../../docs/plans/submodules/backend/legacy-phases/2026-01-30-backend-comprehensive-improvement-plan-v2.md) 的P0剩余任务Day 2计划：
 
 - **目标**：拆分BookRepository接口（51方法→5-8个小接口）
 - **验收**：所有接口≤15方法

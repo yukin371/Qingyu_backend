@@ -146,21 +146,21 @@ func (api *TemplateAPI) ListTemplates(c *gin.Context) {
 	// 是否系统模板
 	if isSystemStr := c.Query("isSystem"); isSystemStr != "" {
 		isSystem, err := strconv.ParseBool(isSystemStr)
-		if err == nil {
-			req.IsSystem = &isSystem
+		if err != nil {
+			response.BadRequest(c, "参数错误", "无效的 isSystem 参数")
+			return
 		}
+		req.IsSystem = &isSystem
 	}
 
 	// 分页参数
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("pageSize", "20"))
-	req.Page = page
-	req.PageSize = pageSize
+	pagination := shared.GetPaginationParamsWithSizeKeys(c, 1, 20, 100, "pageSize", "size", "page_size")
+	req.Page = pagination.Page
+	req.PageSize = pagination.PageSize
 
 	// 排序参数
 	req.SortBy = c.DefaultQuery("sortBy", "created_at")
-	sortOrder, _ := strconv.Atoi(c.DefaultQuery("sortOrder", "-1"))
-	req.SortOrder = sortOrder
+	req.SortOrder = shared.GetIntParam(c, "sortOrder", true, -1, 0, 0)
 
 	// 调用service查询
 	templates, total, err := api.service.ListTemplates(c.Request.Context(), req)
@@ -169,7 +169,7 @@ func (api *TemplateAPI) ListTemplates(c *gin.Context) {
 		return
 	}
 
-	response.Paginated(c, templates, total, page, pageSize, "查询成功")
+	response.Paginated(c, templates, total, pagination.Page, pagination.PageSize, "查询成功")
 }
 
 // GetTemplate 获取模板详情

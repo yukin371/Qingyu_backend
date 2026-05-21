@@ -8,10 +8,11 @@ import (
 	"Qingyu_backend/internal/middleware/auth"
 	"Qingyu_backend/internal/middleware/ratelimit"
 	repoInterfaces "Qingyu_backend/repository/interfaces/user"
+	authService "Qingyu_backend/service/auth"
 	userServiceInterface "Qingyu_backend/service/interfaces/user"
-	"Qingyu_backend/service/shared/stats"
 	sharedStorage "Qingyu_backend/service/shared/storage"
 	userService "Qingyu_backend/service/user"
+	writerService "Qingyu_backend/service/writer"
 )
 
 // BookstoreService 用户公开作品查询端口（复用 handler 端口定义）
@@ -20,16 +21,17 @@ type BookstoreService = handler.BookstoreService
 // RegisterUserRoutes 注册用户路由
 func RegisterUserRoutes(
 	r *gin.RouterGroup,
+	authSvc authService.AuthService,
 	userSvc userServiceInterface.UserService,
 	userRepo repoInterfaces.UserRepository,
 	bookstoreService BookstoreService,
 	storageService sharedStorage.StorageService,
-	statsService stats.StatsPort,
+	userStatsService userService.UserStatsService,
+	contentStatsService writerService.ContentStatsService,
 ) {
 	// 创建验证服务
 	verificationService := userService.NewVerificationService(
 		userRepo,
-		nil, // authRepo
 		nil, // emailService (暂时为nil，使用模拟发送)
 	)
 
@@ -41,7 +43,7 @@ func RegisterUserRoutes(
 
 	// 创建处理器
 	handlers := &Handlers{
-		AuthHandler:       handler.NewAuthHandler(userSvc),
+		AuthHandler:       handler.NewAuthHandler(authSvc),
 		ProfileHandler:    handler.NewProfileHandler(userSvc),
 		PublicUserHandler: handler.NewPublicUserHandler(userSvc),
 		SecurityHandler:   managementApi.NewSecurityAPI(userSvc),
@@ -49,8 +51,8 @@ func RegisterUserRoutes(
 		PasswordAPI:       managementApi.NewPasswordAPI(passwordService),
 	}
 
-	if statsService != nil {
-		handlers.StatsHandler = handler.NewStatsHandler(statsService)
+	if userStatsService != nil && contentStatsService != nil {
+		handlers.StatsHandler = handler.NewStatsHandler(userStatsService, contentStatsService)
 	}
 
 	// 设置可选依赖

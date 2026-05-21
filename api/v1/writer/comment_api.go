@@ -112,8 +112,7 @@ func (api *CommentAPI) GetComments(c *gin.Context) {
 	}
 
 	// 解析查询参数
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
+	pagination := shared.GetPaginationParamsStandard(c)
 
 	// 构建筛选条件
 	docObjID, err := primitive.ObjectIDFromHex(documentID)
@@ -127,21 +126,17 @@ func (api *CommentAPI) GetComments(c *gin.Context) {
 		Resolved:   nil,
 	}
 
-	if resolved := c.Query("resolved"); resolved != "" {
-		if resolved == "true" {
-			trueVal := true
-			filter.Resolved = &trueVal
-		} else {
-			falseVal := false
-			filter.Resolved = &falseVal
-		}
+	resolved, ok := parseResolvedQuery(c)
+	if !ok {
+		return
 	}
+	filter.Resolved = resolved
 
 	if commentType := c.Query("type"); commentType != "" {
 		filter.Type = writermodels.CommentType(commentType)
 	}
 
-	comments, total, err := api.commentService.ListComments(c.Request.Context(), filter, page, size)
+	comments, total, err := api.commentService.ListComments(c.Request.Context(), filter, pagination.Page, pagination.PageSize)
 	if err != nil {
 		c.Error(err)
 		return
@@ -150,11 +145,26 @@ func (api *CommentAPI) GetComments(c *gin.Context) {
 	result := gin.H{
 		"comments": comments,
 		"total":    total,
-		"page":     page,
-		"size":     size,
+		"page":     pagination.Page,
+		"size":     pagination.PageSize,
 	}
 
 	response.Success(c, result)
+}
+
+func parseResolvedQuery(c *gin.Context) (*bool, bool) {
+	resolvedStr := c.Query("resolved")
+	if resolvedStr == "" {
+		return nil, true
+	}
+
+	resolved, err := strconv.ParseBool(resolvedStr)
+	if err != nil {
+		response.BadRequest(c, "参数错误", "resolved 必须是布尔值")
+		return nil, false
+	}
+
+	return &resolved, true
 }
 
 // GetComment 获取批注详情
@@ -211,8 +221,7 @@ func (api *CommentAPI) UpdateComment(c *gin.Context) {
 	}
 
 	var req UpdateCommentRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
@@ -465,10 +474,9 @@ func (api *CommentAPI) SearchComments(c *gin.Context) {
 		return
 	}
 
-	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
-	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
+	pagination := shared.GetPaginationParamsStandard(c)
 
-	comments, total, err := api.commentService.SearchComments(c.Request.Context(), keyword, documentID, page, size)
+	comments, total, err := api.commentService.SearchComments(c.Request.Context(), keyword, documentID, pagination.Page, pagination.PageSize)
 	if err != nil {
 		c.Error(err)
 		return
@@ -477,8 +485,8 @@ func (api *CommentAPI) SearchComments(c *gin.Context) {
 	result := gin.H{
 		"comments": comments,
 		"total":    total,
-		"page":     page,
-		"size":     size,
+		"page":     pagination.Page,
+		"size":     pagination.PageSize,
 		"keyword":  keyword,
 	}
 
@@ -499,8 +507,7 @@ func (api *CommentAPI) SearchComments(c *gin.Context) {
 //	@Router			/api/v1/writer/comments/batch-delete [post]
 func (api *CommentAPI) BatchDeleteComments(c *gin.Context) {
 	var req BatchDeleteRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 

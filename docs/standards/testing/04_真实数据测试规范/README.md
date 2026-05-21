@@ -71,7 +71,7 @@ func TestAuthRepository_CreateRole(t *testing.T) {
     db, cleanup := testutil.SetupTestDB(t)
     defer cleanup()
 
-    repo := shared.NewAuthRepository(db)
+    repo := auth.NewRoleRepository(db)
     ctx := context.Background()
 
     role := &authModel.Role{

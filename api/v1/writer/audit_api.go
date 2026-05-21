@@ -1,6 +1,7 @@
 package writer
 
 import (
+	auditModel "Qingyu_backend/models/audit"
 	"Qingyu_backend/service/interfaces/audit"
 
 	"github.com/gin-gonic/gin"
@@ -34,8 +35,7 @@ func NewAuditApi(auditService audit.ContentAuditService) *AuditApi {
 // @Router /api/v1/audit/check [post]
 func (api *AuditApi) CheckContent(c *gin.Context) {
 	var req auditDTO.CheckContentRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
@@ -63,8 +63,7 @@ func (api *AuditApi) AuditDocument(c *gin.Context) {
 	documentID := c.Param("id")
 
 	var req auditDTO.AuditDocumentRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
@@ -129,8 +128,7 @@ func (api *AuditApi) SubmitAppeal(c *gin.Context) {
 	auditID := c.Param("id")
 
 	var req auditDTO.SubmitAppealRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
@@ -158,12 +156,7 @@ func (api *AuditApi) SubmitAppeal(c *gin.Context) {
 // @Param limit query int false "数量限制" default(50)
 // @Success 200 {object} response.APIResponse
 func (api *AuditApi) GetPendingReviews(c *gin.Context) {
-	limit := 50
-	if limitStr := c.Query("limit"); limitStr != "" {
-		if l, err := c.GetQuery("limit"); err {
-			limit = int(l[0])
-		}
-	}
+	limit := shared.GetIntParam(c, "limit", true, 50, 1, 100)
 
 	records, err := api.auditService.GetPendingReviews(c.Request.Context(), limit)
 	if err != nil {
@@ -192,8 +185,7 @@ func (api *AuditApi) ReviewAudit(c *gin.Context) {
 	auditID := c.Param("id")
 
 	var req auditDTO.ReviewAuditRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
@@ -225,8 +217,7 @@ func (api *AuditApi) ReviewAppeal(c *gin.Context) {
 	auditID := c.Param("id")
 
 	var req auditDTO.ReviewAppealRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		response.BadRequest(c, "参数错误", err.Error())
+	if !shared.BindJSON(c, &req) {
 		return
 	}
 
@@ -346,20 +337,8 @@ func (api *AuditApi) GetUserViolationSummary(c *gin.Context) {
 // @Param limit query int false "数量限制" default(50)
 // @Success 200 {object} response.APIResponse
 func (api *AuditApi) GetHighRiskAudits(c *gin.Context) {
-	minRiskLevel := 3
-	limit := 50
-
-	if level := c.Query("minRiskLevel"); level != "" {
-		if l, err := c.GetQuery("minRiskLevel"); err {
-			minRiskLevel = int(l[0])
-		}
-	}
-
-	if limitStr := c.Query("limit"); limitStr != "" {
-		if l, err := c.GetQuery("limit"); err {
-			limit = int(l[0])
-		}
-	}
+	minRiskLevel := shared.GetIntParam(c, "minRiskLevel", true, 3, 1, 5)
+	limit := shared.GetIntParam(c, "limit", true, 50, 1, 100)
 
 	records, err := api.auditService.GetHighRiskAudits(c.Request.Context(), minRiskLevel, limit)
 	if err != nil {
@@ -378,17 +357,84 @@ func (api *AuditApi) GetHighRiskAudits(c *gin.Context) {
 // 辅助转换函数
 
 func convertAuditRecordToResponse(record interface{}) auditDTO.AuditRecordResponse {
-	// TODO: 实现完整的转换逻辑
-	// 这里简化处理，实际应该使用类型断言或反射
-	return auditDTO.AuditRecordResponse{}
+	switch v := record.(type) {
+	case *auditModel.AuditRecord:
+		if v == nil {
+			return auditDTO.AuditRecordResponse{}
+		}
+		resp := auditDTO.AuditRecordResponse{
+			ID:           v.ID.Hex(),
+			TargetType:   v.TargetType,
+			TargetID:     v.TargetID.Hex(),
+			AuthorID:     v.AuthorID.Hex(),
+			Status:       v.Status,
+			Result:       v.Result,
+			RiskLevel:    v.RiskLevel,
+			RiskScore:    v.RiskScore,
+			Violations:   v.Violations,
+			ReviewNote:   v.ReviewNote,
+			AppealStatus: v.AppealStatus,
+			CreatedAt:    v.CreatedAt,
+			UpdatedAt:    v.UpdatedAt,
+			ReviewedAt:   v.ReviewedAt,
+			CanAppeal:    v.CanAppeal(),
+		}
+		if !v.ReviewerID.IsZero() {
+			resp.ReviewerID = v.ReviewerID.Hex()
+		}
+		return resp
+	default:
+		return auditDTO.AuditRecordResponse{}
+	}
 }
 
 func convertViolationRecordToResponse(violation interface{}) auditDTO.ViolationRecordResponse {
-	// TODO: 实现完整的转换逻辑
-	return auditDTO.ViolationRecordResponse{}
+	switch v := violation.(type) {
+	case *auditModel.ViolationRecord:
+		if v == nil {
+			return auditDTO.ViolationRecordResponse{}
+		}
+		return auditDTO.ViolationRecordResponse{
+			ID:              v.ID,
+			UserID:          v.UserID,
+			TargetType:      v.TargetType,
+			TargetID:        v.TargetID,
+			ViolationType:   v.ViolationType,
+			ViolationLevel:  v.ViolationLevel,
+			ViolationCount:  v.ViolationCount,
+			PenaltyType:     v.PenaltyType,
+			PenaltyDuration: v.PenaltyDuration,
+			IsPenalized:     v.IsPenalized,
+			Description:     v.Description,
+			CreatedAt:       v.CreatedAt,
+			ExpiresAt:       v.ExpiresAt,
+			IsActive:        v.IsActive(),
+		}
+	default:
+		return auditDTO.ViolationRecordResponse{}
+	}
 }
 
 func convertUserViolationSummaryToResponse(summary interface{}) auditDTO.UserViolationSummaryResponse {
-	// TODO: 实现完整的转换逻辑
-	return auditDTO.UserViolationSummaryResponse{}
+	switch v := summary.(type) {
+	case *auditModel.UserViolationSummary:
+		if v == nil {
+			return auditDTO.UserViolationSummaryResponse{}
+		}
+		return auditDTO.UserViolationSummaryResponse{
+			UserID:              v.UserID,
+			TotalViolations:     v.TotalViolations,
+			WarningCount:        v.WarningCount,
+			RejectCount:         v.RejectCount,
+			HighRiskCount:       v.HighRiskCount,
+			LastViolationAt:     v.LastViolationAt,
+			ActivePenalties:     v.ActivePenalties,
+			IsBanned:            v.IsBanned,
+			IsPermanentlyBanned: v.IsPermanentlyBanned,
+			IsHighRiskUser:      v.IsHighRiskUser(),
+			ShouldBan:           v.ShouldBan(),
+		}
+	default:
+		return auditDTO.UserViolationSummaryResponse{}
+	}
 }

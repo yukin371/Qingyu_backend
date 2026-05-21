@@ -3,6 +3,7 @@ package finance
 import (
 	financeModel "Qingyu_backend/models/finance"
 	"Qingyu_backend/models/shared/types"
+	pkgtransaction "Qingyu_backend/pkg/transaction"
 	financeInterface "Qingyu_backend/repository/interfaces/finance"
 	"context"
 	"fmt"
@@ -478,25 +479,7 @@ func (r *WalletRepositoryImpl) isReplicaSet(ctx context.Context) bool {
 // RunInTransaction 在事务中执行钱包相关操作
 // 如果 MongoDB 不支持事务（单节点），则直接执行操作（降级模式）
 func (r *WalletRepositoryImpl) RunInTransaction(ctx context.Context, fn func(context.Context) error) error {
-	// 检查是否支持事务
-	if !r.isReplicaSet(ctx) {
-		// 降级模式：直接执行操作，不使用事务
-		return fn(ctx)
-	}
-
-	// 副本集模式：使用事务
-	session, err := r.db.Client().StartSession()
-	if err != nil {
-		return fmt.Errorf("启动事务失败: %w", err)
-	}
-	defer session.EndSession(ctx)
-
-	_, err = session.WithTransaction(ctx, func(sessCtx mongo.SessionContext) (interface{}, error) {
-		if err := fn(sessCtx); err != nil {
-			return nil, err
-		}
-		return nil, nil
-	})
+	err := pkgtransaction.RunMongoTransaction(ctx, r.db.Client(), fn)
 	if err != nil {
 		return fmt.Errorf("事务执行失败: %w", err)
 	}

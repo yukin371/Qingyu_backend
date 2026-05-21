@@ -2,11 +2,10 @@ package channels
 
 import (
 	messagingModel "Qingyu_backend/models/messaging"
+	messagingRepo "Qingyu_backend/repository/interfaces/messaging"
 	"context"
 	"fmt"
 	"time"
-
-	sharedRepo "Qingyu_backend/repository/interfaces/shared"
 )
 
 // NotificationService 完整的通知服务接口
@@ -37,14 +36,14 @@ type NotificationService interface {
 
 // NotificationServiceComplete 完整的通知服务实现
 type NotificationServiceComplete struct {
-	messageRepo  sharedRepo.MessageRepository
+	messageRepo  messagingRepo.MessageRepository
 	emailService EmailService
 	msgService   MessagingService
 }
 
 // NewNotificationServiceComplete 创建完整的通知服务
 func NewNotificationServiceComplete(
-	messageRepo sharedRepo.MessageRepository,
+	messageRepo messagingRepo.MessageRepository,
 	emailService EmailService,
 	msgService MessagingService,
 ) NotificationService {
@@ -89,7 +88,7 @@ func (s *NotificationServiceComplete) ListNotifications(ctx context.Context, use
 	}
 
 	// 构建过滤器
-	filter := &sharedRepo.NotificationFilter{
+	filter := &messagingRepo.NotificationFilter{
 		UserID: userID,
 		Limit:  int64(pageSize),
 		Offset: int64((page - 1) * pageSize),
@@ -126,7 +125,7 @@ func (s *NotificationServiceComplete) MarkAllAsRead(ctx context.Context, userID 
 
 	// 获取所有未读通知
 	isRead := false
-	filter := &sharedRepo.NotificationFilter{
+	filter := &messagingRepo.NotificationFilter{
 		UserID: userID,
 		IsRead: &isRead,
 	}
@@ -174,7 +173,7 @@ func (s *NotificationServiceComplete) GetUnreadCount(ctx context.Context, userID
 	}
 
 	isRead := false
-	filter := &sharedRepo.NotificationFilter{
+	filter := &messagingRepo.NotificationFilter{
 		UserID: userID,
 		IsRead: &isRead,
 	}

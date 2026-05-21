@@ -22,6 +22,154 @@ func NewAuthorRevenueAPI(revenueService financeService.AuthorRevenueService) *Au
 	}
 }
 
+func objectIDToString(id interface{ Hex() string }) string {
+	if id == nil {
+		return ""
+	}
+	return id.Hex()
+}
+
+func mapAuthorEarning(item *financeModel.AuthorEarning) gin.H {
+	if item == nil {
+		return gin.H{}
+	}
+
+	return gin.H{
+		"id":                 objectIDToString(item.ID),
+		"author_id":          item.AuthorID,
+		"book_id":            objectIDToString(item.BookID),
+		"book_title":         item.BookTitle,
+		"chapter_id":         objectIDToString(item.ChapterID),
+		"chapter_title":      item.ChapterTitle,
+		"type":               item.Type,
+		"amount":             item.AuthorIncome.ToYuan(),
+		"amount_cents":       item.AuthorIncome.ToCents(),
+		"gross_amount":       item.Amount.ToYuan(),
+		"gross_amount_cents": item.Amount.ToCents(),
+		"platform_fee":       item.PlatformFee.ToYuan(),
+		"platform_fee_cents": item.PlatformFee.ToCents(),
+		"reader_id":          item.ReaderID,
+		"reader_nickname":    item.ReaderNickname,
+		"is_settled":         item.IsSettled,
+		"created_at":         item.CreatedAt,
+		"updated_at":         item.UpdatedAt,
+	}
+}
+
+func mapAuthorWithdrawal(item *financeModel.WithdrawalRequest) gin.H {
+	if item == nil {
+		return gin.H{}
+	}
+
+	return gin.H{
+		"id":                  objectIDToString(item.ID),
+		"user_id":             item.UserID,
+		"amount":              item.Amount.ToYuan(),
+		"amount_cents":        item.Amount.ToCents(),
+		"fee":                 item.Fee.ToYuan(),
+		"fee_cents":           item.Fee.ToCents(),
+		"actual_amount":       item.ActualAmount.ToYuan(),
+		"actual_amount_cents": item.ActualAmount.ToCents(),
+		"method":              item.Method,
+		"account_info": gin.H{
+			"account_type": item.AccountInfo.AccountType,
+			"account_name": item.AccountInfo.AccountName,
+			"account_no":   item.AccountInfo.AccountNo,
+			"bank_name":    item.AccountInfo.BankName,
+			"branch_name":  item.AccountInfo.BranchName,
+		},
+		"status":         item.Status,
+		"reject_reason":  item.RejectReason,
+		"approved_by":    item.ApprovedBy,
+		"approved_at":    item.ApprovedAt,
+		"completed_at":   item.CompletedAt,
+		"transaction_id": item.TransactionID,
+		"note":           item.Note,
+		"created_at":     item.CreatedAt,
+		"updated_at":     item.UpdatedAt,
+	}
+}
+
+func mapRevenueDetail(item *financeModel.RevenueDetail) gin.H {
+	if item == nil {
+		return gin.H{}
+	}
+
+	return gin.H{
+		"id":                  objectIDToString(item.ID),
+		"author_id":           item.AuthorID,
+		"book_id":             objectIDToString(item.BookID),
+		"book_title":          item.BookTitle,
+		"type":                item.Type,
+		"total_amount":        item.TotalAmount.ToYuan(),
+		"total_amount_cents":  item.TotalAmount.ToCents(),
+		"total_income":        item.TotalIncome.ToYuan(),
+		"total_income_cents":  item.TotalIncome.ToCents(),
+		"transaction_count":   item.TransactionCount,
+		"first_earning_at":    item.FirstEarningAt,
+		"last_earning_at":     item.LastEarningAt,
+		"created_at":          item.CreatedAt,
+		"updated_at":          item.UpdatedAt,
+	}
+}
+
+func mapRevenueStatistics(item *financeModel.RevenueStatistics) gin.H {
+	if item == nil {
+		return gin.H{}
+	}
+
+	return gin.H{
+		"author_id":               item.AuthorID,
+		"period":                  item.Period,
+		"period_start":            item.PeriodStart,
+		"period_end":              item.PeriodEnd,
+		"total_revenue":           item.TotalRevenue.ToYuan(),
+		"total_revenue_cents":     item.TotalRevenue.ToCents(),
+		"chapter_income":          item.ChapterIncome.ToYuan(),
+		"chapter_income_cents":    item.ChapterIncome.ToCents(),
+		"reward_income":           item.RewardIncome.ToYuan(),
+		"reward_income_cents":     item.RewardIncome.ToCents(),
+		"vip_reading_income":      item.VIPReadingIncome.ToYuan(),
+		"vip_reading_income_cents": item.VIPReadingIncome.ToCents(),
+		"transaction_count":       item.TransactionCount,
+		"reader_count":            item.ReaderCount,
+		"book_count":              item.BookCount,
+		"created_at":              item.CreatedAt,
+		"updated_at":              item.UpdatedAt,
+	}
+}
+
+func mapSettlement(item *financeModel.Settlement) gin.H {
+	if item == nil {
+		return gin.H{}
+	}
+
+	return gin.H{
+		"id":                  objectIDToString(item.ID),
+		"author_id":           item.AuthorID,
+		"author_nickname":     item.AuthorNickname,
+		"period_start":        item.PeriodStart,
+		"period_end":          item.PeriodEnd,
+		"total_revenue":       item.TotalRevenue.ToYuan(),
+		"total_revenue_cents": item.TotalRevenue.ToCents(),
+		"platform_fee":        item.PlatformFee.ToYuan(),
+		"platform_fee_cents":  item.PlatformFee.ToCents(),
+		"actual_income":       item.ActualIncome.ToYuan(),
+		"actual_income_cents": item.ActualIncome.ToCents(),
+		"tax_fee":             item.TaxFee.ToYuan(),
+		"tax_fee_cents":       item.TaxFee.ToCents(),
+		"final_income":        item.FinalIncome.ToYuan(),
+		"final_income_cents":  item.FinalIncome.ToCents(),
+		"earning_count":       item.EarningCount,
+		"status":              item.Status,
+		"processed_at":        item.ProcessedAt,
+		"transaction_id":      item.TransactionID,
+		"note":                item.Note,
+		"created_at":          item.CreatedAt,
+		"updated_at":          item.UpdatedAt,
+	}
+}
+
 // GetEarnings 获取作者收入列表
 //
 //	@Summary		获取作者收入列表
@@ -50,7 +198,12 @@ func (api *AuthorRevenueAPI) GetEarnings(c *gin.Context) {
 		return
 	}
 
-	response.Paginated(c, earnings, total, page, pageSize, "获取收入列表成功")
+	items := make([]gin.H, 0, len(earnings))
+	for _, item := range earnings {
+		items = append(items, mapAuthorEarning(item))
+	}
+
+	response.Paginated(c, items, total, page, pageSize, "获取收入列表成功")
 }
 
 // GetBookEarnings 获取某本书的收入
@@ -88,7 +241,12 @@ func (api *AuthorRevenueAPI) GetBookEarnings(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
 
-	response.Paginated(c, earnings, total, page, pageSize, "获取书籍收入成功")
+	items := make([]gin.H, 0, len(earnings))
+	for _, item := range earnings {
+		items = append(items, mapAuthorEarning(item))
+	}
+
+	response.Paginated(c, items, total, page, pageSize, "获取书籍收入成功")
 }
 
 // GetWithdrawals 获取提现记录
@@ -119,7 +277,12 @@ func (api *AuthorRevenueAPI) GetWithdrawals(c *gin.Context) {
 		return
 	}
 
-	response.Paginated(c, withdrawals, total, page, pageSize, "获取提现记录成功")
+	items := make([]gin.H, 0, len(withdrawals))
+	for _, item := range withdrawals {
+		items = append(items, mapAuthorWithdrawal(item))
+	}
+
+	response.Paginated(c, items, total, page, pageSize, "获取提现记录成功")
 }
 
 // WithdrawRequest 提现申请请求
@@ -176,7 +339,7 @@ func (api *AuthorRevenueAPI) Withdraw(c *gin.Context) {
 		return
 	}
 
-	response.SuccessWithMessage(c, "申请提现成功", withdrawal)
+	response.SuccessWithMessage(c, "申请提现成功", mapAuthorWithdrawal(withdrawal))
 }
 
 // GetRevenueDetails 获取收入明细
@@ -207,7 +370,12 @@ func (api *AuthorRevenueAPI) GetRevenueDetails(c *gin.Context) {
 		return
 	}
 
-	response.Paginated(c, details, total, page, pageSize, "获取收入明细成功")
+	items := make([]gin.H, 0, len(details))
+	for _, item := range details {
+		items = append(items, mapRevenueDetail(item))
+	}
+
+	response.Paginated(c, items, total, page, pageSize, "获取收入明细成功")
 }
 
 // GetRevenueStatistics 获取收入统计
@@ -236,7 +404,12 @@ func (api *AuthorRevenueAPI) GetRevenueStatistics(c *gin.Context) {
 		return
 	}
 
-	response.SuccessWithMessage(c, "获取收入统计成功", statistics)
+	items := make([]gin.H, 0, len(statistics))
+	for _, item := range statistics {
+		items = append(items, mapRevenueStatistics(item))
+	}
+
+	response.SuccessWithMessage(c, "获取收入统计成功", items)
 }
 
 // GetSettlements 获取结算记录
@@ -267,7 +440,12 @@ func (api *AuthorRevenueAPI) GetSettlements(c *gin.Context) {
 		return
 	}
 
-	response.Paginated(c, settlements, total, page, pageSize, "获取结算记录成功")
+	items := make([]gin.H, 0, len(settlements))
+	for _, item := range settlements {
+		items = append(items, mapSettlement(item))
+	}
+
+	response.Paginated(c, items, total, page, pageSize, "获取结算记录成功")
 }
 
 // GetSettlement 获取结算详情
@@ -294,7 +472,7 @@ func (api *AuthorRevenueAPI) GetSettlement(c *gin.Context) {
 		return
 	}
 
-	response.SuccessWithMessage(c, "获取结算详情成功", settlement)
+	response.SuccessWithMessage(c, "获取结算详情成功", mapSettlement(settlement))
 }
 
 // GetTaxInfo 获取税务信息

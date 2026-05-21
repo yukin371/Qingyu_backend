@@ -5,6 +5,7 @@ import (
 	"context"
 	"io"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -16,9 +17,15 @@ import (
 // GetUserID 从上下文获取用户ID，如果不存在或类型错误则返回未授权响应
 // 返回: (userID, ok) - ok为false表示已发送错误响应
 func GetUserID(c *gin.Context) (string, bool) {
+	return GetUserIDWithMessage(c, "请先登录")
+}
+
+// GetUserIDWithMessage 从上下文获取用户ID，并允许自定义缺失时的错误文案
+// 返回: (userID, ok) - ok 为 false 表示已发送错误响应
+func GetUserIDWithMessage(c *gin.Context, missingMessage string) (string, bool) {
 	userID, exists := c.Get("user_id")
 	if !exists {
-		response.Unauthorized(c, "请先登录")
+		response.Unauthorized(c, missingMessage)
 		return "", false
 	}
 
@@ -45,6 +52,30 @@ func GetUserIDOptional(c *gin.Context) string {
 	return ""
 }
 
+// GetBearerToken 从 Authorization 头获取 Bearer Token
+// 返回: (token, ok) - ok 为 false 表示已发送错误响应
+func GetBearerToken(c *gin.Context) (string, bool) {
+	token := strings.TrimSpace(c.GetHeader("Authorization"))
+	if token == "" {
+		response.Unauthorized(c, "未提供Token")
+		return "", false
+	}
+
+	token = strings.TrimSpace(strings.TrimPrefix(token, "Bearer "))
+	return token, true
+}
+
+// GetBearerTokenOptional 从 Authorization 头获取 Bearer Token。
+// 未提供时返回空字符串，不写响应。
+func GetBearerTokenOptional(c *gin.Context) string {
+	token := strings.TrimSpace(c.GetHeader("Authorization"))
+	if token == "" {
+		return ""
+	}
+
+	return strings.TrimSpace(strings.TrimPrefix(token, "Bearer "))
+}
+
 // ============ 路径参数辅助函数 ============
 
 // GetRequiredParam 获取必需的路径参数，如果为空则返回错误响应
@@ -56,6 +87,17 @@ func GetRequiredParam(c *gin.Context, key, displayName string) (string, bool) {
 		return "", false
 	}
 	return param, true
+}
+
+// GetFirstParam 从多个路径参数名中返回第一个非空值。
+// 用于兼容历史路由中同一语义参数存在多个命名的场景；该函数不写响应。
+func GetFirstParam(c *gin.Context, keys ...string) string {
+	for _, key := range keys {
+		if value := c.Param(key); value != "" {
+			return value
+		}
+	}
+	return ""
 }
 
 // GetRequiredQuery 获取必需的查询参数，如果为空则返回错误响应
@@ -79,13 +121,31 @@ type PaginationParams struct {
 	Offset   int
 }
 
+func firstQueryValue(c *gin.Context, defaultValue string, keys ...string) string {
+	for _, key := range keys {
+		if value, exists := c.GetQuery(key); exists {
+			return value
+		}
+	}
+	return defaultValue
+}
+
 // GetPaginationParams 获取分页参数并验证
 // defaultPage: 默认页码
 // defaultPageSize: 默认每页数量
 // maxPageSize: 最大每页数量（0表示不限制）
 func GetPaginationParams(c *gin.Context, defaultPage, defaultPageSize, maxPageSize int) PaginationParams {
+	return GetPaginationParamsWithSizeKeys(c, defaultPage, defaultPageSize, maxPageSize, "size")
+}
+
+// GetPaginationParamsWithSizeKeys 获取分页参数，并允许调用方指定每页数量的查询参数名优先级。
+func GetPaginationParamsWithSizeKeys(c *gin.Context, defaultPage, defaultPageSize, maxPageSize int, sizeKeys ...string) PaginationParams {
+	if len(sizeKeys) == 0 {
+		sizeKeys = []string{"size"}
+	}
+
 	page, _ := strconv.Atoi(c.DefaultQuery("page", strconv.Itoa(defaultPage)))
-	pageSize, _ := strconv.Atoi(c.DefaultQuery("size", strconv.Itoa(defaultPageSize)))
+	pageSize, _ := strconv.Atoi(firstQueryValue(c, strconv.Itoa(defaultPageSize), sizeKeys...))
 
 	// 验证页码
 	if page < 1 {
@@ -157,6 +217,29 @@ func GetIntParam(c *gin.Context, key string, isQuery bool, defaultValue, min, ma
 	return value
 }
 
+// GetIntQueryInRange 获取整数查询参数，并校验其范围。
+// 查询参数缺失时返回默认值；参数存在但格式或范围非法时返回 ok=false，由调用方决定错误响应语义。
+func GetIntQueryInRange(c *gin.Context, key string, defaultValue, min, max int) (value int, ok bool) {
+	valueStr := c.Query(key)
+	if valueStr == "" {
+		return defaultValue, true
+	}
+
+	parsed, err := strconv.Atoi(valueStr)
+	if err != nil {
+		return 0, false
+	}
+
+	if min > 0 && parsed < min {
+		return 0, false
+	}
+	if max > 0 && parsed > max {
+		return 0, false
+	}
+
+	return parsed, true
+}
+
 // ============ JSON绑定辅助函数 ============
 
 // BindAndValidate 绑定并验证JSON请求体
@@ -182,6 +265,20 @@ func BindAndValidate(c *gin.Context, req interface{}) bool {
 func BindJSON(c *gin.Context, req interface{}) bool {
 	if err := c.ShouldBindJSON(req); err != nil {
 		response.BadRequest(c, "参数错误", err.Error())
+		return false
+	}
+	return true
+}
+
+// BindJSONOptional 尝试绑定可选 JSON 请求体，不因空请求体或绑定失败写入错误响应。
+func BindJSONOptional(c *gin.Context, req interface{}) {
+	_ = c.ShouldBindJSON(req)
+}
+
+// BindJSONWithMessage 绑定 JSON 请求体，并使用调用方指定的错误文案前缀。
+func BindJSONWithMessage(c *gin.Context, req interface{}, messagePrefix string) bool {
+	if err := c.ShouldBindJSON(req); err != nil {
+		response.BadRequest(c, messagePrefix+err.Error(), nil)
 		return false
 	}
 	return true

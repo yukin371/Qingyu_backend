@@ -1,6 +1,7 @@
 package writer
 
 import (
+	"errors"
 	"strings"
 	"time"
 
@@ -292,6 +293,9 @@ func isLockedError(err error) bool {
 	if err == nil {
 		return false
 	}
+	if errors.Is(err, lock.ErrDocumentLocked) {
+		return true
+	}
 	errMsg := err.Error()
 	return contains(errMsg, "locked") || contains(errMsg, "锁定")
 }
@@ -300,6 +304,9 @@ func isLockedError(err error) bool {
 func isPermissionError(err error) bool {
 	if err == nil {
 		return false
+	}
+	if errors.Is(err, lock.ErrLockPermissionDenied) || errors.Is(err, lock.ErrLockRefreshUnauthorized) {
+		return true
 	}
 	errMsg := err.Error()
 	return contains(errMsg, "permission") || contains(errMsg, "权限") || contains(errMsg, "denied")

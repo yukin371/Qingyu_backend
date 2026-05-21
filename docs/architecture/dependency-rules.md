@@ -169,9 +169,11 @@ service/{user,writer,reader,ai} 不应该导入:
 **允许依赖auth的模块**：
 - `service/container/` (初始化)
 - `service/interfaces/shared/` (适配器)
-- `api/v1/auth/` (认证API)
-- `api/v1/shared/auth_api.go` (共享认证API)
+- `api/v1/shared/` (标准认证/OAuth API owner)
+- `api/v1/user/handler/auth_handler.go` (用户域兼容认证入口)
 - `middleware/auth/` (认证中间件)
+
+`api/v1/auth/` 历史包已退场，不应再作为第二套认证 API owner 恢复。
 
 **禁止直接依赖auth的模块**：
 - `service/user/` (应该通过AuthPort)

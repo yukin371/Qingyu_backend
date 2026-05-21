@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"strings"
+
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
@@ -22,6 +24,62 @@ func JWTAuth() gin.HandlerFunc {
 
 	middleware := NewJWTAuthMiddleware(jwtManager, nil, logger)
 	return middleware.Handler()
+}
+
+// OptionalJWTAuth 提供可选的 JWT 认证中间件。
+// 携带有效 token 时注入用户信息；未携带或 token 无效时直接放行。
+func OptionalJWTAuth() gin.HandlerFunc {
+	logger, _ := zap.NewDevelopment()
+
+	jwtConfig := config.GetJWTConfigEnhanced()
+	if jwtConfig == nil || strings.TrimSpace(jwtConfig.SecretKey) == "" {
+		return func(c *gin.Context) {
+			c.Next()
+		}
+	}
+
+	jwtManager, err := NewJWTManager(jwtConfig.SecretKey, jwtConfig.Expiration, jwtConfig.RefreshDuration)
+	if err != nil {
+		logger.Warn("Failed to create optional JWT manager, fallback to passthrough", zap.Error(err))
+		return func(c *gin.Context) {
+			c.Next()
+		}
+	}
+
+	middleware := NewJWTAuthMiddleware(jwtManager, nil, logger)
+
+	return func(c *gin.Context) {
+		middleware.refreshJWTManagerFromConfig()
+
+		if !middleware.config.Enabled || middleware.shouldSkipPath(c.Request.URL.Path) {
+			c.Next()
+			return
+		}
+
+		authHeader := strings.TrimSpace(c.GetHeader(middleware.config.TokenHeader))
+		if authHeader == "" {
+			c.Next()
+			return
+		}
+
+		token, err := middleware.extractToken(c)
+		if err != nil {
+			c.Next()
+			return
+		}
+
+		claims, err := middleware.validateToken(token)
+		if err != nil {
+			c.Next()
+			return
+		}
+
+		c.Set("user_id", claims.UserID)
+		c.Set("username", claims.Username)
+		c.Set("roles", claims.Roles)
+		c.Set("token_type", claims.TokenType)
+		c.Next()
+	}
 }
 
 // GenerateToken 生成JWT令牌

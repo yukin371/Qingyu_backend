@@ -219,11 +219,11 @@ import "github.com/yukin371/Qingyu/backend/internal/service"
 - 跨模块协调
 - 事务管理
 
-#### pkg/middleware 依赖
+#### internal/middleware 依赖
 
 ```go
 // 业务模块使用中间件
-import "github.com/yukin371/Qingyu/backend/pkg/middleware"
+import "github.com/yukin371/Qingyu/backend/internal/middleware"
 ```
 
 **middleware 提供**:
@@ -387,9 +387,9 @@ if !shared.ValidateQueryParams(c, &req) {
 | Auth | `internal/middleware/auth` | JWT认证 |
 | Permission | `internal/middleware/core` | 权限检查 |
 | RateLimit | `internal/middleware/ratelimit` | 请求限流 |
-| CORS | `pkg/middleware/cors` | 跨域支持 |
-| Logger | `pkg/middleware/logger` | 请求日志 |
-| Recovery | `pkg/middleware/recovery` | 恢复panic |
+| CORS | `internal/middleware/builtin` | 跨域支持 |
+| Logger | `internal/middleware/builtin` | 请求日志 |
+| Recovery | `internal/middleware/builtin` | 恢复panic |
 | Validation | `internal/middleware/validation` | 参数验证 |
 | Version | `internal/middleware/version_routing` | 版本路由 |
 
@@ -402,8 +402,8 @@ package routes
 
 import (
     "github.com/gin-gonic/gin"
+    "github.com/yukin371/Qingyu/backend/internal/middleware"
     "github.com/yukin371/Qingyu/backend/internal/middleware/auth"
-    "github.com/yukin371/Qingyu/backend/pkg/middleware"
 )
 
 func RegisterRoutes(r *gin.Engine) {
