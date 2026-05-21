@@ -211,6 +211,46 @@ func TestDocumentApiCreateDocument_ServiceNotInitialized(t *testing.T) {
 	assert.Contains(t, w.Body.String(), "服务未初始化")
 }
 
+func TestDocumentApiDuplicateDocument_RequiresLogin(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	router := gin.New()
+	api := &DocumentApi{}
+	router.POST("/api/v1/writer/documents/:id/duplicate", api.DuplicateDocument)
+
+	documentID := primitive.NewObjectID().Hex()
+	req, err := http.NewRequest(http.MethodPost, "/api/v1/writer/documents/"+documentID+"/duplicate", bytes.NewBufferString(`{"position":"inner"}`))
+	require.NoError(t, err)
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+
+	var resp map[string]any
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, float64(1002), resp["code"])
+}
+
+func TestDocumentApiCreateDocumentByBody_ServiceNotInitialized(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	router := gin.New()
+	api := &DocumentApi{}
+	router.POST("/api/v1/writer/documents", api.CreateDocumentByBody)
+
+	req, err := http.NewRequest(http.MethodPost, "/api/v1/writer/documents", bytes.NewBufferString(`{"project_id":"`+primitive.NewObjectID().Hex()+`","title":"新文档"}`))
+	require.NoError(t, err)
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Contains(t, w.Body.String(), "服务未初始化")
+}
+
 func TestDocumentApiCreateDocument_ProjectLookupFailure(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
