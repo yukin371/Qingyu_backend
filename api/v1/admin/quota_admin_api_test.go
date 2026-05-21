@@ -456,6 +456,34 @@ func TestQuotaAdminAPIRechargeUserQuotaRejectsMissingUserID(t *testing.T) {
 	assert.Contains(t, w.Body.String(), "用户ID不能为空")
 }
 
+func TestQuotaAdminAPISuspendUserQuotaRejectsMissingUserID(t *testing.T) {
+	repo := newQuotaAdminAPITestRepo()
+	api, _ := setupQuotaAdminAPITestHarness(repo, nil)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest(http.MethodPost, "/users/suspend", nil)
+
+	api.SuspendUserQuota(c)
+
+	require.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "用户ID不能为空")
+}
+
+func TestQuotaAdminAPIActivateUserQuotaRejectsMissingUserID(t *testing.T) {
+	repo := newQuotaAdminAPITestRepo()
+	api, _ := setupQuotaAdminAPITestHarness(repo, nil)
+
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest(http.MethodPost, "/users/activate", nil)
+
+	api.ActivateUserQuota(c)
+
+	require.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "用户ID不能为空")
+}
+
 func TestQuotaAdminAPIUpdateSuspendAndActivateHandlers(t *testing.T) {
 	t.Run("rejects missing user ID for update", func(t *testing.T) {
 		repo := newQuotaAdminAPITestRepo()
