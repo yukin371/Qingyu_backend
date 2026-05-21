@@ -2,6 +2,7 @@ package ai
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -13,9 +14,11 @@ import (
 )
 
 type quotaAlertRepoStub struct {
-	alerts map[string]*aiModels.QuotaAlert
-	createErr error
-	updateErr error
+	alerts     map[string]*aiModels.QuotaAlert
+	createErr  error
+	updateErr  error
+	listErr    error
+	listCalled int
 }
 
 func newQuotaAlertRepoStub(alerts ...*aiModels.QuotaAlert) *quotaAlertRepoStub {
@@ -48,6 +51,10 @@ func (s *quotaAlertRepoStub) GetByID(ctx context.Context, id string) (*aiModels.
 }
 
 func (s *quotaAlertRepoStub) List(ctx context.Context, alertType, level, status string, page, limit int) ([]*aiModels.QuotaAlert, int64, error) {
+	s.listCalled++
+	if s.listErr != nil {
+		return nil, 0, s.listErr
+	}
 	items := make([]*aiModels.QuotaAlert, 0, len(s.alerts))
 	for _, alert := range s.alerts {
 		if alertType != "" && string(alert.Type) != alertType {
@@ -238,4 +245,29 @@ func TestQuotaAlertServiceAcknowledgeResolveAndIgnoreUpdateStatus(t *testing.T) 
 	require.NoError(t, err)
 	assert.Equal(t, aiModels.QuotaAlertStatusIgnored, alert.Status)
 	assert.Equal(t, "admin-3", alert.ResolvedBy)
+}
+
+func TestQuotaAlertServiceResolveRecoveredConsistencyAlertsHandlesEmptyKeysAndRepositoryFailures(t *testing.T) {
+	t.Run("empty checked keys short-circuits before repository lookup", func(t *testing.T) {
+		repo := newQuotaAlertRepoStub()
+		service := NewQuotaAlertService(repo)
+
+		err := service.ResolveRecoveredConsistencyAlerts(context.Background(), nil, nil, "system")
+		require.NoError(t, err)
+		assert.Equal(t, 0, repo.listCalled)
+	})
+
+	t.Run("repository list failure is wrapped", func(t *testing.T) {
+		repo := &quotaAlertRepoStub{
+			alerts:  map[string]*aiModels.QuotaAlert{},
+			listErr: errors.New("list failed"),
+		}
+		service := NewQuotaAlertService(repo)
+
+		err := service.ResolveRecoveredConsistencyAlerts(context.Background(), map[string]struct{}{"checked": {}}, nil, "system")
+		require.Error(t, err)
+		assert.Contains(t, err.Error(), "查询 consistency 告警失败")
+		assert.Contains(t, err.Error(), "list failed")
+		assert.Equal(t, 1, repo.listCalled)
+	})
 }

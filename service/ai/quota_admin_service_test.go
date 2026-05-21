@@ -317,6 +317,20 @@ func TestQuotaAdminServiceGetUserQuotaReconciliationHandlesFailedAIResponse(t *t
 	assert.Contains(t, err.Error(), "grpc unavailable")
 }
 
+func TestQuotaAdminServiceGetUserQuotaReconciliationReturnsGenericErrorWhenAIResponseHasNoMessage(t *testing.T) {
+	service := NewQuotaAdminService(&quotaAdminRepoStub{}, nil)
+	service.SetConsumptionReader(&quotaConsumptionReaderStub{
+		response: &pb.QuotaConsumptionResponse{
+			Success: false,
+		},
+	})
+
+	result, err := service.GetUserQuotaReconciliation(context.Background(), "user-1", "day", "")
+	require.Error(t, err)
+	assert.Nil(t, result)
+	assert.Contains(t, err.Error(), "AI服务返回未成功状态")
+}
+
 func TestQuotaAdminServiceBatchOperationsValidateAndAggregateResults(t *testing.T) {
 	t.Run("batch recharge validates input and aggregates partial failures", func(t *testing.T) {
 		service := NewQuotaAdminService(&quotaAdminRepoStub{}, newQuotaAlertRepoStub())

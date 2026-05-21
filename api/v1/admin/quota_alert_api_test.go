@@ -27,6 +27,7 @@ type quotaAlertRepoForAPITest struct {
 	lastStatus    string
 	lastPage      int
 	lastLimit     int
+	getByIDErr    error
 	listErr       error
 }
 
@@ -35,6 +36,9 @@ func (s *quotaAlertRepoForAPITest) Create(ctx context.Context, alert *aiModels.Q
 }
 
 func (s *quotaAlertRepoForAPITest) GetByID(ctx context.Context, id string) (*aiModels.QuotaAlert, error) {
+	if s.getByIDErr != nil {
+		return nil, s.getByIDErr
+	}
 	for _, alert := range s.alerts {
 		if alert != nil && alert.ID.Hex() == id {
 			return alert, nil
@@ -332,6 +336,21 @@ func TestQuotaAlertAPIGetAlertReturnsDetails(t *testing.T) {
 	assert.Equal(t, alert.ID.Hex(), response.Data.ID)
 	assert.Equal(t, string(aiModels.QuotaAlertStatusPending), response.Data.Status)
 	assert.Equal(t, "pending", response.Data.Title)
+}
+
+func TestQuotaAlertAPIGetAlertSurfacesRepositoryFailure(t *testing.T) {
+	repo := &quotaAlertRepoForAPITest{
+		getByIDErr: errors.New("lookup failed"),
+	}
+	router := setupQuotaAlertAPITestRouterWithRepo(repo)
+
+	req, _ := http.NewRequest("GET", "/alerts/507f1f77bcf86cd799439011", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Contains(t, w.Body.String(), "获取告警失败")
+	assert.Contains(t, w.Body.String(), "lookup failed")
 }
 
 func TestQuotaAlertAPIResolveAndIgnoreEndpointsUpdateAlertStatus(t *testing.T) {

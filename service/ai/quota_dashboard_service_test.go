@@ -253,6 +253,26 @@ func TestQuotaDashboardServiceGetReconciliationSummaryNormalizesInputAndHandlesF
 	assert.Contains(t, err.Error(), "ai unavailable")
 }
 
+func TestQuotaDashboardServiceGetReconciliationSummaryReturnsGenericFailureWhenAIResponseHasNoMessage(t *testing.T) {
+	repo := &quotaDashboardRepoStub{
+		consumption: &aiModels.QuotaConsumptionSummary{
+			Items: []aiModels.QuotaConsumptionSummaryItem{{GroupKey: "user-1", TotalTokens: 10, TotalRecords: 1}},
+		},
+	}
+	reader := &quotaSummaryReaderStub{
+		response: &pb.QuotaConsumptionSummaryResponse{
+			Success: false,
+		},
+	}
+	service := NewQuotaDashboardService(repo, nil, nil)
+	service.SetConsumptionSummaryReader(reader)
+
+	result, err := service.GetReconciliationSummary(context.Background(), "day", "", "user", 1, 20)
+	require.Error(t, err)
+	assert.Nil(t, result)
+	assert.Contains(t, err.Error(), "AI服务消费聚合摘要返回未成功状态")
+}
+
 func TestQuotaDashboardServiceGetDashboardReturnsEmptyCollectionsWhenRepositoriesAreEmpty(t *testing.T) {
 	repo := &quotaDashboardRepoStub{
 		topConsumers: []aiModels.UserQuotaRanking{},

@@ -159,6 +159,18 @@ func TestWriterStatsAggregateAPIResolveAggregateBookID_UsesProjectIDFallbackWith
 	assert.Equal(t, "project-123", bookID)
 }
 
+func TestWriterStatsAggregateAPIGetOverview_RequiresLoginWhenNoBookOrProject(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	api := NewWriterStatsAggregateAPI(nil, nil)
+	c, w := newWriterTestContext(http.MethodGet, "/api/v1/writer/stats/overview", "", nil)
+
+	api.GetOverview(c)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+	assert.Contains(t, w.Body.String(), "请先登录")
+}
+
 func TestSumViewMetricsAggregatesDailyStats(t *testing.T) {
 	items := []*statsModels.BookStatsDaily{
 		{DailyViews: 12, DailySubscribers: 3},

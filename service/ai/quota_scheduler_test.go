@@ -225,6 +225,21 @@ func TestQuotaSchedulerConsistencyChecksHandleMissingDependenciesAndDownstreamEr
 		assert.NoError(t, err)
 	})
 
+	t.Run("skips user-level checks when there are no top consumers", func(t *testing.T) {
+		conn := &quotaSchedulerAIClientConnStub{}
+		scheduler := &QuotaScheduler{
+			dashboardService: &QuotaDashboardService{
+				quotaRepo: &quotaDashboardRepoStub{},
+			},
+			phase3Client: &Phase3Client{client: pb.NewAIServiceClient(conn)},
+			logger:       log.Default(),
+		}
+
+		err := scheduler.checkUserLevelConsistency(context.Background())
+		assert.NoError(t, err)
+		assert.Equal(t, 0, conn.invokeCount)
+	})
+
 	t.Run("returns top consumer load error", func(t *testing.T) {
 		scheduler := &QuotaScheduler{
 			dashboardService: &QuotaDashboardService{

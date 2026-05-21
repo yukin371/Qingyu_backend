@@ -419,3 +419,33 @@ func TestQuotaDashboardAPIGetReconciliationSummarySurfacesReaderFailure(t *testi
 	assert.Contains(t, w.Body.String(), "获取对账摘要失败")
 	assert.Contains(t, w.Body.String(), "获取AI服务消费聚合摘要失败")
 }
+
+func TestQuotaDashboardAPIGetDashboardReturnsEmptyPayloadWhenRepositoriesAreEmpty(t *testing.T) {
+	repo := &quotaDashboardRepoForAPITest{}
+	alertRepo := &quotaDashboardAlertRepoForAPITest{}
+	router := setupQuotaDashboardAPITestRouter(repo, alertRepo, nil, nil)
+
+	req, _ := http.NewRequest("GET", "/dashboard", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+
+	var resp struct {
+		Data struct {
+			Summary struct {
+				TotalUsers       int64 `json:"totalUsers"`
+				TotalConsumption int64 `json:"totalConsumption"`
+			} `json:"summary"`
+			TopConsumers []any `json:"topConsumers"`
+			RecentAlerts []any `json:"recentAlerts"`
+			TrendData    []any `json:"trendData"`
+		} `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, int64(0), resp.Data.Summary.TotalUsers)
+	assert.Equal(t, int64(0), resp.Data.Summary.TotalConsumption)
+	require.Len(t, resp.Data.TopConsumers, 0)
+	require.Len(t, resp.Data.RecentAlerts, 0)
+	require.Len(t, resp.Data.TrendData, 0)
+}

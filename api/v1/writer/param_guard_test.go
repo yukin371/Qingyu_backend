@@ -8,6 +8,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+
+	"Qingyu_backend/service/writer/document"
 )
 
 func newWriterTestContext(method, target string, body string, params gin.Params) (*gin.Context, *httptest.ResponseRecorder) {
@@ -75,6 +77,54 @@ func TestChangeRequestApiProcessChangeRequest_InvalidJSONReturnsBadRequest(t *te
 	})
 
 	api.ProcessChangeRequest(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "参数错误")
+}
+
+func TestDocumentApiCreateDocument_RequiresLogin(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	api := &DocumentApi{documentService: &document.DocumentService{}}
+	c, w := newWriterTestContext(http.MethodPost, "/api/v1/projects/project-1/documents", `{
+		"title":"新文档",
+		"type":"chapter"
+	}`, gin.Params{
+		{Key: "projectId", Value: "project-1"},
+	})
+
+	api.CreateDocument(c)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+	assert.Contains(t, w.Body.String(), "请先登录")
+}
+
+func TestDocumentApiCreateDocument_RequiresProjectIDPathParam(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	api := &DocumentApi{documentService: &document.DocumentService{}}
+	c, w := newWriterTestContext(http.MethodPost, "/api/v1/projects//documents", `{
+		"title":"新文档",
+		"type":"chapter"
+	}`, nil)
+	c.Set("user_id", "user-1")
+
+	api.CreateDocument(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "项目ID不能为空")
+}
+
+func TestDocumentApiCreateDocument_RejectsMalformedJSON(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	api := &DocumentApi{documentService: &document.DocumentService{}}
+	c, w := newWriterTestContext(http.MethodPost, "/api/v1/projects/project-1/documents", `{"title":`, gin.Params{
+		{Key: "projectId", Value: "project-1"},
+	})
+	c.Set("user_id", "user-1")
+
+	api.CreateDocument(c)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	assert.Contains(t, w.Body.String(), "参数错误")

@@ -597,6 +597,25 @@ func TestDocumentService_UpdateDocumentContent_RejectsInvalidTipTapJSON(t *testi
 	contentRepo.AssertNotCalled(t, "GetByDocumentID", mock.Anything, mock.Anything)
 }
 
+func TestDocumentService_UpdateDocumentContent_RejectsInvalidContentType(t *testing.T) {
+	docRepo := new(MockDocumentRepository)
+	projectRepo := new(MockProjectRepository)
+	contentRepo := new(servicemock.MockDocumentContentRepository)
+	svc := NewDocumentService(docRepo, contentRepo, projectRepo, nil)
+
+	err := svc.UpdateDocumentContent(context.Background(), &dto.UpdateContentRequest{
+		DocumentID:  primitive.NewObjectID().Hex(),
+		Content:     "payload",
+		ContentType: "xml",
+	})
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "无效的contentType")
+	docRepo.AssertNotCalled(t, "GetByID", mock.Anything, mock.Anything)
+	projectRepo.AssertNotCalled(t, "GetByID", mock.Anything, mock.Anything)
+	contentRepo.AssertNotCalled(t, "GetByDocumentID", mock.Anything, mock.Anything)
+}
+
 func TestDocumentService_ReindexDocumentContents_ReordersRowsAndSkipsStableItems(t *testing.T) {
 	docRepo := new(MockDocumentRepository)
 	projectRepo := new(MockProjectRepository)
@@ -636,6 +655,48 @@ func TestDocumentService_ReindexDocumentContents_ReordersRowsAndSkipsStableItems
 	contentRepo.AssertExpectations(t)
 }
 
+func TestDocumentService_GetDocumentContents_FallsBackToDocumentWordCountWhenLegacyLookupFails(t *testing.T) {
+	docRepo := new(MockDocumentRepository)
+	projectRepo := new(MockProjectRepository)
+	contentRepo := new(servicemock.MockDocumentContentRepository)
+	svc := NewDocumentService(docRepo, contentRepo, projectRepo, nil)
+
+	userObjID, _ := primitive.ObjectIDFromHex("507f1f77bcf86cd799439011")
+	projectOID := primitive.NewObjectID()
+	docID := primitive.NewObjectID().Hex()
+	updatedAt := time.Date(2026, 5, 21, 10, 15, 0, 0, time.UTC)
+
+	project := &writer.Project{OwnedEntity: modelbase.OwnedEntity{AuthorID: userObjID}}
+	doc := &writer.Document{
+		ProjectID: projectOID,
+		WordCount: 16,
+		Timestamps: modelbase.Timestamps{
+			UpdatedAt: updatedAt,
+		},
+	}
+
+	ctx := contextWithTestUserID(context.Background(), userObjID.Hex())
+
+	docRepo.On("GetByID", mock.Anything, docID).Return(doc, nil).Once()
+	projectRepo.On("GetByID", mock.Anything, projectOID.Hex()).Return(project, nil).Once()
+	contentRepo.On("List", mock.Anything, mock.Anything).Return([]*writer.DocumentContent{}, nil).Once()
+	contentRepo.On("GetByDocumentID", mock.Anything, docID).Return(nil, errors.New("legacy lookup failed")).Once()
+
+	resp, err := svc.GetDocumentContents(ctx, docID)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+	assert.Equal(t, docID, resp.DocumentID)
+	assert.Empty(t, resp.Contents)
+	assert.Equal(t, 0, resp.Total)
+	assert.Equal(t, 16, resp.WordCount)
+	assert.Equal(t, updatedAt, resp.UpdatedAt)
+
+	docRepo.AssertExpectations(t)
+	projectRepo.AssertExpectations(t)
+	contentRepo.AssertExpectations(t)
+}
+
 func TestDocumentService_ReindexDocumentContents_ReturnsUpdateError(t *testing.T) {
 	docRepo := new(MockDocumentRepository)
 	projectRepo := new(MockProjectRepository)
@@ -666,6 +727,35 @@ func TestDocumentService_ReindexDocumentContents_ReturnsUpdateError(t *testing.T
 	assert.Error(t, err)
 	assert.Nil(t, resp)
 	assert.Contains(t, err.Error(), "更新段落顺序失败")
+
+	docRepo.AssertExpectations(t)
+	projectRepo.AssertExpectations(t)
+	contentRepo.AssertExpectations(t)
+}
+
+func TestDocumentService_ReindexDocumentContents_ReturnsErrorWhenListFails(t *testing.T) {
+	docRepo := new(MockDocumentRepository)
+	projectRepo := new(MockProjectRepository)
+	contentRepo := new(servicemock.MockDocumentContentRepository)
+	svc := NewDocumentService(docRepo, contentRepo, projectRepo, nil)
+
+	userObjID, _ := primitive.ObjectIDFromHex("507f1f77bcf86cd799439011")
+	projectOID := primitive.NewObjectID()
+	docID := primitive.NewObjectID().Hex()
+
+	project := &writer.Project{OwnedEntity: modelbase.OwnedEntity{AuthorID: userObjID}}
+	doc := &writer.Document{ProjectID: projectOID}
+	ctx := contextWithTestUserID(context.Background(), userObjID.Hex())
+
+	docRepo.On("GetByID", mock.Anything, docID).Return(doc, nil).Once()
+	projectRepo.On("GetByID", mock.Anything, projectOID.Hex()).Return(project, nil).Once()
+	contentRepo.On("List", mock.Anything, mock.Anything).Return(nil, errors.New("db timeout")).Once()
+
+	resp, err := svc.ReindexDocumentContents(ctx, docID)
+
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.Contains(t, err.Error(), "查询段落失败")
 
 	docRepo.AssertExpectations(t)
 	projectRepo.AssertExpectations(t)
