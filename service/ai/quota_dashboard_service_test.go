@@ -353,11 +353,21 @@ func TestQuotaDashboardServiceGetDashboardPropagatesRepositoryFailures(t *testin
 			repo: &quotaDashboardRepoStub{trendErr: errors.New("trend down")},
 			want: "获取趋势数据失败",
 		},
+		{
+			name:      "recent alerts failure",
+			repo:      &quotaDashboardRepoStub{},
+			alertRepo: &quotaAlertRepoStub{recentErr: errors.New("alerts down"), alerts: map[string]*aiModels.QuotaAlert{}},
+			want:      "获取近期告警失败",
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			service := NewQuotaDashboardService(tt.repo, newQuotaAlertRepoStub(), nil)
+			alertRepo := tt.alertRepo
+			if alertRepo == nil {
+				alertRepo = newQuotaAlertRepoStub()
+			}
+			service := NewQuotaDashboardService(tt.repo, alertRepo, nil)
 			result, err := service.GetDashboard(context.Background())
 			require.Error(t, err)
 			assert.Nil(t, result)

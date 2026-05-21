@@ -18,6 +18,7 @@ type quotaAlertRepoStub struct {
 	createErr  error
 	updateErr  error
 	listErr    error
+	recentErr  error
 	listCalled int
 }
 
@@ -90,6 +91,9 @@ func (s *quotaAlertRepoStub) Update(ctx context.Context, alert *aiModels.QuotaAl
 }
 
 func (s *quotaAlertRepoStub) GetRecentGlobal(ctx context.Context, limit int) ([]*aiModels.QuotaAlert, error) {
+	if s.recentErr != nil {
+		return nil, s.recentErr
+	}
 	return nil, nil
 }
 
