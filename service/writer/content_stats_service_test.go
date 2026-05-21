@@ -81,6 +81,25 @@ func TestContentStatsService_GetContentStats_Success(t *testing.T) {
 	mockProjectRepo.AssertExpectations(t)
 }
 
+func TestContentStatsService_GetContentStats_SuccessWithoutProjectRepo(t *testing.T) {
+	ctx := context.Background()
+	userID := "user-789"
+	mockUserRepo := new(MockContentStatsUserRepository)
+	service := NewContentStatsService(mockUserRepo, nil)
+
+	mockUserRepo.On("GetByID", ctx, userID).Return(&users.User{}, nil).Once()
+
+	stats, err := service.GetContentStats(ctx, userID)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, stats)
+	assert.Equal(t, userID, stats.UserID)
+	assert.Equal(t, int64(0), stats.TotalProjects)
+	assert.Equal(t, int64(0), stats.PublishedBooks)
+	assert.Equal(t, int64(0), stats.TotalWords)
+	mockUserRepo.AssertExpectations(t)
+}
+
 func TestContentStatsService_GetContentStats_ProjectCountErrorFallback(t *testing.T) {
 	ctx := context.Background()
 	userID := "user-456"

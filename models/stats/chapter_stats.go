@@ -37,13 +37,13 @@ type ChapterStats struct {
 
 // ChapterStatsAggregate 章节统计聚合结果
 type ChapterStatsAggregate struct {
-	ChapterID      string  `json:"chapter_id"`
-	Title          string  `json:"title"`
-	ViewCount      int64   `json:"view_count"`
-	UniqueViewers  int64   `json:"unique_viewers"`
-	CompletionRate float64 `json:"completion_rate"`
-	DropOffRate    float64 `json:"drop_off_rate"`
-	Revenue        float64 `json:"revenue"`
+	ChapterID      string  `bson:"chapter_id" json:"chapter_id"`
+	Title          string  `bson:"title" json:"title"`
+	ViewCount      int64   `bson:"view_count" json:"view_count"`
+	UniqueViewers  int64   `bson:"unique_viewers" json:"unique_viewers"`
+	CompletionRate float64 `bson:"completion_rate" json:"completion_rate"`
+	DropOffRate    float64 `bson:"drop_off_rate" json:"drop_off_rate"`
+	Revenue        float64 `bson:"revenue" json:"revenue"`
 }
 
 // HeatmapPoint 热力图数据点

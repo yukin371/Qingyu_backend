@@ -15,11 +15,12 @@ import (
 )
 
 type quotaDashboardRepoStub struct {
-	summary      *aiModels.DashboardSummary
-	distribution *aiModels.QuotaDistribution
-	topConsumers []aiModels.UserQuotaRanking
-	trend        []aiModels.TrendPoint
-	consumption  *aiModels.QuotaConsumptionSummary
+	summary         *aiModels.DashboardSummary
+	distribution    *aiModels.QuotaDistribution
+	topConsumers    []aiModels.UserQuotaRanking
+	topConsumersErr error
+	trend           []aiModels.TrendPoint
+	consumption     *aiModels.QuotaConsumptionSummary
 }
 
 func (s *quotaDashboardRepoStub) CreateQuota(ctx context.Context, quota *aiModels.UserQuota) error {
@@ -81,6 +82,9 @@ func (s *quotaDashboardRepoStub) GetQuotaDistribution(ctx context.Context) (*aiM
 }
 
 func (s *quotaDashboardRepoStub) GetTopConsumers(ctx context.Context, limit int) ([]aiModels.UserQuotaRanking, error) {
+	if s.topConsumersErr != nil {
+		return nil, s.topConsumersErr
+	}
 	if len(s.topConsumers) > 0 {
 		return s.topConsumers, nil
 	}
@@ -110,7 +114,13 @@ func (s *quotaDashboardRepoStub) Health(ctx context.Context) error {
 }
 
 type quotaSummaryReaderStub struct {
-	response *pb.QuotaConsumptionSummaryResponse
+	response         *pb.QuotaConsumptionSummaryResponse
+	err              error
+	lastTimeRange    string
+	lastWorkflowType string
+	lastGroupBy      string
+	lastPage         int32
+	lastPageSize     int32
 }
 
 func (s *quotaSummaryReaderStub) GetQuotaConsumptionSummary(
@@ -121,7 +131,25 @@ func (s *quotaSummaryReaderStub) GetQuotaConsumptionSummary(
 	page int32,
 	pageSize int32,
 ) (*pb.QuotaConsumptionSummaryResponse, error) {
+	s.lastTimeRange = timeRange
+	s.lastWorkflowType = workflowType
+	s.lastGroupBy = groupBy
+	s.lastPage = page
+	s.lastPageSize = pageSize
+	if s.err != nil {
+		return nil, s.err
+	}
 	return s.response, nil
+}
+
+type quotaConsistencyRunnerStub struct {
+	called int
+	err    error
+}
+
+func (s *quotaConsistencyRunnerStub) RunConsistencyCheck(ctx context.Context) error {
+	s.called++
+	return s.err
 }
 
 func TestQuotaDashboardServiceGetReconciliationSummaryUsesConfiguredGlobalThresholds(t *testing.T) {
@@ -188,4 +216,54 @@ func TestQuotaDashboardServiceGetReconciliationSummaryUsesConfiguredGlobalThresh
 	assert.False(t, result.ShouldAlert)
 	require.Len(t, result.Items, 1)
 	assert.Equal(t, string(aiModels.QuotaAlertLevelInfo), result.Items[0].AlertLevel)
+}
+
+func TestQuotaDashboardServiceGetReconciliationSummaryRequiresReader(t *testing.T) {
+	service := NewQuotaDashboardService(&quotaDashboardRepoStub{}, nil, nil)
+
+	result, err := service.GetReconciliationSummary(context.Background(), "day", "", "user", 1, 20)
+	require.Error(t, err)
+	assert.Nil(t, result)
+	assert.Contains(t, err.Error(), "AI配额聚合对账客户端未配置")
+}
+
+func TestQuotaDashboardServiceGetReconciliationSummaryNormalizesInputAndHandlesFailedResponse(t *testing.T) {
+	repo := &quotaDashboardRepoStub{
+		consumption: &aiModels.QuotaConsumptionSummary{
+			Items: []aiModels.QuotaConsumptionSummaryItem{{GroupKey: "user-1", TotalTokens: 10, TotalRecords: 1}},
+		},
+	}
+	reader := &quotaSummaryReaderStub{
+		response: &pb.QuotaConsumptionSummaryResponse{
+			Success:      false,
+			ErrorMessage: "ai unavailable",
+		},
+	}
+	service := NewQuotaDashboardService(repo, nil, nil)
+	service.SetConsumptionSummaryReader(reader)
+
+	result, err := service.GetReconciliationSummary(context.Background(), "", "story_write", "unknown", 0, 999)
+	require.Error(t, err)
+	assert.Nil(t, result)
+	assert.Equal(t, "day", reader.lastTimeRange)
+	assert.Equal(t, "story_write", reader.lastWorkflowType)
+	assert.Equal(t, "user", reader.lastGroupBy)
+	assert.EqualValues(t, 1, reader.lastPage)
+	assert.EqualValues(t, 100, reader.lastPageSize)
+	assert.Contains(t, err.Error(), "ai unavailable")
+}
+
+func TestQuotaDashboardServiceRunConsistencyCheckRequiresRunnerAndDelegates(t *testing.T) {
+	service := NewQuotaDashboardService(&quotaDashboardRepoStub{}, nil, nil)
+
+	err := service.RunConsistencyCheck(context.Background())
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "AI配额对账执行器未配置")
+
+	runner := &quotaConsistencyRunnerStub{}
+	service.SetConsistencyRunner(runner)
+
+	err = service.RunConsistencyCheck(context.Background())
+	require.NoError(t, err)
+	assert.Equal(t, 1, runner.called)
 }

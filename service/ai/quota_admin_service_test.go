@@ -2,6 +2,7 @@ package ai
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -14,27 +15,125 @@ import (
 )
 
 type quotaAdminRepoStub struct {
-	transactions []*aiModels.QuotaTransaction
+	transactions           []*aiModels.QuotaTransaction
+	quotasByUserID         map[string]map[aiModels.QuotaType]*aiModels.UserQuota
+	allQuotasByUserID      map[string][]*aiModels.UserQuota
+	getQuotaErrByUserID    map[string]error
+	updateQuotaErrByUserID map[string]error
+	createQuotaErrByUserID map[string]error
+	createTransactionErr   error
+}
+
+func newQuotaAdminRepoStub() *quotaAdminRepoStub {
+	return &quotaAdminRepoStub{
+		quotasByUserID:    make(map[string]map[aiModels.QuotaType]*aiModels.UserQuota),
+		allQuotasByUserID: make(map[string][]*aiModels.UserQuota),
+	}
+}
+
+func quotaAdminStubQuota(userID string, quotaType aiModels.QuotaType) string {
+	return userID + "|" + string(quotaType)
 }
 
 func (s *quotaAdminRepoStub) CreateQuota(ctx context.Context, quota *aiModels.UserQuota) error {
+	if quota == nil {
+		return nil
+	}
+	if s.createQuotaErrByUserID != nil {
+		if err, ok := s.createQuotaErrByUserID[quota.UserID]; ok {
+			return err
+		}
+	}
+	if s.quotasByUserID == nil {
+		s.quotasByUserID = make(map[string]map[aiModels.QuotaType]*aiModels.UserQuota)
+	}
+	if s.quotasByUserID[quota.UserID] == nil {
+		s.quotasByUserID[quota.UserID] = make(map[aiModels.QuotaType]*aiModels.UserQuota)
+	}
+	s.quotasByUserID[quota.UserID][quota.QuotaType] = quota
+	if s.allQuotasByUserID != nil {
+		s.allQuotasByUserID[quota.UserID] = append(s.allQuotasByUserID[quota.UserID], quota)
+	}
 	return nil
 }
 
 func (s *quotaAdminRepoStub) GetQuotaByUserID(ctx context.Context, userID string, quotaType aiModels.QuotaType) (*aiModels.UserQuota, error) {
+	if s.getQuotaErrByUserID != nil {
+		if err, ok := s.getQuotaErrByUserID[userID]; ok {
+			return nil, err
+		}
+	}
+	if s.quotasByUserID != nil {
+		if quotaByType, ok := s.quotasByUserID[userID]; ok {
+			if quota, ok := quotaByType[quotaType]; ok {
+				return quota, nil
+			}
+		}
+	}
 	return nil, aiModels.ErrQuotaNotFound
 }
 
 func (s *quotaAdminRepoStub) UpdateQuota(ctx context.Context, quota *aiModels.UserQuota) error {
+	if quota == nil {
+		return nil
+	}
+	if s.updateQuotaErrByUserID != nil {
+		if err, ok := s.updateQuotaErrByUserID[quota.UserID]; ok {
+			return err
+		}
+	}
+	if s.quotasByUserID == nil {
+		s.quotasByUserID = make(map[string]map[aiModels.QuotaType]*aiModels.UserQuota)
+	}
+	if s.quotasByUserID[quota.UserID] == nil {
+		s.quotasByUserID[quota.UserID] = make(map[aiModels.QuotaType]*aiModels.UserQuota)
+	}
+	s.quotasByUserID[quota.UserID][quota.QuotaType] = quota
+	if s.allQuotasByUserID != nil {
+		quotas := s.allQuotasByUserID[quota.UserID]
+		replaced := false
+		for i, existing := range quotas {
+			if existing != nil && existing.QuotaType == quota.QuotaType {
+				quotas[i] = quota
+				replaced = true
+				break
+			}
+		}
+		if !replaced {
+			quotas = append(quotas, quota)
+		}
+		s.allQuotasByUserID[quota.UserID] = quotas
+	}
 	return nil
 }
 
 func (s *quotaAdminRepoStub) DeleteQuota(ctx context.Context, userID string, quotaType aiModels.QuotaType) error {
+	if s.quotasByUserID != nil {
+		if quotaByType, ok := s.quotasByUserID[userID]; ok {
+			delete(quotaByType, quotaType)
+		}
+	}
 	return nil
 }
 
 func (s *quotaAdminRepoStub) GetAllQuotasByUserID(ctx context.Context, userID string) ([]*aiModels.UserQuota, error) {
-	return nil, nil
+	if s.allQuotasByUserID != nil {
+		if quotas, ok := s.allQuotasByUserID[userID]; ok {
+			return quotas, nil
+		}
+	}
+	if s.quotasByUserID == nil {
+		return nil, nil
+	}
+	quotaByType, ok := s.quotasByUserID[userID]
+	if !ok {
+		return nil, nil
+	}
+	quotas := make([]*aiModels.UserQuota, 0, len(quotaByType))
+	for _, quota := range quotaByType {
+		quotas = append(quotas, quota)
+	}
+	return quotas, nil
 }
 
 func (s *quotaAdminRepoStub) BatchResetQuotas(ctx context.Context, quotaType aiModels.QuotaType) error {
@@ -42,6 +141,10 @@ func (s *quotaAdminRepoStub) BatchResetQuotas(ctx context.Context, quotaType aiM
 }
 
 func (s *quotaAdminRepoStub) CreateTransaction(ctx context.Context, transaction *aiModels.QuotaTransaction) error {
+	if s.createTransactionErr != nil {
+		return s.createTransactionErr
+	}
+	s.transactions = append(s.transactions, transaction)
 	return nil
 }
 
@@ -188,4 +291,180 @@ func TestResolveQuotaReconciliationWindowRejectsInvalidRange(t *testing.T) {
 	_, _, _, err := resolveQuotaReconciliationWindow("quarter", time.Now())
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "不支持的时间范围")
+}
+
+func TestQuotaAdminServiceGetUserQuotaReconciliationRequiresReader(t *testing.T) {
+	service := NewQuotaAdminService(&quotaAdminRepoStub{}, nil)
+
+	result, err := service.GetUserQuotaReconciliation(context.Background(), "user-1", "day", "")
+	require.Error(t, err)
+	assert.Nil(t, result)
+	assert.Contains(t, err.Error(), "AI配额对账客户端未配置")
+}
+
+func TestQuotaAdminServiceGetUserQuotaReconciliationHandlesFailedAIResponse(t *testing.T) {
+	service := NewQuotaAdminService(&quotaAdminRepoStub{}, nil)
+	service.SetConsumptionReader(&quotaConsumptionReaderStub{
+		response: &pb.QuotaConsumptionResponse{
+			Success:      false,
+			ErrorMessage: "grpc unavailable",
+		},
+	})
+
+	result, err := service.GetUserQuotaReconciliation(context.Background(), "user-1", "day", "")
+	require.Error(t, err)
+	assert.Nil(t, result)
+	assert.Contains(t, err.Error(), "grpc unavailable")
+}
+
+func TestQuotaAdminServiceBatchOperationsValidateAndAggregateResults(t *testing.T) {
+	t.Run("batch recharge validates input and aggregates partial failures", func(t *testing.T) {
+		service := NewQuotaAdminService(&quotaAdminRepoStub{}, newQuotaAlertRepoStub())
+
+		result, err := service.BatchRecharge(context.Background(), nil, 10, "daily", "manual", "operator-1")
+		require.Error(t, err)
+		assert.Nil(t, result)
+		assert.Contains(t, err.Error(), "用户列表不能为空")
+
+		result, err = service.BatchRecharge(context.Background(), []string{"user-1"}, 0, "daily", "manual", "operator-1")
+		require.Error(t, err)
+		assert.Nil(t, result)
+		assert.Contains(t, err.Error(), "充值金额必须大于0")
+
+		repo := &quotaAdminRepoStub{
+			quotasByUserID: map[string]map[aiModels.QuotaType]*aiModels.UserQuota{
+				"user-1": {
+					aiModels.QuotaTypeDaily: &aiModels.UserQuota{
+						UserID:         "user-1",
+						QuotaType:      aiModels.QuotaTypeDaily,
+						TotalQuota:     100,
+						RemainingQuota: 80,
+						Status:         aiModels.QuotaStatusActive,
+					},
+				},
+			},
+			getQuotaErrByUserID: map[string]error{
+				"user-2": errors.New("db unavailable"),
+			},
+		}
+		service = NewQuotaAdminService(repo, newQuotaAlertRepoStub())
+
+		result, err = service.BatchRecharge(context.Background(), []string{"user-1", "user-2"}, 20, "daily", "manual", "operator-1")
+		require.NoError(t, err)
+		require.NotNil(t, result)
+		assert.Equal(t, 2, result.Total)
+		assert.Equal(t, 1, result.Success)
+		assert.Equal(t, 1, result.Failed)
+		require.Len(t, result.Errors, 1)
+		assert.Contains(t, result.Errors[0], "user-2")
+	})
+
+	t.Run("batch update validates quota type and aggregates partial failures", func(t *testing.T) {
+		service := NewQuotaAdminService(&quotaAdminRepoStub{}, newQuotaAlertRepoStub())
+
+		result, err := service.BatchUpdateQuota(context.Background(), nil, 100, "daily")
+		require.Error(t, err)
+		assert.Nil(t, result)
+		assert.Contains(t, err.Error(), "用户列表不能为空")
+
+		result, err = service.BatchUpdateQuota(context.Background(), []string{"user-1"}, 100, "quarterly")
+		require.Error(t, err)
+		assert.Nil(t, result)
+		assert.Contains(t, err.Error(), "不支持的配额类型")
+
+		repo := &quotaAdminRepoStub{
+			quotasByUserID: map[string]map[aiModels.QuotaType]*aiModels.UserQuota{
+				"user-1": {
+					aiModels.QuotaTypeDaily: &aiModels.UserQuota{
+						UserID:         "user-1",
+						QuotaType:      aiModels.QuotaTypeDaily,
+						TotalQuota:     50,
+						UsedQuota:      10,
+						RemainingQuota: 40,
+						Status:         aiModels.QuotaStatusActive,
+					},
+				},
+				"user-2": {
+					aiModels.QuotaTypeDaily: &aiModels.UserQuota{
+						UserID:         "user-2",
+						QuotaType:      aiModels.QuotaTypeDaily,
+						TotalQuota:     60,
+						UsedQuota:      20,
+						RemainingQuota: 40,
+						Status:         aiModels.QuotaStatusActive,
+					},
+				},
+			},
+			updateQuotaErrByUserID: map[string]error{
+				"user-2": errors.New("update failed"),
+			},
+		}
+		service = NewQuotaAdminService(repo, newQuotaAlertRepoStub())
+
+		result, err = service.BatchUpdateQuota(context.Background(), []string{"user-1", "user-2"}, 120, "daily")
+		require.NoError(t, err)
+		require.NotNil(t, result)
+		assert.Equal(t, 2, result.Total)
+		assert.Equal(t, 1, result.Success)
+		assert.Equal(t, 1, result.Failed)
+		require.Len(t, result.Errors, 1)
+		assert.Contains(t, result.Errors[0], "user-2")
+		assert.Contains(t, result.Errors[0], "更新配额失败")
+	})
+
+	t.Run("batch suspend and activate aggregate partial failures", func(t *testing.T) {
+		suspendQuota := &aiModels.UserQuota{
+			UserID:         "user-1",
+			QuotaType:      aiModels.QuotaTypeDaily,
+			TotalQuota:     80,
+			RemainingQuota: 80,
+			Status:         aiModels.QuotaStatusActive,
+		}
+		activateQuota := &aiModels.UserQuota{
+			UserID:         "user-3",
+			QuotaType:      aiModels.QuotaTypeDaily,
+			TotalQuota:     40,
+			RemainingQuota: 0,
+			Status:         aiModels.QuotaStatusSuspended,
+		}
+
+		repo := &quotaAdminRepoStub{
+			quotasByUserID: map[string]map[aiModels.QuotaType]*aiModels.UserQuota{
+				"user-1": {
+					aiModels.QuotaTypeDaily: suspendQuota,
+				},
+				"user-3": {
+					aiModels.QuotaTypeDaily: activateQuota,
+				},
+			},
+			allQuotasByUserID: map[string][]*aiModels.UserQuota{
+				"user-1": []*aiModels.UserQuota{suspendQuota},
+				"user-3": []*aiModels.UserQuota{activateQuota},
+			},
+			getQuotaErrByUserID: map[string]error{
+				"user-2": errors.New("lookup failed"),
+			},
+		}
+		service := NewQuotaAdminService(repo, newQuotaAlertRepoStub())
+
+		suspendResult, err := service.BatchSuspend(context.Background(), []string{"user-1", "user-2"})
+		require.NoError(t, err)
+		require.NotNil(t, suspendResult)
+		assert.Equal(t, 2, suspendResult.Total)
+		assert.Equal(t, 1, suspendResult.Success)
+		assert.Equal(t, 1, suspendResult.Failed)
+		require.Len(t, suspendResult.Errors, 1)
+		assert.Contains(t, suspendResult.Errors[0], "user-2")
+		assert.Equal(t, aiModels.QuotaStatusSuspended, suspendQuota.Status)
+
+		activateResult, err := service.BatchActivate(context.Background(), []string{"user-3", "user-2"})
+		require.NoError(t, err)
+		require.NotNil(t, activateResult)
+		assert.Equal(t, 2, activateResult.Total)
+		assert.Equal(t, 1, activateResult.Success)
+		assert.Equal(t, 1, activateResult.Failed)
+		require.Len(t, activateResult.Errors, 1)
+		assert.Contains(t, activateResult.Errors[0], "user-2")
+		assert.Equal(t, aiModels.QuotaStatusActive, activateQuota.Status)
+	})
 }

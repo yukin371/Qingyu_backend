@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
+	"time"
 
 	aiModels "Qingyu_backend/models/ai"
 	aiRepo "Qingyu_backend/repository/interfaces/ai"
@@ -18,7 +20,12 @@ import (
 )
 
 type quotaAlertRepoForAPITest struct {
-	alerts []*aiModels.QuotaAlert
+	alerts        []*aiModels.QuotaAlert
+	lastAlertType string
+	lastLevel     string
+	lastStatus    string
+	lastPage      int
+	lastLimit     int
 }
 
 func (s *quotaAlertRepoForAPITest) Create(ctx context.Context, alert *aiModels.QuotaAlert) error {
@@ -35,6 +42,12 @@ func (s *quotaAlertRepoForAPITest) GetByID(ctx context.Context, id string) (*aiM
 }
 
 func (s *quotaAlertRepoForAPITest) List(ctx context.Context, alertType, level, status string, page, limit int) ([]*aiModels.QuotaAlert, int64, error) {
+	s.lastAlertType = alertType
+	s.lastLevel = level
+	s.lastStatus = status
+	s.lastPage = page
+	s.lastLimit = limit
+
 	items := make([]*aiModels.QuotaAlert, 0, len(s.alerts))
 	for _, alert := range s.alerts {
 		if alert == nil {
@@ -92,6 +105,24 @@ func setupQuotaAlertAPITestRouter(alerts ...*aiModels.QuotaAlert) *gin.Engine {
 
 	router := gin.New()
 	router.GET("/alerts", api.ListAlerts)
+	router.GET("/alerts/:id", api.GetAlert)
+	router.PUT("/alerts/:id/acknowledge", api.AcknowledgeAlert)
+	router.PUT("/alerts/:id/resolve", api.ResolveAlert)
+	router.PUT("/alerts/:id/ignore", api.IgnoreAlert)
+	return router
+}
+
+func setupQuotaAlertAPITestRouterWithRepo(repo *quotaAlertRepoForAPITest) *gin.Engine {
+	gin.SetMode(gin.TestMode)
+	service := aiService.NewQuotaAlertService(repo)
+	api := NewQuotaAlertAPI(service)
+
+	router := gin.New()
+	router.GET("/alerts", api.ListAlerts)
+	router.GET("/alerts/:id", api.GetAlert)
+	router.PUT("/alerts/:id/acknowledge", api.AcknowledgeAlert)
+	router.PUT("/alerts/:id/resolve", api.ResolveAlert)
+	router.PUT("/alerts/:id/ignore", api.IgnoreAlert)
 	return router
 }
 
@@ -175,4 +206,170 @@ func TestQuotaAlertAPIListAlertsSupportsAllStatus(t *testing.T) {
 	assert.Equal(t, 200, response.Code)
 	assert.Equal(t, 2, response.Total)
 	require.Len(t, response.Data, 2)
+}
+
+func TestQuotaAlertAPIListAlertsNormalizesPagingAndFiltersOpenStatus(t *testing.T) {
+	repo := &quotaAlertRepoForAPITest{
+		alerts: []*aiModels.QuotaAlert{
+			{
+				ID:        primitive.NewObjectID(),
+				Type:      aiModels.QuotaAlertTypeConsistency,
+				Status:    aiModels.QuotaAlertStatusPending,
+				Title:     "pending",
+				Message:   "pending",
+				Level:     aiModels.QuotaAlertLevelWarning,
+				CreatedAt: primitive.NewObjectID().Timestamp(),
+			},
+			{
+				ID:        primitive.NewObjectID(),
+				Type:      aiModels.QuotaAlertTypeConsistency,
+				Status:    aiModels.QuotaAlertStatusAcknowledged,
+				Title:     "ack",
+				Message:   "ack",
+				Level:     aiModels.QuotaAlertLevelWarning,
+				CreatedAt: primitive.NewObjectID().Timestamp(),
+			},
+			{
+				ID:        primitive.NewObjectID(),
+				Type:      aiModels.QuotaAlertTypeConsistency,
+				Status:    aiModels.QuotaAlertStatusResolved,
+				Title:     "resolved",
+				Message:   "resolved",
+				Level:     aiModels.QuotaAlertLevelWarning,
+				CreatedAt: primitive.NewObjectID().Timestamp(),
+			},
+		},
+	}
+	router := setupQuotaAlertAPITestRouterWithRepo(repo)
+
+	req, _ := http.NewRequest("GET", "/alerts?type=consistency&level=warning&status=open&page=0&limit=101", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, "consistency", repo.lastAlertType)
+	assert.Equal(t, "warning", repo.lastLevel)
+	assert.Equal(t, "open", repo.lastStatus)
+	assert.Equal(t, 1, repo.lastPage)
+	assert.Equal(t, 20, repo.lastLimit)
+
+	var response struct {
+		Code  int              `json:"code"`
+		Total int              `json:"total"`
+		Data  []map[string]any `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &response))
+	assert.Equal(t, 200, response.Code)
+	assert.Equal(t, 2, response.Total)
+	require.Len(t, response.Data, 2)
+}
+
+func TestQuotaAlertAPIGetAlertReturnsDetails(t *testing.T) {
+	alert := &aiModels.QuotaAlert{
+		ID:        primitive.NewObjectID(),
+		Type:      aiModels.QuotaAlertTypeConsistency,
+		Status:    aiModels.QuotaAlertStatusPending,
+		Title:     "pending",
+		Message:   "pending",
+		Level:     aiModels.QuotaAlertLevelWarning,
+		CreatedAt: primitive.NewObjectID().Timestamp(),
+	}
+	router := setupQuotaAlertAPITestRouter(alert)
+
+	req, _ := http.NewRequest("GET", "/alerts/"+alert.ID.Hex(), nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+
+	var response struct {
+		Data struct {
+			ID     string `json:"id"`
+			Status string `json:"status"`
+			Title  string `json:"title"`
+		} `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &response))
+	assert.Equal(t, alert.ID.Hex(), response.Data.ID)
+	assert.Equal(t, string(aiModels.QuotaAlertStatusPending), response.Data.Status)
+	assert.Equal(t, "pending", response.Data.Title)
+}
+
+func TestQuotaAlertAPIResolveAndIgnoreEndpointsUpdateAlertStatus(t *testing.T) {
+	resolvedAlert := &aiModels.QuotaAlert{
+		ID:        primitive.NewObjectID(),
+		Type:      aiModels.QuotaAlertTypeConsistency,
+		Status:    aiModels.QuotaAlertStatusPending,
+		Title:     "resolve",
+		Message:   "resolve",
+		Level:     aiModels.QuotaAlertLevelWarning,
+		CreatedAt: time.Now(),
+	}
+	ignoredAlert := &aiModels.QuotaAlert{
+		ID:        primitive.NewObjectID(),
+		Type:      aiModels.QuotaAlertTypeConsistency,
+		Status:    aiModels.QuotaAlertStatusPending,
+		Title:     "ignore",
+		Message:   "ignore",
+		Level:     aiModels.QuotaAlertLevelWarning,
+		CreatedAt: time.Now(),
+	}
+	router := setupQuotaAlertAPITestRouter(resolvedAlert, ignoredAlert)
+
+	resolveReq, _ := http.NewRequest("PUT", "/alerts/"+resolvedAlert.ID.Hex()+"/resolve", strings.NewReader(`{"operatorId":"admin-1"}`))
+	resolveReq.Header.Set("Content-Type", "application/json")
+	resolveResp := httptest.NewRecorder()
+	router.ServeHTTP(resolveResp, resolveReq)
+	require.Equal(t, http.StatusOK, resolveResp.Code)
+	assert.Equal(t, aiModels.QuotaAlertStatusResolved, resolvedAlert.Status)
+	assert.Equal(t, "admin-1", resolvedAlert.ResolvedBy)
+	assert.NotNil(t, resolvedAlert.ResolvedAt)
+
+	ignoreReq, _ := http.NewRequest("PUT", "/alerts/"+ignoredAlert.ID.Hex()+"/ignore", strings.NewReader(`{"operatorId":"admin-2"}`))
+	ignoreReq.Header.Set("Content-Type", "application/json")
+	ignoreResp := httptest.NewRecorder()
+	router.ServeHTTP(ignoreResp, ignoreReq)
+	require.Equal(t, http.StatusOK, ignoreResp.Code)
+	assert.Equal(t, aiModels.QuotaAlertStatusIgnored, ignoredAlert.Status)
+	assert.Equal(t, "admin-2", ignoredAlert.ResolvedBy)
+}
+
+func TestQuotaAlertAPIActionHandlersRejectMissingIDAndMalformedJSON(t *testing.T) {
+	t.Run("rejects missing alert id", func(t *testing.T) {
+		api := NewQuotaAlertAPI(aiService.NewQuotaAlertService(&quotaAlertRepoForAPITest{}))
+
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+		c.Request = httptest.NewRequest(http.MethodGet, "/alerts", nil)
+
+		api.GetAlert(c)
+
+		require.Equal(t, http.StatusBadRequest, w.Code)
+		assert.Contains(t, w.Body.String(), "告警ID不能为空")
+	})
+
+	t.Run("rejects malformed action payloads", func(t *testing.T) {
+		router := setupQuotaAlertAPITestRouter()
+		cases := []struct {
+			name   string
+			method string
+			path   string
+		}{
+			{name: "acknowledge", method: http.MethodPut, path: "/alerts/507f1f77bcf86cd799439011/acknowledge"},
+			{name: "resolve", method: http.MethodPut, path: "/alerts/507f1f77bcf86cd799439011/resolve"},
+			{name: "ignore", method: http.MethodPut, path: "/alerts/507f1f77bcf86cd799439011/ignore"},
+		}
+
+		for _, tt := range cases {
+			t.Run(tt.name, func(t *testing.T) {
+				req, _ := http.NewRequest(tt.method, tt.path, strings.NewReader("{"))
+				req.Header.Set("Content-Type", "application/json")
+				w := httptest.NewRecorder()
+				router.ServeHTTP(w, req)
+
+				require.Equal(t, http.StatusBadRequest, w.Code)
+				assert.Contains(t, w.Body.String(), "参数错误")
+			})
+		}
+	})
 }

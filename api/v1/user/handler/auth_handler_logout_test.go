@@ -325,6 +325,42 @@ func TestAuthHandler_Login_NotFoundMapsToGenericUnauthorized(t *testing.T) {
 	mockService.AssertExpectations(t)
 }
 
+func TestAuthHandler_Login_UnauthorizedMapsToGenericUnauthorized(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	mockService := new(MockAuthHandlerService)
+	handler := NewAuthHandler(mockService)
+
+	body := map[string]string{
+		"username": "tester",
+		"password": "wrong-password",
+	}
+	payload, err := json.Marshal(body)
+	require.NoError(t, err)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/user/auth/login", bytes.NewReader(payload))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = req
+
+	mockService.On("Login", mock.Anything, &authsvc.LoginRequest{
+		Username: "tester",
+		Password: "wrong-password",
+		ClientIP: "192.0.2.1",
+	}).Return(nil, serviceInterfaces.NewServiceError("AuthService", serviceInterfaces.ErrorTypeUnauthorized, "密码错误", nil)).Once()
+
+	handler.Login(c)
+
+	require.Equal(t, http.StatusUnauthorized, w.Code)
+
+	var resp map[string]interface{}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, float64(1002), resp["code"])
+	assert.Equal(t, "用户名或密码错误", resp["message"])
+	mockService.AssertExpectations(t)
+}
+
 func TestAuthHandler_Login_ValidationErrorKeepsCompatMessage(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 

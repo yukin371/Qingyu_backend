@@ -8,11 +8,14 @@ import (
 	aiModels "Qingyu_backend/models/ai"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type quotaAlertRepoStub struct {
 	alerts map[string]*aiModels.QuotaAlert
+	createErr error
+	updateErr error
 }
 
 func newQuotaAlertRepoStub(alerts ...*aiModels.QuotaAlert) *quotaAlertRepoStub {
@@ -30,6 +33,9 @@ func newQuotaAlertRepoStub(alerts ...*aiModels.QuotaAlert) *quotaAlertRepoStub {
 }
 
 func (s *quotaAlertRepoStub) Create(ctx context.Context, alert *aiModels.QuotaAlert) error {
+	if s.createErr != nil {
+		return s.createErr
+	}
 	if alert.ID.IsZero() {
 		alert.ID = primitive.NewObjectID()
 	}
@@ -69,6 +75,9 @@ func (s *quotaAlertRepoStub) GetByUserID(ctx context.Context, userID string, pag
 }
 
 func (s *quotaAlertRepoStub) Update(ctx context.Context, alert *aiModels.QuotaAlert) error {
+	if s.updateErr != nil {
+		return s.updateErr
+	}
 	s.alerts[alert.ID.Hex()] = alert
 	return nil
 }
@@ -183,4 +192,50 @@ func TestResolveRecoveredConsistencyAlertsResolvesOnlyCheckedRecoveredOpenAlerts
 
 	assert.Equal(t, aiModels.QuotaAlertStatusIgnored, ignoredAlert.Status)
 	assert.Equal(t, aiModels.QuotaAlertStatusPending, otherTypeAlert.Status)
+}
+
+func TestQuotaAlertServiceCreateAlertAppliesDefaults(t *testing.T) {
+	repo := newQuotaAlertRepoStub()
+	service := NewQuotaAlertService(repo)
+
+	err := service.CreateAlert(context.Background(), &aiModels.QuotaAlert{
+		Type:    aiModels.QuotaAlertTypeThreshold,
+		Title:   "quota warning",
+		Message: "quota warning",
+	})
+	require.NoError(t, err)
+	require.Len(t, repo.alerts, 1)
+	for _, alert := range repo.alerts {
+		assert.Equal(t, aiModels.QuotaAlertLevelInfo, alert.Level)
+		assert.Equal(t, aiModels.QuotaAlertStatusPending, alert.Status)
+	}
+}
+
+func TestQuotaAlertServiceAcknowledgeResolveAndIgnoreUpdateStatus(t *testing.T) {
+	alert := &aiModels.QuotaAlert{
+		ID:        primitive.NewObjectID(),
+		Type:      aiModels.QuotaAlertTypeConsistency,
+		Status:    aiModels.QuotaAlertStatusPending,
+		Title:     "consistency mismatch",
+		Message:   "consistency mismatch",
+		CreatedAt: time.Now(),
+	}
+	repo := newQuotaAlertRepoStub(alert)
+	service := NewQuotaAlertService(repo)
+
+	err := service.AcknowledgeAlert(context.Background(), alert.ID.Hex(), "admin-1")
+	require.NoError(t, err)
+	assert.Equal(t, aiModels.QuotaAlertStatusAcknowledged, alert.Status)
+	assert.Equal(t, "admin-1", alert.ResolvedBy)
+
+	err = service.ResolveAlert(context.Background(), alert.ID.Hex(), "admin-2")
+	require.NoError(t, err)
+	assert.Equal(t, aiModels.QuotaAlertStatusResolved, alert.Status)
+	assert.Equal(t, "admin-2", alert.ResolvedBy)
+	assert.NotNil(t, alert.ResolvedAt)
+
+	err = service.IgnoreAlert(context.Background(), alert.ID.Hex(), "admin-3")
+	require.NoError(t, err)
+	assert.Equal(t, aiModels.QuotaAlertStatusIgnored, alert.Status)
+	assert.Equal(t, "admin-3", alert.ResolvedBy)
 }

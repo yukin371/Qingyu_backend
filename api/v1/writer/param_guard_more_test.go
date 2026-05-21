@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 
+	statsModels "Qingyu_backend/models/stats"
 	"Qingyu_backend/service/writer/document"
 )
 
@@ -132,6 +133,43 @@ func TestWriterStatsAggregateAPIGetViews_RejectsInvalidDaysQuery(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	assert.Contains(t, w.Body.String(), "天数必须在1-365之间")
+}
+
+func TestWriterStatsAggregateAPIResolveAggregateBookID_UsesBookIDQuery(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	api := NewWriterStatsAggregateAPI(nil, nil)
+	c, _ := newWriterTestContext(http.MethodGet, "/api/v1/writer/stats/overview?bookId=book-123", "", nil)
+
+	bookID, ok := api.resolveAggregateBookID(c)
+
+	assert.True(t, ok)
+	assert.Equal(t, "book-123", bookID)
+}
+
+func TestWriterStatsAggregateAPIResolveAggregateBookID_UsesProjectIDFallbackWithoutBookRepo(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	api := NewWriterStatsAggregateAPI(nil, nil)
+	c, _ := newWriterTestContext(http.MethodGet, "/api/v1/writer/stats/overview?projectId=project-123", "", nil)
+
+	bookID, ok := api.resolveAggregateBookID(c)
+
+	assert.True(t, ok)
+	assert.Equal(t, "project-123", bookID)
+}
+
+func TestSumViewMetricsAggregatesDailyStats(t *testing.T) {
+	items := []*statsModels.BookStatsDaily{
+		{DailyViews: 12, DailySubscribers: 3},
+		{DailyViews: 8, DailySubscribers: 2},
+		{DailyViews: 0, DailySubscribers: 1},
+	}
+
+	views, subscribers := sumViewMetrics(items)
+
+	assert.Equal(t, int64(20), views)
+	assert.Equal(t, int64(6), subscribers)
 }
 
 func TestStoryHarnessApiGetChapterContext_RequiresChapterIDParam(t *testing.T) {

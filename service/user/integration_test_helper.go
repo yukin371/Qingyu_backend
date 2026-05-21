@@ -18,12 +18,12 @@ import (
 
 // IntegrationTestEnvironment 集成测试环境
 type IntegrationTestEnvironment struct {
-	UserService    *UserServiceImpl
-	DB             *mongo.Database
-	DBName         string
-	CleanupFunc    func()
-	TestConfig     *TestConfig
-	JWTTestHelper  *JWTTestHelper
+	UserService   *UserServiceImpl
+	DB            *mongo.Database
+	DBName        string
+	CleanupFunc   func()
+	TestConfig    *TestConfig
+	JWTTestHelper *JWTTestHelper
 }
 
 // SetupIntegrationTestEnvironment 设置集成测试环境
@@ -38,6 +38,7 @@ func SetupIntegrationTestEnvironment(t *testing.T) *IntegrationTestEnvironment {
 
 	// 获取测试配置
 	testCfg := GetTestConfig()
+	uniqueDatabaseName := fmt.Sprintf("%s_%d", testCfg.DatabaseName, time.Now().UnixNano())
 
 	// 初始化全局配置（如果还没有初始化）
 	if config.GlobalConfig == nil {
@@ -52,7 +53,7 @@ func SetupIntegrationTestEnvironment(t *testing.T) *IntegrationTestEnvironment {
 					Type: config.DatabaseTypeMongoDB,
 					MongoDB: &config.MongoDBConfig{
 						URI:      testCfg.MongoURI,
-						Database: testCfg.DatabaseName,
+						Database: uniqueDatabaseName,
 					},
 				},
 			},
@@ -77,7 +78,7 @@ func SetupIntegrationTestEnvironment(t *testing.T) *IntegrationTestEnvironment {
 			Type: config.DatabaseTypeMongoDB,
 			MongoDB: &config.MongoDBConfig{
 				URI:      testCfg.MongoURI,
-				Database: testCfg.DatabaseName,
+				Database: uniqueDatabaseName,
 			},
 		}
 	}
@@ -97,7 +98,7 @@ func SetupIntegrationTestEnvironment(t *testing.T) *IntegrationTestEnvironment {
 		t.Skipf("MongoDB不可用，跳过集成测试: %v", err)
 	}
 
-	db := client.Database(testCfg.DatabaseName)
+	db := client.Database(uniqueDatabaseName)
 
 	// 创建UserRepository
 	userRepo := repoUser.NewMongoUserRepository(db)
@@ -127,17 +128,18 @@ func SetupIntegrationTestEnvironment(t *testing.T) *IntegrationTestEnvironment {
 		_ = db.Collection("password_reset_tokens").Drop(cleanupCtx)
 		_ = db.Collection("email_verification_codes").Drop(cleanupCtx)
 		_ = db.Collection("sessions").Drop(cleanupCtx)
+		_ = db.Drop(cleanupCtx)
 
 		// 断开连接
 		_ = client.Disconnect(cleanupCtx)
 	}
 
 	return &IntegrationTestEnvironment{
-		UserService: userServiceImpl,
-		DB:          db,
-		DBName:      testCfg.DatabaseName,
-		CleanupFunc: cleanup,
-		TestConfig:  testCfg,
+		UserService:   userServiceImpl,
+		DB:            db,
+		DBName:        uniqueDatabaseName,
+		CleanupFunc:   cleanup,
+		TestConfig:    testCfg,
 		JWTTestHelper: jwtHelper,
 	}
 }

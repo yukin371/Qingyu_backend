@@ -189,6 +189,14 @@ func (m *MockVerificationUserService) ConfirmPasswordReset(ctx context.Context, 
 	return args.Get(0).(*userServiceInterface.ConfirmPasswordResetResponse), args.Error(1)
 }
 
+func (m *MockVerificationUserService) DowngradeRole(ctx context.Context, req *userServiceInterface.DowngradeRoleRequest) (*userServiceInterface.DowngradeRoleResponse, error) {
+	args := m.Called(ctx, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*userServiceInterface.DowngradeRoleResponse), args.Error(1)
+}
+
 // 实现BaseService接口
 func (m *MockVerificationUserService) GetServiceName() string {
 	return "MockUserService"

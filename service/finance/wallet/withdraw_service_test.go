@@ -28,6 +28,21 @@ func TestWithdrawServiceCreateRequestRollbackOnBalanceFailure(t *testing.T) {
 	assert.Empty(t, repo.withdrawRequests)
 }
 
+func TestWithdrawServiceCreateRequestSuccess(t *testing.T) {
+	repo := NewMockWalletRepositoryV2()
+	repo.wallets["user_a"] = &financeModel.Wallet{ID: primitive.NewObjectID(), UserID: "user_a", Balance: types.Money(5000)}
+
+	service := NewWithdrawService(repo)
+
+	request, err := service.CreateWithdrawRequest(context.Background(), "user_a", "user_a", 2000, "alipay", "acc-1")
+	require.NoError(t, err)
+	require.NotNil(t, request)
+	assert.Equal(t, int64(2000), request.Amount)
+	assert.Equal(t, "pending", request.Status)
+	assert.Equal(t, types.Money(3000), repo.wallets["user_a"].Balance)
+	assert.Len(t, repo.withdrawRequests, 1)
+}
+
 func TestWithdrawServiceApproveRollbackOnTransactionFailure(t *testing.T) {
 	repo := NewMockWalletRepositoryV2()
 	repo.wallets["user_a"] = &financeModel.Wallet{ID: primitive.NewObjectID(), UserID: "user_a", Balance: types.Money(5000)}
@@ -48,6 +63,29 @@ func TestWithdrawServiceApproveRollbackOnTransactionFailure(t *testing.T) {
 	assert.Empty(t, repo.transactions)
 }
 
+func TestWithdrawServiceApproveSuccess(t *testing.T) {
+	repo := NewMockWalletRepositoryV2()
+	repo.wallets["user_a"] = &financeModel.Wallet{ID: primitive.NewObjectID(), UserID: "user_a", Balance: types.Money(3000)}
+	withdrawID := primitive.NewObjectID()
+	repo.withdrawRequests[withdrawID.Hex()] = &financeModel.WithdrawRequest{
+		ID:          withdrawID,
+		UserID:      "user_a",
+		Amount:      types.Money(2000),
+		AccountType: "alipay",
+		Status:      "pending",
+	}
+
+	service := NewWithdrawService(repo)
+
+	err := service.ApproveWithdraw(context.Background(), withdrawID.Hex(), "admin", "ok")
+	require.NoError(t, err)
+	assert.Equal(t, "approved", repo.withdrawRequests[withdrawID.Hex()].Status)
+	assert.Len(t, repo.transactions, 1)
+	for _, tx := range repo.transactions {
+		assert.Equal(t, "withdraw", tx.Type)
+	}
+}
+
 func TestWithdrawServiceRejectRollbackOnStatusUpdateFailure(t *testing.T) {
 	repo := NewMockWalletRepositoryV2()
 	repo.wallets["user_a"] = &financeModel.Wallet{ID: primitive.NewObjectID(), UserID: "user_a", Balance: types.Money(3000)}
@@ -66,4 +104,23 @@ func TestWithdrawServiceRejectRollbackOnStatusUpdateFailure(t *testing.T) {
 	require.Error(t, err)
 	assert.Equal(t, types.Money(3000), repo.wallets["user_a"].Balance)
 	assert.Equal(t, "pending", repo.withdrawRequests[withdrawID.Hex()].Status)
+}
+
+func TestWithdrawServiceRejectSuccess(t *testing.T) {
+	repo := NewMockWalletRepositoryV2()
+	repo.wallets["user_a"] = &financeModel.Wallet{ID: primitive.NewObjectID(), UserID: "user_a", Balance: types.Money(3000)}
+	withdrawID := primitive.NewObjectID()
+	repo.withdrawRequests[withdrawID.Hex()] = &financeModel.WithdrawRequest{
+		ID:     withdrawID,
+		UserID: "user_a",
+		Amount: types.Money(1000),
+		Status: "pending",
+	}
+
+	service := NewWithdrawService(repo)
+
+	err := service.RejectWithdraw(context.Background(), withdrawID.Hex(), "admin", "bad account")
+	require.NoError(t, err)
+	assert.Equal(t, types.Money(4000), repo.wallets["user_a"].Balance)
+	assert.Equal(t, "rejected", repo.withdrawRequests[withdrawID.Hex()].Status)
 }

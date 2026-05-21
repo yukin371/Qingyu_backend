@@ -2,6 +2,7 @@ package ai
 
 import (
 	"context"
+	"errors"
 	"log"
 	"testing"
 
@@ -197,4 +198,58 @@ func TestEmitConsistencyAlertsResolvesRecoveredCheckedKeysWithoutNewAlerts(t *te
 	assert.Equal(t, aiModels.QuotaAlertStatusResolved, recoveredAlert.Status)
 	assert.Equal(t, "system-consistency-check", recoveredAlert.ResolvedBy)
 	assert.NotNil(t, recoveredAlert.ResolvedAt)
+}
+
+func TestQuotaSchedulerConsistencyChecksHandleMissingDependenciesAndDownstreamErrors(t *testing.T) {
+	t.Run("skips when dashboard service is missing", func(t *testing.T) {
+		scheduler := &QuotaScheduler{logger: log.Default()}
+
+		err := scheduler.checkCrossServiceConsistency(context.Background())
+		assert.NoError(t, err)
+	})
+
+	t.Run("skips user-level checks when phase3 client is missing", func(t *testing.T) {
+		scheduler := &QuotaScheduler{
+			dashboardService: &QuotaDashboardService{
+				quotaRepo: &quotaDashboardRepoStub{
+					topConsumers: []aiModels.UserQuotaRanking{
+						{UserID: "user-1", UsedQuota: 100},
+					},
+				},
+			},
+			logger: log.Default(),
+		}
+
+		err := scheduler.checkUserLevelConsistency(context.Background())
+		assert.NoError(t, err)
+	})
+
+	t.Run("returns top consumer load error", func(t *testing.T) {
+		scheduler := &QuotaScheduler{
+			dashboardService: &QuotaDashboardService{
+				quotaRepo: &quotaDashboardRepoStub{
+					topConsumersErr: errors.New("dashboard unavailable"),
+				},
+			},
+			phase3Client: &Phase3Client{},
+			logger:       log.Default(),
+		}
+
+		err := scheduler.checkUserLevelConsistency(context.Background())
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "load top consumers failed")
+		assert.Contains(t, err.Error(), "dashboard unavailable")
+	})
+
+	t.Run("skips aggregated checks when summary reader is missing", func(t *testing.T) {
+		scheduler := &QuotaScheduler{
+			dashboardService: &QuotaDashboardService{
+				quotaRepo: &quotaDashboardRepoStub{},
+			},
+			logger: log.Default(),
+		}
+
+		err := scheduler.checkAggregatedConsistency(context.Background())
+		assert.NoError(t, err)
+	})
 }
