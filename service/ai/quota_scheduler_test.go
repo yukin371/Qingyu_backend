@@ -1,6 +1,7 @@
 package ai
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"log"
@@ -456,4 +457,60 @@ func TestQuotaSchedulerEmitConsistencyAlertsHandlesNilServiceAndCreateFailures(t
 		}, map[string]struct{}{})
 		assert.NoError(t, err)
 	})
+}
+
+func TestQuotaSchedulerRunConsistencyCheckLogsAndReturnsOnError(t *testing.T) {
+	var buf bytes.Buffer
+	logger := log.New(&buf, "", 0)
+	scheduler := &QuotaScheduler{
+		dashboardService: &QuotaDashboardService{
+			quotaRepo: &quotaDashboardRepoStub{
+				topConsumersErr: errors.New("consistency down"),
+			},
+		},
+		phase3Client: &Phase3Client{},
+		logger: logger,
+	}
+
+	assert.NotPanics(t, func() {
+		scheduler.runConsistencyCheck()
+	})
+	assert.Contains(t, buf.String(), "quota consistency check failed")
+	assert.Contains(t, buf.String(), "consistency down")
+}
+
+func TestQuotaSchedulerRefreshDashboardCacheLogsAndReturnsOnError(t *testing.T) {
+	var buf bytes.Buffer
+	logger := log.New(&buf, "", 0)
+	scheduler := &QuotaScheduler{
+		dashboardService: &QuotaDashboardService{
+			quotaRepo: &quotaDashboardRepoStub{
+				summaryErr: errors.New("summary down"),
+			},
+		},
+		logger: logger,
+	}
+
+	assert.NotPanics(t, func() {
+		scheduler.refreshDashboardCache()
+	})
+	assert.Contains(t, buf.String(), "quota dashboard refresh failed")
+	assert.Contains(t, buf.String(), "summary down")
+}
+
+func TestQuotaSchedulerEmitConsistencyAlertsReturnsResolveError(t *testing.T) {
+	repo := &quotaAlertRepoStub{
+		listErr: errors.New("resolve list failed"),
+	}
+	scheduler := &QuotaScheduler{
+		alertService: NewQuotaAlertService(repo),
+		logger:       log.Default(),
+	}
+
+	err := scheduler.emitConsistencyAlerts(context.Background(), nil, map[string]struct{}{
+		"checked-key": {},
+	})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "查询 consistency 告警失败")
+	assert.Contains(t, err.Error(), "resolve list failed")
 }
