@@ -193,3 +193,38 @@ func TestDocumentApiCreateDocument_ServiceError(t *testing.T) {
 
 	mockProjectRepo.AssertExpectations(t)
 }
+
+func TestDocumentApiCreateDocument_ProjectLookupFailure(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	userID := primitive.NewObjectID().Hex()
+	projectID := primitive.NewObjectID().Hex()
+
+	mockProjectRepo := new(mockProjectRepository)
+	mockProjectRepo.On("GetByID", mock.Anything, projectID).Return(nil, assert.AnError).Once()
+
+	api := NewDocumentApi(document.NewDocumentService(nil, nil, mockProjectRepo, nil))
+	router := setupDocumentCreateTestRouter(api, userID)
+
+	reqBody, err := json.Marshal(map[string]any{
+		"title": "新文档",
+		"type":  "chapter",
+	})
+	require.NoError(t, err)
+
+	req, err := http.NewRequest(http.MethodPost, "/api/v1/writer/projects/"+projectID+"/documents", bytes.NewBuffer(reqBody))
+	require.NoError(t, err)
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+
+	var resp map[string]any
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, float64(5000), resp["code"])
+	assert.Contains(t, resp["details"].(string), "查询项目失败")
+
+	mockProjectRepo.AssertExpectations(t)
+}
