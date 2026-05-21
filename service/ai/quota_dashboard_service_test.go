@@ -244,6 +244,19 @@ func TestQuotaDashboardServiceGetReconciliationSummaryRequiresReader(t *testing.
 	assert.Contains(t, err.Error(), "AI配额聚合对账客户端未配置")
 }
 
+func TestQuotaDashboardServiceGetReconciliationSummaryWrapsReaderError(t *testing.T) {
+	repo := &quotaDashboardRepoStub{
+		consumption: &aiModels.QuotaConsumptionSummary{},
+	}
+	service := NewQuotaDashboardService(repo, nil, nil)
+	service.SetConsumptionSummaryReader(&quotaSummaryReaderStub{err: errors.New("reader failed")})
+
+	result, err := service.GetReconciliationSummary(context.Background(), "day", "", "user", 1, 20)
+	require.Error(t, err)
+	assert.Nil(t, result)
+	assert.Contains(t, err.Error(), "获取AI服务消费聚合摘要失败: reader failed")
+}
+
 func TestQuotaDashboardServiceGetReconciliationSummaryNormalizesInputAndHandlesFailedResponse(t *testing.T) {
 	repo := &quotaDashboardRepoStub{
 		consumption: &aiModels.QuotaConsumptionSummary{
