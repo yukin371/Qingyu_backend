@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"Qingyu_backend/models/writer"
@@ -319,6 +320,51 @@ func TestDocumentApiCreateDocument_ProjectNotFound(t *testing.T) {
 	assert.Contains(t, resp["details"].(string), "项目不存在")
 
 	mockProjectRepo.AssertExpectations(t)
+}
+
+func TestDocumentApiUpdateDocument_RejectsMalformedJSON(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	api := &DocumentApi{documentService: &document.DocumentService{}}
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = httptest.NewRequest(http.MethodPut, "/api/v1/writer/documents/document-1", strings.NewReader("{"))
+	c.Request.Header.Set("Content-Type", "application/json")
+	c.Params = gin.Params{{Key: "id", Value: "document-1"}}
+
+	api.UpdateDocument(c)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "参数错误")
+}
+
+func TestDocumentApiDeleteDocument_SurfacesServiceError(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	api := &DocumentApi{documentService: document.NewDocumentService(nil, nil, nil, nil)}
+	router := gin.New()
+	router.Use(func(c *gin.Context) {
+		c.Next()
+		if len(c.Errors) > 0 && !c.Writer.Written() {
+			err := c.Errors.Last().Err
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"code":    5000,
+				"message": "内部服务器错误",
+				"details": err.Error(),
+			})
+		}
+	})
+	router.DELETE("/api/v1/writer/documents/:id", api.DeleteDocument)
+
+	req, err := http.NewRequest(http.MethodDelete, "/api/v1/writer/documents/document-1", nil)
+	require.NoError(t, err)
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Contains(t, w.Body.String(), "内部服务器错误")
 }
 
 func TestDocumentApiCreateDocument_ProjectOwnerMismatch(t *testing.T) {
