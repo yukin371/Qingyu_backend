@@ -408,6 +408,64 @@ func TestDocumentApiDeleteDocument_SurfacesServiceError(t *testing.T) {
 	assert.Contains(t, w.Body.String(), "内部服务器错误")
 }
 
+func TestDocumentApiGetDocument_SurfacesServiceError(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	api := &DocumentApi{documentService: document.NewDocumentService(nil, nil, nil, nil)}
+	router := gin.New()
+	router.Use(func(c *gin.Context) {
+		c.Next()
+		if len(c.Errors) > 0 && !c.Writer.Written() {
+			err := c.Errors.Last().Err
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"code":    5000,
+				"message": "内部服务器错误",
+				"details": err.Error(),
+			})
+		}
+	})
+	router.GET("/api/v1/writer/documents/:id", api.GetDocument)
+
+	req, err := http.NewRequest(http.MethodGet, "/api/v1/writer/documents/document-1", nil)
+	require.NoError(t, err)
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Contains(t, w.Body.String(), "内部服务器错误")
+	assert.Contains(t, w.Body.String(), "用户未登录")
+}
+
+func TestDocumentApiGetDocumentTree_SurfacesServiceError(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	api := &DocumentApi{documentService: document.NewDocumentService(nil, nil, nil, nil)}
+	router := gin.New()
+	router.Use(func(c *gin.Context) {
+		c.Next()
+		if len(c.Errors) > 0 && !c.Writer.Written() {
+			err := c.Errors.Last().Err
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"code":    5000,
+				"message": "内部服务器错误",
+				"details": err.Error(),
+			})
+		}
+	})
+	router.GET("/api/v1/writer/projects/:projectId/documents/tree", api.GetDocumentTree)
+
+	req, err := http.NewRequest(http.MethodGet, "/api/v1/writer/projects/project-1/documents/tree", nil)
+	require.NoError(t, err)
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Contains(t, w.Body.String(), "内部服务器错误")
+	assert.Contains(t, w.Body.String(), "用户未登录")
+}
+
 func TestDocumentApiCreateDocument_ProjectOwnerMismatch(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
