@@ -32,6 +32,7 @@ type quotaAdminAPITestRepo struct {
 
 	quotasByKey   map[string]*aiModels.UserQuota
 	quotasByUser  map[string][]*aiModels.UserQuota
+	getAllErr     error
 	transactions  []*aiModels.QuotaTransaction
 	createdQuotas []*aiModels.UserQuota
 	updatedQuotas []*aiModels.UserQuota
@@ -76,6 +77,9 @@ func (s *quotaAdminAPITestRepo) DeleteQuota(ctx context.Context, userID string, 
 }
 
 func (s *quotaAdminAPITestRepo) GetAllQuotasByUserID(ctx context.Context, userID string) ([]*aiModels.UserQuota, error) {
+	if s.getAllErr != nil {
+		return nil, s.getAllErr
+	}
 	return s.quotasByUser[userID], nil
 }
 
@@ -254,7 +258,7 @@ func TestQuotaAdminAPIListUserQuotasNormalizesPagingAndForwardsFilters(t *testin
 	require.Len(t, resp.Data, 1)
 }
 
-func TestQuotaAdminAPIGetUserQuotaDetailsAndReconciliationHandlers(t *testing.T) {
+func TestQuotaAdminAPIGetUserQuotaDetailsSurfacesServiceError(t *testing.T) {
 	t.Run("rejects missing user ID for details", func(t *testing.T) {
 		repo := newQuotaAdminAPITestRepo()
 		api, _ := setupQuotaAdminAPITestHarness(repo, nil)
@@ -267,6 +271,20 @@ func TestQuotaAdminAPIGetUserQuotaDetailsAndReconciliationHandlers(t *testing.T)
 
 		require.Equal(t, http.StatusBadRequest, w.Code)
 		assert.Contains(t, w.Body.String(), "用户ID不能为空")
+	})
+
+	t.Run("surfaces service error when quota details load fails", func(t *testing.T) {
+		repo := newQuotaAdminAPITestRepo()
+		repo.getAllErr = errors.New("quota service unavailable")
+		_, router := setupQuotaAdminAPITestHarness(repo, nil)
+
+		req, _ := http.NewRequest(http.MethodGet, "/users/user-1", nil)
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		require.Equal(t, http.StatusInternalServerError, w.Code)
+		assert.Contains(t, w.Body.String(), "获取配额详情失败")
+		assert.Contains(t, w.Body.String(), "quota service unavailable")
 	})
 
 	t.Run("returns details and reconciliation summary", func(t *testing.T) {

@@ -406,6 +406,20 @@ func TestQuotaDashboardAPIRunConsistencyCheckInvokesRunner(t *testing.T) {
 	assert.Equal(t, "一致性检查已执行", resp.Message)
 }
 
+func TestQuotaDashboardAPIRunConsistencyCheckSurfacesRunnerFailure(t *testing.T) {
+	repo := &quotaDashboardRepoForAPITest{}
+	runner := &quotaConsistencyRunnerForAPITest{err: errors.New("runner failed")}
+	router := setupQuotaDashboardAPITestRouter(repo, &quotaDashboardAlertRepoForAPITest{}, nil, runner)
+
+	req, _ := http.NewRequest("POST", "/statistics/reconciliation/check", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Equal(t, 1, runner.called)
+	assert.Contains(t, w.Body.String(), "执行一致性检查失败")
+}
+
 func TestQuotaDashboardAPIRefreshCacheAndConsistencyCheckTailErrors(t *testing.T) {
 	t.Run("refresh cache surfaces dashboard rebuild failure", func(t *testing.T) {
 		repo := &quotaDashboardRepoForAPITest{summaryErr: errors.New("boom")}
