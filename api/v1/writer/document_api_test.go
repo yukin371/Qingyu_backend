@@ -12,6 +12,7 @@ import (
 	"Qingyu_backend/models/writer"
 	"Qingyu_backend/models/writer/base"
 	"Qingyu_backend/repository/interfaces/infrastructure"
+	writerRepo "Qingyu_backend/repository/interfaces/writer"
 	"Qingyu_backend/service/writer/document"
 
 	"github.com/gin-gonic/gin"
@@ -126,6 +127,66 @@ func (m *mockProjectRepository) CreateWithTransaction(ctx context.Context, proje
 	args := m.Called(ctx, project, callback)
 	return args.Error(0)
 }
+
+type documentRepoStub struct {
+	getByProjectIDErr error
+}
+
+func (s *documentRepoStub) Create(ctx context.Context, document *writer.Document) error { return nil }
+func (s *documentRepoStub) GetByID(ctx context.Context, id string) (*writer.Document, error) {
+	return nil, nil
+}
+func (s *documentRepoStub) Update(ctx context.Context, id string, updates map[string]interface{}) error {
+	return nil
+}
+func (s *documentRepoStub) Delete(ctx context.Context, id string) error { return nil }
+func (s *documentRepoStub) List(ctx context.Context, filter infrastructure.Filter) ([]*writer.Document, error) {
+	return nil, nil
+}
+func (s *documentRepoStub) Count(ctx context.Context, filter infrastructure.Filter) (int64, error) {
+	return 0, nil
+}
+func (s *documentRepoStub) Exists(ctx context.Context, id string) (bool, error) { return false, nil }
+func (s *documentRepoStub) Health(ctx context.Context) error                   { return nil }
+func (s *documentRepoStub) GetByProjectID(ctx context.Context, projectID string, limit, offset int64) ([]*writer.Document, error) {
+	if s.getByProjectIDErr != nil {
+		return nil, s.getByProjectIDErr
+	}
+	return nil, nil
+}
+func (s *documentRepoStub) GetByProjectAndType(ctx context.Context, projectID, documentType string, limit, offset int64) ([]*writer.Document, error) {
+	return nil, nil
+}
+func (s *documentRepoStub) GetByIDs(ctx context.Context, ids []string) ([]*writer.Document, error) {
+	return nil, nil
+}
+func (s *documentRepoStub) UpdateByProject(ctx context.Context, documentID, projectID string, updates map[string]interface{}) error {
+	return nil
+}
+func (s *documentRepoStub) DeleteByProject(ctx context.Context, documentID, projectID string) error {
+	return nil
+}
+func (s *documentRepoStub) RestoreByProject(ctx context.Context, documentID, projectID string) error {
+	return nil
+}
+func (s *documentRepoStub) IsProjectMember(ctx context.Context, documentID, projectID string) (bool, error) {
+	return true, nil
+}
+func (s *documentRepoStub) SoftDelete(ctx context.Context, documentID, projectID string) error {
+	return nil
+}
+func (s *documentRepoStub) HardDelete(ctx context.Context, documentID string) error { return nil }
+func (s *documentRepoStub) GetByIDUnscoped(ctx context.Context, id string) (*writer.Document, error) {
+	return nil, nil
+}
+func (s *documentRepoStub) CountByProject(ctx context.Context, projectID string) (int64, error) {
+	return 0, nil
+}
+func (s *documentRepoStub) CreateWithTransaction(ctx context.Context, document *writer.Document, callback func(ctx context.Context) error) error {
+	return nil
+}
+
+var _ writerRepo.DocumentRepository = (*documentRepoStub)(nil)
 
 func setupDocumentCreateTestRouter(api *DocumentApi, userID string) *gin.Engine {
 	gin.SetMode(gin.TestMode)
@@ -464,6 +525,52 @@ func TestDocumentApiGetDocumentTree_SurfacesServiceError(t *testing.T) {
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 	assert.Contains(t, w.Body.String(), "内部服务器错误")
 	assert.Contains(t, w.Body.String(), "用户未登录")
+}
+
+func TestDocumentApiListDocuments_SurfacesServiceError(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	api := NewDocumentApi(document.NewDocumentService(&documentRepoStub{getByProjectIDErr: assert.AnError}, nil, nil, nil))
+	router := gin.New()
+	router.Use(func(c *gin.Context) {
+		c.Next()
+		if len(c.Errors) > 0 && !c.Writer.Written() {
+			err := c.Errors.Last().Err
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"code":    5000,
+				"message": "内部服务器错误",
+				"details": err.Error(),
+			})
+		}
+	})
+	router.GET("/api/v1/writer/projects/:projectId/documents", api.ListDocuments)
+
+	req, err := http.NewRequest(http.MethodGet, "/api/v1/writer/projects/project-1/documents", nil)
+	require.NoError(t, err)
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Contains(t, w.Body.String(), "内部服务器错误")
+	assert.Contains(t, w.Body.String(), "查询文档列表失败")
+}
+
+func TestDocumentApiReorderDocuments_RejectsMalformedJSON(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	api := &DocumentApi{}
+	router := gin.New()
+	router.PUT("/api/v1/writer/projects/:projectId/documents/reorder", api.ReorderDocuments)
+
+	req, err := http.NewRequest(http.MethodPut, "/api/v1/writer/projects/project-1/documents/reorder", bytes.NewBufferString("{"))
+	require.NoError(t, err)
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
 
 func TestDocumentApiCreateDocument_ProjectOwnerMismatch(t *testing.T) {
