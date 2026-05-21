@@ -327,3 +327,33 @@ func TestWriterStatsAggregateAPIGetOverview_ResolvesProjectID(t *testing.T) {
 	assert.Equal(t, float64(17), data["monthViews"])
 	assert.Equal(t, float64(0.5), data["retentionRate"])
 }
+
+func TestWriterStatsAggregateAPIGetOverview_ReturnsEmptySummaryWhenAuthorHasNoBooks(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	db, cleanup := testutil.SetupTestDB(t)
+	t.Cleanup(cleanup)
+
+	bookRepo := bookstoreRepo.NewMongoBookRepository(db.Client(), db.Name())
+	api := NewWriterStatsAggregateAPI(nil, bookRepo)
+	c, w := newWriterTestContext(http.MethodGet, "/api/v1/writer/stats/overview", "", nil)
+	c.Set("user_id", primitive.NewObjectID().Hex())
+
+	api.GetOverview(c)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	resp := decodeWriterStatsAggregateResponse(t, w.Body.Bytes())
+	data := resp["data"].(map[string]any)
+	assert.Equal(t, "", data["bookId"])
+	assert.Equal(t, "", data["title"])
+	assert.Equal(t, float64(0), data["totalViews"])
+	assert.Equal(t, float64(0), data["subscribers"])
+	assert.Equal(t, float64(0), data["favorites"])
+	assert.Equal(t, float64(0), data["comments"])
+	assert.Equal(t, float64(0), data["todayViews"])
+	assert.Equal(t, float64(0), data["monthViews"])
+	assert.Equal(t, float64(0), data["wordCount"])
+	assert.Equal(t, float64(0), data["todayWords"])
+	assert.Equal(t, float64(0), data["totalRevenue"])
+	assert.Equal(t, float64(0), data["retentionRate"])
+}

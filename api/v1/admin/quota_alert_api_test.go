@@ -269,6 +269,20 @@ func TestQuotaAlertAPIListAlertsNormalizesPagingAndFiltersOpenStatus(t *testing.
 	require.Len(t, response.Data, 2)
 }
 
+func TestQuotaAlertAPIListAlertsSurfacesRepositoryFailure(t *testing.T) {
+	repo := &quotaAlertRepoForAPITest{
+		listErr: errors.New("list failed"),
+	}
+	router := setupQuotaAlertAPITestRouterWithRepo(repo)
+
+	req, _ := http.NewRequest("GET", "/alerts", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Contains(t, w.Body.String(), "获取告警列表失败")
+}
+
 func TestQuotaAlertAPIGetAlertReturnsDetails(t *testing.T) {
 	alert := &aiModels.QuotaAlert{
 		ID:        primitive.NewObjectID(),
