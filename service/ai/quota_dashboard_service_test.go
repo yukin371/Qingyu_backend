@@ -257,6 +257,21 @@ func TestQuotaDashboardServiceGetReconciliationSummaryWrapsReaderError(t *testin
 	assert.Contains(t, err.Error(), "获取AI服务消费聚合摘要失败: reader failed")
 }
 
+func TestQuotaDashboardServiceGetReconciliationSummaryWrapsBackendSummaryError(t *testing.T) {
+	repo := &quotaDashboardRepoStub{
+		consumptionErr: errors.New("summary down"),
+	}
+	service := NewQuotaDashboardService(repo, nil, nil)
+	service.SetConsumptionSummaryReader(&quotaSummaryReaderStub{
+		response: &pb.QuotaConsumptionSummaryResponse{Success: true},
+	})
+
+	result, err := service.GetReconciliationSummary(context.Background(), "day", "", "user", 1, 20)
+	require.Error(t, err)
+	assert.Nil(t, result)
+	assert.Contains(t, err.Error(), "获取后端消费聚合摘要失败: summary down")
+}
+
 func TestQuotaDashboardServiceGetReconciliationSummaryNormalizesInputAndHandlesFailedResponse(t *testing.T) {
 	repo := &quotaDashboardRepoStub{
 		consumption: &aiModels.QuotaConsumptionSummary{
@@ -389,4 +404,10 @@ func TestQuotaDashboardServiceRunConsistencyCheckRequiresRunnerAndDelegates(t *t
 	err = service.RunConsistencyCheck(context.Background())
 	require.NoError(t, err)
 	assert.Equal(t, 1, runner.called)
+
+	runner.err = errors.New("runner failed")
+	err = service.RunConsistencyCheck(context.Background())
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "runner failed")
+	assert.Equal(t, 2, runner.called)
 }

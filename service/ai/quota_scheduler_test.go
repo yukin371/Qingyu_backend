@@ -365,6 +365,30 @@ func TestQuotaSchedulerCheckUserLevelConsistencySkipsInvalidConsumersAndSurfaces
 		assert.Equal(t, 1, conn.invokeCount)
 	})
 
+	t.Run("returns generic error when unsuccessful ai batch response has no message", func(t *testing.T) {
+		conn := &quotaSchedulerAIClientConnStub{
+			batchResp: &pb.QuotaConsumptionBatchResponse{
+				Success: false,
+			},
+		}
+		scheduler := &QuotaScheduler{
+			dashboardService: &QuotaDashboardService{
+				quotaRepo: &quotaDashboardRepoStub{
+					topConsumers: []aiModels.UserQuotaRanking{
+						{UserID: "user-1", UsedQuota: 100},
+					},
+				},
+			},
+			phase3Client: &Phase3Client{client: pb.NewAIServiceClient(conn)},
+			logger:       log.Default(),
+		}
+
+		err := scheduler.checkUserLevelConsistency(context.Background())
+		assert.Error(t, err)
+		assert.Contains(t, err.Error(), "AI service batch quota query returned unsuccessful response")
+		assert.Equal(t, 1, conn.invokeCount)
+	})
+
 	t.Run("surfaces ai batch rpc errors", func(t *testing.T) {
 		conn := &quotaSchedulerAIClientConnStub{
 			invokeErr: errors.New("rpc down"),
@@ -386,5 +410,50 @@ func TestQuotaSchedulerCheckUserLevelConsistencySkipsInvalidConsumersAndSurfaces
 		assert.Contains(t, err.Error(), "load AI service quota summaries failed")
 		assert.Contains(t, err.Error(), "rpc down")
 		assert.Equal(t, 1, conn.invokeCount)
+	})
+}
+
+func TestQuotaSchedulerEmitConsistencyAlertsHandlesNilServiceAndCreateFailures(t *testing.T) {
+	t.Run("returns nil when alert service is missing", func(t *testing.T) {
+		scheduler := &QuotaScheduler{
+			logger: log.Default(),
+		}
+
+		err := scheduler.emitConsistencyAlerts(context.Background(), []quotaConsistencyAlertRequest{
+			{
+				userID: "user-1",
+				level:  "warning",
+				title:  "AI 配额对账偏差",
+				message: "用户 user-1 的 AI 配额对账出现偏差",
+				data: map[string]interface{}{
+					"scope":     "user",
+					"timeRange": "day",
+				},
+			},
+		}, map[string]struct{}{})
+		assert.NoError(t, err)
+	})
+
+	t.Run("returns nil when creating a consistency alert fails", func(t *testing.T) {
+		repo := newQuotaAlertRepoStub()
+		repo.createErr = errors.New("insert failed")
+		scheduler := &QuotaScheduler{
+			alertService: NewQuotaAlertService(repo),
+			logger:       log.Default(),
+		}
+
+		err := scheduler.emitConsistencyAlerts(context.Background(), []quotaConsistencyAlertRequest{
+			{
+				userID: "user-1",
+				level:  "warning",
+				title:  "AI 配额对账偏差",
+				message: "用户 user-1 的 AI 配额对账出现偏差",
+				data: map[string]interface{}{
+					"scope":     "user",
+					"timeRange": "day",
+				},
+			},
+		}, map[string]struct{}{})
+		assert.NoError(t, err)
 	})
 }
