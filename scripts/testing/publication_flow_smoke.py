@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 import argparse
 import os
 import re
@@ -8,6 +8,13 @@ import time
 import urllib.error
 import urllib.request
 from pathlib import Path
+
+DEFAULT_TEST_PASSWORD = "password"
+
+
+def warn_if_using_default_password(env_name: str, value: str) -> None:
+    if value == DEFAULT_TEST_PASSWORD:
+        print(f"[WARN] {env_name} 未设置，当前使用默认测试密码占位值", file=sys.stderr)
 
 
 def wait_for_http(url: str, timeout_seconds: int) -> None:
@@ -100,6 +107,10 @@ def main() -> int:
         env["QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE"] = env["MONGODB_DATABASE"]
     env.setdefault("REDIS_ADDR", env.get("REDIS_ADDR", "localhost:6379"))
     env.setdefault("QINGYU_SERVER_PORT", args.server_port)
+    author_password = env.get("QINGYU_TEST_AUTHOR_PASSWORD", DEFAULT_TEST_PASSWORD)
+    admin_password = env.get("QINGYU_TEST_ADMIN_PASSWORD", DEFAULT_TEST_PASSWORD)
+    warn_if_using_default_password("QINGYU_TEST_AUTHOR_PASSWORD", author_password)
+    warn_if_using_default_password("QINGYU_TEST_ADMIN_PASSWORD", admin_password)
 
     if not args.skip_seed:
         print("[1/4] Seed test data")
@@ -141,11 +152,11 @@ def main() -> int:
                 "--author-username",
                 "hot_author_01",
                 "--author-password",
-                "password",
+                author_password,
                 "--admin-username",
                 "testadmin001",
                 "--admin-password",
-                "password",
+                admin_password,
             ]
         )
         if seeded_project_id:

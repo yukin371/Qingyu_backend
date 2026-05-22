@@ -22,7 +22,11 @@ NC='\033[0m' # No Color
 API_BASE="http://localhost:8080/api/v1"
 TEST_USER="smoke_test_$(date +%s)"
 TEST_EMAIL="${TEST_USER}@test.com"
-TEST_PASSWORD="Test@123456"
+TEST_PASSWORD="${QINGYU_TEST_USER_PASSWORD:-password}"
+
+if [ -z "${QINGYU_TEST_USER_PASSWORD:-}" ]; then
+    echo -e "${YELLOW}[WARN] QINGYU_TEST_USER_PASSWORD 未设置，当前使用默认测试密码占位值${NC}"
+fi
 
 # 测试结果统计
 TOTAL_TESTS=0
@@ -98,7 +102,7 @@ if echo "$REGISTER_RESPONSE" | grep -q "success\|token\|user"; then
     test_result "用户注册（强密码）" "PASS"
 else
     test_result "用户注册（强密码）" "FAIL"
-    echo "注册响应: $REGISTER_RESPONSE"
+    echo -e "${YELLOW}注册响应: 已隐藏敏感字段，请按需手动重跑定位${NC}"
 fi
 
 echo ""
@@ -301,4 +305,3 @@ else
     echo "请修复失败的测试用例后重试"
     exit 1
 fi
-

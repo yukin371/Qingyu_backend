@@ -1,17 +1,24 @@
-﻿#!/usr/bin/env python3
+#!/usr/bin/env python3
 import argparse
 import json
+import os
 import sys
 import urllib.error
 import urllib.parse
 import urllib.request
 
+DEFAULT_TEST_PASSWORD = "password"
 DEFAULT_AUTHOR_USERNAME = "author_new"
-DEFAULT_AUTHOR_PASSWORD = "Author@123456"
+DEFAULT_AUTHOR_PASSWORD = os.getenv("QINGYU_TEST_AUTHOR_PASSWORD", DEFAULT_TEST_PASSWORD)
 DEFAULT_ADMIN_USERNAME = "admin"
-DEFAULT_ADMIN_PASSWORD = "Admin@123456"
+DEFAULT_ADMIN_PASSWORD = os.getenv("QINGYU_TEST_ADMIN_PASSWORD", DEFAULT_TEST_PASSWORD)
 DEFAULT_PROJECT_TITLE = "联调发布示例项目"
 DEFAULT_DOCUMENT_TITLE = "第1章 风起青川"
+
+
+def warn_if_using_default_password(env_name: str, value: str) -> None:
+    if value == DEFAULT_TEST_PASSWORD:
+        print(f"[WARN] {env_name} 未设置，当前使用默认测试密码占位值", file=sys.stderr)
 
 
 def build_url(base_url: str, path: str, query: dict | None = None) -> str:
@@ -352,6 +359,9 @@ def main() -> int:
     parser.add_argument("--retry-after-reject", action="store_true")
     parser.add_argument("--skip-reset", action="store_true")
     args = parser.parse_args()
+
+    warn_if_using_default_password("QINGYU_TEST_AUTHOR_PASSWORD", args.author_password)
+    warn_if_using_default_password("QINGYU_TEST_ADMIN_PASSWORD", args.admin_password)
 
     if args.reject_project and args.reject_document:
         raise RuntimeError("--reject-project and --reject-document cannot be used together")

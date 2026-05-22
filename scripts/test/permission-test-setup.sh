@@ -287,10 +287,10 @@ print_summary() {
     if [ "$SKIP_DATA" = false ]; then
         echo -e "${GREEN}测试账号:${NC}"
         echo ""
-        echo "  管理员: admin@test.com / Admin@123"
-        echo "  作者:   author@test.com / Author@123"
-        echo "  读者:   reader@test.com / Reader@123"
-        echo "  编辑:   editor@test.com / Editor@123"
+        echo "  管理员: admin@test.com / <从测试数据脚本输出获取>"
+        echo "  作者:   author@test.com / <从测试数据脚本输出获取>"
+        echo "  读者:   reader@test.com / <从测试数据脚本输出获取>"
+        echo "  编辑:   editor@test.com / <从测试数据脚本输出获取>"
         echo ""
     fi
 
@@ -310,7 +310,7 @@ print_summary() {
         echo "  # 测试管理员登录"
         echo "  curl -X POST http://localhost:8080/api/v1/auth/login \\"
         echo "    -H \"Content-Type: application/json\" \\"
-        echo "    -d '{\"username\":\"admin@test.com\",\"password\":\"Admin@123\"}'"
+        echo "    -d '{\"username\":\"admin@test.com\",\"password\":\"<从测试数据脚本输出获取>\"}'"
         echo ""
     fi
 

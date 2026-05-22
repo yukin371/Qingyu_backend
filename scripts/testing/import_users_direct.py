@@ -6,70 +6,103 @@
 """
 
 import sys
+import os
 import bcrypt
 from datetime import datetime
 from pymongo import MongoClient
 from pymongo.errors import DuplicateKeyError
 
 # 测试用户数据
+DEFAULT_TEST_PASSWORD = "password"
+DEFAULT_ADMIN_PASSWORD = os.getenv("QINGYU_TEST_ADMIN_PASSWORD", DEFAULT_TEST_PASSWORD)
+DEFAULT_VIP_PASSWORD = os.getenv("QINGYU_TEST_VIP_PASSWORD", DEFAULT_TEST_PASSWORD)
+DEFAULT_USER_PASSWORD = os.getenv("QINGYU_TEST_USER_PASSWORD", DEFAULT_TEST_PASSWORD)
+
 TEST_USERS = [
     {
         "username": "admin",
         "email": "admin@qingyu.com",
-        "password": "Admin@123456",
+        "password": DEFAULT_ADMIN_PASSWORD,
         "role": "admin",
         "description": "系统管理员"
     },
     {
         "username": "vip_user01",
         "email": "vip01@qingyu.com",
-        "password": "Vip@123456",
+        "password": DEFAULT_VIP_PASSWORD,
         "role": "vip",
         "description": "VIP测试用户1"
     },
     {
         "username": "vip_user02",
         "email": "vip02@qingyu.com",
-        "password": "Vip@123456",
+        "password": DEFAULT_VIP_PASSWORD,
         "role": "vip",
         "description": "VIP测试用户2"
     },
     {
         "username": "test_user01",
         "email": "test01@qingyu.com",
-        "password": "Test@123456",
+        "password": DEFAULT_USER_PASSWORD,
         "role": "user",
         "description": "普通测试用户1"
     },
     {
         "username": "test_user02",
         "email": "test02@qingyu.com",
-        "password": "Test@123456",
+        "password": DEFAULT_USER_PASSWORD,
         "role": "user",
         "description": "普通测试用户2"
     },
     {
         "username": "test_user03",
         "email": "test03@qingyu.com",
-        "password": "Test@123456",
+        "password": DEFAULT_USER_PASSWORD,
         "role": "user",
         "description": "普通测试用户3"
     },
     {
         "username": "test_user04",
         "email": "test04@qingyu.com",
-        "password": "Test@123456",
+        "password": DEFAULT_USER_PASSWORD,
         "role": "user",
         "description": "普通测试用户4"
     },
     {
         "username": "test_user05",
         "email": "test05@qingyu.com",
-        "password": "Test@123456",
+        "password": DEFAULT_USER_PASSWORD,
         "role": "user",
         "description": "普通测试用户5"
     }
 ]
+
+def mask_uri(uri: str) -> str:
+    if "@" not in uri:
+        return uri
+    prefix, suffix = uri.split("@", 1)
+    if "://" in prefix:
+        scheme, _ = prefix.split("://", 1)
+        return f"{scheme}://***@{suffix}"
+    return f"***@{suffix}"
+
+def mask_email(email: str) -> str:
+    if "@" not in email:
+        return email
+    name, domain = email.split("@", 1)
+    if len(name) <= 1:
+        return f"***@{domain}"
+    return f"{name[:1]}***@{domain}"
+
+def mask_secret(secret: str) -> str:
+    if len(secret) <= 2:
+        return "***"
+    return f"{secret[:1]}***{secret[-1:]}"
+
+
+def warn_if_using_default_password(env_name: str, value: str) -> None:
+    if value == DEFAULT_TEST_PASSWORD:
+        print(f"[WARN] {env_name} 未设置，当前使用默认测试密码占位值")
 
 def hash_password(password):
     """使用bcrypt加密密码"""
@@ -83,12 +116,16 @@ def import_users():
     print("青羽后端 - 测试用户导入工具 (Python直连版)")
     print("="*60)
     print()
+    warn_if_using_default_password("QINGYU_TEST_ADMIN_PASSWORD", DEFAULT_ADMIN_PASSWORD)
+    warn_if_using_default_password("QINGYU_TEST_VIP_PASSWORD", DEFAULT_VIP_PASSWORD)
+    warn_if_using_default_password("QINGYU_TEST_USER_PASSWORD", DEFAULT_USER_PASSWORD)
+    print()
 
     # 连接MongoDB
     try:
         # 使用无认证连接（本地开发环境）
         mongo_uri = 'mongodb://localhost:27017'
-        print(f"连接MongoDB: {mongo_uri}")
+        print(f"连接MongoDB: {mask_uri(mongo_uri)}")
         client = MongoClient(mongo_uri)
         db = client['qingyu_test']
         users_collection = db['users']
@@ -100,7 +137,7 @@ def import_users():
         print()
         print("请确保:")
         print("  1. MongoDB服务已启动")
-        print("  2. 连接地址正确: mongodb://admin:password@localhost:27017")
+        print("  2. 连接地址正确: mongodb://***@localhost:27017")
         print("  3. 数据库名称正确: qingyu_test")
         print("  4. MongoDB认证信息正确")
         return 1
@@ -180,11 +217,11 @@ def import_users():
         print("-" * 75)
         for user in TEST_USERS:
             role_name = {"admin": "管理员", "vip": "VIP用户", "user": "普通用户"}[user["role"]]
-            print(f"{role_name:<12} {user['username']:<15} {user['email']:<25} {user['password']:<20}")
+            print(f"{role_name:<12} {user['username']:<15} {mask_email(user['email']):<25} {mask_secret(user['password']):<20}")
         print()
         print("提示:")
         print("  - 登录时使用 username 字段，不是 email")
-        print("  - 例如: username='test_user01', password='Test@123456'")
+        print("  - 默认密码可通过 QINGYU_TEST_ADMIN_PASSWORD / QINGYU_TEST_VIP_PASSWORD / QINGYU_TEST_USER_PASSWORD 覆盖")
         print()
 
     client.close()

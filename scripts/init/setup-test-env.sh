@@ -107,13 +107,24 @@ echo ""
 echo "🌍 4. 设置测试环境变量..."
 
 export GO_ENV=test
-export MONGODB_URI=${MONGODB_URI:-"mongodb://test:test123@localhost:27017/qingyu_test"}
+export MONGODB_URI=${MONGODB_URI:-"mongodb://localhost:27017/qingyu_test"}
 export REDIS_ADDR=${REDIS_ADDR:-"localhost:6379"}
 export REDIS_DB=${REDIS_DB:-1}
 
+mask_uri() {
+    local uri="$1"
+    if [[ "$uri" == *"@"* ]]; then
+        local suffix="${uri##*@}"
+        local prefix="${uri%%://*}://"
+        echo "${prefix}***@${suffix}"
+        return
+    fi
+    echo "$uri"
+}
+
 print_success "环境变量已设置:"
 echo "  GO_ENV=$GO_ENV"
-echo "  MONGODB_URI=$MONGODB_URI"
+echo "  MONGODB_URI=$(mask_uri "$MONGODB_URI")"
 echo "  REDIS_ADDR=$REDIS_ADDR"
 echo "  REDIS_DB=$REDIS_DB"
 

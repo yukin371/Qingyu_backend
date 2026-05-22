@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"os"
+	"strings"
 	"time"
 
 	"Qingyu_backend/config"
@@ -27,83 +29,122 @@ type TestUser struct {
 	Description string
 }
 
-// 测试账号列表
-var testUsers = []TestUser{
-	// 管理员账号
-	{
-		Username:    "admin",
-		Email:       "admin@qingyu.com",
-		Password:    "Admin@123456",
-		Roles:       []string{"reader", "author", "admin"},
-		VIPLevel:    5, // 最高VIP等级
-		Description: "系统管理员",
-	},
-
-	// VIP用户
-	{
-		Username:    "vip_user01",
-		Email:       "vip01@qingyu.com",
-		Password:    "Vip@123456",
-		Roles:       []string{"reader"},
-		VIPLevel:    3,
-		Description: "VIP测试用户1",
-	},
-	{
-		Username:    "vip_user02",
-		Email:       "vip02@qingyu.com",
-		Password:    "Vip@123456",
-		Roles:       []string{"reader"},
-		VIPLevel:    2,
-		Description: "VIP测试用户2",
-	},
-
-	// 普通用户
-	{
-		Username:    "test_user01",
-		Email:       "test01@qingyu.com",
-		Password:    "Test@123456",
-		Roles:       []string{"reader"},
-		VIPLevel:    0,
-		Description: "普通测试用户1",
-	},
-	{
-		Username:    "test_user02",
-		Email:       "test02@qingyu.com",
-		Password:    "Test@123456",
-		Roles:       []string{"reader"},
-		VIPLevel:    0,
-		Description: "普通测试用户2",
-	},
-	{
-		Username:    "test_user03",
-		Email:       "test03@qingyu.com",
-		Password:    "Test@123456",
-		Roles:       []string{"reader"},
-		VIPLevel:    0,
-		Description: "普通测试用户3",
-	},
-	{
-		Username:    "test_user04",
-		Email:       "test04@qingyu.com",
-		Password:    "Test@123456",
-		Roles:       []string{"reader"},
-		VIPLevel:    0,
-		Description: "普通测试用户4",
-	},
-	{
-		Username:    "test_user05",
-		Email:       "test05@qingyu.com",
-		Password:    "Test@123456",
-		Roles:       []string{"reader"},
-		VIPLevel:    0,
-		Description: "普通测试用户5",
-	},
+func getEnvOrDefault(key, fallback string) string {
+	value := os.Getenv(key)
+	if value == "" {
+		return fallback
+	}
+	return value
 }
+
+const defaultTestPassword = "password"
+
+func warnIfUsingDefaultPassword(envName, value string) {
+	if value == defaultTestPassword {
+		fmt.Printf("[WARN] %s 未设置，当前使用默认测试密码占位值\n", envName)
+	}
+}
+
+func maskMongoURI(uri string) string {
+	if uri == "" {
+		return ""
+	}
+	if idx := strings.Index(uri, "@"); idx >= 0 {
+		prefix := uri[:idx]
+		if schemeIdx := strings.Index(prefix, "://"); schemeIdx >= 0 {
+			return prefix[:schemeIdx+3] + "***@" + uri[idx+1:]
+		}
+	}
+	return uri
+}
+
+// 测试账号列表
+var testUsers = func() []TestUser {
+	adminPassword := getEnvOrDefault("QINGYU_TEST_ADMIN_PASSWORD", defaultTestPassword)
+	vipPassword := getEnvOrDefault("QINGYU_TEST_VIP_PASSWORD", defaultTestPassword)
+	userPassword := getEnvOrDefault("QINGYU_TEST_USER_PASSWORD", defaultTestPassword)
+
+	return []TestUser{
+		// 管理员账号
+		{
+			Username:    "admin",
+			Email:       "admin@qingyu.com",
+			Password:    adminPassword,
+			Roles:       []string{"reader", "author", "admin"},
+			VIPLevel:    5, // 最高VIP等级
+			Description: "系统管理员",
+		},
+
+		// VIP用户
+		{
+			Username:    "vip_user01",
+			Email:       "vip01@qingyu.com",
+			Password:    vipPassword,
+			Roles:       []string{"reader"},
+			VIPLevel:    3,
+			Description: "VIP测试用户1",
+		},
+		{
+			Username:    "vip_user02",
+			Email:       "vip02@qingyu.com",
+			Password:    vipPassword,
+			Roles:       []string{"reader"},
+			VIPLevel:    2,
+			Description: "VIP测试用户2",
+		},
+
+		// 普通用户
+		{
+			Username:    "test_user01",
+			Email:       "test01@qingyu.com",
+			Password:    userPassword,
+			Roles:       []string{"reader"},
+			VIPLevel:    0,
+			Description: "普通测试用户1",
+		},
+		{
+			Username:    "test_user02",
+			Email:       "test02@qingyu.com",
+			Password:    userPassword,
+			Roles:       []string{"reader"},
+			VIPLevel:    0,
+			Description: "普通测试用户2",
+		},
+		{
+			Username:    "test_user03",
+			Email:       "test03@qingyu.com",
+			Password:    userPassword,
+			Roles:       []string{"reader"},
+			VIPLevel:    0,
+			Description: "普通测试用户3",
+		},
+		{
+			Username:    "test_user04",
+			Email:       "test04@qingyu.com",
+			Password:    userPassword,
+			Roles:       []string{"reader"},
+			VIPLevel:    0,
+			Description: "普通测试用户4",
+		},
+		{
+			Username:    "test_user05",
+			Email:       "test05@qingyu.com",
+			Password:    userPassword,
+			Roles:       []string{"reader"},
+			VIPLevel:    0,
+			Description: "普通测试用户5",
+		},
+	}
+}()
 
 func main() {
 	fmt.Println("========================================")
 	fmt.Println("青羽后端 - 测试用户导入工具")
 	fmt.Println("========================================")
+	fmt.Println()
+	warnIfUsingDefaultPassword("QINGYU_TEST_ADMIN_PASSWORD", getEnvOrDefault("QINGYU_TEST_ADMIN_PASSWORD", defaultTestPassword))
+	warnIfUsingDefaultPassword("QINGYU_TEST_VIP_PASSWORD", getEnvOrDefault("QINGYU_TEST_VIP_PASSWORD", defaultTestPassword))
+	warnIfUsingDefaultPassword("QINGYU_TEST_USER_PASSWORD", getEnvOrDefault("QINGYU_TEST_USER_PASSWORD", defaultTestPassword))
 	fmt.Println()
 
 	// 加载配置（使用测试配置）
@@ -204,8 +245,8 @@ func main() {
 	for _, user := range testUsers {
 		if containsRole(user.Roles, "admin") {
 			fmt.Printf("  用户名: %s\n", user.Username)
-			fmt.Printf("  邮箱: %s\n", user.Email)
-			fmt.Printf("  密码: %s\n", user.Password)
+			fmt.Printf("  邮箱: %s\n", maskEmail(user.Email))
+			fmt.Printf("  密码: %s\n", maskSecret(user.Password))
 			fmt.Printf("  VIP等级: %d\n", user.VIPLevel)
 			fmt.Printf("  说明: %s\n", user.Description)
 			fmt.Println()
@@ -216,7 +257,7 @@ func main() {
 	for _, user := range testUsers {
 		if user.VIPLevel > 0 {
 			fmt.Printf("  用户名: %s | 邮箱: %s | 密码: %s | VIP等级: %d\n",
-				user.Username, user.Email, user.Password, user.VIPLevel)
+				user.Username, maskEmail(user.Email), maskSecret(user.Password), user.VIPLevel)
 		}
 	}
 	fmt.Println()
@@ -224,7 +265,7 @@ func main() {
 	fmt.Println("【普通用户】")
 	for _, user := range testUsers {
 		if user.VIPLevel == 0 && !containsRole(user.Roles, "admin") {
-			fmt.Printf("  用户名: %s | 邮箱: %s | 密码: %s\n", user.Username, user.Email, user.Password)
+			fmt.Printf("  用户名: %s | 邮箱: %s | 密码: %s\n", user.Username, maskEmail(user.Email), maskSecret(user.Password))
 		}
 	}
 
@@ -245,6 +286,25 @@ func containsRole(roles []string, role string) bool {
 		}
 	}
 	return false
+}
+
+func maskEmail(email string) string {
+	for i := 0; i < len(email); i++ {
+		if email[i] == '@' {
+			if i <= 1 {
+				return "***" + email[i:]
+			}
+			return email[:1] + "***" + email[i:]
+		}
+	}
+	return email
+}
+
+func maskSecret(secret string) string {
+	if len(secret) <= 2 {
+		return "***"
+	}
+	return secret[:1] + "***" + secret[len(secret)-1:]
 }
 
 // connectDB 连接数据库
@@ -275,7 +335,7 @@ func connectDB() (*mongo.Database, error) {
 		return nil, fmt.Errorf("Ping MongoDB 失败: %w", err)
 	}
 
-	fmt.Printf("✓ 已连接到数据库: %s\n", mongoCfg.Database)
+	fmt.Printf("✓ 已连接到数据库: %s (%s)\n", mongoCfg.Database, maskMongoURI(mongoCfg.URI))
 	fmt.Println()
 
 	return client.Database(mongoCfg.Database), nil

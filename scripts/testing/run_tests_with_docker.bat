@@ -45,7 +45,7 @@ exit /b 1
 :redis_ready
 
 :: 设置环境变量
-set MONGODB_URI=mongodb://admin:password@localhost:27017
+if not defined MONGODB_URI set MONGODB_URI=mongodb://localhost:27017
 set MONGODB_DATABASE=qingyu_test
 set REDIS_ADDR=localhost:6379
 set ENVIRONMENT=test

@@ -33,7 +33,7 @@ for i in {1..15}; do
 done
 
 # 设置环境变量
-export MONGODB_URI="mongodb://admin:password@localhost:27017"
+export MONGODB_URI="${MONGODB_URI:-mongodb://localhost:27017}"
 export MONGODB_DATABASE="qingyu_test"
 export REDIS_ADDR="localhost:6379"
 export ENVIRONMENT="test"

@@ -3,11 +3,13 @@
 import { execFileSync } from 'node:child_process';
 import { parseArgs } from 'node:util';
 
+const DEFAULT_TEST_PASSWORD = 'password';
 const DEFAULT_BASE_URL = 'http://localhost:9090';
 const DEFAULT_AUTHOR_USERNAME = 'testauthor001';
-const DEFAULT_AUTHOR_PASSWORD = 'password';
+const DEFAULT_AUTHOR_PASSWORD = process.env.QINGYU_TEST_AUTHOR_PASSWORD || DEFAULT_TEST_PASSWORD;
 const DEFAULT_ADMIN_USERNAME = 'testadmin001';
-const DEFAULT_ADMIN_PASSWORD = 'password';
+const DEFAULT_ADMIN_PASSWORD = process.env.QINGYU_TEST_ADMIN_PASSWORD || DEFAULT_TEST_PASSWORD;
+const DEFAULT_READER_PASSWORD = process.env.QINGYU_TEST_USER_PASSWORD || DEFAULT_TEST_PASSWORD;
 const DEFAULT_READER_USERS = ['testuser001', 'testuser002', 'testuser003', 'testuser004'];
 
 const { values } = parseArgs({
@@ -32,7 +34,17 @@ const { values } = parseArgs({
 const rootDir = new URL('..', import.meta.url);
 const backendDir = filePath(rootDir);
 
+function warnIfUsingDefaultPassword(envName, value) {
+  if (value === DEFAULT_TEST_PASSWORD) {
+    console.warn(`[WARN] ${envName} 未设置，当前使用默认测试密码占位值`);
+  }
+}
+
 async function main() {
+  warnIfUsingDefaultPassword('QINGYU_TEST_AUTHOR_PASSWORD', values.authorPassword);
+  warnIfUsingDefaultPassword('QINGYU_TEST_ADMIN_PASSWORD', values.adminPassword);
+  warnIfUsingDefaultPassword('QINGYU_TEST_USER_PASSWORD', DEFAULT_READER_PASSWORD);
+
   const mode = values.mode;
   if (mode === 'baseline') {
     runSeeder('baseline', values.clean);
@@ -175,7 +187,7 @@ async function enrichShowcaseBook({
   console.log(`showcase book: ${targetBook.title} (${targetBook.id})`);
 
   for (const [index, readerUsername] of readers.entries()) {
-    const readerToken = await login(baseUrl, readerUsername, 'password');
+    const readerToken = await login(baseUrl, readerUsername, DEFAULT_READER_PASSWORD);
     await createOrUpdateRating(
       baseUrl,
       readerToken,
@@ -215,7 +227,7 @@ async function enrichProjectStats(baseUrl, authorToken, adminToken, project, rea
   console.log(`published book: ${bookId}`);
 
   for (const [index, readerUsername] of readers.entries()) {
-    const readerToken = await login(baseUrl, readerUsername, 'password');
+    const readerToken = await login(baseUrl, readerUsername, DEFAULT_READER_PASSWORD);
     await createOrUpdateRating(baseUrl, readerToken, bookId, 4 + (index % 2), `${readerUsername} rating for ${project.title}`);
     await createBookComment(
       baseUrl,
@@ -247,11 +259,11 @@ async function login(baseUrl, username, password) {
 async function ensureReaderAccounts(baseUrl, readers) {
   for (const username of readers) {
     try {
-      await login(baseUrl, username, 'password');
+      await login(baseUrl, username, DEFAULT_READER_PASSWORD);
       continue;
     } catch (_error) {
       await registerReader(baseUrl, username);
-      await login(baseUrl, username, 'password');
+      await login(baseUrl, username, DEFAULT_READER_PASSWORD);
     }
   }
 }
@@ -262,7 +274,7 @@ async function registerReader(baseUrl, username) {
       body: {
         username,
         email: `${username}@qingyu.test`,
-        password: 'password',
+        password: DEFAULT_READER_PASSWORD,
       },
     });
   } catch (error) {

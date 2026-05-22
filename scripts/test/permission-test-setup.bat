@@ -190,10 +190,10 @@ echo.
 
 if %SKIP_DATA% EQU 0 (
     echo 测试账号:
-    echo   管理员: admin@test.com / Admin@123
-    echo   作者:   author@test.com / Author@123
-    echo   读者:   reader@test.com / Reader@123
-    echo   编辑:   editor@test.com / Editor@123
+    echo   管理员: admin@test.com / ^<从测试数据脚本输出获取^>
+    echo   作者:   author@test.com / ^<从测试数据脚本输出获取^>
+    echo   读者:   reader@test.com / ^<从测试数据脚本输出获取^>
+    echo   编辑:   editor@test.com / ^<从测试数据脚本输出获取^>
     echo.
 )
 

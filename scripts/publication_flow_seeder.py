@@ -28,9 +28,12 @@ if sys.platform == 'win32':
     sys.stderr = codecs.getwriter('utf-8')(sys.stderr.buffer, errors='replace')
 
 # Default configuration
+DEFAULT_TEST_PASSWORD = "password"
 DEFAULT_BASE_URL = "http://localhost:9090"
 DEFAULT_ADMIN_USERNAME = "testadmin001"
-DEFAULT_ADMIN_PASSWORD = "password"
+DEFAULT_ADMIN_PASSWORD = os.getenv("QINGYU_TEST_ADMIN_PASSWORD", DEFAULT_TEST_PASSWORD)
+DEFAULT_AUTHOR_PASSWORD = os.getenv("QINGYU_TEST_AUTHOR_PASSWORD", DEFAULT_TEST_PASSWORD)
+DEFAULT_USER_PASSWORD = os.getenv("QINGYU_TEST_USER_PASSWORD", DEFAULT_TEST_PASSWORD)
 
 # Book configurations
 BOOKS_PER_AUTHOR = 5  # Books per author
@@ -38,9 +41,22 @@ CHAPTERS_PER_BOOK = 3  # Chapters per book
 
 # Test author configurations
 TEST_AUTHORS = [
-    {"username": "hot_author_01", "password": "Author@123456", "nickname": "HotAuthor01"},
-    {"username": "hot_author_02", "password": "Author@123456", "nickname": "HotAuthor02"},
+    {
+        "username": "hot_author_01",
+        "password": DEFAULT_AUTHOR_PASSWORD,
+        "nickname": "HotAuthor01",
+    },
+    {
+        "username": "hot_author_02",
+        "password": DEFAULT_AUTHOR_PASSWORD,
+        "nickname": "HotAuthor02",
+    },
 ]
+
+
+def warn_if_using_default_password(env_name: str, value: str) -> None:
+    if value == DEFAULT_TEST_PASSWORD:
+        print(f"[WARN] {env_name} 未设置，当前使用默认测试密码占位值")
 
 
 def build_url(base_url: str, path: str, query: dict | None = None) -> str:
@@ -360,6 +376,9 @@ def seed_publication_flow(
     print(f"  Base URL: {base_url}")
     print(f"  Books per author: {num_books_per_author}")
     print(f"  Chapters per book: {chapters_per_book}")
+    warn_if_using_default_password("QINGYU_TEST_ADMIN_PASSWORD", DEFAULT_ADMIN_PASSWORD)
+    warn_if_using_default_password("QINGYU_TEST_AUTHOR_PASSWORD", DEFAULT_AUTHOR_PASSWORD)
+    warn_if_using_default_password("QINGYU_TEST_USER_PASSWORD", DEFAULT_USER_PASSWORD)
 
     # 1. Get admin token
     print("\nStep 1: Getting admin token...")
@@ -424,7 +443,7 @@ def seed_publication_flow(
         # Try to use existing author users from seeder
         try:
             # Login as testauthor001 (created by user seeder)
-            token, user = login(base_url, "testauthor001", "password")
+            token, user = login(base_url, "testauthor001", DEFAULT_AUTHOR_PASSWORD)
             test_authors.append({
                 "username": "testauthor001",
                 "nickname": "TestAuthor01",
@@ -442,7 +461,7 @@ def seed_publication_flow(
     reader_token = None
 
     try:
-        token, _ = login(base_url, "testuser001", "password")
+        token, _ = login(base_url, "testuser001", DEFAULT_USER_PASSWORD)
         reader_token = token
         print(f"  [OK] Reader user ready")
     except Exception as e:

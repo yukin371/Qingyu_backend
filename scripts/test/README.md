@@ -59,14 +59,14 @@ docker-compose -f docker-compose.test.yml down
 
 ## 测试账号
 
-| 用户名 | 密码 | 角色 | 说明 |
+| 用户名 | 密码来源 | 角色 | 说明 |
 |--------|------|------|------|
-| admin@test.com | Admin@123 | admin | 管理员，所有权限 |
-| author@test.com | Author@123 | author | 作者，作品管理权限 |
-| reader@test.com | Reader@123 | reader | 读者，只读权限 |
-| editor@test.com | Editor@123 | editor | 编辑，审核权限 |
-| limited@test.com | Limited@123 | limited_user | 受限用户 |
-| author_reader@test.com | MultiRole@123 | author, reader | 多角色测试 |
+| admin@test.com | 本地权限测试数据脚本输出或环境变量 | admin | 管理员，所有权限 |
+| author@test.com | 本地权限测试数据脚本输出或环境变量 | author | 作者，作品管理权限 |
+| reader@test.com | 本地权限测试数据脚本输出或环境变量 | reader | 读者，只读权限 |
+| editor@test.com | 本地权限测试数据脚本输出或环境变量 | editor | 编辑，审核权限 |
+| limited@test.com | 本地权限测试数据脚本输出或环境变量 | limited_user | 受限用户 |
+| author_reader@test.com | 本地权限测试数据脚本输出或环境变量 | author, reader | 多角色测试 |
 
 ## 快速测试
 
@@ -76,12 +76,12 @@ docker-compose -f docker-compose.test.yml down
 # 管理员登录
 curl -X POST http://localhost:8080/api/v1/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username": "admin@test.com", "password": "Admin@123"}'
+  -d '{"username": "admin@test.com", "password": "<从测试数据脚本输出获取>"}'
 
 # 读者登录
 curl -X POST http://localhost:8080/api/v1/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username": "reader@test.com", "password": "Reader@123"}'
+  -d '{"username": "reader@test.com", "password": "<从测试数据脚本输出获取>"}'
 ```
 
 ### 测试权限

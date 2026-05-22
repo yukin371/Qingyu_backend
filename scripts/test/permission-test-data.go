@@ -5,6 +5,8 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -48,6 +50,35 @@ var (
 	verbose  = flag.Bool("v", false, "详细输出")
 )
 
+func getEnvOrDefault(key, fallback string) string {
+	value := os.Getenv(key)
+	if value == "" {
+		return fallback
+	}
+	return value
+}
+
+const defaultTestPassword = "password"
+
+func warnIfUsingDefaultPassword(envName, value string) {
+	if value == defaultTestPassword {
+		log.Printf("[WARN] %s 未设置，当前使用默认测试密码占位值", envName)
+	}
+}
+
+func maskMongoURI(uri string) string {
+	if uri == "" {
+		return ""
+	}
+	if idx := strings.Index(uri, "@"); idx >= 0 {
+		prefix := uri[:idx]
+		if schemeIdx := strings.Index(prefix, "://"); schemeIdx >= 0 {
+			return prefix[:schemeIdx+3] + "***@" + uri[idx+1:]
+		}
+	}
+	return uri
+}
+
 func main() {
 	flag.Parse()
 
@@ -57,7 +88,13 @@ func main() {
 	log.Println("")
 
 	// 1. 连接MongoDB
-	log.Printf("[1/5] 连接MongoDB: %s", *mongoURI)
+	warnIfUsingDefaultPassword("QINGYU_TEST_ADMIN_PASSWORD", getEnvOrDefault("QINGYU_TEST_ADMIN_PASSWORD", defaultTestPassword))
+	warnIfUsingDefaultPassword("QINGYU_TEST_AUTHOR_PASSWORD", getEnvOrDefault("QINGYU_TEST_AUTHOR_PASSWORD", defaultTestPassword))
+	warnIfUsingDefaultPassword("QINGYU_TEST_READER_PASSWORD", getEnvOrDefault("QINGYU_TEST_READER_PASSWORD", defaultTestPassword))
+	warnIfUsingDefaultPassword("QINGYU_TEST_EDITOR_PASSWORD", getEnvOrDefault("QINGYU_TEST_EDITOR_PASSWORD", defaultTestPassword))
+	warnIfUsingDefaultPassword("QINGYU_TEST_LIMITED_PASSWORD", getEnvOrDefault("QINGYU_TEST_LIMITED_PASSWORD", defaultTestPassword))
+	warnIfUsingDefaultPassword("QINGYU_TEST_MULTI_ROLE_PASSWORD", getEnvOrDefault("QINGYU_TEST_MULTI_ROLE_PASSWORD", defaultTestPassword))
+	log.Printf("[1/5] 连接MongoDB: %s", maskMongoURI(*mongoURI))
 	client, err := connectMongoDB(*mongoURI)
 	if err != nil {
 		log.Fatalf("连接MongoDB失败: %v", err)
@@ -265,18 +302,24 @@ func createTestRoles() []authModel.Role {
 // createTestUsers 创建测试用户
 func createTestUsers() []User {
 	now := time.Now()
-	adminPassword := hashPassword("Admin@123")
-	authorPassword := hashPassword("Author@123")
-	readerPassword := hashPassword("Reader@123")
-	editorPassword := hashPassword("Editor@123")
-	limitedPassword := hashPassword("Limited@123")
+	adminPlainPassword := getEnvOrDefault("QINGYU_TEST_ADMIN_PASSWORD", defaultTestPassword)
+	authorPlainPassword := getEnvOrDefault("QINGYU_TEST_AUTHOR_PASSWORD", defaultTestPassword)
+	readerPlainPassword := getEnvOrDefault("QINGYU_TEST_READER_PASSWORD", defaultTestPassword)
+	editorPlainPassword := getEnvOrDefault("QINGYU_TEST_EDITOR_PASSWORD", defaultTestPassword)
+	limitedPlainPassword := getEnvOrDefault("QINGYU_TEST_LIMITED_PASSWORD", defaultTestPassword)
+	multiRolePlainPassword := getEnvOrDefault("QINGYU_TEST_MULTI_ROLE_PASSWORD", defaultTestPassword)
+	adminPassword := hashPassword(adminPlainPassword)
+	authorPassword := hashPassword(authorPlainPassword)
+	readerPassword := hashPassword(readerPlainPassword)
+	editorPassword := hashPassword(editorPlainPassword)
+	limitedPassword := hashPassword(limitedPlainPassword)
 
 	return []User{
 		{
 			ID:             primitive.NewObjectID(),
 			Username:       "admin@test.com",
 			Email:          "admin@test.com",
-			Password:       "Admin@123",
+			Password:       adminPlainPassword,
 			HashedPassword: adminPassword,
 			Roles:          []string{"admin"},
 			IsVip:          true,
@@ -288,7 +331,7 @@ func createTestUsers() []User {
 			ID:             primitive.NewObjectID(),
 			Username:       "author@test.com",
 			Email:          "author@test.com",
-			Password:       "Author@123",
+			Password:       authorPlainPassword,
 			HashedPassword: authorPassword,
 			Roles:          []string{"author"},
 			IsVip:          true,
@@ -300,7 +343,7 @@ func createTestUsers() []User {
 			ID:             primitive.NewObjectID(),
 			Username:       "reader@test.com",
 			Email:          "reader@test.com",
-			Password:       "Reader@123",
+			Password:       readerPlainPassword,
 			HashedPassword: readerPassword,
 			Roles:          []string{"reader"},
 			IsVip:          false,
@@ -312,7 +355,7 @@ func createTestUsers() []User {
 			ID:             primitive.NewObjectID(),
 			Username:       "editor@test.com",
 			Email:          "editor@test.com",
-			Password:       "Editor@123",
+			Password:       editorPlainPassword,
 			HashedPassword: editorPassword,
 			Roles:          []string{"editor"},
 			IsVip:          false,
@@ -324,7 +367,7 @@ func createTestUsers() []User {
 			ID:             primitive.NewObjectID(),
 			Username:       "limited@test.com",
 			Email:          "limited@test.com",
-			Password:       "Limited@123",
+			Password:       limitedPlainPassword,
 			HashedPassword: limitedPassword,
 			Roles:          []string{"limited_user"},
 			IsVip:          false,
@@ -337,8 +380,8 @@ func createTestUsers() []User {
 			ID:             primitive.NewObjectID(),
 			Username:       "author_reader@test.com",
 			Email:          "author_reader@test.com",
-			Password:       "MultiRole@123",
-			HashedPassword: hashPassword("MultiRole@123"),
+			Password:       multiRolePlainPassword,
+			HashedPassword: hashPassword(multiRolePlainPassword),
 			Roles:          []string{"author", "reader"},
 			IsVip:          true,
 			IsAdmin:        false,
@@ -456,11 +499,18 @@ func printSummary(users []User) {
 		}
 
 		fmt.Printf("  %s\n", user.Username)
-		fmt.Printf("    密码: %s\n", user.Password)
+		fmt.Printf("    密码: %s\n", maskSecret(user.Password))
 		fmt.Printf("    角色: %s\n", roles)
 		fmt.Println("")
 	}
 
 	fmt.Println("========================================")
 	fmt.Println("")
+}
+
+func maskSecret(secret string) string {
+	if len(secret) <= 2 {
+		return "***"
+	}
+	return secret[:1] + "***" + secret[len(secret)-1:]
 }

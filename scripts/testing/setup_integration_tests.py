@@ -8,6 +8,7 @@
 import os
 import sys
 import json
+import re
 import subprocess
 import time
 import requests
@@ -41,6 +42,23 @@ def print_info(message):
 
 def print_warning(message):
     print(f"{Colors.WARNING}⚠ {message}{Colors.ENDC}")
+
+def redact_sensitive_text(text: str) -> str:
+    """脱敏命令输出中的常见敏感字段"""
+    if not text:
+        return text
+
+    redacted = text
+    redacted = re.sub(r'(Authorization:\s*Bearer\s+)[^\s"\']+', r'\1***', redacted, flags=re.IGNORECASE)
+    redacted = re.sub(r'("token"\s*:\s*")[^"]+(")', r'\1***\2', redacted, flags=re.IGNORECASE)
+    redacted = re.sub(r'("password"\s*:\s*")[^"]+(")', r'\1***\2', redacted, flags=re.IGNORECASE)
+    redacted = re.sub(r'(token[:=]\s*)[^\s"\']+', r'\1***', redacted, flags=re.IGNORECASE)
+    redacted = re.sub(r'(mongodb(?:\+srv)?://)([^@\s/]+)@', r'\1***@', redacted, flags=re.IGNORECASE)
+    return redacted
+
+def print_redacted_output(text: str):
+    if text:
+        print(redact_sensitive_text(text))
 
 def run_command(cmd, shell=True, check=True):
     """运行命令并返回结果"""
@@ -136,11 +154,11 @@ def cleanup_test_data():
     
     if success or "countDocuments" in stdout:
         print_success("数据清理完成")
-        print(stdout)
+        print_redacted_output(stdout)
         return True
     else:
         print_error("数据清理失败")
-        print(stderr)
+        print_redacted_output(stderr)
         return False
 
 def import_test_users():
@@ -162,7 +180,7 @@ def import_test_users():
         return True
     else:
         print_error("测试用户导入失败")
-        print(stderr)
+        print_redacted_output(stderr)
         return False
 
 def import_novels():
@@ -187,7 +205,7 @@ def import_novels():
     
     if not success and "验证通过" not in stdout:
         print_error("数据验证失败")
-        print(stderr)
+        print_redacted_output(stderr)
         return False
     
     print_success("数据验证通过")
@@ -208,7 +226,7 @@ def import_novels():
         return True
     else:
         print_error("小说数据导入失败")
-        print(stderr)
+        print_redacted_output(stderr)
         return False
 
 def check_server():
@@ -301,10 +319,10 @@ def run_tests():
         cmd = f"go test -v ./test/integration/{test_file}"
     
     success, stdout, stderr = run_command(cmd, check=False)
-    
-    print(stdout)
+
+    print_redacted_output(stdout)
     if stderr:
-        print(stderr)
+        print_redacted_output(stderr)
     
     if success or "PASS" in stdout:
         print_success("测试执行完成")
@@ -316,22 +334,44 @@ def run_tests():
 def show_test_accounts():
     """显示测试账号信息"""
     print_header("测试账号清单")
-    
+
+    unset_password_label = "未设置"
+    admin_password = os.getenv("QINGYU_TEST_ADMIN_PASSWORD") or unset_password_label
+    vip_password = os.getenv("QINGYU_TEST_VIP_PASSWORD") or unset_password_label
+    user_password = os.getenv("QINGYU_TEST_USER_PASSWORD") or unset_password_label
+
     accounts = [
-        {"角色": "管理员", "邮箱": "admin@qingyu.com", "密码": "Admin@123456"},
-        {"角色": "VIP用户", "邮箱": "vip01@qingyu.com", "密码": "Vip@123456"},
-        {"角色": "VIP用户", "邮箱": "vip02@qingyu.com", "密码": "Vip@123456"},
-        {"角色": "普通用户", "邮箱": "test01@qingyu.com", "密码": "Test@123456"},
-        {"角色": "普通用户", "邮箱": "test02@qingyu.com", "密码": "Test@123456"},
-        {"角色": "普通用户", "邮箱": "test03@qingyu.com", "密码": "Test@123456"},
-        {"角色": "普通用户", "邮箱": "test04@qingyu.com", "密码": "Test@123456"},
-        {"角色": "普通用户", "邮箱": "test05@qingyu.com", "密码": "Test@123456"},
+        {"角色": "管理员", "邮箱": "admin@qingyu.com", "密码": admin_password},
+        {"角色": "VIP用户", "邮箱": "vip01@qingyu.com", "密码": vip_password},
+        {"角色": "VIP用户", "邮箱": "vip02@qingyu.com", "密码": vip_password},
+        {"角色": "普通用户", "邮箱": "test01@qingyu.com", "密码": user_password},
+        {"角色": "普通用户", "邮箱": "test02@qingyu.com", "密码": user_password},
+        {"角色": "普通用户", "邮箱": "test03@qingyu.com", "密码": user_password},
+        {"角色": "普通用户", "邮箱": "test04@qingyu.com", "密码": user_password},
+        {"角色": "普通用户", "邮箱": "test05@qingyu.com", "密码": user_password},
     ]
-    
+
+    def mask_email(email: str) -> str:
+        if "@" not in email:
+            return email
+        name, domain = email.split("@", 1)
+        if len(name) <= 1:
+            return f"***@{domain}"
+        return f"{name[:1]}***@{domain}"
+
+    def mask_secret(secret: str) -> str:
+        if len(secret) <= 2:
+            return "***"
+        return f"{secret[:1]}***{secret[-1:]}"
+
     print(f"{'角色':<12} {'邮箱':<25} {'密码':<20}")
     print("-" * 60)
     for account in accounts:
-        print(f"{account['角色']:<12} {account['邮箱']:<25} {account['密码']:<20}")
+        print(f"{account['角色']:<12} {mask_email(account['邮箱']):<25} {mask_secret(account['密码']):<20}")
+    print()
+    print("密码来源: QINGYU_TEST_ADMIN_PASSWORD / QINGYU_TEST_VIP_PASSWORD / QINGYU_TEST_USER_PASSWORD")
+    if admin_password == unset_password_label or vip_password == unset_password_label or user_password == unset_password_label:
+        print("[WARN] 存在未设置的测试密码环境变量，当前显示的是“未设置”占位值")
     print()
 
 def main():
@@ -398,4 +438,3 @@ if __name__ == "__main__":
         import traceback
         traceback.print_exc()
         sys.exit(1)
-
