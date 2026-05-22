@@ -78,7 +78,7 @@ func SetupTestDB(t *testing.T) (*mongo.Database, func()) {
 		}
 	} else {
 		// 如果没有环境变量，尝试从配置文件加载（本地开发）
-		cfg, err = loadLocalConfigWithFallback()
+		cfg, err = LoadLocalConfigWithFallback()
 		if err != nil {
 			t.Fatalf("加载配置失败: %v (请确保设置 MONGODB_URI 环境变量或 configs/config.yaml 存在)", err)
 		}
@@ -196,7 +196,7 @@ func SetupTestContainer(t *testing.T) (*container.ServiceContainer, func()) {
 		}
 	} else {
 		// 如果没有环境变量，尝试从配置文件加载（本地开发）
-		cfg, err = loadLocalConfigWithFallback()
+		cfg, err = LoadLocalConfigWithFallback()
 		if err != nil {
 			t.Fatalf("加载配置失败: %v (请确保设置 MONGODB_URI 环境变量或 configs/config.yaml 存在)", err)
 		}
@@ -269,7 +269,8 @@ func SetupTestContainer(t *testing.T) (*container.ServiceContainer, func()) {
 	return c, cleanup
 }
 
-func loadLocalConfigWithFallback() (*config.Config, error) {
+// LoadLocalConfigWithFallback 按测试优先策略查找本地配置文件，并为 Mongo 测试库生成隔离库名。
+func LoadLocalConfigWithFallback() (*config.Config, error) {
 	candidates := []string{
 		"configs/config.test.yaml",
 		"config/config.test.yaml", // 兼容旧路径

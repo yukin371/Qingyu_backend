@@ -22,7 +22,7 @@ func SetupTestEnvironment(t *testing.T) {
 	t.Helper()
 
 	// 加载配置
-	cfg, err := config.LoadConfig("../../../config")
+	cfg, err := testutil.LoadLocalConfigWithFallback()
 	require.NoError(t, err, "加载配置失败")
 
 	// 设置全局配置

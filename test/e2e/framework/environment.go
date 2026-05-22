@@ -36,7 +36,7 @@ func SetupTestEnvironment(t *testing.T) (*TestEnvironment, func()) {
 	t.Helper()
 
 	// 1. 加载测试配置
-	cfg, err := config.LoadConfig("../../config")
+	cfg, err := testutil.LoadLocalConfigWithFallback()
 	require.NoError(t, err, "加载测试配置失败")
 	config.GlobalConfig = cfg
 	testutil.EnableStrictLogAssertionsIgnoreWarn(t)

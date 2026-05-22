@@ -14,6 +14,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"google.golang.org/grpc"
+	"google.golang.org/protobuf/proto"
 )
 
 func TestDetermineConsistencyAlertLevel(t *testing.T) {
@@ -310,7 +311,7 @@ func (s *quotaSchedulerAIClientConnStub) Invoke(ctx context.Context, method stri
 		return s.invokeErr
 	}
 	if resp, ok := reply.(*pb.QuotaConsumptionBatchResponse); ok && s.batchResp != nil {
-		*resp = *s.batchResp
+		proto.Merge(resp, s.batchResp)
 	}
 	return nil
 }
@@ -422,9 +423,9 @@ func TestQuotaSchedulerEmitConsistencyAlertsHandlesNilServiceAndCreateFailures(t
 
 		err := scheduler.emitConsistencyAlerts(context.Background(), []quotaConsistencyAlertRequest{
 			{
-				userID: "user-1",
-				level:  "warning",
-				title:  "AI 配额对账偏差",
+				userID:  "user-1",
+				level:   "warning",
+				title:   "AI 配额对账偏差",
 				message: "用户 user-1 的 AI 配额对账出现偏差",
 				data: map[string]interface{}{
 					"scope":     "user",
@@ -445,9 +446,9 @@ func TestQuotaSchedulerEmitConsistencyAlertsHandlesNilServiceAndCreateFailures(t
 
 		err := scheduler.emitConsistencyAlerts(context.Background(), []quotaConsistencyAlertRequest{
 			{
-				userID: "user-1",
-				level:  "warning",
-				title:  "AI 配额对账偏差",
+				userID:  "user-1",
+				level:   "warning",
+				title:   "AI 配额对账偏差",
 				message: "用户 user-1 的 AI 配额对账出现偏差",
 				data: map[string]interface{}{
 					"scope":     "user",
@@ -469,7 +470,7 @@ func TestQuotaSchedulerRunConsistencyCheckLogsAndReturnsOnError(t *testing.T) {
 			},
 		},
 		phase3Client: &Phase3Client{},
-		logger: logger,
+		logger:       logger,
 	}
 
 	assert.NotPanics(t, func() {
