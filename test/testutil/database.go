@@ -271,6 +271,12 @@ func SetupTestContainer(t *testing.T) (*container.ServiceContainer, func()) {
 
 func loadLocalConfigWithFallback() (*config.Config, error) {
 	candidates := []string{
+		"configs/config.test.yaml",
+		"config/config.test.yaml", // 兼容旧路径
+		"../../configs/config.test.yaml",
+		"../../config/config.test.yaml", // 兼容旧路径
+		"../../../configs/config.test.yaml",
+		"../../../config/config.test.yaml", // 兼容旧路径
 		"configs/config.yaml",
 		"config/config.yaml", // 兼容旧路径
 		"../../configs/config.yaml",
@@ -279,6 +285,7 @@ func loadLocalConfigWithFallback() (*config.Config, error) {
 		"../../../config/config.yaml", // 兼容旧路径
 	}
 
+	var lastErr error
 	for _, candidate := range candidates {
 		cfg, err := config.LoadConfig(candidate)
 		if err == nil {
@@ -288,7 +295,11 @@ func loadLocalConfigWithFallback() (*config.Config, error) {
 			}
 			return cfg, nil
 		}
+		lastErr = err
 	}
 
+	if lastErr != nil {
+		return nil, fmt.Errorf("未找到可用配置文件，已尝试路径: %v，最后错误: %w", candidates, lastErr)
+	}
 	return nil, fmt.Errorf("未找到可用配置文件，已尝试路径: %v", candidates)
 }
