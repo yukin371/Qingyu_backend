@@ -33,6 +33,9 @@ type quotaAdminAPITestRepo struct {
 
 	quotasByKey   map[string]*aiModels.UserQuota
 	quotasByUser  map[string][]*aiModels.UserQuota
+	getAllErrByUser map[string]error
+	createErrByUser map[string]error
+	updateErrByUser map[string]error
 	getAllErr     error
 	transactions  []*aiModels.QuotaTransaction
 	createdQuotas []*aiModels.UserQuota
@@ -44,8 +47,11 @@ type quotaAdminAPITestRepo struct {
 
 func newQuotaAdminAPITestRepo() *quotaAdminAPITestRepo {
 	return &quotaAdminAPITestRepo{
-		quotasByKey:  make(map[string]*aiModels.UserQuota),
-		quotasByUser: make(map[string][]*aiModels.UserQuota),
+		quotasByKey:    make(map[string]*aiModels.UserQuota),
+		quotasByUser:   make(map[string][]*aiModels.UserQuota),
+		getAllErrByUser: make(map[string]error),
+		createErrByUser: make(map[string]error),
+		updateErrByUser: make(map[string]error),
 	}
 }
 
@@ -54,6 +60,9 @@ func adminQuotaKey(userID string, quotaType aiModels.QuotaType) string {
 }
 
 func (s *quotaAdminAPITestRepo) CreateQuota(ctx context.Context, quota *aiModels.UserQuota) error {
+	if err, ok := s.createErrByUser[quota.UserID]; ok {
+		return err
+	}
 	s.createdQuotas = append(s.createdQuotas, quota)
 	s.quotasByKey[adminQuotaKey(quota.UserID, quota.QuotaType)] = quota
 	return nil
@@ -67,6 +76,9 @@ func (s *quotaAdminAPITestRepo) GetQuotaByUserID(ctx context.Context, userID str
 }
 
 func (s *quotaAdminAPITestRepo) UpdateQuota(ctx context.Context, quota *aiModels.UserQuota) error {
+	if err, ok := s.updateErrByUser[quota.UserID]; ok {
+		return err
+	}
 	s.updatedQuotas = append(s.updatedQuotas, quota)
 	s.quotasByKey[adminQuotaKey(quota.UserID, quota.QuotaType)] = quota
 	return nil
@@ -80,6 +92,9 @@ func (s *quotaAdminAPITestRepo) DeleteQuota(ctx context.Context, userID string, 
 func (s *quotaAdminAPITestRepo) GetAllQuotasByUserID(ctx context.Context, userID string) ([]*aiModels.UserQuota, error) {
 	if s.getAllErr != nil {
 		return nil, s.getAllErr
+	}
+	if err, ok := s.getAllErrByUser[userID]; ok {
+		return nil, err
 	}
 	return s.quotasByUser[userID], nil
 }
@@ -570,6 +585,286 @@ func TestQuotaAdminAPIBatchRechargeRejectsMissingUserIDs(t *testing.T) {
 	assert.Contains(t, w.Body.String(), "参数错误")
 }
 
+func TestQuotaAdminAPIBatchUpdateRejectsMissingUserIDs(t *testing.T) {
+	repo := newQuotaAdminAPITestRepo()
+	_, router := setupQuotaAdminAPITestHarness(repo, nil)
+
+	req, _ := http.NewRequest(http.MethodPost, "/batch-update", strings.NewReader(`{"amount":100,"quotaType":"daily","reason":"test"}`))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "参数错误")
+}
+
+func TestQuotaAdminAPIBatchSuspendRejectsMissingUserIDs(t *testing.T) {
+	repo := newQuotaAdminAPITestRepo()
+	_, router := setupQuotaAdminAPITestHarness(repo, nil)
+
+	req, _ := http.NewRequest(http.MethodPost, "/batch-suspend", strings.NewReader(`{"reason":"test"}`))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "参数错误")
+}
+
+func TestQuotaAdminAPIBatchActivateRejectsMissingUserIDs(t *testing.T) {
+	repo := newQuotaAdminAPITestRepo()
+	_, router := setupQuotaAdminAPITestHarness(repo, nil)
+
+	req, _ := http.NewRequest(http.MethodPost, "/batch-activate", strings.NewReader(`{"reason":"test"}`))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Contains(t, w.Body.String(), "参数错误")
+}
+
+func TestQuotaAdminAPIBatchUpdateCreatesQuotasForEachUser(t *testing.T) {
+	repo := newQuotaAdminAPITestRepo()
+	_, router := setupQuotaAdminAPITestHarness(repo, nil)
+
+	req, _ := http.NewRequest(http.MethodPost, "/batch-update", strings.NewReader(`{"userIds":["user-1","user-2"],"amount":120,"quotaType":"daily"}`))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "批量更新完成")
+	require.Len(t, repo.createdQuotas, 2)
+	assert.Equal(t, "user-1", repo.createdQuotas[0].UserID)
+	assert.Equal(t, aiModels.QuotaTypeDaily, repo.createdQuotas[0].QuotaType)
+	assert.Equal(t, 120, repo.createdQuotas[0].TotalQuota)
+	assert.Equal(t, "user-2", repo.createdQuotas[1].UserID)
+	assert.Equal(t, 120, repo.createdQuotas[1].RemainingQuota)
+
+	var resp struct {
+		Data struct {
+			Total   int `json:"total"`
+			Success int `json:"success"`
+			Failed  int `json:"failed"`
+		} `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, 2, resp.Data.Total)
+	assert.Equal(t, 2, resp.Data.Success)
+	assert.Equal(t, 0, resp.Data.Failed)
+}
+
+func TestQuotaAdminAPIBatchUpdateSurfacesUnsupportedQuotaType(t *testing.T) {
+	repo := newQuotaAdminAPITestRepo()
+	_, router := setupQuotaAdminAPITestHarness(repo, nil)
+
+	req, _ := http.NewRequest(http.MethodPost, "/batch-update", strings.NewReader(`{"userIds":["user-1"],"amount":120,"quotaType":"yearly"}`))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Contains(t, w.Body.String(), "批量更新失败")
+	assert.Contains(t, w.Body.String(), "不支持的配额类型")
+}
+
+func TestQuotaAdminAPIBatchUpdateAggregatesPerUserFailures(t *testing.T) {
+	repo := newQuotaAdminAPITestRepo()
+	repo.createErrByUser["user-bad"] = errors.New("db write failed")
+	_, router := setupQuotaAdminAPITestHarness(repo, nil)
+
+	req, _ := http.NewRequest(http.MethodPost, "/batch-update", strings.NewReader(`{"userIds":["user-ok","user-bad"],"amount":120,"quotaType":"daily"}`))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "批量更新完成")
+	require.Len(t, repo.createdQuotas, 1)
+	assert.Equal(t, "user-ok", repo.createdQuotas[0].UserID)
+
+	var resp struct {
+		Data struct {
+			Total   int      `json:"total"`
+			Success int      `json:"success"`
+			Failed  int      `json:"failed"`
+			Errors  []string `json:"errors"`
+		} `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, 2, resp.Data.Total)
+	assert.Equal(t, 1, resp.Data.Success)
+	assert.Equal(t, 1, resp.Data.Failed)
+	require.Len(t, resp.Data.Errors, 1)
+	assert.Contains(t, resp.Data.Errors[0], "user-bad")
+	assert.Contains(t, resp.Data.Errors[0], "db write failed")
+}
+
+func TestQuotaAdminAPIBatchRechargeUpdatesQuotasAndCreatesTransactions(t *testing.T) {
+	repo := newQuotaAdminAPITestRepo()
+	repo.quotasByKey[adminQuotaKey("user-1", aiModels.QuotaTypeDaily)] = &aiModels.UserQuota{
+		UserID:         "user-1",
+		QuotaType:      aiModels.QuotaTypeDaily,
+		TotalQuota:     100,
+		RemainingQuota: 60,
+	}
+	repo.quotasByKey[adminQuotaKey("user-2", aiModels.QuotaTypeDaily)] = &aiModels.UserQuota{
+		UserID:         "user-2",
+		QuotaType:      aiModels.QuotaTypeDaily,
+		TotalQuota:     80,
+		RemainingQuota: 10,
+	}
+	_, router := setupQuotaAdminAPITestHarness(repo, nil)
+
+	req, _ := http.NewRequest(http.MethodPost, "/batch-recharge", strings.NewReader(`{"userIds":["user-1","user-2"],"amount":40,"quotaType":"daily","reason":"campaign"}`))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "批量充值完成")
+	require.Len(t, repo.updatedQuotas, 2)
+	assert.Equal(t, "user-1", repo.updatedQuotas[0].UserID)
+	assert.Equal(t, 140, repo.updatedQuotas[0].TotalQuota)
+	assert.Equal(t, 100, repo.updatedQuotas[0].RemainingQuota)
+	assert.Equal(t, "user-2", repo.updatedQuotas[1].UserID)
+	assert.Equal(t, 120, repo.updatedQuotas[1].TotalQuota)
+	assert.Equal(t, 50, repo.updatedQuotas[1].RemainingQuota)
+	require.Len(t, repo.transactions, 2)
+	assert.Equal(t, "recharge", repo.transactions[0].Type)
+	assert.Equal(t, "campaign", repo.transactions[0].Description)
+	assert.Equal(t, 60, repo.transactions[0].BeforeBalance)
+	assert.Equal(t, 100, repo.transactions[0].AfterBalance)
+	assert.Equal(t, 10, repo.transactions[1].BeforeBalance)
+	assert.Equal(t, 50, repo.transactions[1].AfterBalance)
+
+	var resp struct {
+		Data struct {
+			Total   int `json:"total"`
+			Success int `json:"success"`
+			Failed  int `json:"failed"`
+		} `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, 2, resp.Data.Total)
+	assert.Equal(t, 2, resp.Data.Success)
+	assert.Equal(t, 0, resp.Data.Failed)
+}
+
+func TestQuotaAdminAPIBatchRechargeMixesUpdateAndCreate(t *testing.T) {
+	repo := newQuotaAdminAPITestRepo()
+	repo.quotasByKey[adminQuotaKey("user-1", aiModels.QuotaTypeDaily)] = &aiModels.UserQuota{
+		UserID:         "user-1",
+		QuotaType:      aiModels.QuotaTypeDaily,
+		TotalQuota:     100,
+		RemainingQuota: 60,
+	}
+	_, router := setupQuotaAdminAPITestHarness(repo, nil)
+
+	req, _ := http.NewRequest(http.MethodPost, "/batch-recharge", strings.NewReader(`{"userIds":["user-1","user-missing"],"amount":40,"quotaType":"daily","reason":"campaign"}`))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "批量充值完成")
+	require.Len(t, repo.updatedQuotas, 1)
+	assert.Equal(t, "user-1", repo.updatedQuotas[0].UserID)
+	require.Len(t, repo.createdQuotas, 1)
+	assert.Equal(t, "user-missing", repo.createdQuotas[0].UserID)
+	assert.Equal(t, 40, repo.createdQuotas[0].TotalQuota)
+	assert.Equal(t, 40, repo.createdQuotas[0].RemainingQuota)
+	require.Len(t, repo.transactions, 1)
+
+	var resp struct {
+		Data struct {
+			Total   int      `json:"total"`
+			Success int      `json:"success"`
+			Failed  int      `json:"failed"`
+			Errors  []string `json:"errors"`
+		} `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, 2, resp.Data.Total)
+	assert.Equal(t, 2, resp.Data.Success)
+	assert.Equal(t, 0, resp.Data.Failed)
+	assert.Empty(t, resp.Data.Errors)
+}
+
+func TestQuotaAdminAPIBatchRechargeSurfacesUnsupportedQuotaType(t *testing.T) {
+	repo := newQuotaAdminAPITestRepo()
+	_, router := setupQuotaAdminAPITestHarness(repo, nil)
+
+	req, _ := http.NewRequest(http.MethodPost, "/batch-recharge", strings.NewReader(`{"userIds":["user-1"],"amount":40,"quotaType":"yearly","reason":"campaign"}`))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "批量充值完成")
+
+	var resp struct {
+		Data struct {
+			Total   int      `json:"total"`
+			Success int      `json:"success"`
+			Failed  int      `json:"failed"`
+			Errors  []string `json:"errors"`
+		} `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, 1, resp.Data.Total)
+	assert.Equal(t, 0, resp.Data.Success)
+	assert.Equal(t, 1, resp.Data.Failed)
+	require.Len(t, resp.Data.Errors, 1)
+	assert.Contains(t, resp.Data.Errors[0], "不支持的配额类型")
+}
+
+func TestQuotaAdminAPIBatchRechargeAggregatesPerUserFailures(t *testing.T) {
+	repo := newQuotaAdminAPITestRepo()
+	repo.quotasByKey[adminQuotaKey("user-ok", aiModels.QuotaTypeDaily)] = &aiModels.UserQuota{
+		UserID:         "user-ok",
+		QuotaType:      aiModels.QuotaTypeDaily,
+		TotalQuota:     100,
+		RemainingQuota: 60,
+	}
+	repo.quotasByKey[adminQuotaKey("user-bad", aiModels.QuotaTypeDaily)] = &aiModels.UserQuota{
+		UserID:         "user-bad",
+		QuotaType:      aiModels.QuotaTypeDaily,
+		TotalQuota:     50,
+		RemainingQuota: 30,
+	}
+	repo.updateErrByUser["user-bad"] = errors.New("quota update failed")
+	_, router := setupQuotaAdminAPITestHarness(repo, nil)
+
+	req, _ := http.NewRequest(http.MethodPost, "/batch-recharge", strings.NewReader(`{"userIds":["user-ok","user-bad"],"amount":40,"quotaType":"daily","reason":"campaign"}`))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "批量充值完成")
+	require.Len(t, repo.updatedQuotas, 1)
+	assert.Equal(t, "user-ok", repo.updatedQuotas[0].UserID)
+	require.Len(t, repo.transactions, 1)
+
+	var resp struct {
+		Data struct {
+			Total   int      `json:"total"`
+			Success int      `json:"success"`
+			Failed  int      `json:"failed"`
+			Errors  []string `json:"errors"`
+		} `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, 2, resp.Data.Total)
+	assert.Equal(t, 1, resp.Data.Success)
+	assert.Equal(t, 1, resp.Data.Failed)
+	require.Len(t, resp.Data.Errors, 1)
+	assert.Contains(t, resp.Data.Errors[0], "user-bad")
+	assert.Contains(t, resp.Data.Errors[0], "quota update failed")
+}
+
 func TestQuotaAdminAPIRechargeUserQuotaRejectsNonPositiveAmount(t *testing.T) {
 	repo := newQuotaAdminAPITestRepo()
 	_, router := setupQuotaAdminAPITestHarness(repo, nil)
@@ -692,6 +987,201 @@ func TestQuotaAdminAPIUpdateSuspendAndActivateHandlers(t *testing.T) {
 		assert.Equal(t, aiModels.QuotaStatusActive, repo.updatedQuotas[0].Status)
 		assert.Equal(t, aiModels.QuotaStatusActive, repo.updatedQuotas[1].Status)
 	})
+}
+
+func TestQuotaAdminAPIBatchSuspendAndActivateHandlers(t *testing.T) {
+	repo := newQuotaAdminAPITestRepo()
+	repo.quotasByKey[adminQuotaKey("user-a", aiModels.QuotaTypeDaily)] = &aiModels.UserQuota{
+		UserID:    "user-a",
+		QuotaType: aiModels.QuotaTypeDaily,
+		Status:    aiModels.QuotaStatusActive,
+	}
+	repo.quotasByKey[adminQuotaKey("user-b", aiModels.QuotaTypeDaily)] = &aiModels.UserQuota{
+		UserID:    "user-b",
+		QuotaType: aiModels.QuotaTypeDaily,
+		Status:    aiModels.QuotaStatusActive,
+	}
+	repo.quotasByUser["user-a"] = []*aiModels.UserQuota{
+		repo.quotasByKey[adminQuotaKey("user-a", aiModels.QuotaTypeDaily)],
+		{
+			UserID:    "user-a",
+			QuotaType: aiModels.QuotaTypeMonthly,
+			Status:    aiModels.QuotaStatusActive,
+		},
+	}
+	repo.quotasByUser["user-b"] = []*aiModels.UserQuota{
+		repo.quotasByKey[adminQuotaKey("user-b", aiModels.QuotaTypeDaily)],
+	}
+	_, router := setupQuotaAdminAPITestHarness(repo, nil)
+
+	suspendReq, _ := http.NewRequest(http.MethodPost, "/batch-suspend", strings.NewReader(`{"userIds":["user-a","user-b"]}`))
+	suspendReq.Header.Set("Content-Type", "application/json")
+	suspendResp := httptest.NewRecorder()
+	router.ServeHTTP(suspendResp, suspendReq)
+
+	require.Equal(t, http.StatusOK, suspendResp.Code)
+	assert.Contains(t, suspendResp.Body.String(), "批量暂停完成")
+	require.Len(t, repo.updatedQuotas, 3)
+	for _, quota := range repo.updatedQuotas {
+		assert.Equal(t, aiModels.QuotaStatusSuspended, quota.Status)
+	}
+
+	repo.updatedQuotas = nil
+	for _, quota := range repo.quotasByUser["user-a"] {
+		quota.Status = aiModels.QuotaStatusSuspended
+	}
+	for _, quota := range repo.quotasByUser["user-b"] {
+		quota.Status = aiModels.QuotaStatusSuspended
+	}
+
+	activateReq, _ := http.NewRequest(http.MethodPost, "/batch-activate", strings.NewReader(`{"userIds":["user-a","user-b"]}`))
+	activateReq.Header.Set("Content-Type", "application/json")
+	activateResp := httptest.NewRecorder()
+	router.ServeHTTP(activateResp, activateReq)
+
+	require.Equal(t, http.StatusOK, activateResp.Code)
+	assert.Contains(t, activateResp.Body.String(), "批量激活完成")
+	require.Len(t, repo.updatedQuotas, 3)
+	for _, quota := range repo.updatedQuotas {
+		assert.Equal(t, aiModels.QuotaStatusActive, quota.Status)
+	}
+}
+
+func TestQuotaAdminAPIBatchSuspendAndActivateAllowUsersWithoutExistingQuota(t *testing.T) {
+	repo := newQuotaAdminAPITestRepo()
+	_, router := setupQuotaAdminAPITestHarness(repo, nil)
+
+	suspendReq, _ := http.NewRequest(http.MethodPost, "/batch-suspend", strings.NewReader(`{"userIds":["user-empty"]}`))
+	suspendReq.Header.Set("Content-Type", "application/json")
+	suspendResp := httptest.NewRecorder()
+	router.ServeHTTP(suspendResp, suspendReq)
+
+	require.Equal(t, http.StatusOK, suspendResp.Code)
+	assert.Contains(t, suspendResp.Body.String(), "批量暂停完成")
+
+	var suspendResult struct {
+		Data struct {
+			Total   int `json:"total"`
+			Success int `json:"success"`
+			Failed  int `json:"failed"`
+		} `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(suspendResp.Body.Bytes(), &suspendResult))
+	assert.Equal(t, 1, suspendResult.Data.Total)
+	assert.Equal(t, 1, suspendResult.Data.Success)
+	assert.Equal(t, 0, suspendResult.Data.Failed)
+	assert.Empty(t, repo.updatedQuotas)
+
+	activateReq, _ := http.NewRequest(http.MethodPost, "/batch-activate", strings.NewReader(`{"userIds":["user-empty"]}`))
+	activateReq.Header.Set("Content-Type", "application/json")
+	activateResp := httptest.NewRecorder()
+	router.ServeHTTP(activateResp, activateReq)
+
+	require.Equal(t, http.StatusOK, activateResp.Code)
+	assert.Contains(t, activateResp.Body.String(), "批量激活完成")
+
+	var activateResult struct {
+		Data struct {
+			Total   int `json:"total"`
+			Success int `json:"success"`
+			Failed  int `json:"failed"`
+		} `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(activateResp.Body.Bytes(), &activateResult))
+	assert.Equal(t, 1, activateResult.Data.Total)
+	assert.Equal(t, 1, activateResult.Data.Success)
+	assert.Equal(t, 0, activateResult.Data.Failed)
+	assert.Empty(t, repo.updatedQuotas)
+}
+
+func TestQuotaAdminAPIBatchSuspendAggregatesPerUserFailures(t *testing.T) {
+	repo := newQuotaAdminAPITestRepo()
+	repo.quotasByKey[adminQuotaKey("user-ok", aiModels.QuotaTypeDaily)] = &aiModels.UserQuota{
+		UserID:    "user-ok",
+		QuotaType: aiModels.QuotaTypeDaily,
+		Status:    aiModels.QuotaStatusActive,
+	}
+	repo.quotasByKey[adminQuotaKey("user-bad", aiModels.QuotaTypeDaily)] = &aiModels.UserQuota{
+		UserID:    "user-bad",
+		QuotaType: aiModels.QuotaTypeDaily,
+		Status:    aiModels.QuotaStatusActive,
+	}
+	repo.quotasByUser["user-ok"] = []*aiModels.UserQuota{
+		repo.quotasByKey[adminQuotaKey("user-ok", aiModels.QuotaTypeDaily)],
+	}
+	repo.getAllErrByUser["user-bad"] = errors.New("quota load failed")
+	_, router := setupQuotaAdminAPITestHarness(repo, nil)
+
+	req, _ := http.NewRequest(http.MethodPost, "/batch-suspend", strings.NewReader(`{"userIds":["user-ok","user-bad"]}`))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "批量暂停完成")
+	require.Len(t, repo.updatedQuotas, 1)
+	assert.Equal(t, "user-ok", repo.updatedQuotas[0].UserID)
+
+	var resp struct {
+		Data struct {
+			Total   int      `json:"total"`
+			Success int      `json:"success"`
+			Failed  int      `json:"failed"`
+			Errors  []string `json:"errors"`
+		} `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, 2, resp.Data.Total)
+	assert.Equal(t, 1, resp.Data.Success)
+	assert.Equal(t, 1, resp.Data.Failed)
+	require.Len(t, resp.Data.Errors, 1)
+	assert.Contains(t, resp.Data.Errors[0], "user-bad")
+	assert.Contains(t, resp.Data.Errors[0], "quota load failed")
+}
+
+func TestQuotaAdminAPIBatchActivateAggregatesPerUserFailures(t *testing.T) {
+	repo := newQuotaAdminAPITestRepo()
+	repo.quotasByKey[adminQuotaKey("user-ok", aiModels.QuotaTypeDaily)] = &aiModels.UserQuota{
+		UserID:    "user-ok",
+		QuotaType: aiModels.QuotaTypeDaily,
+		Status:    aiModels.QuotaStatusSuspended,
+	}
+	repo.quotasByKey[adminQuotaKey("user-bad", aiModels.QuotaTypeDaily)] = &aiModels.UserQuota{
+		UserID:    "user-bad",
+		QuotaType: aiModels.QuotaTypeDaily,
+		Status:    aiModels.QuotaStatusSuspended,
+	}
+	repo.quotasByUser["user-ok"] = []*aiModels.UserQuota{
+		repo.quotasByKey[adminQuotaKey("user-ok", aiModels.QuotaTypeDaily)],
+	}
+	repo.getAllErrByUser["user-bad"] = errors.New("quota load failed")
+	_, router := setupQuotaAdminAPITestHarness(repo, nil)
+
+	req, _ := http.NewRequest(http.MethodPost, "/batch-activate", strings.NewReader(`{"userIds":["user-ok","user-bad"]}`))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "批量激活完成")
+	require.Len(t, repo.updatedQuotas, 1)
+	assert.Equal(t, "user-ok", repo.updatedQuotas[0].UserID)
+
+	var resp struct {
+		Data struct {
+			Total   int      `json:"total"`
+			Success int      `json:"success"`
+			Failed  int      `json:"failed"`
+			Errors  []string `json:"errors"`
+		} `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, 2, resp.Data.Total)
+	assert.Equal(t, 1, resp.Data.Success)
+	assert.Equal(t, 1, resp.Data.Failed)
+	require.Len(t, resp.Data.Errors, 1)
+	assert.Contains(t, resp.Data.Errors[0], "user-bad")
+	assert.Contains(t, resp.Data.Errors[0], "quota load failed")
 }
 
 func TestQuotaAdminAPINegativeHandlersRejectInvalidPayloads(t *testing.T) {
