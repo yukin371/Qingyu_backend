@@ -2,7 +2,6 @@ package events
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"Qingyu_backend/service/base"
@@ -404,18 +403,41 @@ func (h *AuditLogHandler) Handle(ctx context.Context, event base.Event) error {
 	switch event.GetEventType() {
 	case EventConfigChanged:
 		data, _ := event.GetEventData().(ConfigEventData)
-		log.Printf("[AuditLog] 配置变更: %s, 操作者: %s, 旧值: %v, 新值: %v, 原因: %s",
-			data.ConfigKey, data.OperatorID, data.OldValue, data.NewValue, data.Reason)
+		logEventRuntime("info", "记录系统审计日志", map[string]interface{}{
+			"handler":     h.name,
+			"event_type":  event.GetEventType(),
+			"target_type": data.TargetType,
+			"target_id":   data.TargetID,
+			"operator_id": data.OperatorID,
+			"action":      data.Action,
+			"config_key":  data.ConfigKey,
+		})
 
 	case EventPermissionChanged, EventRoleChanged:
 		data, _ := event.GetEventData().(PermissionEventData)
-		log.Printf("[AuditLog] 权限/角色变更: 用户 %s, 操作者: %s, 原因: %s",
-			data.UserID, data.OperatorID, data.Reason)
+		logEventRuntime("info", "记录系统审计日志", map[string]interface{}{
+			"handler":     h.name,
+			"event_type":  event.GetEventType(),
+			"target_type": data.TargetType,
+			"target_id":   data.TargetID,
+			"user_id":     data.UserID,
+			"operator_id": data.OperatorID,
+			"action":      data.Action,
+		})
 
 	case EventReviewApproved, EventReviewRejected:
 		data, _ := event.GetEventData().(ReviewEventData)
-		log.Printf("[AuditLog] 审核: %s %s, 审核者: %s, 状态: %s, 原因: %s",
-			data.ContentType, data.ContentID, data.ReviewerID, data.Status, data.Reason)
+		logEventRuntime("info", "记录系统审计日志", map[string]interface{}{
+			"handler":      h.name,
+			"event_type":   event.GetEventType(),
+			"target_type":  data.TargetType,
+			"target_id":    data.TargetID,
+			"review_id":    data.ReviewID,
+			"content_type": data.ContentType,
+			"content_id":   data.ContentID,
+			"reviewer_id":  data.ReviewerID,
+			"status":       data.Status,
+		})
 	}
 
 	return nil
@@ -457,17 +479,33 @@ func (h *CacheInvalidationHandler) Handle(ctx context.Context, event base.Event)
 	switch event.GetEventType() {
 	case EventConfigChanged:
 		data, _ := event.GetEventData().(ConfigEventData)
-		log.Printf("[CacheInvalidation] 清除配置缓存: %s", data.ConfigKey)
+		logEventRuntime("info", "触发缓存失效", map[string]interface{}{
+			"handler":    h.name,
+			"event_type": event.GetEventType(),
+			"scope":      "config",
+			"config_key": data.ConfigKey,
+		})
 		// 清除相关缓存
 
 	case EventPermissionChanged, EventRoleChanged:
 		data, _ := event.GetEventData().(PermissionEventData)
-		log.Printf("[CacheInvalidation] 清除用户权限缓存: %s", data.UserID)
+		logEventRuntime("info", "触发缓存失效", map[string]interface{}{
+			"handler":    h.name,
+			"event_type": event.GetEventType(),
+			"scope":      "permission",
+			"user_id":    data.UserID,
+		})
 		// 清除用户权限缓存
 
 	case EventContentPublished, EventContentUnpublished:
 		data, _ := event.GetEventData().(ContentEventData)
-		log.Printf("[CacheInvalidation] 清除内容缓存: %s:%s", data.ContentType, data.ContentID)
+		logEventRuntime("info", "触发缓存失效", map[string]interface{}{
+			"handler":      h.name,
+			"event_type":   event.GetEventType(),
+			"scope":        "content",
+			"content_type": data.ContentType,
+			"content_id":   data.ContentID,
+		})
 		// 清除内容缓存
 	}
 
@@ -508,8 +546,13 @@ func (h *SecurityAlertHandler) Handle(ctx context.Context, event base.Event) err
 	switch event.GetEventType() {
 	case EventSecurityAlert:
 		data, _ := event.GetEventData().(SecurityEventData)
-		log.Printf("[SecurityAlert] 安全告警: 类型=%s, 严重程度=%s, 描述=%s",
-			data.EventType, data.Severity, data.Description)
+		logEventRuntime("warn", "记录安全告警", map[string]interface{}{
+			"handler":    h.name,
+			"event_type": event.GetEventType(),
+			"alert_type": data.EventType,
+			"severity":   data.Severity,
+			"target_id":  data.TargetID,
+		})
 		// 根据严重程度采取不同措施
 		// - high/critical: 立即通知管理员
 		// - medium: 记录并监控
@@ -517,14 +560,25 @@ func (h *SecurityAlertHandler) Handle(ctx context.Context, event base.Event) err
 
 	case EventSuspiciousActivity:
 		data, _ := event.GetEventData().(SecurityEventData)
-		log.Printf("[SecurityAlert] 可疑活动: 用户=%s, IP=%s, 类型=%s",
-			data.TargetID, data.IPAddress, data.EventType)
+		logEventRuntime("warn", "记录可疑活动", map[string]interface{}{
+			"handler":       h.name,
+			"event_type":    event.GetEventType(),
+			"activity_type": data.EventType,
+			"severity":      data.Severity,
+			"target_id":     data.TargetID,
+		})
 		// 标记账户，要求额外验证
 		// 发送安全通知给用户
 
 	case EventAccountLocked:
 		data, _ := event.GetEventData().(SecurityEventData)
-		log.Printf("[SecurityAlert] 账户锁定: 用户=%s, 原因=%s", data.TargetID, data.Description)
+		logEventRuntime("warn", "记录账户锁定", map[string]interface{}{
+			"handler":    h.name,
+			"event_type": event.GetEventType(),
+			"alert_type": data.EventType,
+			"severity":   data.Severity,
+			"target_id":  data.TargetID,
+		})
 		// 锁定账户
 		// 发送锁定通知
 		// 记录安全事件
@@ -565,20 +619,38 @@ func (h *ContentModerationNotificationHandler) Handle(ctx context.Context, event
 	switch event.GetEventType() {
 	case EventReviewApproved:
 		data, _ := event.GetEventData().(ReviewEventData)
-		log.Printf("[ModerationNotification] 审核通过通知: %s %s，发送给用户 %s",
-			data.ContentType, data.ContentID, data.SubmitterID)
+		logEventRuntime("info", "发送审核通知", map[string]interface{}{
+			"handler":      h.name,
+			"event_type":   event.GetEventType(),
+			"review_id":    data.ReviewID,
+			"content_type": data.ContentType,
+			"content_id":   data.ContentID,
+			"submitter_id": data.SubmitterID,
+			"status":       data.Status,
+		})
 		// 发送审核通过通知
 
 	case EventReviewRejected:
 		data, _ := event.GetEventData().(ReviewEventData)
-		log.Printf("[ModerationNotification] 审核拒绝通知: %s %s，原因: %s，发送给用户 %s",
-			data.ContentType, data.ContentID, data.Reason, data.SubmitterID)
+		logEventRuntime("warn", "发送审核通知", map[string]interface{}{
+			"handler":      h.name,
+			"event_type":   event.GetEventType(),
+			"review_id":    data.ReviewID,
+			"content_type": data.ContentType,
+			"content_id":   data.ContentID,
+			"submitter_id": data.SubmitterID,
+			"status":       data.Status,
+		})
 		// 发送审核拒绝通知，包含拒绝原因
 
 	case EventContentUnpublished:
 		data, _ := event.GetEventData().(ContentEventData)
-		log.Printf("[ModerationNotification] 内容下架通知: %s %s，原因: %s",
-			data.ContentType, data.ContentID, data.Reason)
+		logEventRuntime("warn", "发送内容下架通知", map[string]interface{}{
+			"handler":      h.name,
+			"event_type":   event.GetEventType(),
+			"content_type": data.ContentType,
+			"content_id":   data.ContentID,
+		})
 		// 发送内容下架通知
 	}
 

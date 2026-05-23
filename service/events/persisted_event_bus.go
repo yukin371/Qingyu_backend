@@ -3,7 +3,6 @@ package events
 import (
 	"context"
 	"fmt"
-	"log"
 	"sync"
 	"time"
 
@@ -61,7 +60,11 @@ func (b *PersistedEventBus) Unsubscribe(eventType string, handlerName string) er
 func (b *PersistedEventBus) Publish(ctx context.Context, event base.Event) error {
 	// 1. 持久化事件
 	if err := b.storeEvent(ctx, event); err != nil {
-		log.Printf("[PersistedEventBus] Failed to store event: %v", err)
+		logEventRuntime("warn", "事件持久化失败，但继续发布", map[string]interface{}{
+			"event_type": event.GetEventType(),
+			"source":     event.GetSource(),
+			"error":      err,
+		})
 		// 持久化失败不影响事件发布
 	}
 
@@ -77,15 +80,26 @@ func (b *PersistedEventBus) PublishAsync(ctx context.Context, event base.Event) 
 		case b.eventCh <- &event:
 			// 事件已加入异步队列
 		default:
-			log.Printf("[PersistedEventBus] Event channel full, storing synchronously")
+			logEventRuntime("warn", "事件异步队列已满，退回同步持久化", map[string]interface{}{
+				"event_type": event.GetEventType(),
+				"source":     event.GetSource(),
+			})
 			// 队列满时同步存储
 			if err := b.storeEvent(context.Background(), event); err != nil {
-				log.Printf("[PersistedEventBus] Failed to store event: %v", err)
+				logEventRuntime("warn", "事件同步持久化失败", map[string]interface{}{
+					"event_type": event.GetEventType(),
+					"source":     event.GetSource(),
+					"error":      err,
+				})
 			}
 		}
 	} else {
 		if err := b.storeEvent(ctx, event); err != nil {
-			log.Printf("[PersistedEventBus] Failed to store event: %v", err)
+			logEventRuntime("warn", "事件持久化失败", map[string]interface{}{
+				"event_type": event.GetEventType(),
+				"source":     event.GetSource(),
+				"error":      err,
+			})
 		}
 	}
 
@@ -149,11 +163,18 @@ func (b *PersistedEventBus) storeBatch(ctx context.Context, events []base.Event)
 	}
 
 	if err := b.store.StoreBatch(ctx, events); err != nil {
-		log.Printf("[PersistedEventBus] Failed to store event batch: %v", err)
+		logEventRuntime("warn", "事件批量持久化失败，降级为逐条写入", map[string]interface{}{
+			"batch_size": len(events),
+			"error":      err,
+		})
 		// 批量失败时，尝试逐个存储
 		for _, event := range events {
 			if err := b.store.Store(ctx, event); err != nil {
-				log.Printf("[PersistedEventBus] Failed to store event: %v", err)
+				logEventRuntime("warn", "事件逐条持久化失败", map[string]interface{}{
+					"event_type": event.GetEventType(),
+					"source":     event.GetSource(),
+					"error":      err,
+				})
 			}
 		}
 	}

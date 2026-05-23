@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"fmt"
+	"log"
 	"sync"
 	"time"
 
@@ -55,7 +56,7 @@ import (
 
 	// Infrastructure
 	"Qingyu_backend/config"
-	"Qingyu_backend/internal/middleware/auth"
+	middlewareAuth "Qingyu_backend/internal/middleware/auth"
 	"Qingyu_backend/pkg/cache"
 	pkgmetrics "Qingyu_backend/pkg/metrics"
 	pkgtransaction "Qingyu_backend/pkg/transaction"
@@ -187,6 +188,7 @@ func (b *authRedisClientBlacklist) getKey(token string) string {
 	tokenHash := base64.RawURLEncoding.EncodeToString(h.Sum(nil))
 	return fmt.Sprintf("token:blacklist:%s", tokenHash[:32])
 }
+
 // NewServiceContainer 创建服务容器
 // Repository工厂将在Initialize()时自动创建
 func NewServiceContainer() *ServiceContainer {
@@ -571,7 +573,7 @@ func (c *ServiceContainer) Initialize(ctx context.Context) error {
 	// 3. 初始化Redis客户端（失败不阻塞）
 	if err := c.initRedis(); err != nil {
 		// Redis初始化失败不阻塞启动，但记录错误
-		fmt.Printf("警告: Redis客户端初始化失败: %v\n", err)
+		log.Printf("警告: Redis客户端初始化失败: %v", err)
 	}
 
 	// 4. 初始化Repository工厂健康检查
@@ -589,7 +591,7 @@ func (c *ServiceContainer) Initialize(ctx context.Context) error {
 	// 6. 预热缓存（非阻塞）
 	if err := c.warmUpCache(ctx); err != nil {
 		// 缓存预热失败不阻塞应用启动
-		fmt.Printf("警告: 缓存预热失败: %v\n", err)
+		log.Printf("警告: 缓存预热失败: %v", err)
 	}
 
 	c.initialized = true
@@ -720,7 +722,7 @@ func (c *ServiceContainer) Close(ctx context.Context) error {
 	// 1. 关闭Redis客户端
 	if c.redisClient != nil {
 		if err := c.redisClient.Close(); err != nil {
-			fmt.Printf("警告: 关闭Redis客户端失败: %v\n", err)
+			log.Printf("警告: 关闭Redis客户端失败: %v", err)
 			lastErr = fmt.Errorf("关闭Redis客户端失败: %w", err)
 		}
 	}
@@ -738,18 +740,21 @@ func (c *ServiceContainer) Close(ctx context.Context) error {
 		}
 	}
 
-	// 3. 关闭MongoDB（在Repository工厂之前关闭）
-	if c.mongoClient != nil {
-		if err := c.mongoClient.Disconnect(ctx); err != nil {
-			fmt.Printf("警告: 关闭MongoDB客户端失败: %v\n", err)
-			lastErr = fmt.Errorf("关闭MongoDB客户端失败: %w", err)
-		}
-	}
-
-	// 4. 关闭Repository工厂
+	// 3. 优先关闭Repository工厂，由其负责Mongo客户端释放，避免双重断连。
 	if c.repositoryFactory != nil {
 		if err := c.repositoryFactory.Close(); err != nil {
 			lastErr = fmt.Errorf("关闭Repository工厂失败: %w", err)
+		}
+		c.repositoryFactory = nil
+		c.mongoClient = nil
+		c.mongoDB = nil
+	}
+
+	// 4. 当没有Repository工厂时，再直接关闭MongoDB客户端。
+	if c.mongoClient != nil {
+		if err := c.mongoClient.Disconnect(ctx); err != nil {
+			log.Printf("警告: 关闭MongoDB客户端失败: %v", err)
+			lastErr = fmt.Errorf("关闭MongoDB客户端失败: %w", err)
 		}
 	}
 
@@ -973,14 +978,14 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	if aiCfg != nil && aiCfg.AIService != nil && aiCfg.AIService.Endpoint != "" {
 		phase3Client, err := aiService.NewPhase3Client(aiCfg.AIService.Endpoint)
 		if err != nil {
-			fmt.Printf("警告: Phase3Client初始化失败: %v\n", err)
-			fmt.Println("  AI服务将不可用，请确保Python AI服务已启动")
+			log.Printf("警告: Phase3Client初始化失败: %v", err)
+			log.Printf("AI服务将不可用，请确保Python AI服务已启动")
 		} else {
 			c.phase3Client = phase3Client
 			fmt.Printf("  ✓ Phase3Client初始化完成 (endpoint: %s)\n", aiCfg.AIService.Endpoint)
 		}
 	} else {
-		fmt.Println("警告: AI服务配置为空，跳过Phase3Client初始化")
+		log.Printf("警告: AI服务配置为空，跳过Phase3Client初始化")
 	}
 
 	// 创建聊天服务（使用临时内存存储）
@@ -992,13 +997,13 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	if aiCfg != nil && aiCfg.AIService != nil && aiCfg.AIService.Endpoint != "" {
 		unifiedClient, err := aiService.NewUnifiedClientWithAddress(aiCfg.AIService.Endpoint)
 		if err != nil {
-			fmt.Printf("警告: UnifiedClient初始化失败: %v\n", err)
+			log.Printf("警告: UnifiedClient初始化失败: %v", err)
 		} else {
 			c.unifiedClient = unifiedClient
 			fmt.Printf("  ✓ UnifiedClient初始化完成 (endpoint: %s)\n", aiCfg.AIService.Endpoint)
 		}
 	} else {
-		fmt.Println("警告: AI服务配置为空，跳过UnifiedClient初始化")
+		log.Printf("警告: AI服务配置为空，跳过UnifiedClient初始化")
 	}
 
 	// ============ 5.3 故事上下文引擎 ============
@@ -1152,15 +1157,15 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 		if err == nil {
 			oauthSvc, err := auth.NewOAuthService(logger, oauthRepo, oauthConfigs)
 			if err != nil {
-				fmt.Printf("警告: 创建OAuthService失败: %v\n", err)
+				log.Printf("警告: 创建OAuthService失败: %v", err)
 			} else {
 				c.oauthService = oauthSvc
 				fmt.Printf("  ✓ OAuthService初始化完成 (启用的提供商: %v)\n", enabledProviders)
 			}
 		}
 	} else {
-		fmt.Println("  ℹ OAuth配置为空，跳过OAuthService创建（OAuth登录功能将不可用）")
-		fmt.Println("    提示: 设置环境变量 GOOGLE_CLIENT_ID、GITHUB_CLIENT_ID 等来启用OAuth登录")
+		log.Printf("ℹ OAuth配置为空，跳过OAuthService创建（OAuth登录功能将不可用）")
+		log.Printf("提示: 设置环境变量 GOOGLE_CLIENT_ID、GITHUB_CLIENT_ID 等来启用OAuth登录")
 	}
 
 	// 5.3 创建 RecommendationService
@@ -1177,7 +1182,7 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 			}
 		}
 	} else {
-		fmt.Println("警告: Redis客户端未初始化，跳过RecommendationService创建")
+		log.Printf("警告: Redis客户端未初始化，跳过RecommendationService创建")
 	}
 
 	// 5.4 Shared Storage 服务初始化
@@ -1257,10 +1262,10 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 			}
 			fmt.Println("  ✓ MessagingService初始化完成（Redis Stream - channels包）")
 		} else {
-			fmt.Println("警告: Redis客户端类型转换失败，跳过MessagingService创建")
+			log.Printf("警告: Redis客户端类型转换失败，跳过MessagingService创建")
 		}
 	} else {
-		fmt.Println("警告: Redis客户端未初始化，跳过MessagingService创建")
+		log.Printf("警告: Redis客户端未初始化，跳过MessagingService创建")
 	}
 
 	// 5.7 AnnouncementService
@@ -1303,7 +1308,7 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 
 	// 初始化默认模板
 	if err := templateSvc.InitializeDefaultTemplates(context.Background()); err != nil {
-		fmt.Printf("警告: 初始化默认通知模板失败: %v\n", err)
+		log.Printf("警告: 初始化默认通知模板失败: %v", err)
 	}
 
 	if baseNotificationSvc, ok := notificationSvc.(serviceInterfaces.BaseService); ok {
@@ -1957,7 +1962,7 @@ func (c *ServiceContainer) warmUpCache(ctx context.Context) error {
 
 	// 检查Redis是否可用
 	if c.redisClient == nil {
-		fmt.Println("Redis客户端未初始化，跳过缓存预热")
+		log.Printf("Redis客户端未初始化，跳过缓存预热")
 		return nil
 	}
 
@@ -1965,7 +1970,7 @@ func (c *ServiceContainer) warmUpCache(ctx context.Context) error {
 	rawClient := c.redisClient.GetClient()
 	redisClient, ok := rawClient.(*redis.Client)
 	if !ok {
-		fmt.Println("Redis客户端类型转换失败，跳过缓存预热")
+		log.Printf("Redis客户端类型转换失败，跳过缓存预热")
 		return nil
 	}
 
@@ -1979,4 +1984,3 @@ func (c *ServiceContainer) warmUpCache(ctx context.Context) error {
 	// 执行预热
 	return warmer.WarmUpCache(ctx)
 }
-

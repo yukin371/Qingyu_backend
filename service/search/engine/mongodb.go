@@ -3,6 +3,7 @@ package engine
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -134,14 +135,15 @@ func (m *MongoEngine) buildSearchQuery(query interface{}, opts *SearchOptions) b
 	filter := bson.M{}
 
 	// 处理关键词搜索
-	if queryStr, ok := query.(string); ok && queryStr != "" {
+	if queryStr, ok := query.(string); ok && queryStr != "" && queryStr != "*" {
+		safePattern := regexp.QuoteMeta(queryStr)
 		// 使用 $or 进行多字段搜索
 		searchConditions := []bson.M{
-			{"title": bson.M{"$regex": queryStr, "$options": "i"}},
-			{"author": bson.M{"$regex": queryStr, "$options": "i"}},
-			{"introduction": bson.M{"$regex": queryStr, "$options": "i"}},
-			{"description": bson.M{"$regex": queryStr, "$options": "i"}},
-			{"content": bson.M{"$regex": queryStr, "$options": "i"}},
+			{"title": bson.M{"$regex": safePattern, "$options": "i"}},
+			{"author": bson.M{"$regex": safePattern, "$options": "i"}},
+			{"introduction": bson.M{"$regex": safePattern, "$options": "i"}},
+			{"description": bson.M{"$regex": safePattern, "$options": "i"}},
+			{"content": bson.M{"$regex": safePattern, "$options": "i"}},
 		}
 		filter["$or"] = searchConditions
 	}

@@ -3,7 +3,6 @@ package events
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 
 	"Qingyu_backend/service/base"
@@ -85,7 +84,12 @@ func (h *WelcomeEmailHandler) Handle(ctx context.Context, event base.Event) erro
 	}
 
 	// 发送欢迎邮件（这里只是模拟）
-	log.Printf("[WelcomeEmailHandler] 发送欢迎邮件给用户: %s (%s)", data.Username, data.Email)
+	logEventRuntime("info", "发送欢迎邮件", map[string]interface{}{
+		"handler":  h.name,
+		"user_id":  data.UserID,
+		"username": data.Username,
+		"email":    data.Email,
+	})
 
 	// 实际项目中这里应该调用邮件服务
 	// emailService.SendWelcomeEmail(data.Email, data.Username)
@@ -125,11 +129,14 @@ func (h *UserActivityLogHandler) Handle(ctx context.Context, event base.Event) e
 	}
 
 	// 记录日志
-	log.Printf("[UserActivityLog] 用户活动: %s - 用户: %s, 动作: %s, 时间: %s",
-		event.GetEventType(),
-		data.Username,
-		data.Action,
-		data.Time.Format("2006-01-02 15:04:05"))
+	logEventRuntime("info", "记录用户活动", map[string]interface{}{
+		"handler":    h.name,
+		"event_type": event.GetEventType(),
+		"user_id":    data.UserID,
+		"username":   data.Username,
+		"action":     data.Action,
+		"event_time": data.Time,
+	})
 
 	// 实际项目中这里应该将日志写入数据库或日志系统
 	// activityLogRepo.Create(...)
@@ -177,17 +184,35 @@ func (h *UserStatisticsHandler) Handle(ctx context.Context, event base.Event) er
 	// 更新统计信息
 	switch event.GetEventType() {
 	case EventTypeUserRegistered:
-		log.Printf("[UserStatistics] 新用户注册: %s, 更新总用户数", data.Username)
+		logEventRuntime("info", "更新用户统计", map[string]interface{}{
+			"handler":    h.name,
+			"event_type": event.GetEventType(),
+			"user_id":    data.UserID,
+			"username":   data.Username,
+			"action":     "increment_total_users",
+		})
 		// 实际项目中这里应该更新统计数据
 		// statisticsRepo.IncrementTotalUsers()
 
 	case EventTypeUserLoggedIn:
-		log.Printf("[UserStatistics] 用户登录: %s, 更新活跃用户数", data.Username)
+		logEventRuntime("info", "更新用户统计", map[string]interface{}{
+			"handler":    h.name,
+			"event_type": event.GetEventType(),
+			"user_id":    data.UserID,
+			"username":   data.Username,
+			"action":     "increment_active_users",
+		})
 		// 实际项目中这里应该更新活跃用户统计
 		// statisticsRepo.IncrementActiveUsers()
 
 	case EventTypeUserDeleted:
-		log.Printf("[UserStatistics] 用户删除: %s, 更新总用户数", data.Username)
+		logEventRuntime("info", "更新用户统计", map[string]interface{}{
+			"handler":    h.name,
+			"event_type": event.GetEventType(),
+			"user_id":    data.UserID,
+			"username":   data.Username,
+			"action":     "decrement_total_users",
+		})
 		// 实际项目中这里应该更新统计数据
 		// statisticsRepo.DecrementTotalUsers()
 	}

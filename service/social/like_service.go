@@ -4,6 +4,7 @@ import (
 	"Qingyu_backend/models/social"
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	socialRepo "Qingyu_backend/repository/interfaces/social"
@@ -175,7 +176,7 @@ func (s *LikeService) LikeComment(ctx context.Context, userID, commentID string)
 		CreatedAt:  time.Now(),
 	}
 
-	if err := s.likeRepo.RunInTransaction(ctx, func(txCtx context.Context) error {
+	likePersistence := func(txCtx context.Context) error {
 		if err := s.likeRepo.AddLike(txCtx, like); err != nil {
 			if err.Error() == "已经点赞过了" {
 				return err
@@ -189,11 +190,21 @@ func (s *LikeService) LikeComment(ctx context.Context, userID, commentID string)
 			}
 		}
 		return nil
-	}); err != nil {
-		if err.Error() == "已经点赞过了" {
+	}
+
+	if err := s.likeRepo.RunInTransaction(ctx, likePersistence); err != nil {
+		if isLikeTransactionUnsupported(err) {
+			if fallbackErr := likePersistence(ctx); fallbackErr != nil {
+				if fallbackErr.Error() == "已经点赞过了" {
+					return nil
+				}
+				return fallbackErr
+			}
+		} else if err.Error() == "已经点赞过了" {
 			return nil
+		} else {
+			return err
 		}
-		return err
 	}
 
 	// 发布点赞事件
@@ -211,7 +222,7 @@ func (s *LikeService) UnlikeComment(ctx context.Context, userID, commentID strin
 		return fmt.Errorf("评论ID不能为空")
 	}
 
-	if err := s.likeRepo.RunInTransaction(ctx, func(txCtx context.Context) error {
+	unlikePersistence := func(txCtx context.Context) error {
 		if err := s.likeRepo.RemoveLike(txCtx, userID, social.LikeTargetTypeComment, commentID); err != nil {
 			if err.Error() == "点赞记录不存在" {
 				return err
@@ -225,11 +236,21 @@ func (s *LikeService) UnlikeComment(ctx context.Context, userID, commentID strin
 			}
 		}
 		return nil
-	}); err != nil {
-		if err.Error() == "点赞记录不存在" {
+	}
+
+	if err := s.likeRepo.RunInTransaction(ctx, unlikePersistence); err != nil {
+		if isLikeTransactionUnsupported(err) {
+			if fallbackErr := unlikePersistence(ctx); fallbackErr != nil {
+				if fallbackErr.Error() == "点赞记录不存在" {
+					return nil
+				}
+				return fallbackErr
+			}
+		} else if err.Error() == "点赞记录不存在" {
 			return nil
+		} else {
+			return err
 		}
-		return err
 	}
 
 	// 发布取消点赞事件
@@ -410,4 +431,14 @@ func (s *LikeService) publishLikeEvent(ctx context.Context, eventType string, us
 	}
 
 	s.eventBus.PublishAsync(ctx, event)
+}
+
+func isLikeTransactionUnsupported(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	message := err.Error()
+	return strings.Contains(message, "Transaction numbers are only allowed on a replica set member or mongos") ||
+		strings.Contains(message, "transactions are not supported")
 }

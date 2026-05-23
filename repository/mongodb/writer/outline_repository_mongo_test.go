@@ -54,7 +54,8 @@ func TestOutlineRepository_Create(t *testing.T) {
 	repo, _, ctx, cleanup := setupOutlineRepo(t)
 	defer cleanup()
 
-	projectID := primitive.NewObjectID().Hex()
+	projectObjectID := primitive.NewObjectID()
+	projectID := projectObjectID.Hex()
 	outline := createTestOutline(projectID, "第一章", "", 0)
 
 	err := repo.Create(ctx, outline)
@@ -74,7 +75,8 @@ func TestOutlineRepository_Create_WithParent(t *testing.T) {
 	repo, _, ctx, cleanup := setupOutlineRepo(t)
 	defer cleanup()
 
-	projectID := primitive.NewObjectID().Hex()
+	projectObjectID := primitive.NewObjectID()
+	projectID := projectObjectID.Hex()
 
 	// 创建父节点
 	parent := createTestOutline(projectID, "第一卷", "", 0)
@@ -99,7 +101,8 @@ func TestOutlineRepository_FindByID(t *testing.T) {
 	repo, _, ctx, cleanup := setupOutlineRepo(t)
 	defer cleanup()
 
-	projectID := primitive.NewObjectID().Hex()
+	projectObjectID := primitive.NewObjectID()
+	projectID := projectObjectID.Hex()
 	outline := createTestOutline(projectID, "第一章", "", 0)
 	err := repo.Create(ctx, outline)
 	require.NoError(t, err)
@@ -134,7 +137,8 @@ func TestOutlineRepository_FindByProjectID(t *testing.T) {
 	repo, _, ctx, cleanup := setupOutlineRepo(t)
 	defer cleanup()
 
-	projectID := primitive.NewObjectID().Hex()
+	projectObjectID := primitive.NewObjectID()
+	projectID := projectObjectID.Hex()
 	otherProjectID := primitive.NewObjectID().Hex()
 
 	// 创建当前项目的大纲
@@ -157,7 +161,7 @@ func TestOutlineRepository_FindByProjectID(t *testing.T) {
 
 	// 验证都属于当前项目
 	for _, o := range outlines {
-		assert.Equal(t, projectID, o.ProjectID)
+		assert.Equal(t, projectObjectID, o.ProjectID)
 	}
 }
 
@@ -170,7 +174,8 @@ func TestOutlineRepository_Update(t *testing.T) {
 	repo, _, ctx, cleanup := setupOutlineRepo(t)
 	defer cleanup()
 
-	projectID := primitive.NewObjectID().Hex()
+	projectObjectID := primitive.NewObjectID()
+	projectID := projectObjectID.Hex()
 	outline := createTestOutline(projectID, "原标题", "", 0)
 	err := repo.Create(ctx, outline)
 	require.NoError(t, err)
@@ -204,7 +209,8 @@ func TestOutlineRepository_Update_NotFound(t *testing.T) {
 	repo, _, ctx, cleanup := setupOutlineRepo(t)
 	defer cleanup()
 
-	projectID := primitive.NewObjectID().Hex()
+	projectObjectID := primitive.NewObjectID()
+	projectID := projectObjectID.Hex()
 	outline := createTestOutline(projectID, "测试", "", 0)
 	outline.ID = primitive.NewObjectID() // 不存在的ID
 
@@ -221,7 +227,8 @@ func TestOutlineRepository_Delete(t *testing.T) {
 	repo, _, ctx, cleanup := setupOutlineRepo(t)
 	defer cleanup()
 
-	projectID := primitive.NewObjectID().Hex()
+	projectObjectID := primitive.NewObjectID()
+	projectID := projectObjectID.Hex()
 	outline := createTestOutline(projectID, "待删除", "", 0)
 	err := repo.Create(ctx, outline)
 	require.NoError(t, err)
@@ -257,7 +264,8 @@ func TestOutlineRepository_FindByParentID(t *testing.T) {
 	repo, _, ctx, cleanup := setupOutlineRepo(t)
 	defer cleanup()
 
-	projectID := primitive.NewObjectID().Hex()
+	projectObjectID := primitive.NewObjectID()
+	projectID := projectObjectID.Hex()
 
 	// 创建父节点
 	parent := createTestOutline(projectID, "第一卷", "", 0)
@@ -280,7 +288,7 @@ func TestOutlineRepository_FindByParentID(t *testing.T) {
 	// 验证都是子节点
 	for _, child := range children {
 		assert.Equal(t, parent.ID.Hex(), child.ParentID)
-		assert.Equal(t, projectID, child.ProjectID)
+		assert.Equal(t, projectObjectID, child.ProjectID)
 	}
 }
 
@@ -293,7 +301,8 @@ func TestOutlineRepository_FindByParentID_Empty(t *testing.T) {
 	repo, _, ctx, cleanup := setupOutlineRepo(t)
 	defer cleanup()
 
-	projectID := primitive.NewObjectID().Hex()
+	projectObjectID := primitive.NewObjectID()
+	projectID := projectObjectID.Hex()
 	parentID := primitive.NewObjectID().Hex()
 
 	// 查询不存在的父节点的子节点
@@ -311,7 +320,8 @@ func TestOutlineRepository_FindRoots(t *testing.T) {
 	repo, _, ctx, cleanup := setupOutlineRepo(t)
 	defer cleanup()
 
-	projectID := primitive.NewObjectID().Hex()
+	projectObjectID := primitive.NewObjectID()
+	projectID := projectObjectID.Hex()
 
 	// 创建根节点
 	for i := 1; i <= 2; i++ {
@@ -336,7 +346,7 @@ func TestOutlineRepository_FindRoots(t *testing.T) {
 	// 验证都是根节点
 	for _, root := range roots {
 		assert.Equal(t, "", root.ParentID)
-		assert.Equal(t, projectID, root.ProjectID)
+		assert.Equal(t, projectObjectID, root.ProjectID)
 	}
 }
 

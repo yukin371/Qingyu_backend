@@ -3,6 +3,7 @@ package finance
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	financeModel "Qingyu_backend/models/finance"
@@ -528,6 +529,6 @@ func (s *MembershipServiceImpl) triggerQuotaRefresh(ctx context.Context, userID 
 		return
 	}
 	if err := s.quotaRefreshHandler(ctx, userID); err != nil {
-		fmt.Printf("警告: 刷新用户%s的AI配额画像失败: %v\n", userID, err)
+		log.Printf("警告: 刷新用户%s的AI配额画像失败: %v", userID, err)
 	}
 }

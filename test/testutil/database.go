@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path/filepath"
+	"runtime"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -271,20 +273,7 @@ func SetupTestContainer(t *testing.T) (*container.ServiceContainer, func()) {
 
 // LoadLocalConfigWithFallback 按测试优先策略查找本地配置文件，并为 Mongo 测试库生成隔离库名。
 func LoadLocalConfigWithFallback() (*config.Config, error) {
-	candidates := []string{
-		"configs/config.test.yaml",
-		"config/config.test.yaml", // 兼容旧路径
-		"../../configs/config.test.yaml",
-		"../../config/config.test.yaml", // 兼容旧路径
-		"../../../configs/config.test.yaml",
-		"../../../config/config.test.yaml", // 兼容旧路径
-		"configs/config.yaml",
-		"config/config.yaml", // 兼容旧路径
-		"../../configs/config.yaml",
-		"../../config/config.yaml", // 兼容旧路径
-		"../../../configs/config.yaml",
-		"../../../config/config.yaml", // 兼容旧路径
-	}
+	candidates := buildLocalConfigCandidates()
 
 	var lastErr error
 	for _, candidate := range candidates {
@@ -303,4 +292,41 @@ func LoadLocalConfigWithFallback() (*config.Config, error) {
 		return nil, fmt.Errorf("未找到可用配置文件，已尝试路径: %v，最后错误: %w", candidates, lastErr)
 	}
 	return nil, fmt.Errorf("未找到可用配置文件，已尝试路径: %v", candidates)
+}
+
+func buildLocalConfigCandidates() []string {
+	candidates := []string{
+		"configs/config.test.yaml",
+		"config/config.test.yaml", // 兼容旧路径
+		"../../configs/config.test.yaml",
+		"../../config/config.test.yaml", // 兼容旧路径
+		"../../../configs/config.test.yaml",
+		"../../../config/config.test.yaml", // 兼容旧路径
+		"../../../../configs/config.test.yaml",
+		"../../../../config/config.test.yaml", // 兼容旧路径
+		"configs/config.yaml",
+		"config/config.yaml", // 兼容旧路径
+		"../../configs/config.yaml",
+		"../../config/config.yaml", // 兼容旧路径
+		"../../../configs/config.yaml",
+		"../../../config/config.yaml", // 兼容旧路径
+		"../../../../configs/config.yaml",
+		"../../../../config/config.yaml", // 兼容旧路径
+	}
+
+	_, currentFile, _, ok := runtime.Caller(0)
+	if !ok {
+		return candidates
+	}
+
+	testutilDir := filepath.Dir(currentFile)
+	repoRoot := filepath.Clean(filepath.Join(testutilDir, "..", ".."))
+	absoluteCandidates := []string{
+		filepath.Join(repoRoot, "configs", "config.test.yaml"),
+		filepath.Join(repoRoot, "config", "config.test.yaml"),
+		filepath.Join(repoRoot, "configs", "config.yaml"),
+		filepath.Join(repoRoot, "config", "config.yaml"),
+	}
+
+	return append(absoluteCandidates, candidates...)
 }

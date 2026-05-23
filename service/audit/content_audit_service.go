@@ -4,6 +4,7 @@ import (
 	auditInterface "Qingyu_backend/service/interfaces/audit"
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -217,7 +218,7 @@ func (s *ContentAuditService) AuditDocument(ctx context.Context, documentID stri
 	if record.Status == audit.StatusRejected && authorID != "" {
 		if err := s.createViolationRecord(ctx, record); err != nil {
 			// 记录错误但不影响主流程
-			fmt.Printf("创建违规记录失败: %v\n", err)
+			log.Printf("创建违规记录失败: %v", err)
 		}
 	}
 
@@ -357,7 +358,7 @@ func (s *ContentAuditService) ReviewAudit(ctx context.Context, auditID string, r
 		record.Status = status
 		record.Result = result
 		if err := s.createViolationRecord(ctx, record); err != nil {
-			fmt.Printf("创建违规记录失败: %v\n", err)
+			log.Printf("创建违规记录失败: %v", err)
 		}
 	}
 

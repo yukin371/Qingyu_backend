@@ -61,7 +61,11 @@ func TestMain(m *testing.M) {
 
 	code := m.Run()
 
-	_ = global.MongoClient.Disconnect(ctx)
+	if global.MongoClient != nil {
+		_ = global.MongoClient.Disconnect(ctx)
+		global.MongoClient = nil
+	}
+	global.DB = nil
 	os.Exit(code)
 }
 

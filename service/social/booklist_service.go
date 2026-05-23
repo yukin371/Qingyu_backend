@@ -3,6 +3,7 @@ package social
 import (
 	"context"
 	"fmt"
+	"log"
 	"strings"
 	"time"
 
@@ -119,7 +120,7 @@ func (s *BookListService) GetBookListByID(ctx context.Context, bookListID string
 
 	// 增加浏览次数
 	if err := s.bookListRepo.IncrementViewCount(ctx, bookListID); err != nil {
-		fmt.Printf("Warning: Failed to increment view count\n")
+		log.Printf("Warning: failed to increment book list view count: %v", err)
 	}
 
 	return bookList, nil

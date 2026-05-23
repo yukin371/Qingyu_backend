@@ -2,7 +2,6 @@ package events
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"Qingyu_backend/service/base"
@@ -360,39 +359,96 @@ func (h *TransactionHandler) Handle(ctx context.Context, event base.Event) error
 	switch event.GetEventType() {
 	case EventDepositCreated:
 		data, _ := event.GetEventData().(DepositEventData)
-		log.Printf("[Transaction] 用户 %s 发起充值请求 %.2f 元，支付方式: %s", data.UserID, data.Amount, data.PaymentMethod)
+		logEventRuntime("info", "处理充值请求", map[string]interface{}{
+			"handler":        h.name,
+			"event_type":     event.GetEventType(),
+			"deposit_id":     data.DepositID,
+			"user_id":        data.UserID,
+			"amount":         data.Amount,
+			"currency":       data.Currency,
+			"payment_method": data.PaymentMethod,
+			"status":         data.Status,
+		})
 		// 调用支付网关处理充值
 
 	case EventDepositCompleted:
 		data, _ := event.GetEventData().(DepositEventData)
-		log.Printf("[Transaction] 用户 %s 充值成功，金额: %.2f 元", data.UserID, data.Amount)
+		logEventRuntime("info", "充值完成", map[string]interface{}{
+			"handler":    h.name,
+			"event_type": event.GetEventType(),
+			"deposit_id": data.DepositID,
+			"user_id":    data.UserID,
+			"amount":     data.Amount,
+			"currency":   data.Currency,
+			"status":     data.Status,
+		})
 		// 更新用户账户余额
 		// 发送充值成功通知
 
 	case EventDepositFailed:
 		data, _ := event.GetEventData().(DepositEventData)
-		log.Printf("[Transaction] 用户 %s 充值失败，原因: %s", data.UserID, data.FailureReason)
+		logEventRuntime("warn", "充值失败", map[string]interface{}{
+			"handler":    h.name,
+			"event_type": event.GetEventType(),
+			"deposit_id": data.DepositID,
+			"user_id":    data.UserID,
+			"amount":     data.Amount,
+			"currency":   data.Currency,
+			"status":     data.Status,
+		})
 		// 发送充值失败通知
 
 	case EventWithdrawalCreated:
 		data, _ := event.GetEventData().(WithdrawalEventData)
-		log.Printf("[Transaction] 用户 %s 发起提现请求 %.2f 元，银行: %s", data.UserID, data.Amount, data.BankName)
+		logEventRuntime("info", "处理提现请求", map[string]interface{}{
+			"handler":       h.name,
+			"event_type":    event.GetEventType(),
+			"withdrawal_id": data.WithdrawalID,
+			"user_id":       data.UserID,
+			"amount":        data.Amount,
+			"currency":      data.Currency,
+			"status":        data.Status,
+		})
 		// 通知管理员审核
 
 	case EventWithdrawalApproved:
 		data, _ := event.GetEventData().(WithdrawalEventData)
-		log.Printf("[Transaction] 提现请求 %s 已批准，处理人: %s", data.WithdrawalID, data.ProcessedBy)
+		logEventRuntime("info", "提现请求已批准", map[string]interface{}{
+			"handler":       h.name,
+			"event_type":    event.GetEventType(),
+			"withdrawal_id": data.WithdrawalID,
+			"user_id":       data.UserID,
+			"amount":        data.Amount,
+			"currency":      data.Currency,
+			"status":        data.Status,
+		})
 		// 执行银行转账
 		// 冻结用户账户余额
 
 	case EventWithdrawalRejected:
 		data, _ := event.GetEventData().(WithdrawalEventData)
-		log.Printf("[Transaction] 提现请求 %s 已拒绝，原因: %s", data.WithdrawalID, data.RejectionReason)
+		logEventRuntime("warn", "提现请求被拒绝", map[string]interface{}{
+			"handler":       h.name,
+			"event_type":    event.GetEventType(),
+			"withdrawal_id": data.WithdrawalID,
+			"user_id":       data.UserID,
+			"amount":        data.Amount,
+			"currency":      data.Currency,
+			"status":        data.Status,
+		})
 		// 发送拒绝通知
 
 	case EventWithdrawalCompleted:
 		data, _ := event.GetEventData().(WithdrawalEventData)
-		log.Printf("[Transaction] 提现请求 %s 完成，金额: %.2f 元", data.WithdrawalID, data.Amount)
+		logEventRuntime("info", "提现完成", map[string]interface{}{
+			"handler":       h.name,
+			"event_type":    event.GetEventType(),
+			"withdrawal_id": data.WithdrawalID,
+			"user_id":       data.UserID,
+			"amount":        data.Amount,
+			"currency":      data.Currency,
+			"status":        data.Status,
+		})
 		// 扣除用户账户余额
 		// 发送提现成功通知
 	}
@@ -436,14 +492,31 @@ func (h *SettlementHandler) Handle(ctx context.Context, event base.Event) error 
 	switch event.GetEventType() {
 	case EventSettlementGenerated:
 		data, _ := event.GetEventData().(SettlementEventData)
-		log.Printf("[Settlement] 生成用户 %s 的 %s 结算单，总金额: %.2f 元", data.UserID, data.Period, data.FinalAmount)
+		logEventRuntime("info", "生成结算单", map[string]interface{}{
+			"handler":       h.name,
+			"event_type":    event.GetEventType(),
+			"settlement_id": data.SettlementID,
+			"user_id":       data.UserID,
+			"period":        data.Period,
+			"final_amount":  data.FinalAmount,
+			"currency":      data.Currency,
+			"status":        data.Status,
+		})
 		// 生成结算单PDF
 		// 发送结算单通知给作者
 		// 等待作者确认
 
 	case EventSettlementPaid:
 		data, _ := event.GetEventData().(SettlementEventData)
-		log.Printf("[Settlement] 结算单 %s 已支付，金额: %.2f 元", data.SettlementID, data.FinalAmount)
+		logEventRuntime("info", "结算单已支付", map[string]interface{}{
+			"handler":       h.name,
+			"event_type":    event.GetEventType(),
+			"settlement_id": data.SettlementID,
+			"user_id":       data.UserID,
+			"final_amount":  data.FinalAmount,
+			"currency":      data.Currency,
+			"status":        data.Status,
+		})
 		// 更新结算状态
 		// 发送支付成功通知
 	}
@@ -482,14 +555,31 @@ func (h *RevenueStatisticsHandler) Handle(ctx context.Context, event base.Event)
 	switch event.GetEventType() {
 	case EventRevenueEarned:
 		data, _ := event.GetEventData().(RevenueEventData)
-		log.Printf("[RevenueStatistics] 用户 %s 获得收入 %.2f 元，来源: %s:%s", data.UserID, data.NetAmount, data.Source, data.SourceID)
+		logEventRuntime("info", "记录收入统计", map[string]interface{}{
+			"handler":    h.name,
+			"event_type": event.GetEventType(),
+			"revenue_id": data.RevenueID,
+			"user_id":    data.UserID,
+			"net_amount": data.NetAmount,
+			"currency":   data.Currency,
+			"source":     data.Source,
+			"status":     data.Status,
+		})
 		// 更新作者收入统计
 		// 更新作品收入排名
 		// 生成收入报表
 
 	case EventRevenueSettled:
 		data, _ := event.GetEventData().(RevenueEventData)
-		log.Printf("[RevenueStatistics] 用户 %s 收入 %.2f 元已结算", data.UserID, data.NetAmount)
+		logEventRuntime("info", "记录收入结算", map[string]interface{}{
+			"handler":    h.name,
+			"event_type": event.GetEventType(),
+			"revenue_id": data.RevenueID,
+			"user_id":    data.UserID,
+			"net_amount": data.NetAmount,
+			"currency":   data.Currency,
+			"status":     data.Status,
+		})
 		// 更新已结算收入统计
 	}
 
@@ -527,15 +617,33 @@ func (h *FinanceNotificationHandler) Handle(ctx context.Context, event base.Even
 	switch event.GetEventType() {
 	case EventDepositCompleted:
 		data, _ := event.GetEventData().(DepositEventData)
-		log.Printf("[FinanceNotification] 充值成功通知发送给用户 %s", data.UserID)
+		logEventRuntime("info", "发送财务通知", map[string]interface{}{
+			"handler":      h.name,
+			"event_type":   event.GetEventType(),
+			"notification": "deposit_completed",
+			"deposit_id":   data.DepositID,
+			"user_id":      data.UserID,
+		})
 
 	case EventWithdrawalCompleted:
 		data, _ := event.GetEventData().(WithdrawalEventData)
-		log.Printf("[FinanceNotification] 提现完成通知发送给用户 %s", data.UserID)
+		logEventRuntime("info", "发送财务通知", map[string]interface{}{
+			"handler":       h.name,
+			"event_type":    event.GetEventType(),
+			"notification":  "withdrawal_completed",
+			"withdrawal_id": data.WithdrawalID,
+			"user_id":       data.UserID,
+		})
 
 	case EventSettlementGenerated:
 		data, _ := event.GetEventData().(SettlementEventData)
-		log.Printf("[FinanceNotification] 结算单生成通知发送给用户 %s", data.UserID)
+		logEventRuntime("info", "发送财务通知", map[string]interface{}{
+			"handler":       h.name,
+			"event_type":    event.GetEventType(),
+			"notification":  "settlement_generated",
+			"settlement_id": data.SettlementID,
+			"user_id":       data.UserID,
+		})
 	}
 
 	return nil

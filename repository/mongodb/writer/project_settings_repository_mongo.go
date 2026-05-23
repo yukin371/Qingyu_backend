@@ -3,7 +3,6 @@ package writer
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"Qingyu_backend/models/writer"
@@ -56,11 +55,8 @@ func (r *ProjectSettingsRepositoryMongo) Create(ctx context.Context, settings *w
 
 // FindByProjectID 根据项目ID查找设置
 func (r *ProjectSettingsRepositoryMongo) FindByProjectID(ctx context.Context, projectID string) (*writer.ProjectSettings, error) {
-	log.Printf("[FindByProjectID] 开始查询项目设置, projectID=%s", projectID)
-
 	projectObjectID, err := r.ParseID(projectID)
 	if err != nil {
-		log.Printf("[FindByProjectID] ID转换失败: %v", err)
 		return nil, errors.NewRepositoryError(errors.RepositoryErrorValidation, "invalid project ID", err)
 	}
 
@@ -76,26 +72,20 @@ func (r *ProjectSettingsRepositoryMongo) FindByProjectID(ctx context.Context, pr
 	err = r.GetCollection().FindOne(ctx, filter, opts).Decode(&result)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			log.Printf("[FindByProjectID] 项目不存在, 返回默认设置")
 			// 项目不存在时，返回默认设置
 			defaultSettings := writer.NewProjectSettings(projectObjectID)
 			return &defaultSettings, nil
 		}
-		log.Printf("[FindByProjectID] 查询失败: %v", err)
 		return nil, errors.NewRepositoryError(errors.RepositoryErrorInternal, "find project settings failed", err)
 	}
 
-	log.Printf("[FindByProjectID] 查询成功")
 	return &result.Settings, nil
 }
 
 // Update 更新项目设置
 func (r *ProjectSettingsRepositoryMongo) Update(ctx context.Context, projectID string, settings *writer.ProjectSettings) error {
-	log.Printf("[Update] 开始更新项目设置, projectID=%s", projectID)
-
 	projectObjectID, err := r.ParseID(projectID)
 	if err != nil {
-		log.Printf("[Update] ID转换失败: %v", err)
 		return errors.NewRepositoryError(errors.RepositoryErrorValidation, "invalid project ID", err)
 	}
 
@@ -109,26 +99,20 @@ func (r *ProjectSettingsRepositoryMongo) Update(ctx context.Context, projectID s
 
 	result, err := r.GetCollection().UpdateOne(ctx, filter, update)
 	if err != nil {
-		log.Printf("[Update] 更新失败: %v", err)
 		return errors.NewRepositoryError(errors.RepositoryErrorInternal, "update project settings failed", err)
 	}
 
 	if result.MatchedCount == 0 {
-		log.Printf("[Update] 项目不存在")
 		return errors.NewRepositoryError(errors.RepositoryErrorNotFound, "project not found", nil)
 	}
 
-	log.Printf("[Update] 更新成功")
 	return nil
 }
 
 // AddCharacterRole 添加自定义角色类型
 func (r *ProjectSettingsRepositoryMongo) AddCharacterRole(ctx context.Context, projectID string, role *writer.CharacterRole) error {
-	log.Printf("[AddCharacterRole] 开始添加角色类型, projectID=%s, role=%s", projectID, role.Name)
-
 	projectObjectID, err := r.ParseID(projectID)
 	if err != nil {
-		log.Printf("[AddCharacterRole] ID转换失败: %v", err)
 		return errors.NewRepositoryError(errors.RepositoryErrorValidation, "invalid project ID", err)
 	}
 
@@ -144,32 +128,25 @@ func (r *ProjectSettingsRepositoryMongo) AddCharacterRole(ctx context.Context, p
 
 	result, err := r.GetCollection().UpdateOne(ctx, filter, update)
 	if err != nil {
-		log.Printf("[AddCharacterRole] 添加失败: %v", err)
 		return errors.NewRepositoryError(errors.RepositoryErrorInternal, "add character role failed", err)
 	}
 
 	if result.MatchedCount == 0 {
-		log.Printf("[AddCharacterRole] 项目不存在")
 		return errors.NewRepositoryError(errors.RepositoryErrorNotFound, "project not found", nil)
 	}
 
-	log.Printf("[AddCharacterRole] 添加成功")
 	return nil
 }
 
 // UpdateCharacterRole 更新角色类型
 func (r *ProjectSettingsRepositoryMongo) UpdateCharacterRole(ctx context.Context, projectID, roleID string, role *writer.CharacterRole) error {
-	log.Printf("[UpdateCharacterRole] 开始更新角色类型, projectID=%s, roleID=%s", projectID, roleID)
-
 	projectObjectID, err := r.ParseID(projectID)
 	if err != nil {
-		log.Printf("[UpdateCharacterRole] ID转换失败: %v", err)
 		return errors.NewRepositoryError(errors.RepositoryErrorValidation, "invalid project ID", err)
 	}
 
 	roleObjectID, err := r.ParseID(roleID)
 	if err != nil {
-		log.Printf("[UpdateCharacterRole] 角色ID转换失败: %v", err)
 		return errors.NewRepositoryError(errors.RepositoryErrorValidation, "invalid role ID", err)
 	}
 
@@ -187,32 +164,25 @@ func (r *ProjectSettingsRepositoryMongo) UpdateCharacterRole(ctx context.Context
 
 	result, err := r.GetCollection().UpdateOne(ctx, filter, update)
 	if err != nil {
-		log.Printf("[UpdateCharacterRole] 更新失败: %v", err)
 		return errors.NewRepositoryError(errors.RepositoryErrorInternal, "update character role failed", err)
 	}
 
 	if result.MatchedCount == 0 {
-		log.Printf("[UpdateCharacterRole] 项目或角色类型不存在")
 		return errors.NewRepositoryError(errors.RepositoryErrorNotFound, "project or character role not found", nil)
 	}
 
-	log.Printf("[UpdateCharacterRole] 更新成功")
 	return nil
 }
 
 // DeleteCharacterRole 删除角色类型
 func (r *ProjectSettingsRepositoryMongo) DeleteCharacterRole(ctx context.Context, projectID, roleID string) error {
-	log.Printf("[DeleteCharacterRole] 开始删除角色类型, projectID=%s, roleID=%s", projectID, roleID)
-
 	projectObjectID, err := r.ParseID(projectID)
 	if err != nil {
-		log.Printf("[DeleteCharacterRole] ID转换失败: %v", err)
 		return errors.NewRepositoryError(errors.RepositoryErrorValidation, "invalid project ID", err)
 	}
 
 	roleObjectID, err := r.ParseID(roleID)
 	if err != nil {
-		log.Printf("[DeleteCharacterRole] 角色ID转换失败: %v", err)
 		return errors.NewRepositoryError(errors.RepositoryErrorValidation, "invalid role ID", err)
 	}
 
@@ -228,40 +198,31 @@ func (r *ProjectSettingsRepositoryMongo) DeleteCharacterRole(ctx context.Context
 
 	result, err := r.GetCollection().UpdateOne(ctx, filter, update)
 	if err != nil {
-		log.Printf("[DeleteCharacterRole] 删除失败: %v", err)
 		return errors.NewRepositoryError(errors.RepositoryErrorInternal, "delete character role failed", err)
 	}
 
 	if result.MatchedCount == 0 {
-		log.Printf("[DeleteCharacterRole] 项目不存在")
 		return errors.NewRepositoryError(errors.RepositoryErrorNotFound, "project not found", nil)
 	}
 
-	log.Printf("[DeleteCharacterRole] 删除成功")
 	return nil
 }
 
 // GetDefaultRoles 获取项目的角色类型列表（包含默认和自定义）
 func (r *ProjectSettingsRepositoryMongo) GetDefaultRoles(ctx context.Context, projectID string) ([]writer.CharacterRole, error) {
-	log.Printf("[GetDefaultRoles] 开始获取角色类型列表, projectID=%s", projectID)
-
 	settings, err := r.FindByProjectID(ctx, projectID)
 	if err != nil {
-		log.Printf("[GetDefaultRoles] 获取项目设置失败: %v", err)
 		return nil, err
 	}
 
 	if settings == nil {
-		log.Printf("[GetDefaultRoles] 项目设置为空，返回默认角色类型")
 		// 返回默认角色类型
 		projectObjectID, err := r.ParseID(projectID)
 		if err != nil {
-			log.Printf("[GetDefaultRoles] ID转换失败: %v", err)
 			return nil, errors.NewRepositoryError(errors.RepositoryErrorValidation, "invalid project ID", err)
 		}
 		return writer.GetDefaultCharacterRoles(projectObjectID), nil
 	}
 
-	log.Printf("[GetDefaultRoles] 获取成功, 角色类型数量=%d", len(settings.CharacterRoles))
 	return settings.CharacterRoles, nil
 }

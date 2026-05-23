@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -61,7 +62,7 @@ func main() {
 	fmt.Println("========================================")
 	fmt.Println("章节内容数据迁移工具")
 	fmt.Println("========================================")
-	fmt.Printf("MongoDB URI: %s\n", config.MongoURI)
+	fmt.Printf("MongoDB URI: %s\n", maskMongoURI(config.MongoURI))
 	fmt.Printf("Database: %s\n", config.Database)
 	fmt.Printf("Dry Run: %v\n", config.DryRun)
 	fmt.Printf("Batch Size: %d\n", config.BatchSize)
@@ -84,6 +85,19 @@ func main() {
 	}
 
 	fmt.Println("\n迁移完成！")
+}
+
+func maskMongoURI(uri string) string {
+	if uri == "" {
+		return ""
+	}
+	if idx := strings.Index(uri, "@"); idx >= 0 {
+		prefix := uri[:idx]
+		if schemeIdx := strings.Index(prefix, "://"); schemeIdx >= 0 {
+			return prefix[:schemeIdx+3] + "***@" + uri[idx+1:]
+		}
+	}
+	return uri
 }
 
 func migrate(ctx context.Context, config Config) error {

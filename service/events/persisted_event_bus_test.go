@@ -640,6 +640,38 @@ func TestPersistedEventBus_PublishAsync_WithAsyncStore(t *testing.T) {
 	}
 }
 
+// TestPersistedEventBus_PublishAsync_WhenChannelFull_FallsBackToSyncStore 测试异步队列满时同步存储降级
+func TestPersistedEventBus_PublishAsync_WhenChannelFull_FallsBackToSyncStore(t *testing.T) {
+	// Arrange
+	ctx := context.Background()
+	mockStore := new(MockEventStore)
+	mockEventBus := NewMockEventBus()
+
+	event := newTestPersistedEvent("test.event", map[string]interface{}{"key": "value"})
+
+	mockStore.On("Store", mock.Anything, mock.AnythingOfType("*base.BaseEvent")).Return(nil).Once()
+	mockEventBus.On("PublishAsync", ctx, mock.AnythingOfType("*base.BaseEvent")).Return(nil).Once()
+
+	bus := &PersistedEventBus{
+		eventBus:   mockEventBus,
+		store:      mockStore,
+		asyncStore: true,
+		stopCh:     make(chan struct{}),
+		eventCh:    make(chan *base.Event),
+	}
+
+	// 先占满无缓冲通道的 default 分支，让其走同步持久化
+	bus.eventCh = make(chan *base.Event)
+
+	// Act
+	err := bus.PublishAsync(ctx, event)
+
+	// Assert
+	assert.NoError(t, err, "异步队列已满时应退回同步持久化且继续发布")
+	mockStore.AssertCalled(t, "Store", mock.Anything, mock.AnythingOfType("*base.BaseEvent"))
+	mockEventBus.AssertCalled(t, "PublishAsync", ctx, mock.AnythingOfType("*base.BaseEvent"))
+}
+
 // ============ PersistedEventBus Subscribe/Unsubscribe 测试 ============
 
 // TestPersistedEventBus_Subscribe 测试订阅事件

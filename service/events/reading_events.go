@@ -3,7 +3,6 @@ package events
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 
 	"Qingyu_backend/service/base"
@@ -89,18 +88,38 @@ func (h *ReadingStatisticsHandler) Handle(ctx context.Context, event base.Event)
 	// 更新统计信息
 	switch event.GetEventType() {
 	case EventTypeChapterRead:
-		log.Printf("[ReadingStatistics] 用户 %s 阅读了章节 %s", data.UserID, data.ChapterID)
+		logEventRuntime("info", "更新阅读统计", map[string]interface{}{
+			"handler":    h.name,
+			"event_type": event.GetEventType(),
+			"user_id":    data.UserID,
+			"book_id":    data.BookID,
+			"chapter_id": data.ChapterID,
+			"action":     data.Action,
+		})
 		// 实际项目中这里应该更新：
 		// - 书籍阅读次数
 		// - 用户阅读时长
 		// - 章节热度
 
 	case EventTypeReadingProgress:
-		log.Printf("[ReadingStatistics] 用户 %s 的阅读进度更新为 %d%%", data.UserID, data.Progress)
+		logEventRuntime("info", "更新阅读统计", map[string]interface{}{
+			"handler":    h.name,
+			"event_type": event.GetEventType(),
+			"user_id":    data.UserID,
+			"book_id":    data.BookID,
+			"progress":   data.Progress,
+			"action":     data.Action,
+		})
 		// 更新用户阅读进度统计
 
 	case EventTypeReadingCompleted:
-		log.Printf("[ReadingStatistics] 用户 %s 完成了书籍 %s", data.UserID, data.BookID)
+		logEventRuntime("info", "更新阅读统计", map[string]interface{}{
+			"handler":    h.name,
+			"event_type": event.GetEventType(),
+			"user_id":    data.UserID,
+			"book_id":    data.BookID,
+			"action":     data.Action,
+		})
 		// 更新书籍完成统计
 	}
 
@@ -143,7 +162,14 @@ func (h *RecommendationUpdateHandler) Handle(ctx context.Context, event base.Eve
 	}
 
 	// 根据阅读行为更新推荐
-	log.Printf("[RecommendationUpdate] 基于用户 %s 的阅读行为更新推荐列表", data.UserID)
+	logEventRuntime("info", "更新推荐列表", map[string]interface{}{
+		"handler":    h.name,
+		"event_type": event.GetEventType(),
+		"user_id":    data.UserID,
+		"book_id":    data.BookID,
+		"chapter_id": data.ChapterID,
+		"action":     data.Action,
+	})
 
 	// 实际项目中这里应该:
 	// 1. 分析用户阅读偏好

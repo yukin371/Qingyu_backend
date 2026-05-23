@@ -2,7 +2,6 @@ package events
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"Qingyu_backend/service/base"
@@ -356,13 +355,27 @@ func (h *PurchaseStatisticsHandler) Handle(ctx context.Context, event base.Event
 	switch event.GetEventType() {
 	case EventBookPurchased:
 		data, _ := event.GetEventData().(PurchaseEventData)
-		log.Printf("[PurchaseStatistics] 书籍 %s 被购买，金额: %.2f", data.BookID, data.FinalAmount)
+		logEventRuntime("info", "更新购买统计", map[string]interface{}{
+			"handler":      h.name,
+			"event_type":   event.GetEventType(),
+			"book_id":      data.BookID,
+			"user_id":      data.UserID,
+			"final_amount": data.FinalAmount,
+			"currency":     data.Currency,
+		})
 		// 更新书籍购买统计
 		// 更新畅销榜单
 
 	case EventChapterPurchased:
 		data, _ := event.GetEventData().(PurchaseEventData)
-		log.Printf("[PurchaseStatistics] 章节 %s 被购买，金额: %.2f", data.ChapterID, data.FinalAmount)
+		logEventRuntime("info", "更新购买统计", map[string]interface{}{
+			"handler":      h.name,
+			"event_type":   event.GetEventType(),
+			"chapter_id":   data.ChapterID,
+			"user_id":      data.UserID,
+			"final_amount": data.FinalAmount,
+			"currency":     data.Currency,
+		})
 		// 更新章节购买统计
 	}
 
@@ -400,18 +413,40 @@ func (h *RoyaltyCalculationHandler) Handle(ctx context.Context, event base.Event
 	switch event.GetEventType() {
 	case EventBookPurchased:
 		data, _ := event.GetEventData().(PurchaseEventData)
-		log.Printf("[RoyaltyCalculation] 计算书籍 %s 的版税，金额: %.2f", data.BookID, data.FinalAmount)
+		logEventRuntime("info", "计算版税", map[string]interface{}{
+			"handler":      h.name,
+			"event_type":   event.GetEventType(),
+			"book_id":      data.BookID,
+			"order_id":     data.OrderID,
+			"final_amount": data.FinalAmount,
+			"currency":     data.Currency,
+		})
 		// 计算作者版税（通常是销售额的50-70%）
 		// 记录到作者收入账户
 
 	case EventChapterPurchased:
 		data, _ := event.GetEventData().(PurchaseEventData)
-		log.Printf("[RoyaltyCalculation] 计算章节 %s 的版税，金额: %.2f", data.ChapterID, data.FinalAmount)
+		logEventRuntime("info", "计算版税", map[string]interface{}{
+			"handler":      h.name,
+			"event_type":   event.GetEventType(),
+			"chapter_id":   data.ChapterID,
+			"order_id":     data.OrderID,
+			"final_amount": data.FinalAmount,
+			"currency":     data.Currency,
+		})
 		// 计算章节版税
 
 	case EventRewardCreated:
 		data, _ := event.GetEventData().(RewardEventData)
-		log.Printf("[RoyaltyCalculation] 记录打赏 %s 给作者 %s，金额: %.2f", data.RewardID, data.AuthorID, data.Amount)
+		logEventRuntime("info", "记录打赏收入", map[string]interface{}{
+			"handler":    h.name,
+			"event_type": event.GetEventType(),
+			"reward_id":  data.RewardID,
+			"author_id":  data.AuthorID,
+			"sponsor_id": data.SponsorID,
+			"amount":     data.Amount,
+			"currency":   data.Currency,
+		})
 		// 打赏金额通常全部给作者
 	}
 
@@ -450,13 +485,25 @@ func (h *VIPBenefitHandler) Handle(ctx context.Context, event base.Event) error 
 	switch event.GetEventType() {
 	case EventVIPActivated:
 		data, _ := event.GetEventData().(VIPEventData)
-		log.Printf("[VIPBenefit] 激活用户 %s 的VIP权益，等级: %s", data.UserID, data.VIPLevel)
+		logEventRuntime("info", "激活VIP权益", map[string]interface{}{
+			"handler":    h.name,
+			"event_type": event.GetEventType(),
+			"user_id":    data.UserID,
+			"vip_level":  data.VIPLevel,
+			"action":     data.Action,
+		})
 		// 激活VIP权益
 		// 发送VIP激活通知
 
 	case EventVIPExpired:
 		data, _ := event.GetEventData().(VIPEventData)
-		log.Printf("[VIPBenefit] 用户 %s 的VIP权益已过期", data.UserID)
+		logEventRuntime("info", "VIP权益过期", map[string]interface{}{
+			"handler":    h.name,
+			"event_type": event.GetEventType(),
+			"user_id":    data.UserID,
+			"vip_level":  data.VIPLevel,
+			"action":     data.Action,
+		})
 		// 停用VIP权益
 		// 发送VIP过期通知
 		// 清理VIP相关缓存
@@ -496,17 +543,38 @@ func (h *SubscriptionNotificationHandler) Handle(ctx context.Context, event base
 	switch event.GetEventType() {
 	case EventSubscriptionCreated:
 		data, _ := event.GetEventData().(SubscriptionEventData)
-		log.Printf("[SubscriptionNotification] 用户 %s 订阅成功，%s订阅", data.UserID, data.PlanType)
+		logEventRuntime("info", "发送订阅通知", map[string]interface{}{
+			"handler":         h.name,
+			"event_type":      event.GetEventType(),
+			"subscription_id": data.SubscriptionID,
+			"user_id":         data.UserID,
+			"plan_type":       data.PlanType,
+			"action":          data.Action,
+		})
 		// 发送订阅成功通知
 
 	case EventSubscriptionRenewed:
 		data, _ := event.GetEventData().(SubscriptionEventData)
-		log.Printf("[SubscriptionNotification] 用户 %s 续费成功，%s订阅", data.UserID, data.PlanType)
+		logEventRuntime("info", "发送订阅通知", map[string]interface{}{
+			"handler":         h.name,
+			"event_type":      event.GetEventType(),
+			"subscription_id": data.SubscriptionID,
+			"user_id":         data.UserID,
+			"plan_type":       data.PlanType,
+			"action":          data.Action,
+		})
 		// 发送续费成功通知
 
 	case EventSubscriptionExpired:
 		data, _ := event.GetEventData().(SubscriptionEventData)
-		log.Printf("[SubscriptionNotification] 用户 %s 订阅已过期", data.UserID)
+		logEventRuntime("info", "发送订阅通知", map[string]interface{}{
+			"handler":         h.name,
+			"event_type":      event.GetEventType(),
+			"subscription_id": data.SubscriptionID,
+			"user_id":         data.UserID,
+			"plan_type":       data.PlanType,
+			"action":          data.Action,
+		})
 		// 发送订阅过期通知
 		// 提示续费
 	}

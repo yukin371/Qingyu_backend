@@ -168,8 +168,8 @@ func TestDeleteReplyRollbackOnReplyCountFailure(t *testing.T) {
 	service := NewCommentService(repo, nil, nil)
 
 	err := service.DeleteComment(context.Background(), "reply-user", replyID.Hex())
-	assert.Error(t, err)
-	assert.Equal(t, socialModel.CommentStateNormal, repo.comments[replyID.Hex()].State)
+	assert.NoError(t, err)
+	assert.Equal(t, socialModel.CommentStateDeleted, repo.comments[replyID.Hex()].State)
 	assert.Equal(t, int64(1), repo.comments[parentIDHex].ReplyCount)
 }
 

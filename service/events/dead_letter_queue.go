@@ -183,7 +183,11 @@ func (q *MongoDeadLetterQueue) Reprocess(ctx context.Context, id string) error {
 	// TODO: 完整实现时需要使用 event.EventData 和 event.Timestamp
 	_ = event.EventData // 显式标记为有意未使用（待实现）
 	_ = event.Timestamp // 显式标记为有意未使用（待实现）
-	fmt.Printf("[DeadLetterQueue] 重新处理事件: ID=%s, 类型=%s, 来源=%s\n", id, event.EventType, event.Source)
+	logEventRuntime("info", "重新处理死信事件", map[string]interface{}{
+		"dead_letter_id": id,
+		"event_type":     event.EventType,
+		"source":         event.Source,
+	})
 
 	// 标记为已处理
 	now := time.Now()

@@ -3,6 +3,7 @@ package base
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
 	"Qingyu_backend/repository/interfaces"
@@ -325,7 +326,7 @@ func (bus *SimpleEventBus) PublishAsync(ctx context.Context, event Event) error 
 		go func(h EventHandler) {
 			if err := h.Handle(ctx, event); err != nil {
 				// 这里可以记录日志或发送到错误处理系统
-				fmt.Printf("异步事件处理器 %s 处理事件失败: %v\n", h.GetHandlerName(), err)
+				log.Printf("异步事件处理器 %s 处理事件失败: %v", h.GetHandlerName(), err)
 			}
 		}(handler)
 	}

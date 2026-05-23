@@ -2,7 +2,6 @@ package events
 
 import (
 	"context"
-	"log"
 	"sync"
 	"time"
 
@@ -93,16 +92,19 @@ func (w *RetryWorker) processRetryItems(ctx context.Context) {
 	ticker := time.NewTicker(w.checkInterval)
 	defer ticker.Stop()
 
-	log.Printf("[RetryWorker] 后台重试处理器已启动，检查间隔: %v", w.checkInterval)
+	logEventRuntime("info", "后台重试处理器已启动", map[string]interface{}{
+		"check_interval": w.checkInterval,
+		"batch_size":     w.batchSize,
+	})
 
 	for {
 		select {
 		case <-ctx.Done():
-			log.Printf("[RetryWorker] 上下文已取消，停止重试处理器")
+			logEventRuntime("info", "重试处理器因上下文取消而停止", nil)
 			return
 
 		case <-w.stopCh:
-			log.Printf("[RetryWorker] 收到停止信号，正在退出...")
+			logEventRuntime("info", "重试处理器收到停止信号", nil)
 			return
 
 		case <-ticker.C:
@@ -116,7 +118,9 @@ func (w *RetryWorker) processBatch(ctx context.Context) {
 	// 获取需要重试的项
 	items, err := w.retryQueue.Get(ctx, w.batchSize)
 	if err != nil {
-		log.Printf("[RetryWorker] 获取重试项失败: %v", err)
+		logEventRuntime("warn", "获取重试项失败", map[string]interface{}{
+			"error": err,
+		})
 		return
 	}
 
@@ -124,7 +128,9 @@ func (w *RetryWorker) processBatch(ctx context.Context) {
 		return // 没有需要重试的项
 	}
 
-	log.Printf("[RetryWorker] 获取到 %d 个需要重试的项", len(items))
+	logEventRuntime("info", "获取到待重试项", map[string]interface{}{
+		"count": len(items),
+	})
 
 	for _, item := range items {
 		select {
@@ -138,8 +144,13 @@ func (w *RetryWorker) processBatch(ctx context.Context) {
 
 // processItem 处理单个重试项
 func (w *RetryWorker) processItem(ctx context.Context, item *RetryItem) {
-	log.Printf("[RetryWorker] 处理重试项: %s, 尝试次数: %d/%d",
-		item.ID, item.Attempt+1, item.MaxRetries)
+	logEventRuntime("info", "处理重试项", map[string]interface{}{
+		"retry_item_id": item.ID,
+		"attempt":       item.Attempt + 1,
+		"max_retries":   item.MaxRetries,
+		"handler":       item.HandlerName,
+		"event_type":    item.EventType,
+	})
 
 	// 重建事件
 	event := &base.BaseEvent{
@@ -154,9 +165,14 @@ func (w *RetryWorker) processItem(ctx context.Context, item *RetryItem) {
 	if err == nil {
 		// 成功，从重试队列中删除
 		if err := w.retryQueue.MarkSuccess(ctx, item.ID); err != nil {
-			log.Printf("[RetryWorker] 标记重试成功失败: %v", err)
+			logEventRuntime("warn", "标记重试成功失败", map[string]interface{}{
+				"retry_item_id": item.ID,
+				"error":         err,
+			})
 		} else {
-			log.Printf("[RetryWorker] 重试成功: %s", item.ID)
+			logEventRuntime("info", "重试成功", map[string]interface{}{
+				"retry_item_id": item.ID,
+			})
 		}
 		return
 	}
@@ -165,9 +181,16 @@ func (w *RetryWorker) processItem(ctx context.Context, item *RetryItem) {
 	nextAttempt := item.Attempt + 1
 	if nextAttempt >= item.MaxRetries || !w.retryPolicy.ShouldRetry(err, nextAttempt) {
 		// 达到最大重试次数或不应重试，移入死信队列
-		log.Printf("[RetryWorker] 重试失败，移入死信队列: %s, 错误: %v", item.ID, err)
+		logEventRuntime("warn", "重试失败，移入死信队列", map[string]interface{}{
+			"retry_item_id": item.ID,
+			"error":         err,
+			"attempt":       nextAttempt,
+		})
 		if err := w.retryQueue.MarkFailed(ctx, item.ID); err != nil {
-			log.Printf("[RetryWorker] 移入死信队列失败: %v", err)
+			logEventRuntime("warn", "移入死信队列失败", map[string]interface{}{
+				"retry_item_id": item.ID,
+				"error":         err,
+			})
 		}
 		return
 	}
@@ -175,10 +198,16 @@ func (w *RetryWorker) processItem(ctx context.Context, item *RetryItem) {
 	// 计算下次重试时间并更新
 	nextRetryTime := time.Now().Add(w.retryPolicy.GetDelay(nextAttempt))
 	if err := w.retryQueue.UpdateAttempt(ctx, item.ID, nextRetryTime, nextAttempt); err != nil {
-		log.Printf("[RetryWorker] 更新重试时间失败: %v", err)
+		logEventRuntime("warn", "更新重试时间失败", map[string]interface{}{
+			"retry_item_id": item.ID,
+			"error":         err,
+		})
 	} else {
-		log.Printf("[RetryWorker] 将在 %v 后进行第 %d 次重试",
-			time.Until(nextRetryTime), nextAttempt+1)
+		logEventRuntime("info", "已安排下一次重试", map[string]interface{}{
+			"retry_item_id": item.ID,
+			"next_attempt":  nextAttempt + 1,
+			"delay":         time.Until(nextRetryTime),
+		})
 	}
 }
 
@@ -188,7 +217,10 @@ func (w *RetryWorker) reprocessEvent(ctx context.Context, event *base.BaseEvent,
 	// 由于我们没有处理器注册表，这里暂时通过事件总线重新发布
 	// 实际使用时应该维护一个处理器注册表
 
-	log.Printf("[RetryWorker] 重新发布事件: %s, 处理器: %s", event.GetEventType(), handlerName)
+	logEventRuntime("info", "重新发布事件", map[string]interface{}{
+		"event_type": event.GetEventType(),
+		"handler":    handlerName,
+	})
 
 	// 重新发布事件（同步）
 	return w.eventBus.Publish(ctx, event)

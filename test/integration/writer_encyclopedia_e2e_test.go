@@ -40,14 +40,23 @@ func TestWriterEncyclopediaE2E(t *testing.T) {
 		}
 
 		w := helper.DoAuthRequest("POST", "/api/v1/writer/projects", projectData, token)
-		data := helper.AssertSuccess(w, 201, "创建项目应该成功")
+		resp := helper.AssertSuccess(w, 201, "创建项目应该成功")
+		data, _ := resp["data"].(map[string]interface{})
 
-		if id, ok := data["projectId"].(string); ok {
-			projectID = id
-			helper.LogSuccess("✓ 项目创建成功 - ID: %s", projectID)
-		} else {
-			t.Fatal("无法获取项目ID")
+		switch {
+		case data["id"] != nil:
+			projectID, _ = data["id"].(string)
+		case data["projectId"] != nil:
+			projectID, _ = data["projectId"].(string)
+		case data["project_id"] != nil:
+			projectID, _ = data["project_id"].(string)
 		}
+
+		if projectID == "" {
+			t.Fatalf("无法获取项目ID，响应: %+v", data)
+		}
+
+		helper.LogSuccess("✓ 项目创建成功 - ID: %s", projectID)
 	})
 
 	t.Run("阶段2：创建角色设定", func(t *testing.T) {
@@ -64,7 +73,8 @@ func TestWriterEncyclopediaE2E(t *testing.T) {
 
 		url := fmt.Sprintf("/api/v1/writer/projects/%s/characters", projectID)
 		w := helper.DoAuthRequest("POST", url, characterData, token)
-		data := helper.AssertSuccess(w, 201, "创建角色应该成功")
+		resp := helper.AssertSuccess(w, 201, "创建角色应该成功")
+		data, _ := resp["data"].(map[string]interface{})
 
 		if id, ok := data["id"].(string); ok {
 			characterID = id
@@ -84,7 +94,8 @@ func TestWriterEncyclopediaE2E(t *testing.T) {
 
 		url := fmt.Sprintf("/api/v1/writer/projects/%s/locations", projectID)
 		w := helper.DoAuthRequest("POST", url, locationData, token)
-		data := helper.AssertSuccess(w, 201, "创建地点应该成功")
+		resp := helper.AssertSuccess(w, 201, "创建地点应该成功")
+		data, _ := resp["data"].(map[string]interface{})
 
 		if id, ok := data["id"].(string); ok {
 			locationID = id
@@ -101,7 +112,8 @@ func TestWriterEncyclopediaE2E(t *testing.T) {
 
 		url := fmt.Sprintf("/api/v1/writer/projects/%s/timelines", projectID)
 		w := helper.DoAuthRequest("POST", url, timelineData, token)
-		data := helper.AssertSuccess(w, 201, "创建时间线应该成功")
+		resp := helper.AssertSuccess(w, 201, "创建时间线应该成功")
+		data, _ := resp["data"].(map[string]interface{})
 
 		if id, ok := data["id"].(string); ok {
 			timelineID = id
@@ -126,7 +138,8 @@ func TestWriterEncyclopediaE2E(t *testing.T) {
 
 			url := fmt.Sprintf("/api/v1/writer/timelines/%s/events?projectId=%s", timelineID, projectID)
 			w := helper.DoAuthRequest("POST", url, eventData, token)
-			data := helper.AssertSuccess(w, 201, "创建事件应该成功")
+			resp := helper.AssertSuccess(w, 201, "创建事件应该成功")
+			data, _ := resp["data"].(map[string]interface{})
 
 			if id, ok := data["id"].(string); ok {
 				eventID = id
@@ -145,7 +158,8 @@ func TestWriterEncyclopediaE2E(t *testing.T) {
 		}
 
 		w := helper.DoAuthRequest("POST", "/api/v1/writer/documents", documentData, token)
-		data := helper.AssertSuccess(w, 200, "创建文档应该成功")
+		resp := helper.AssertSuccess(w, 201, "创建文档应该成功")
+		data, _ := resp["data"].(map[string]interface{})
 
 		if id, ok := data["id"].(string); ok {
 			documentID = id

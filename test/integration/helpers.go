@@ -20,6 +20,7 @@ import (
 	"Qingyu_backend/config"
 	"Qingyu_backend/core"
 	"Qingyu_backend/global"
+	"Qingyu_backend/service"
 )
 
 // ========================================
@@ -640,13 +641,19 @@ func setupTestEnvironment(t *testing.T) (*gin.Engine, func()) {
 		t.Fatalf("初始化服务器失败: %v", err)
 	}
 
+	// legacy integration tests still read global.DB/global.MongoClient directly.
+	if serviceContainer := service.GetServiceContainer(); serviceContainer != nil {
+		global.DB = serviceContainer.GetMongoDB()
+		global.MongoClient = serviceContainer.GetMongoClient()
+	}
+
 	// 清理函数
 	cleanup := func() {
-		// 关闭数据库连接
-		if global.DB != nil {
-			global.DB.Client().Disconnect(context.Background())
-			global.DB = nil // 重要：将global.DB设为nil，避免后续测试使用断开的连接
+		if err := service.CloseServices(context.Background()); err != nil {
+			t.Logf("⚠ 关闭服务容器失败: %v", err)
 		}
+		global.DB = nil
+		global.MongoClient = nil
 	}
 
 	return r, cleanup

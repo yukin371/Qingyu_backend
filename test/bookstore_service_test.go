@@ -695,15 +695,17 @@ func TestBookstoreService_GetBookByID(t *testing.T) {
 	mockBookRepo := new(MockBookRepository)
 	mockCategoryRepo := new(MockCategoryRepository)
 	mockBannerRepo := new(MockBannerRepository)
+	mockCollectionRepo := new(MockCollectionRepository)
 
 	// 设置Mock期望
 	mockBookRepo.On("GetByID", mock.Anything, mock.AnythingOfType("string")).Return(expectedBook, nil)
+	mockCollectionRepo.On("CountBookCollections", mock.Anything, bookID.Hex()).Return(int64(0), nil)
 
 	// 创建 MockRankingRepository (使用 ranking_test.go 中的定义)
 	mockRankingRepo := new(MockRankingRepository)
 
 	// 创建服务
-	service := bookstoreService.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo, new(MockCollectionRepository))
+	service := bookstoreService.NewBookstoreService(mockBookRepo, mockCategoryRepo, mockBannerRepo, mockRankingRepo, mockCollectionRepo)
 
 	// 执行测试
 	result, err := service.GetBookByID(context.Background(), bookID.Hex())
@@ -712,6 +714,7 @@ func TestBookstoreService_GetBookByID(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, expectedBook, result)
 	mockBookRepo.AssertExpectations(t)
+	mockCollectionRepo.AssertExpectations(t)
 }
 
 func TestBookstoreService_GetBookByID_NotFound(t *testing.T) {

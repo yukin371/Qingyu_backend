@@ -4,7 +4,6 @@ package writer
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 
 	"Qingyu_backend/models/writer"
@@ -73,31 +72,23 @@ func (r *CharacterRepositoryMongo) FindByID(ctx context.Context, characterID str
 
 // FindByProjectID 查询项目下的所有角色
 func (r *CharacterRepositoryMongo) FindByProjectID(ctx context.Context, projectID string) ([]*writer.Character, error) {
-	log.Printf("[FindByProjectID] 开始查询, projectID=%s", projectID)
-
 	projectObjectID, err := r.ParseID(projectID)
 	if err != nil {
-		log.Printf("[FindByProjectID] ID转换失败: %v", err)
 		return nil, errors.NewRepositoryError(errors.RepositoryErrorValidation, "invalid project ID", err)
 	}
 
 	filter := bson.M{"project_id": projectObjectID}
-	log.Printf("[FindByProjectID] 查询filter: %+v", filter)
 
 	cursor, err := r.GetCollection().Find(ctx, filter)
 	if err != nil {
-		log.Printf("[FindByProjectID] 查询失败: %v", err)
 		return nil, errors.NewRepositoryError(errors.RepositoryErrorInternal, "find characters failed", err)
 	}
 	defer cursor.Close(ctx)
 
 	var characters []*writer.Character
 	if err = cursor.All(ctx, &characters); err != nil {
-		log.Printf("[FindByProjectID] 解码失败: %v", err)
 		return nil, errors.NewRepositoryError(errors.RepositoryErrorInternal, "decode characters failed", err)
 	}
-
-	log.Printf("[FindByProjectID] 查询成功, 返回角色数量=%d", len(characters))
 
 	return characters, nil
 }
@@ -163,11 +154,8 @@ func (r *CharacterRepositoryMongo) CreateRelation(ctx context.Context, relation 
 // 如果characterID为nil，返回项目下所有关系
 // 如果characterID不为nil，返回该角色相关的所有关系
 func (r *CharacterRepositoryMongo) FindRelations(ctx context.Context, projectID string, characterID *string) ([]*writer.CharacterRelation, error) {
-	log.Printf("[FindRelations] 开始查询, projectID=%s, characterID=%v", projectID, characterID)
-
 	projectObjectID, err := r.ParseID(projectID)
 	if err != nil {
-		log.Printf("[FindRelations] ID转换失败: %v", err)
 		return nil, errors.NewRepositoryError(errors.RepositoryErrorValidation, "invalid project ID", err)
 	}
 	filter := bson.M{"project_id": projectObjectID}
@@ -179,22 +167,16 @@ func (r *CharacterRepositoryMongo) FindRelations(ctx context.Context, projectID 
 		}
 	}
 
-	log.Printf("[FindRelations] 查询filter: %+v", filter)
-
 	cursor, err := r.relationCollection.Find(ctx, filter)
 	if err != nil {
-		log.Printf("[FindRelations] 查询失败: %v", err)
 		return nil, errors.NewRepositoryError(errors.RepositoryErrorInternal, "find character relations failed", err)
 	}
 	defer cursor.Close(ctx)
 
 	var relations []*writer.CharacterRelation
 	if err = cursor.All(ctx, &relations); err != nil {
-		log.Printf("[FindRelations] 解码失败: %v", err)
 		return nil, errors.NewRepositoryError(errors.RepositoryErrorInternal, "decode character relations failed", err)
 	}
-
-	log.Printf("[FindRelations] 查询成功, 返回关系数量=%d", len(relations))
 
 	return relations, nil
 }

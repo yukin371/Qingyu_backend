@@ -3,7 +3,6 @@ package events
 import (
 	"context"
 	"fmt"
-	"log"
 	"time"
 
 	baseInterfaces "Qingyu_backend/service/interfaces/base"
@@ -56,13 +55,19 @@ func (h *SearchIndexHandler) Handle(ctx context.Context, event baseInterfaces.Ev
 	if err != nil {
 		// 如果是重复键错误，说明文档已存在，不需要处理
 		if isDuplicateKeyError(err) {
-			log.Printf("[SearchIndexHandler] Book %s already indexed, skipping", bookstoreID)
+			logEventRuntime("info", "搜索索引已存在，跳过重复写入", map[string]interface{}{
+				"handler":      h.name,
+				"bookstore_id": bookstoreID,
+			})
 			return nil
 		}
 		return fmt.Errorf("SearchIndexHandler: failed to index book %s: %w", bookstoreID, err)
 	}
 
-	log.Printf("[SearchIndexHandler] Successfully indexed book %s", bookstoreID)
+	logEventRuntime("info", "搜索索引写入成功", map[string]interface{}{
+		"handler":      h.name,
+		"bookstore_id": bookstoreID,
+	})
 	return nil
 }
 

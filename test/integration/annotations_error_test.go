@@ -108,8 +108,8 @@ func TestErrorCodeMapping(t *testing.T) {
 	resp := th.ParseResponse(w)
 	code := int(resp["code"].(float64))
 
-	// 验证是4位错误码
-	assert.GreaterOrEqual(t, code, 1000, "错误码应该是4位数字")
-	assert.Less(t, code, 1000, "错误码应该是4位数字")
-	assert.Equal(t, 1001, code)
+	// 验证当前错误码体系是 6 位业务码
+	assert.GreaterOrEqual(t, code, 100000, "错误码应该是6位业务码")
+	assert.Less(t, code, 1000000, "错误码应该是6位业务码")
+	assert.Equal(t, 100001, code)
 }

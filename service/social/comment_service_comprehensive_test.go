@@ -456,8 +456,8 @@ func TestCommentServiceTableDriven(t *testing.T) {
 			expectedState: social.CommentStateNormal,
 		},
 		{
-			name:    "内容太短",
-			content: "太短",
+			name:    "内容为空",
+			content: "",
 			rating:  5,
 			setupMock: func() {
 				// 不调用任何mock，因为会在参数验证时失败

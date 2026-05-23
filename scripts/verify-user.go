@@ -38,14 +38,13 @@ func main() {
 
 	fmt.Println("=== 测试用户信息 ===")
 	fmt.Printf("用户名: %s\n", user["username"])
-	fmt.Printf("邮箱: %s\n", user["email"])
+	fmt.Printf("邮箱: %s\n", maskEmail(fmt.Sprint(user["email"])))
 	fmt.Printf("角色: %v\n", user["roles"])
 	fmt.Printf("状态: %s\n", user["status"])
 	fmt.Printf("昵称: %s\n", user["nickname"])
 
 	password, ok := user["password"].(string)
 	if ok {
-		fmt.Printf("密码哈希: %s\n", password)
 		fmt.Printf("哈希长度: %d\n", len(password))
 
 		// 检查是否是bcrypt格式（以$2a$或$2b$开头）
@@ -55,4 +54,16 @@ func main() {
 			fmt.Printf("❌ 密码格式不正确\n")
 		}
 	}
+}
+
+func maskEmail(email string) string {
+	for i := 0; i < len(email); i++ {
+		if email[i] == '@' {
+			if i <= 1 {
+				return "***" + email[i:]
+			}
+			return email[:1] + "***" + email[i:]
+		}
+	}
+	return email
 }

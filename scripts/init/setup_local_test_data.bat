@@ -69,19 +69,19 @@ echo 2. 使用以下测试账号登录：
 echo.
 echo    管理员账号：
 echo      用户名: admin
-echo      密码: Admin@123456
+echo      密码: 请查看 create_beta_users 输出或本地安全配置
 echo.
 echo    VIP作家账号：
 echo      用户名: vip_writer01
-echo      密码: Vip@123456
+echo      密码: 请查看 create_beta_users 输出或本地安全配置
 echo.
 echo    普通作家：
 echo      用户名: writer_xuanhuan
-echo      密码: Writer@123456
+echo      密码: 请查看 create_beta_users 输出或本地安全配置
 echo.
 echo    普通读者：
 echo      用户名: reader01
-echo      密码: Reader@123456
+echo      密码: 请查看 create_beta_users 输出或本地安全配置
 echo.
 echo 详细账号列表请查看上方输出
 echo ====================================

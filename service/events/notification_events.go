@@ -2,7 +2,6 @@ package events
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"Qingyu_backend/service/base"
@@ -139,7 +138,14 @@ func (h *EmailNotificationHandler) Handle(ctx context.Context, event base.Event)
 		return nil
 	}
 
-	log.Printf("[EmailNotification] 发送邮件给用户 %s: %s - %s", data.UserID, data.Title, data.Content)
+	logEventRuntime("info", "发送邮件通知", map[string]interface{}{
+		"handler":         h.name,
+		"notification_id": data.NotificationID,
+		"user_id":         data.UserID,
+		"type":            data.Type,
+		"priority":        data.Priority,
+		"channel":         "email",
+	})
 	// 实际项目中这里应该调用邮件服务
 	// emailService.Send(data.UserID, data.Title, data.Content)
 
@@ -193,7 +199,14 @@ func (h *SMSNotificationHandler) Handle(ctx context.Context, event base.Event) e
 
 	// 只发送重要通知的短信
 	if data.Priority == "high" || data.Priority == "urgent" {
-		log.Printf("[SMSNotification] 发送短信给用户 %s: %s", data.UserID, data.Title)
+		logEventRuntime("info", "发送短信通知", map[string]interface{}{
+			"handler":         h.name,
+			"notification_id": data.NotificationID,
+			"user_id":         data.UserID,
+			"type":            data.Type,
+			"priority":        data.Priority,
+			"channel":         "sms",
+		})
 		// 实际项目中这里应该调用短信服务
 		// smsService.Send(data.UserID, data.Content)
 	}
@@ -246,7 +259,16 @@ func (h *PushNotificationHandler) Handle(ctx context.Context, event base.Event) 
 		return nil
 	}
 
-	log.Printf("[PushNotification] 发送推送通知给用户 %s: %s - %s", data.UserID, data.Title, data.Content)
+	logEventRuntime("info", "发送推送通知", map[string]interface{}{
+		"handler":         h.name,
+		"notification_id": data.NotificationID,
+		"user_id":         data.UserID,
+		"type":            data.Type,
+		"priority":        data.Priority,
+		"channel":         "push",
+		"target_type":     data.TargetType,
+		"target_id":       data.TargetID,
+	})
 	// 实际项目中这里应该调用推送服务
 	// pushService.Send(data.UserID, data.Title, data.Content, data.TargetType, data.TargetID)
 
@@ -298,7 +320,16 @@ func (h *InAppNotificationHandler) Handle(ctx context.Context, event base.Event)
 		return nil
 	}
 
-	log.Printf("[InAppNotification] 创建站内通知给用户 %s: %s", data.UserID, data.Title)
+	logEventRuntime("info", "创建站内通知", map[string]interface{}{
+		"handler":         h.name,
+		"notification_id": data.NotificationID,
+		"user_id":         data.UserID,
+		"type":            data.Type,
+		"priority":        data.Priority,
+		"channel":         "in_app",
+		"target_type":     data.TargetType,
+		"target_id":       data.TargetID,
+	})
 	// 实际项目中这里应该存储到数据库
 	// notificationRepo.Create(&Notification{
 	//     UserID: data.UserID,
@@ -344,17 +375,37 @@ func (h *NotificationStatisticsHandler) Handle(ctx context.Context, event base.E
 	switch event.GetEventType() {
 	case EventNotificationCreated:
 		data, _ := event.GetEventData().(NotificationEventData)
-		log.Printf("[NotificationStatistics] 用户 %s 创建通知，类型: %s", data.UserID, data.Type)
+		logEventRuntime("info", "更新通知统计", map[string]interface{}{
+			"handler":         h.name,
+			"event_type":      event.GetEventType(),
+			"notification_id": data.NotificationID,
+			"user_id":         data.UserID,
+			"type":            data.Type,
+			"action":          "created",
+		})
 		// 统计通知创建数量
 
 	case EventNotificationSent:
 		data, _ := event.GetEventData().(NotificationEventData)
-		log.Printf("[NotificationStatistics] 用户 %s 通知已发送，渠道: %v", data.UserID, data.Channels)
+		logEventRuntime("info", "更新通知统计", map[string]interface{}{
+			"handler":         h.name,
+			"event_type":      event.GetEventType(),
+			"notification_id": data.NotificationID,
+			"user_id":         data.UserID,
+			"channels":        data.Channels,
+			"action":          "sent",
+		})
 		// 统计通知发送数量
 
 	case EventNotificationRead:
 		data, _ := event.GetEventData().(NotificationEventData)
-		log.Printf("[NotificationStatistics] 用户 %s 通知已读", data.UserID)
+		logEventRuntime("info", "更新通知统计", map[string]interface{}{
+			"handler":         h.name,
+			"event_type":      event.GetEventType(),
+			"notification_id": data.NotificationID,
+			"user_id":         data.UserID,
+			"action":          "read",
+		})
 		// 统计通知已读数量
 	}
 

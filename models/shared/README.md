@@ -437,7 +437,7 @@ type User struct {
 
 - [类型系统文档](./types/README.md) - types/ 包详细说明
 - [模型一致性修复指南](../../docs/architecture/model-consistency-fix-guide.md) - 模型重构指南
-- [分层架构重构计划](../../.serena/memories/backend-layered-architecture-plan.md) - 方案B实施计划
+- 分层架构重构计划：TBD，待确认长期归档位置；确认路径：检查父仓归档或后端架构治理文档
 
 ---
 

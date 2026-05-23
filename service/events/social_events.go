@@ -2,7 +2,6 @@ package events
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"Qingyu_backend/service/base"
@@ -244,17 +243,38 @@ func (h *SocialNotificationHandler) Handle(ctx context.Context, event base.Event
 	switch event.GetEventType() {
 	case EventLikeAdded:
 		data, _ := event.GetEventData().(SocialEventData)
-		log.Printf("[SocialNotification] 用户 %s 点赞了 %s:%s", data.UserID, data.TargetType, data.TargetID)
+		logEventRuntime("info", "发送社交通知", map[string]interface{}{
+			"handler":     h.name,
+			"event_type":  event.GetEventType(),
+			"user_id":     data.UserID,
+			"target_type": data.TargetType,
+			"target_id":   data.TargetID,
+			"action":      data.Action,
+		})
 		// 发送点赞通知给目标用户/作者
 
 	case EventCommentCreated, EventCommentReplied:
 		data, _ := event.GetEventData().(CommentEventData)
-		log.Printf("[SocialNotification] 用户 %s 评论了 %s:%s", data.UserID, data.TargetType, data.TargetID)
+		logEventRuntime("info", "发送社交通知", map[string]interface{}{
+			"handler":     h.name,
+			"event_type":  event.GetEventType(),
+			"user_id":     data.UserID,
+			"target_type": data.TargetType,
+			"target_id":   data.TargetID,
+			"comment_id":  data.CommentID,
+			"action":      data.Action,
+		})
 		// 发送评论通知
 
 	case EventFollowAdded:
 		data, _ := event.GetEventData().(FollowEventData)
-		log.Printf("[SocialNotification] 用户 %s 关注了用户 %s", data.FollowerID, data.FolloweeID)
+		logEventRuntime("info", "发送社交通知", map[string]interface{}{
+			"handler":     h.name,
+			"event_type":  event.GetEventType(),
+			"follower_id": data.FollowerID,
+			"followee_id": data.FolloweeID,
+			"action":      data.Action,
+		})
 		// 发送关注通知
 	}
 
@@ -294,17 +314,34 @@ func (h *SocialStatisticsHandler) Handle(ctx context.Context, event base.Event) 
 	switch event.GetEventType() {
 	case EventLikeAdded, EventLikeRemoved:
 		data, _ := event.GetEventData().(SocialEventData)
-		log.Printf("[SocialStatistics] 更新 %s:%s 的点赞统计", data.TargetType, data.TargetID)
+		logEventRuntime("info", "更新社交统计", map[string]interface{}{
+			"handler":     h.name,
+			"event_type":  event.GetEventType(),
+			"target_type": data.TargetType,
+			"target_id":   data.TargetID,
+			"metric":      "like",
+		})
 		// 更新点赞计数
 
 	case EventCommentCreated, EventCommentDeleted:
 		data, _ := event.GetEventData().(CommentEventData)
-		log.Printf("[SocialStatistics] 更新 %s:%s 的评论统计", data.TargetType, data.TargetID)
+		logEventRuntime("info", "更新社交统计", map[string]interface{}{
+			"handler":     h.name,
+			"event_type":  event.GetEventType(),
+			"target_type": data.TargetType,
+			"target_id":   data.TargetID,
+			"metric":      "comment",
+		})
 		// 更新评论计数
 
 	case EventFollowAdded, EventFollowRemoved:
 		data, _ := event.GetEventData().(FollowEventData)
-		log.Printf("[SocialStatistics] 更新用户 %s 的粉丝统计", data.FolloweeID)
+		logEventRuntime("info", "更新社交统计", map[string]interface{}{
+			"handler":     h.name,
+			"event_type":  event.GetEventType(),
+			"followee_id": data.FolloweeID,
+			"metric":      "follow",
+		})
 		// 更新粉丝计数
 	}
 
@@ -346,17 +383,34 @@ func (h *SocialAchievementHandler) Handle(ctx context.Context, event base.Event)
 	switch event.GetEventType() {
 	case EventLikeAdded:
 		data, _ := event.GetEventData().(SocialEventData)
-		log.Printf("[SocialAchievement] 检查用户 %s 的点赞成就", data.UserID)
+		logEventRuntime("info", "检查社交成就", map[string]interface{}{
+			"handler":    h.name,
+			"event_type": event.GetEventType(),
+			"user_id":    data.UserID,
+			"metric":     "like",
+		})
 		// 检查是否达成"获得100个点赞"等成就
 
 	case EventCommentCreated:
 		data, _ := event.GetEventData().(CommentEventData)
-		log.Printf("[SocialAchievement] 检查用户 %s 的评论成就", data.UserID)
+		logEventRuntime("info", "检查社交成就", map[string]interface{}{
+			"handler":    h.name,
+			"event_type": event.GetEventType(),
+			"user_id":    data.UserID,
+			"comment_id": data.CommentID,
+			"metric":     "comment",
+		})
 		// 检查是否达成"发表10条评论"等成就
 
 	case EventFollowAdded:
 		data, _ := event.GetEventData().(FollowEventData)
-		log.Printf("[SocialAchievement] 检查用户 %s 和 %s 的关注成就", data.FollowerID, data.FolloweeID)
+		logEventRuntime("info", "检查社交成就", map[string]interface{}{
+			"handler":     h.name,
+			"event_type":  event.GetEventType(),
+			"follower_id": data.FollowerID,
+			"followee_id": data.FolloweeID,
+			"metric":      "follow",
+		})
 		// 检查是否达成"关注10位作者"等成就
 	}
 

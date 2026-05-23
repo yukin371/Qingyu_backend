@@ -356,6 +356,10 @@ func (s *SearchService) Search(ctx context.Context, req *search.SearchRequest) (
 		return nil, search.WrapError(err, search.ErrCodeEngineFailure, "Search execution failed")
 	}
 
+	if resp == nil {
+		return nil, search.WrapError(fmt.Errorf("provider returned nil response"), search.ErrCodeEngineFailure, "Search execution failed")
+	}
+
 	// 7. 记录耗时
 	took := time.Since(start)
 	if resp.Data != nil {
@@ -386,8 +390,12 @@ func (s *SearchService) Search(ctx context.Context, req *search.SearchRequest) (
 	if useES {
 		engineName = "ES"
 	}
+	total := int64(0)
+	if resp.Data != nil {
+		total = resp.Data.Total
+	}
 	s.logger.Printf("[SearchService] Search completed: type=%s, engine=%s, query=%s, took=%v, total=%d, cache_hit=%v", // codeql[go/log-injection]
-		req.Type, engineName, req.Query, took, resp.Data.Total, cacheHit)
+		req.Type, engineName, req.Query, took, total, cacheHit)
 
 	return resp, nil
 }

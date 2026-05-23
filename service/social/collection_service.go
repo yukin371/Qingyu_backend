@@ -17,6 +17,7 @@ import (
 	"crypto/rand"
 	"fmt"
 	"math/big"
+	"strings"
 	"time"
 
 	"Qingyu_backend/models/reader"
@@ -127,7 +128,7 @@ func (s *CollectionService) AddToCollection(ctx context.Context, userID, bookID,
 		UpdatedAt: time.Now(),
 	}
 
-	if err := s.collectionRepo.RunInTransaction(ctx, func(txCtx context.Context) error {
+	persistCollection := func(txCtx context.Context) error {
 		if err := s.collectionRepo.Create(txCtx, collection); err != nil {
 			return fmt.Errorf("添加收藏失败: %w", err)
 		}
@@ -138,8 +139,16 @@ func (s *CollectionService) AddToCollection(ctx context.Context, userID, bookID,
 			}
 		}
 		return nil
-	}); err != nil {
-		return nil, err
+	}
+
+	if err := s.collectionRepo.RunInTransaction(ctx, persistCollection); err != nil {
+		if isCollectionTransactionUnsupported(err) {
+			if fallbackErr := persistCollection(ctx); fallbackErr != nil {
+				return nil, fallbackErr
+			}
+		} else {
+			return nil, err
+		}
 	}
 
 	// 发布事件
@@ -168,7 +177,7 @@ func (s *CollectionService) RemoveFromCollection(ctx context.Context, userID, co
 		return fmt.Errorf("无权删除该收藏")
 	}
 
-	if err := s.collectionRepo.RunInTransaction(ctx, func(txCtx context.Context) error {
+	removeCollection := func(txCtx context.Context) error {
 		if err := s.collectionRepo.Delete(txCtx, collectionID); err != nil {
 			return fmt.Errorf("删除收藏失败: %w", err)
 		}
@@ -179,8 +188,16 @@ func (s *CollectionService) RemoveFromCollection(ctx context.Context, userID, co
 			}
 		}
 		return nil
-	}); err != nil {
-		return err
+	}
+
+	if err := s.collectionRepo.RunInTransaction(ctx, removeCollection); err != nil {
+		if isCollectionTransactionUnsupported(err) {
+			if fallbackErr := removeCollection(ctx); fallbackErr != nil {
+				return fallbackErr
+			}
+		} else {
+			return err
+		}
 	}
 
 	// 发布事件
@@ -226,7 +243,7 @@ func (s *CollectionService) UpdateCollection(ctx context.Context, userID, collec
 		}
 	}
 
-	if err := s.collectionRepo.RunInTransaction(ctx, func(txCtx context.Context) error {
+	updateCollection := func(txCtx context.Context) error {
 		if newFolderID, ok := updates["folder_id"].(string); ok {
 			oldFolderID := collection.FolderID
 			if oldFolderID != newFolderID {
@@ -247,8 +264,16 @@ func (s *CollectionService) UpdateCollection(ctx context.Context, userID, collec
 			return fmt.Errorf("更新收藏失败: %w", err)
 		}
 		return nil
-	}); err != nil {
-		return err
+	}
+
+	if err := s.collectionRepo.RunInTransaction(ctx, updateCollection); err != nil {
+		if isCollectionTransactionUnsupported(err) {
+			if fallbackErr := updateCollection(ctx); fallbackErr != nil {
+				return fallbackErr
+			}
+		} else {
+			return err
+		}
 	}
 
 	return nil
@@ -274,6 +299,16 @@ func (s *CollectionService) GetUserCollections(ctx context.Context, userID, fold
 	}
 
 	return collections, total, nil
+}
+
+func isCollectionTransactionUnsupported(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	message := err.Error()
+	return strings.Contains(message, "Transaction numbers are only allowed on a replica set member or mongos") ||
+		strings.Contains(message, "transactions are not supported")
 }
 
 // GetCollectionsByTag 根据标签获取收藏
