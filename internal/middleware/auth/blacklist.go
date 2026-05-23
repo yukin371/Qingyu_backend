@@ -2,6 +2,8 @@ package auth
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/base64"
 	"fmt"
 	"time"
 
@@ -29,7 +31,7 @@ type redisBlacklist struct {
 // NewRedisBlacklist 创建Redis黑名单
 func NewRedisBlacklist(client *redis.Client, prefix string) Blacklist {
 	if prefix == "" {
-		prefix = "blacklist:"
+		prefix = "token:blacklist:"
 	}
 
 	return &redisBlacklist{
@@ -40,13 +42,13 @@ func NewRedisBlacklist(client *redis.Client, prefix string) Blacklist {
 
 // Add 添加Token到黑名单
 func (b *redisBlacklist) Add(ctx context.Context, token string, ttl time.Duration) error {
-	key := b.prefix + token
+	key := b.getKey(token)
 	return b.client.Set(ctx, key, "1", ttl).Err()
 }
 
 // IsBlacklisted 检查Token是否在黑名单中
 func (b *redisBlacklist) IsBlacklisted(ctx context.Context, token string) (bool, error) {
-	key := b.prefix + token
+	key := b.getKey(token)
 	result, err := b.client.Exists(ctx, key).Result()
 	if err != nil {
 		return false, fmt.Errorf("failed to check blacklist: %w", err)
@@ -56,8 +58,15 @@ func (b *redisBlacklist) IsBlacklisted(ctx context.Context, token string) (bool,
 
 // Remove 从黑名单移除Token
 func (b *redisBlacklist) Remove(ctx context.Context, token string) error {
-	key := b.prefix + token
+	key := b.getKey(token)
 	return b.client.Del(ctx, key).Err()
+}
+
+func (b *redisBlacklist) getKey(token string) string {
+	h := sha256.New()
+	h.Write([]byte(token))
+	tokenHash := base64.RawURLEncoding.EncodeToString(h.Sum(nil))
+	return fmt.Sprintf("%s%s", b.prefix, tokenHash[:32])
 }
 
 // mockBlacklist 用于测试的模拟黑名单

@@ -1,9 +1,11 @@
 package auth
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"Qingyu_backend/config"
 
@@ -90,4 +92,81 @@ func TestOptionalJWTAuth_IgnoresInvalidToken(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.Contains(t, w.Body.String(), "\"exists\":false")
+}
+
+func TestOptionalJWTAuth_IgnoresBlacklistedToken(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	previousConfig := config.GlobalConfig
+	config.GlobalConfig = &config.Config{
+		JWT: &config.JWTConfig{
+			Secret:          "test-secret-key-123456",
+			ExpirationHours: 24,
+		},
+	}
+	defer func() {
+		config.GlobalConfig = previousConfig
+		SetSharedBlacklist(nil)
+	}()
+
+	token, err := GenerateToken("user-123", "tester", []string{"reader"})
+	require.NoError(t, err)
+
+	blacklist := NewMockBlacklist()
+	require.NoError(t, blacklist.Add(context.Background(), token, time.Hour))
+	SetSharedBlacklist(blacklist)
+
+	router := gin.New()
+	router.Use(OptionalJWTAuth())
+	router.GET("/test", func(c *gin.Context) {
+		_, exists := c.Get("user_id")
+		c.JSON(http.StatusOK, gin.H{
+			"exists": exists,
+		})
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, w.Body.String(), "\"exists\":false")
+}
+
+func TestJWTAuth_RejectsBlacklistedToken(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	previousConfig := config.GlobalConfig
+	config.GlobalConfig = &config.Config{
+		JWT: &config.JWTConfig{
+			Secret:          "test-secret-key-123456",
+			ExpirationHours: 24,
+		},
+	}
+	defer func() {
+		config.GlobalConfig = previousConfig
+		SetSharedBlacklist(nil)
+	}()
+
+	token, err := GenerateToken("user-123", "tester", []string{"reader"})
+	require.NoError(t, err)
+
+	blacklist := NewMockBlacklist()
+	require.NoError(t, blacklist.Add(context.Background(), token, time.Hour))
+	SetSharedBlacklist(blacklist)
+
+	router := gin.New()
+	router.Use(JWTAuth())
+	router.GET("/test", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"ok": true})
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/test", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+	assert.Contains(t, w.Body.String(), "\"code\":\"2016\"")
 }

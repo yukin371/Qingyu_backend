@@ -20,6 +20,7 @@ import (
 
 type jwtServiceStub struct {
 	generateTokenFunc func(ctx context.Context, userID string, roles []string) (string, error)
+	validateTokenFunc func(ctx context.Context, token string) (*TokenClaims, error)
 	refreshTokenFunc  func(ctx context.Context, token string) (string, error)
 	revokeTokenFunc   func(ctx context.Context, token string) error
 }
@@ -32,6 +33,9 @@ func (s *jwtServiceStub) GenerateToken(ctx context.Context, userID string, roles
 }
 
 func (s *jwtServiceStub) ValidateToken(ctx context.Context, token string) (*TokenClaims, error) {
+	if s.validateTokenFunc != nil {
+		return s.validateTokenFunc(ctx, token)
+	}
 	return nil, nil
 }
 
@@ -53,9 +57,15 @@ func (s *jwtServiceStub) IsTokenRevoked(ctx context.Context, token string) (bool
 	return false, nil
 }
 
-type sessionServiceStub struct{}
+type sessionServiceStub struct {
+	createSessionFunc      func(ctx context.Context, userID string) (*Session, error)
+	enforceDeviceLimitFunc func(ctx context.Context, userID string, maxDevices int) error
+}
 
 func (s *sessionServiceStub) CreateSession(ctx context.Context, userID string) (*Session, error) {
+	if s.createSessionFunc != nil {
+		return s.createSessionFunc(ctx, userID)
+	}
 	return nil, nil
 }
 
@@ -80,6 +90,9 @@ func (s *sessionServiceStub) CheckDeviceLimit(ctx context.Context, userID string
 }
 
 func (s *sessionServiceStub) EnforceDeviceLimit(ctx context.Context, userID string, maxDevices int) error {
+	if s.enforceDeviceLimitFunc != nil {
+		return s.enforceDeviceLimitFunc(ctx, userID, maxDevices)
+	}
 	return nil
 }
 
@@ -206,6 +219,108 @@ func TestAuthService_RefreshToken_WrapsJWTError(t *testing.T) {
 	assert.Empty(t, newToken)
 	assert.Contains(t, err.Error(), "刷新Token失败")
 	assert.Contains(t, err.Error(), "token expired")
+}
+
+func TestAuthService_ValidateToken_ReturnsClaims(t *testing.T) {
+	expectedClaims := &TokenClaims{
+		UserID: "user-123",
+		Roles:  []string{"reader", "author"},
+		Exp:    1234567890,
+		Iat:    1234567000,
+	}
+
+	service := &AuthServiceImpl{
+		jwtService: &jwtServiceStub{
+			validateTokenFunc: func(ctx context.Context, token string) (*TokenClaims, error) {
+				assert.Equal(t, "access-token-123", token)
+				return expectedClaims, nil
+			},
+		},
+	}
+
+	actualClaims, err := service.ValidateToken(context.Background(), "access-token-123")
+
+	require.NoError(t, err)
+	assert.Equal(t, expectedClaims, actualClaims)
+}
+
+func TestAuthService_Logout_SucceedsWhenTokenRevoked(t *testing.T) {
+	service := &AuthServiceImpl{
+		jwtService: &jwtServiceStub{
+			revokeTokenFunc: func(ctx context.Context, token string) error {
+				assert.Equal(t, "token-success", token)
+				return nil
+			},
+		},
+	}
+
+	err := service.Logout(context.Background(), "token-success")
+
+	require.NoError(t, err)
+}
+
+func TestAuthService_Login_SessionFailuresDoNotBlockLogin(t *testing.T) {
+	ctx := context.Background()
+	userID := primitive.NewObjectID()
+
+	user := &usersModel.User{
+		Username: "reader-login",
+		Email:    "reader@example.com",
+		Roles:    []string{"reader"},
+		Status:   usersModel.UserStatusActive,
+	}
+	user.ID = userID
+	require.NoError(t, user.SetPassword("Password123!"))
+
+	mockUserRepo := &usermocks.MockUserRepository{}
+	mockAuthRepo := usermocks.NewMockAuthRepository()
+	mockUserRepo.On("GetByUsername", mock.Anything, "reader-login").Return(user, nil).Once()
+	mockUserRepo.On("UpdateLastLogin", mock.Anything, userID.Hex(), "unknown").Return(nil).Once()
+	mockAuthRepo.On("GetUserRoles", mock.Anything, userID.Hex()).Return([]*authModel.Role{
+		{Name: "reader"},
+	}, nil).Once()
+
+	deviceLimitCalled := false
+	createSessionCalled := false
+	service := &AuthServiceImpl{
+		jwtService: &jwtServiceStub{
+			generateTokenFunc: func(ctx context.Context, actualUserID string, roles []string) (string, error) {
+				assert.Equal(t, userID.Hex(), actualUserID)
+				assert.Equal(t, []string{"reader"}, roles)
+				return "login-token", nil
+			},
+		},
+		authRepo: mockAuthRepo,
+		userRepo: mockUserRepo,
+		sessionService: &sessionServiceStub{
+			enforceDeviceLimitFunc: func(ctx context.Context, actualUserID string, maxDevices int) error {
+				deviceLimitCalled = true
+				assert.Equal(t, userID.Hex(), actualUserID)
+				assert.Equal(t, 5, maxDevices)
+				return errors.New("device tracker unavailable")
+			},
+			createSessionFunc: func(ctx context.Context, actualUserID string) (*Session, error) {
+				createSessionCalled = true
+				assert.Equal(t, userID.Hex(), actualUserID)
+				return nil, errors.New("session store unavailable")
+			},
+		},
+	}
+
+	resp, err := service.Login(ctx, &LoginRequest{
+		Username: "reader-login",
+		Password: "Password123!",
+	})
+
+	require.NoError(t, err)
+	require.NotNil(t, resp)
+	assert.True(t, deviceLimitCalled)
+	assert.True(t, createSessionCalled)
+	assert.Equal(t, "login-token", resp.Token)
+	assert.Equal(t, userID.Hex(), resp.User.ID)
+	assert.Equal(t, []string{"reader"}, resp.User.Roles)
+	mockUserRepo.AssertExpectations(t)
+	mockAuthRepo.AssertExpectations(t)
 }
 
 func TestAuthService_OAuthLogin_ExistingAccountUsesResolvedRoles(t *testing.T) {
@@ -342,6 +457,236 @@ func TestAuthService_OAuthLogin_NewAccountCreatesReaderUser(t *testing.T) {
 	assert.Equal(t, "github_provider", resp.User.Username)
 	mockUserRepo.AssertExpectations(t)
 	mockAuthRepo.AssertExpectations(t)
+}
+
+func TestAuthService_OAuthLogin_ExistingAccountGenerateTokenFailureReturnsWrappedError(t *testing.T) {
+	ctx := context.Background()
+	userID := primitive.NewObjectID()
+	accountID := primitive.NewObjectID()
+
+	mockUserRepo := &usermocks.MockUserRepository{}
+	mockAuthRepo := usermocks.NewMockAuthRepository()
+	oauthRepo := &oauthRepositoryStub{
+		findByProviderAndProviderIDFunc: func(ctx context.Context, provider authModel.OAuthProvider, providerUserID string) (*authModel.OAuthAccount, error) {
+			return &authModel.OAuthAccount{
+				ID:             accountID,
+				UserID:         userID.Hex(),
+				Provider:       provider,
+				ProviderUserID: providerUserID,
+			}, nil
+		},
+		updateLastLoginFunc: func(ctx context.Context, id string) error {
+			assert.Equal(t, accountID.Hex(), id)
+			return nil
+		},
+	}
+
+	user := &usersModel.User{
+		Username: "oauth-user",
+		Email:    "oauth@example.com",
+		Roles:    []string{"reader"},
+		Status:   usersModel.UserStatusActive,
+	}
+	user.ID = userID
+
+	mockUserRepo.On("GetByID", mock.Anything, userID.Hex()).Return(user, nil).Once()
+	mockAuthRepo.On("GetUserRoles", mock.Anything, userID.Hex()).Return([]*authModel.Role{
+		{Name: "author"},
+		{Name: "reader"},
+	}, nil).Once()
+
+	service := &AuthServiceImpl{
+		jwtService: &jwtServiceStub{
+			generateTokenFunc: func(ctx context.Context, actualUserID string, roles []string) (string, error) {
+				assert.Equal(t, userID.Hex(), actualUserID)
+				assert.Equal(t, []string{"author", "reader"}, roles)
+				return "", errors.New("jwt signer unavailable")
+			},
+		},
+		authRepo:       mockAuthRepo,
+		oauthRepo:      oauthRepo,
+		userRepo:       mockUserRepo,
+		sessionService: &sessionServiceStub{},
+	}
+
+	resp, err := service.OAuthLogin(ctx, &OAuthLoginRequest{
+		Provider:   authModel.OAuthProviderGoogle,
+		ProviderID: "google-user-token-fail",
+	})
+
+	require.Error(t, err)
+	assert.Nil(t, resp)
+	assert.Contains(t, err.Error(), "生成Token失败")
+	assert.Contains(t, err.Error(), "jwt signer unavailable")
+	mockUserRepo.AssertExpectations(t)
+	mockAuthRepo.AssertExpectations(t)
+}
+
+func TestAuthService_OAuthLogin_NewAccountCreateOAuthRecordFailureReturnsWrappedError(t *testing.T) {
+	ctx := context.Background()
+	newUserID := primitive.NewObjectID()
+
+	mockUserRepo := &usermocks.MockUserRepository{}
+	mockAuthRepo := usermocks.NewMockAuthRepository()
+	oauthRepo := &oauthRepositoryStub{
+		findByProviderAndProviderIDFunc: func(ctx context.Context, provider authModel.OAuthProvider, providerUserID string) (*authModel.OAuthAccount, error) {
+			return nil, nil
+		},
+		createFunc: func(ctx context.Context, account *authModel.OAuthAccount) error {
+			assert.Equal(t, newUserID.Hex(), account.UserID)
+			assert.Equal(t, authModel.OAuthProviderGitHub, account.Provider)
+			assert.Equal(t, "provider-user-create-fail", account.ProviderUserID)
+			return errors.New("oauth repo down")
+		},
+	}
+
+	mockUserRepo.On("ExistsByUsername", mock.Anything, mock.MatchedBy(func(username string) bool {
+		return len(username) > 0 && username[:7] == "github_"
+	})).Return(false, nil).Once()
+	mockUserRepo.On("ExistsByEmail", mock.Anything, "oauth@example.com").Return(false, nil).Once()
+	mockUserRepo.On("Create", mock.Anything, mock.MatchedBy(func(user *usersModel.User) bool {
+		user.ID = newUserID
+		return user.Email == "oauth@example.com" &&
+			len(user.Username) > 0 &&
+			user.Username[:7] == "github_" &&
+			user.Password != "" &&
+			user.Status == usersModel.UserStatusActive &&
+			assert.ObjectsAreEqual([]string{"reader"}, user.Roles)
+	})).Return(nil).Once()
+
+	roleID := primitive.NewObjectID()
+	mockAuthRepo.On("GetRoleByName", mock.Anything, "reader").Return(&authModel.Role{ID: roleID, Name: "reader"}, nil).Once()
+	mockAuthRepo.On("AssignUserRole", mock.Anything, newUserID.Hex(), roleID.Hex()).Return(nil).Once()
+
+	service := &AuthServiceImpl{
+		jwtService: &jwtServiceStub{
+			generateTokenFunc: func(ctx context.Context, actualUserID string, roles []string) (string, error) {
+				t.Fatalf("GenerateToken should not run when oauthRepo.Create fails")
+				return "", nil
+			},
+		},
+		authRepo:       mockAuthRepo,
+		oauthRepo:      oauthRepo,
+		userRepo:       mockUserRepo,
+		sessionService: &sessionServiceStub{},
+	}
+
+	resp, err := service.OAuthLogin(ctx, &OAuthLoginRequest{
+		Provider:   authModel.OAuthProviderGitHub,
+		ProviderID: "provider-user-create-fail",
+		Email:      "oauth@example.com",
+		Avatar:     "https://example.com/avatar.png",
+	})
+
+	require.Error(t, err)
+	assert.Nil(t, resp)
+	assert.Contains(t, err.Error(), "创建OAuth账号失败")
+	assert.Contains(t, err.Error(), "oauth repo down")
+	mockUserRepo.AssertExpectations(t)
+	mockAuthRepo.AssertExpectations(t)
+}
+
+func TestAuthService_OAuthLogin_ExistingAccountResolveRolesFailureReturnsWrappedError(t *testing.T) {
+	ctx := context.Background()
+	userID := primitive.NewObjectID()
+	accountID := primitive.NewObjectID()
+
+	mockUserRepo := &usermocks.MockUserRepository{}
+	mockAuthRepo := usermocks.NewMockAuthRepository()
+	oauthRepo := &oauthRepositoryStub{
+		findByProviderAndProviderIDFunc: func(ctx context.Context, provider authModel.OAuthProvider, providerUserID string) (*authModel.OAuthAccount, error) {
+			return &authModel.OAuthAccount{
+				ID:             accountID,
+				UserID:         userID.Hex(),
+				Provider:       provider,
+				ProviderUserID: providerUserID,
+			}, nil
+		},
+		updateLastLoginFunc: func(ctx context.Context, id string) error {
+			assert.Equal(t, accountID.Hex(), id)
+			return nil
+		},
+	}
+
+	user := &usersModel.User{
+		Username: "oauth-user",
+		Email:    "oauth@example.com",
+		Roles:    []string{"reader"},
+		Status:   usersModel.UserStatusActive,
+	}
+	user.ID = userID
+
+	mockUserRepo.On("GetByID", mock.Anything, userID.Hex()).Return(user, nil).Once()
+	mockAuthRepo.On("GetUserRoles", mock.Anything, userID.Hex()).Return(nil, errors.New("role repo timeout")).Once()
+
+	service := &AuthServiceImpl{
+		jwtService: &jwtServiceStub{
+			generateTokenFunc: func(ctx context.Context, actualUserID string, roles []string) (string, error) {
+				t.Fatalf("GenerateToken should not run when resolveUserRoles fails")
+				return "", nil
+			},
+		},
+		authRepo:       mockAuthRepo,
+		oauthRepo:      oauthRepo,
+		userRepo:       mockUserRepo,
+		sessionService: &sessionServiceStub{},
+	}
+
+	resp, err := service.OAuthLogin(ctx, &OAuthLoginRequest{
+		Provider:   authModel.OAuthProviderGoogle,
+		ProviderID: "google-user-role-fail",
+	})
+
+	require.Error(t, err)
+	assert.Nil(t, resp)
+	assert.Contains(t, err.Error(), "获取用户角色失败")
+	assert.Contains(t, err.Error(), "role repo timeout")
+	mockUserRepo.AssertExpectations(t)
+	mockAuthRepo.AssertExpectations(t)
+}
+
+func TestAuthService_OAuthLogin_ExistingAccountGetUserFailureReturnsWrappedError(t *testing.T) {
+	ctx := context.Background()
+	userID := primitive.NewObjectID()
+	accountID := primitive.NewObjectID()
+
+	mockUserRepo := &usermocks.MockUserRepository{}
+	oauthRepo := &oauthRepositoryStub{
+		findByProviderAndProviderIDFunc: func(ctx context.Context, provider authModel.OAuthProvider, providerUserID string) (*authModel.OAuthAccount, error) {
+			assert.Equal(t, authModel.OAuthProviderGoogle, provider)
+			assert.Equal(t, "google-user-fail", providerUserID)
+			return &authModel.OAuthAccount{
+				ID:             accountID,
+				UserID:         userID.Hex(),
+				Provider:       provider,
+				ProviderUserID: providerUserID,
+			}, nil
+		},
+		updateLastLoginFunc: func(ctx context.Context, id string) error {
+			t.Fatalf("UpdateLastLogin should not run when GetByID fails")
+			return nil
+		},
+	}
+
+	mockUserRepo.On("GetByID", mock.Anything, userID.Hex()).Return(nil, errors.New("user repo offline")).Once()
+
+	service := &AuthServiceImpl{
+		jwtService:      &jwtServiceStub{},
+		oauthRepo:       oauthRepo,
+		userRepo:        mockUserRepo,
+		sessionService:  &sessionServiceStub{},
+	}
+
+	resp, err := service.OAuthLogin(ctx, &OAuthLoginRequest{
+		Provider:   authModel.OAuthProviderGoogle,
+		ProviderID: "google-user-fail",
+	})
+
+	require.Error(t, err)
+	assert.Nil(t, resp)
+	assert.Contains(t, err.Error(), "获取用户信息失败")
+	assert.Contains(t, err.Error(), "user repo offline")
+	mockUserRepo.AssertExpectations(t)
 }
 
 func TestGenerateUsernameFromProvider(t *testing.T) {

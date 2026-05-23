@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"Qingyu_backend/service/admin"
-	"Qingyu_backend/service/finance/wallet"
 	"Qingyu_backend/service/auth"
+	"Qingyu_backend/service/finance/wallet"
 	"Qingyu_backend/service/shared/storage"
 
 	"github.com/stretchr/testify/assert"
@@ -638,6 +638,92 @@ func TestAdminWallet_ReviewWithdrawWithWalletCheck(t *testing.T) {
 	walletService.AssertExpectations(t)
 }
 
+// TestAdminWallet_ReviewWithdrawWithInsufficientBalance 测试提现审核时余额不足不会继续审批
+func TestAdminWallet_ReviewWithdrawWithInsufficientBalance(t *testing.T) {
+	ctx := context.Background()
+
+	adminService := new(MockAdminService)
+	walletService := new(MockWalletService)
+
+	withdrawID := "withdraw_insufficient_balance"
+	userID := "user_low_balance"
+
+	withdrawRequest := &wallet.WithdrawRequest{
+		ID:        withdrawID,
+		UserID:    userID,
+		Amount:    500.0,
+		Account:   "bank_account_low",
+		Status:    "pending",
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+	walletService.On("GetWithdrawRequest", ctx, withdrawID).Return(withdrawRequest, nil)
+
+	userWallet := &wallet.Wallet{
+		ID:        "wallet_low_balance",
+		UserID:    userID,
+		Balance:   120.0,
+		Frozen:    false,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+	walletService.On("GetWallet", ctx, userID).Return(userWallet, nil)
+
+	request, err := walletService.GetWithdrawRequest(ctx, withdrawID)
+	assert.NoError(t, err)
+	assert.Equal(t, "pending", request.Status, "余额校验前提现单状态应保持 pending")
+
+	userWalletInfo, err := walletService.GetWallet(ctx, request.UserID)
+	assert.NoError(t, err)
+	assert.False(t, userWalletInfo.Frozen, "钱包不应被冻结")
+	assert.Less(t, userWalletInfo.Balance, request.Amount, "当前余额应不足以完成提现")
+
+	adminService.AssertNotCalled(t, "ReviewWithdraw", mock.Anything, mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+	walletService.AssertNotCalled(t, "ApproveWithdraw", mock.Anything, mock.Anything, mock.Anything)
+
+	adminService.AssertExpectations(t)
+	walletService.AssertExpectations(t)
+}
+
+// TestAdminWallet_ReviewWithdrawFailureStopsApproval 测试管理员审核失败时不会继续批准提现
+func TestAdminWallet_ReviewWithdrawFailureStopsApproval(t *testing.T) {
+	ctx := context.Background()
+
+	adminService := new(MockAdminService)
+	walletService := new(MockWalletService)
+
+	withdrawID := "withdraw_review_fail"
+	adminID := "admin001"
+
+	withdrawRequest := &wallet.WithdrawRequest{
+		ID:        withdrawID,
+		UserID:    "user123",
+		Amount:    300.0,
+		Account:   "bank_account_review_fail",
+		Status:    "pending",
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+	walletService.On("GetWithdrawRequest", ctx, withdrawID).Return(withdrawRequest, nil)
+	adminService.On("ReviewWithdraw", ctx, withdrawID, adminID, true, "").Return(errors.New("审核服务暂时不可用"))
+
+	request, err := walletService.GetWithdrawRequest(ctx, withdrawID)
+	assert.NoError(t, err)
+	assert.Equal(t, "pending", request.Status)
+
+	err = adminService.ReviewWithdraw(ctx, withdrawID, adminID, true, "")
+	assert.Error(t, err, "管理员审核失败时应返回错误")
+	assert.Contains(t, err.Error(), "审核服务暂时不可用")
+
+	walletService.AssertNotCalled(t, "ApproveWithdraw", mock.Anything, mock.Anything, mock.Anything)
+
+	adminService.AssertExpectations(t)
+	walletService.AssertExpectations(t)
+}
+
 // ============ 测试场景3: Storage + Auth 集成 ============
 
 // TestStorageAuth_UploadFileWithAuth 测试用户上传文件（需要认证）
@@ -856,6 +942,114 @@ func TestAuthWallet_InsufficientBalance(t *testing.T) {
 	// 验证Mock调用
 	authService.AssertExpectations(t)
 	walletService.AssertExpectations(t)
+}
+
+// TestAuthWallet_UnauthorizedWithdrawRequest 测试未认证用户无法发起提现
+func TestAuthWallet_UnauthorizedWithdrawRequest(t *testing.T) {
+	ctx := context.Background()
+
+	authService := new(MockAuthService)
+	walletService := new(MockWalletService)
+
+	invalidToken := "expired_withdraw_token"
+	withdrawAmount := 88.0
+	withdrawAccount := "alipay:test-user"
+
+	authService.On("ValidateToken", ctx, invalidToken).
+		Return(nil, errors.New("token已过期"))
+
+	claims, err := authService.ValidateToken(ctx, invalidToken)
+	assert.Error(t, err, "未认证提现应先在鉴权阶段失败")
+	assert.Nil(t, claims, "鉴权失败时不应返回用户声明")
+	assert.Contains(t, err.Error(), "token已过期")
+
+	walletService.AssertNotCalled(t, "RequestWithdraw", mock.Anything, mock.Anything, withdrawAmount, withdrawAccount)
+
+	authService.AssertExpectations(t)
+}
+
+// TestAuthWallet_ExpiredTokenBlocksWalletConsume 测试过期Token无法继续访问钱包消费链路
+func TestAuthWallet_ExpiredTokenBlocksWalletConsume(t *testing.T) {
+	ctx := context.Background()
+
+	authService := new(MockAuthService)
+	walletService := new(MockWalletService)
+
+	expiredToken := "expired_consume_token"
+	authService.On("ValidateToken", ctx, expiredToken).
+		Return(nil, errors.New("token已过期"))
+
+	claims, err := authService.ValidateToken(ctx, expiredToken)
+	assert.Error(t, err, "过期Token验证应该失败")
+	assert.Nil(t, claims, "过期Token不应返回声明")
+	assert.Contains(t, err.Error(), "过期")
+
+	walletService.AssertNotCalled(t, "Consume", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+	authService.AssertExpectations(t)
+}
+
+// TestAuthWallet_LogoutInvalidatesTokenForWalletConsume 测试登出后旧Token无法继续消费
+func TestAuthWallet_LogoutInvalidatesTokenForWalletConsume(t *testing.T) {
+	ctx := context.Background()
+
+	authService := new(MockAuthService)
+	walletService := new(MockWalletService)
+
+	oldToken := "jwt_token_after_logout"
+
+	authService.On("Logout", ctx, oldToken).Return(nil).Once()
+	authService.On("ValidateToken", ctx, oldToken).
+		Return(nil, errors.New("token已失效")).
+		Once()
+
+	err := authService.Logout(ctx, oldToken)
+	assert.NoError(t, err, "登出应该成功")
+
+	claims, err := authService.ValidateToken(ctx, oldToken)
+	assert.Error(t, err, "登出后的旧Token验证应该失败")
+	assert.Nil(t, claims, "旧Token不应再返回声明")
+	assert.Contains(t, err.Error(), "失效")
+
+	walletService.AssertNotCalled(t, "Consume", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+	authService.AssertExpectations(t)
+}
+
+// TestAuthWallet_DestroyedSessionBlocksWalletRecharge 测试会话销毁后无法继续进入钱包充值链路
+func TestAuthWallet_DestroyedSessionBlocksWalletRecharge(t *testing.T) {
+	ctx := context.Background()
+
+	authService := new(MockAuthService)
+	walletService := new(MockWalletService)
+
+	sessionID := "session_revoked_001"
+	session := &auth.Session{
+		ID:        sessionID,
+		UserID:    "user_session_001",
+		Data:      map[string]interface{}{"token": "jwt_token_session_001"},
+		CreatedAt: time.Now(),
+		ExpiresAt: time.Now().Add(30 * time.Minute),
+	}
+
+	authService.On("GetSession", ctx, sessionID).Return(session, nil).Once()
+	authService.On("DestroySession", ctx, sessionID).Return(nil).Once()
+	authService.On("GetSession", ctx, sessionID).
+		Return(nil, errors.New("session不存在或已失效")).
+		Once()
+
+	currentSession, err := authService.GetSession(ctx, sessionID)
+	assert.NoError(t, err, "会话初次读取应该成功")
+	assert.Equal(t, "user_session_001", currentSession.UserID)
+
+	err = authService.DestroySession(ctx, sessionID)
+	assert.NoError(t, err, "销毁会话应该成功")
+
+	currentSession, err = authService.GetSession(ctx, sessionID)
+	assert.Error(t, err, "销毁后的会话读取应该失败")
+	assert.Nil(t, currentSession, "失效会话不应返回会话数据")
+	assert.Contains(t, err.Error(), "失效")
+
+	walletService.AssertNotCalled(t, "Recharge", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
+	authService.AssertExpectations(t)
 }
 
 // TestStorageAuth_UnauthorizedUpload 测试未授权用户无法上传文件

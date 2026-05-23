@@ -2,6 +2,8 @@ package container
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/base64"
 	"fmt"
 	"sync"
 	"time"
@@ -53,6 +55,7 @@ import (
 
 	// Infrastructure
 	"Qingyu_backend/config"
+	"Qingyu_backend/internal/middleware/auth"
 	"Qingyu_backend/pkg/cache"
 	pkgmetrics "Qingyu_backend/pkg/metrics"
 	pkgtransaction "Qingyu_backend/pkg/transaction"
@@ -143,6 +146,47 @@ type ServiceContainer struct {
 	imageProcessor   storage.ImageProcessorService
 }
 
+type blacklistDeleteClient interface {
+	Delete(ctx context.Context, key string) error
+}
+
+type authRedisClientBlacklist struct {
+	client auth.RedisClient
+}
+
+func newAuthRedisClientBlacklist(client auth.RedisClient) middlewareAuth.Blacklist {
+	if client == nil {
+		return nil
+	}
+	return &authRedisClientBlacklist{client: client}
+}
+
+func (b *authRedisClientBlacklist) Add(ctx context.Context, token string, ttl time.Duration) error {
+	return b.client.Set(ctx, b.getKey(token), "revoked", ttl)
+}
+
+func (b *authRedisClientBlacklist) IsBlacklisted(ctx context.Context, token string) (bool, error) {
+	exists, err := b.client.Exists(ctx, b.getKey(token))
+	if err != nil {
+		return false, err
+	}
+	return exists > 0, nil
+}
+
+func (b *authRedisClientBlacklist) Remove(ctx context.Context, token string) error {
+	deleteClient, ok := b.client.(blacklistDeleteClient)
+	if !ok {
+		return nil
+	}
+	return deleteClient.Delete(ctx, b.getKey(token))
+}
+
+func (b *authRedisClientBlacklist) getKey(token string) string {
+	h := sha256.New()
+	h.Write([]byte(token))
+	tokenHash := base64.RawURLEncoding.EncodeToString(h.Sum(nil))
+	return fmt.Sprintf("token:blacklist:%s", tokenHash[:32])
+}
 // NewServiceContainer 创建服务容器
 // Repository工厂将在Initialize()时自动创建
 func NewServiceContainer() *ServiceContainer {
@@ -1045,11 +1089,13 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 		// 使用Redis Token黑名单
 		redisImpl := auth.NewRedisAdapter(c.redisClient)
 		redisAdapter = redisImpl
+		middlewareAuth.SetSharedBlacklist(newAuthRedisClientBlacklist(redisImpl))
 		fmt.Println("✓ AuthService使用Redis Token黑名单")
 	} else {
 		// 降级到内存Token黑名单
 		redisImpl := auth.NewInMemoryTokenBlacklist()
 		redisAdapter = redisImpl
+		middlewareAuth.SetSharedBlacklist(newAuthRedisClientBlacklist(redisImpl))
 		fmt.Println("⚠ Redis不可用，AuthService使用内存Token黑名单（降级模式）")
 		fmt.Println("  注意：内存模式不支持分布式部署，服务器重启后黑名单会丢失")
 	}
@@ -1933,3 +1979,4 @@ func (c *ServiceContainer) warmUpCache(ctx context.Context) error {
 	// 执行预热
 	return warmer.WarmUpCache(ctx)
 }
+

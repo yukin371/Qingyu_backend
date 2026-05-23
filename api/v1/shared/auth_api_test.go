@@ -233,6 +233,79 @@ func TestAuthAPI_RefreshToken_Success(t *testing.T) {
 	assert.Equal(t, "new-access-token", data["token"])
 }
 
+func TestAuthAPI_RefreshToken_ServiceErrorReturnsUnauthorized(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	api := NewAuthAPI(&authServiceStub{
+		refreshTokenFunc: func(ctx context.Context, token string) (string, error) {
+			assert.Equal(t, "expired-refresh-token", token)
+			return "", errors.New("token expired")
+		},
+	})
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/shared/auth/refresh", nil)
+	req.Header.Set("Authorization", "Bearer expired-refresh-token")
+	recorder := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(recorder)
+	c.Request = req
+
+	api.RefreshToken(c)
+
+	require.Equal(t, http.StatusUnauthorized, recorder.Code)
+	resp := decodeSharedAPIResponse(t, recorder)
+	assert.Equal(t, "Token刷新失败: token expired", resp["message"])
+}
+
+func TestAuthAPI_Logout_Success(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	api := NewAuthAPI(&authServiceStub{
+		logoutFunc: func(ctx context.Context, token string) error {
+			assert.Equal(t, "token-logout-123", token)
+			return nil
+		},
+	})
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/shared/auth/logout", nil)
+	req.Header.Set("Authorization", "Bearer token-logout-123")
+	recorder := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(recorder)
+	c.Request = req
+
+	api.Logout(c)
+
+	require.Equal(t, http.StatusOK, recorder.Code)
+	resp := decodeSharedAPIResponse(t, recorder)
+	assert.Equal(t, "登出成功", resp["message"])
+	_, hasData := resp["data"]
+	assert.False(t, hasData)
+}
+
+func TestAuthAPI_Logout_ServiceErrorReturnsInternalError(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	api := NewAuthAPI(&authServiceStub{
+		logoutFunc: func(ctx context.Context, token string) error {
+			assert.Equal(t, "token-logout-123", token)
+			return errors.New("revoke failed")
+		},
+	})
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/shared/auth/logout", nil)
+	req.Header.Set("Authorization", "Bearer token-logout-123")
+	recorder := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(recorder)
+	c.Request = req
+
+	api.Logout(c)
+
+	require.Equal(t, http.StatusInternalServerError, recorder.Code)
+	resp := decodeSharedAPIResponse(t, recorder)
+	assert.Equal(t, "服务器内部错误", resp["message"])
+	data := resp["data"].(map[string]interface{})
+	assert.Equal(t, "revoke failed", data["error"])
+}
+
 func TestAuthAPI_Logout_MissingTokenReturnsUnauthorized(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
@@ -247,4 +320,29 @@ func TestAuthAPI_Logout_MissingTokenReturnsUnauthorized(t *testing.T) {
 	require.Equal(t, http.StatusUnauthorized, recorder.Code)
 	resp := decodeSharedAPIResponse(t, recorder)
 	assert.Equal(t, "未提供Token", resp["message"])
+}
+
+func TestAuthAPI_Logout_LegacyAuthorizationHeaderPassesThrough(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	api := NewAuthAPI(&authServiceStub{
+		logoutFunc: func(ctx context.Context, token string) error {
+			assert.Equal(t, "legacy-token-123", token)
+			return nil
+		},
+	})
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/shared/auth/logout", nil)
+	req.Header.Set("Authorization", "legacy-token-123")
+	recorder := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(recorder)
+	c.Request = req
+
+	api.Logout(c)
+
+	require.Equal(t, http.StatusOK, recorder.Code)
+	resp := decodeSharedAPIResponse(t, recorder)
+	assert.Equal(t, "登出成功", resp["message"])
+	_, hasData := resp["data"]
+	assert.False(t, hasData)
 }

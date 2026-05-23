@@ -2,12 +2,31 @@ package auth
 
 import (
 	"strings"
+	"sync"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
 	"Qingyu_backend/config"
 )
+
+var (
+	sharedBlacklistMu sync.RWMutex
+	sharedBlacklist   Blacklist
+)
+
+// SetSharedBlacklist 为 JWT helper 注入与运行时一致的 token blacklist。
+func SetSharedBlacklist(blacklist Blacklist) {
+	sharedBlacklistMu.Lock()
+	defer sharedBlacklistMu.Unlock()
+	sharedBlacklist = blacklist
+}
+
+func getSharedBlacklist() Blacklist {
+	sharedBlacklistMu.RLock()
+	defer sharedBlacklistMu.RUnlock()
+	return sharedBlacklist
+}
 
 // JWTAuth 提供简单的JWT认证中间件
 // 这是一个便捷函数，使用默认配置创建JWT认证中间件
@@ -22,7 +41,7 @@ func JWTAuth() gin.HandlerFunc {
 		logger.Fatal("Failed to create JWT manager", zap.Error(err))
 	}
 
-	middleware := NewJWTAuthMiddleware(jwtManager, nil, logger)
+	middleware := NewJWTAuthMiddleware(jwtManager, getSharedBlacklist(), logger)
 	return middleware.Handler()
 }
 
@@ -46,7 +65,7 @@ func OptionalJWTAuth() gin.HandlerFunc {
 		}
 	}
 
-	middleware := NewJWTAuthMiddleware(jwtManager, nil, logger)
+	middleware := NewJWTAuthMiddleware(jwtManager, getSharedBlacklist(), logger)
 
 	return func(c *gin.Context) {
 		middleware.refreshJWTManagerFromConfig()
@@ -72,6 +91,14 @@ func OptionalJWTAuth() gin.HandlerFunc {
 		if err != nil {
 			c.Next()
 			return
+		}
+
+		if middleware.blacklist != nil {
+			isBlacklisted, err := middleware.blacklist.IsBlacklisted(c.Request.Context(), token)
+			if err != nil || isBlacklisted {
+				c.Next()
+				return
+			}
 		}
 
 		c.Set("user_id", claims.UserID)

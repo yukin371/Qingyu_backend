@@ -92,6 +92,33 @@ func TestAuthHandler_Logout_WithoutTokenIsIdempotent(t *testing.T) {
 	mockService.AssertNotCalled(t, "Logout", mock.Anything, mock.Anything)
 }
 
+func TestAuthHandler_Logout_LegacyAuthorizationHeaderPassesThrough(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	mockService := new(MockAuthHandlerService)
+	handler := NewAuthHandler(mockService)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/user/auth/logout", nil)
+	req.Header.Set("Authorization", "legacy-token-123")
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+	c.Request = req
+
+	mockService.On("Logout", mock.Anything, "legacy-token-123").Return(nil).Once()
+
+	handler.Logout(c)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	var resp map[string]interface{}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, float64(0), resp["code"])
+	assert.Equal(t, "操作成功", resp["message"])
+	data := resp["data"].(map[string]interface{})
+	assert.Equal(t, "Logged out successfully", data["message"])
+	assert.Equal(t, true, data["success"])
+	mockService.AssertExpectations(t)
+}
+
 func TestAuthHandler_Logout_ServiceError(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 
