@@ -535,6 +535,23 @@ func TestMembershipService_Subscribe_Renewal(t *testing.T) {
 	mockRepo.AssertExpectations(t)
 }
 
+// TestMembershipService_Subscribe_InvalidPlanID 测试订阅会员-非法套餐ID
+func TestMembershipService_Subscribe_InvalidPlanID(t *testing.T) {
+	// Arrange
+	service, mockRepo := setupMembershipService()
+	ctx := context.Background()
+
+	// Act
+	membership, err := service.Subscribe(ctx, "user123", "not-an-object-id", "alipay")
+
+	// Assert
+	require.Error(t, err)
+	assert.Nil(t, membership)
+	assert.Contains(t, err.Error(), "无效的套餐ID")
+
+	mockRepo.AssertExpectations(t)
+}
+
 // TestMembershipService_GetMembership_Success 测试获取会员状态成功
 func TestMembershipService_GetMembership_Success(t *testing.T) {
 	// Arrange
@@ -650,6 +667,45 @@ func TestMembershipService_RenewMembership_Success(t *testing.T) {
 	mockRepo.On("GetPlan", ctx, oldMembership.PlanID).Return(plan, nil)
 	mockRepo.On("UpdateMembership", ctx, oldMembership.ID, mock.MatchedBy(func(u map[string]interface{}) bool {
 		return u["end_time"] != nil && u["status"] == financeModel.MembershipStatusActive
+	})).Return(nil)
+	mockRepo.On("GetMembership", ctx, userID).Return(updatedMembership, nil)
+
+	// Act
+	membership, err := service.RenewMembership(ctx, userID)
+
+	// Assert
+	require.NoError(t, err)
+	assert.NotNil(t, membership)
+	assert.Equal(t, financeModel.MembershipStatusActive, membership.Status)
+
+	mockRepo.AssertExpectations(t)
+}
+
+// TestMembershipService_RenewMembership_ExpiredUsesCurrentTime 测试手动续费-已过期会员从当前时间续费
+func TestMembershipService_RenewMembership_ExpiredUsesCurrentTime(t *testing.T) {
+	// Arrange
+	service, mockRepo := setupMembershipService()
+	ctx := context.Background()
+
+	userID := "user123"
+	plan := createTestPlan("月度VIP", financeModel.MembershipTypeMonthly, 30, 19.9, true)
+	oldMembership := createTestMembership(userID, plan.ID, financeModel.MembershipLevelVIPMonthly, time.Now().Add(-60*24*time.Hour), time.Now().Add(-10*24*time.Hour))
+	oldMembership.Status = financeModel.MembershipStatusActive
+
+	beforeRenew := time.Now()
+	updatedMembership := createTestMembership(userID, plan.ID, financeModel.MembershipLevelVIPMonthly, beforeRenew, beforeRenew.AddDate(0, 0, 30))
+	updatedMembership.Status = financeModel.MembershipStatusActive
+
+	mockRepo.On("GetMembership", ctx, userID).Return(oldMembership, nil)
+	mockRepo.On("GetPlan", ctx, oldMembership.PlanID).Return(plan, nil)
+	mockRepo.On("UpdateMembership", ctx, oldMembership.ID, mock.MatchedBy(func(u map[string]interface{}) bool {
+		endTime, ok := u["end_time"].(time.Time)
+		if !ok {
+			return false
+		}
+		lowerBound := beforeRenew.AddDate(0, 0, 29)
+		upperBound := beforeRenew.AddDate(0, 0, 31)
+		return u["status"] == financeModel.MembershipStatusActive && (endTime.After(lowerBound) || endTime.Equal(lowerBound)) && endTime.Before(upperBound)
 	})).Return(nil)
 	mockRepo.On("GetMembership", ctx, userID).Return(updatedMembership, nil)
 

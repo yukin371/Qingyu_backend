@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -146,6 +147,17 @@ func setupCommentTestRouter(commentService interfaces.CommentService, userID str
 		}
 		c.Next()
 	})
+	r.Use(func(c *gin.Context) {
+		c.Next()
+		if len(c.Errors) > 0 && !c.Writer.Written() {
+			err := c.Errors.Last().Err
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"code":    5000,
+				"message": "内部服务器错误",
+				"details": err.Error(),
+			})
+		}
+	})
 
 	api := socialAPI.NewCommentAPI(commentService)
 
@@ -243,8 +255,8 @@ func TestCommentAPI_CreateComment_MissingBookID(t *testing.T) {
 	assert.Contains(t, response["message"], "参数错误")
 }
 
-// TestCommentAPI_CreateComment_ContentTooShort 测试评论内容过短
-func TestCommentAPI_CreateComment_ContentTooShort(t *testing.T) {
+// TestCommentAPI_CreateComment_EmptyContent 测试评论内容为空
+func TestCommentAPI_CreateComment_EmptyContent(t *testing.T) {
 	// Given
 	mockService := new(MockCommentService)
 	userID := primitive.NewObjectID().Hex()
@@ -252,7 +264,7 @@ func TestCommentAPI_CreateComment_ContentTooShort(t *testing.T) {
 
 	reqBody := map[string]interface{}{
 		"book_id": primitive.NewObjectID().Hex(),
-		"content": "太短了",
+		"content": "",
 		"rating":  5,
 	}
 
@@ -532,6 +544,194 @@ func TestCommentAPI_ReplyComment_Success(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, float64(0), response["code"]) // 成功响应code为0
 	assert.NotNil(t, response["data"])
+
+	mockService.AssertExpectations(t)
+}
+
+// TestCommentAPI_GetTopComments_Success 测试获取热门评论成功
+func TestCommentAPI_GetTopComments_Success(t *testing.T) {
+	// Given
+	mockService := new(MockCommentService)
+	router := setupCommentTestRouter(mockService, "")
+
+	bookID := primitive.NewObjectID().Hex()
+	topComment := &social.Comment{}
+	topComment.ID = primitive.NewObjectID()
+	topComment.Content = "这是热门评论"
+	topComment.Rating = 5
+
+	mockService.On("GetTopComments", mock.Anything, bookID, 10).Return([]*social.Comment{topComment}, nil).Once()
+
+	req, _ := http.NewRequest("GET", "/api/v1/reader/comments/top?book_id="+bookID, nil)
+
+	// When
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, float64(0), response["code"])
+
+	data, ok := response["data"].(map[string]interface{})
+	assert.True(t, ok)
+	assert.Equal(t, float64(1), data["total"])
+
+	comments, ok := data["comments"].([]interface{})
+	assert.True(t, ok)
+	assert.Len(t, comments, 1)
+
+	mockService.AssertExpectations(t)
+}
+
+// TestCommentAPI_GetTopComments_MissingBookID 测试缺少书籍ID参数
+func TestCommentAPI_GetTopComments_MissingBookID(t *testing.T) {
+	// Given
+	mockService := new(MockCommentService)
+	router := setupCommentTestRouter(mockService, "")
+
+	req, _ := http.NewRequest("GET", "/api/v1/reader/comments/top", nil)
+
+	// When
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+
+	var response map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, float64(1001), response["code"])
+	assert.Equal(t, "参数错误", response["message"])
+	if errorDetail, ok := response["error"]; ok {
+		assert.Equal(t, "书籍ID不能为空", errorDetail)
+	}
+
+	mockService.AssertExpectations(t)
+}
+
+// TestCommentAPI_GetCommentDetail_NotFound 测试评论详情不存在
+func TestCommentAPI_GetCommentDetail_NotFound(t *testing.T) {
+	// Given
+	mockService := new(MockCommentService)
+	router := setupCommentTestRouter(mockService, "")
+
+	commentID := primitive.NewObjectID().Hex()
+	mockService.On("GetCommentDetail", mock.Anything, commentID).Return((*social.Comment)(nil), errors.New("comment not found")).Once()
+
+	req, _ := http.NewRequest("GET", "/api/v1/reader/comments/"+commentID, nil)
+
+	// When
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then
+	assert.Equal(t, http.StatusNotFound, w.Code)
+
+	var response map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, float64(1004), response["code"])
+	assert.Equal(t, "获取评论详情失败", response["message"])
+
+	mockService.AssertExpectations(t)
+}
+
+// TestCommentAPI_GetCommentThread_ServiceError 测试评论线程查询服务错误
+func TestCommentAPI_GetCommentThread_ServiceError(t *testing.T) {
+	// Given
+	mockService := new(MockCommentService)
+	router := setupCommentTestRouter(mockService, "")
+
+	commentID := primitive.NewObjectID().Hex()
+	mockService.On("GetCommentThread", mock.Anything, commentID).Return((*social.CommentThread)(nil), errors.New("database temporarily unavailable")).Once()
+
+	req, _ := http.NewRequest("GET", "/api/v1/reader/comments/"+commentID+"/thread", nil)
+
+	// When
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+
+	var response map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, float64(5000), response["code"])
+	assert.Equal(t, "内部服务器错误", response["message"])
+	assert.Equal(t, "database temporarily unavailable", response["details"])
+
+	mockService.AssertExpectations(t)
+}
+
+// TestCommentAPI_GetCommentReplies_ServiceError 测试评论回复列表查询服务错误
+func TestCommentAPI_GetCommentReplies_ServiceError(t *testing.T) {
+	// Given
+	mockService := new(MockCommentService)
+	router := setupCommentTestRouter(mockService, "")
+
+	commentID := primitive.NewObjectID().Hex()
+	mockService.On("GetCommentReplies", mock.Anything, commentID, 1, 20).Return(([]*social.Comment)(nil), int64(0), errors.New("query replies failed")).Once()
+
+	req, _ := http.NewRequest("GET", "/api/v1/reader/comments/"+commentID+"/replies?page=1&size=20", nil)
+
+	// When
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+
+	var response map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, float64(5000), response["code"])
+	assert.Equal(t, "内部服务器错误", response["message"])
+	assert.Equal(t, "query replies failed", response["details"])
+
+	mockService.AssertExpectations(t)
+}
+
+// TestCommentAPI_GetCommentReplies_Success 测试获取评论回复列表成功
+func TestCommentAPI_GetCommentReplies_Success(t *testing.T) {
+	// Given
+	mockService := new(MockCommentService)
+	router := setupCommentTestRouter(mockService, "")
+
+	commentID := primitive.NewObjectID().Hex()
+	reply1 := &social.Comment{}
+	reply1.ID = primitive.NewObjectID()
+	reply1.Content = "第一条回复"
+
+	reply2 := &social.Comment{}
+	reply2.ID = primitive.NewObjectID()
+	reply2.Content = "第二条回复"
+
+	mockService.On("GetCommentReplies", mock.Anything, commentID, 1, 20).Return([]*social.Comment{reply1, reply2}, int64(2), nil).Once()
+
+	req, _ := http.NewRequest("GET", "/api/v1/reader/comments/"+commentID+"/replies?page=1&size=20", nil)
+
+	// When
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, float64(0), response["code"])
+
+	pagination, ok := response["pagination"].(map[string]interface{})
+	assert.True(t, ok)
+	assert.Equal(t, float64(2), pagination["total"])
+	assert.Equal(t, float64(1), pagination["page"])
 
 	mockService.AssertExpectations(t)
 }

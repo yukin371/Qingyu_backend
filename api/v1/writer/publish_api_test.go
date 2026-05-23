@@ -15,6 +15,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"Qingyu_backend/api/v1/writer"
+	"Qingyu_backend/models/dto"
 	"Qingyu_backend/service/interfaces"
 )
 
@@ -271,6 +272,48 @@ func TestPublishApi_GetProjectPublicationStatus_RejectsInvalidProjectID(t *testi
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	assert.Contains(t, w.Body.String(), "项目ID格式不正确")
 	mockService.AssertNotCalled(t, "GetProjectPublicationStatus", mock.Anything, mock.Anything)
+}
+
+func TestPublishApi_GetProjectPublicationStatus_Success(t *testing.T) {
+	mockService := new(MockPublishService)
+	projectID := primitive.NewObjectID().Hex()
+	router := setupPublishTestRouter(mockService, "")
+
+	expectedStatus := &interfaces.PublicationStatus{
+		ProjectID:         projectID,
+		ProjectTitle:      "测试项目",
+		IsPublished:       true,
+		BookstoreID:       "bookstore-1",
+		BookstoreName:     "本地书城",
+		TotalChapters:     8,
+		PublishedChapters: 5,
+		Statistics: dto.PublicationStatistics{
+			TotalViews:     1234,
+			TotalLikes:     56,
+			TotalComments:  7,
+			TotalFavorites: 8,
+		},
+	}
+	mockService.On("GetProjectPublicationStatus", mock.Anything, projectID).Return(expectedStatus, nil).Once()
+
+	req, _ := http.NewRequest("GET", "/api/v1/writer/projects/"+projectID+"/publication-status", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	var response map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, float64(0), response["code"])
+
+	data := response["data"].(map[string]interface{})
+	assert.Equal(t, projectID, data["projectId"])
+	assert.Equal(t, "测试项目", data["projectTitle"])
+	assert.Equal(t, true, data["isPublished"])
+	assert.Equal(t, float64(8), data["totalChapters"])
+	assert.Equal(t, float64(5), data["publishedChapters"])
+
+	mockService.AssertExpectations(t)
 }
 
 func TestPublishApi_PublishDocument_UsesOptionalProjectIDAndUserID(t *testing.T) {

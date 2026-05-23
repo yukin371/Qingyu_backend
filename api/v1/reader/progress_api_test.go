@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -317,6 +318,7 @@ func setupProgressTestRouter(readerService interfaces.ReaderService, deviceRepo 
 		v1.GET("/stats", api.GetReadingStats)
 		v1.GET("/unfinished", api.GetUnfinishedBooks)
 		v1.GET("/finished", api.GetFinishedBooks)
+		v1.GET("/devices", api.GetDevicesProgress)
 	}
 
 	return r
@@ -749,6 +751,127 @@ func TestProgressAPI_GetFinishedBooks_Success(t *testing.T) {
 	assert.NotNil(t, response["data"])
 
 	mockService.AssertExpectations(t)
+}
+
+// TestProgressAPI_GetDevicesProgress_SuccessMapping 测试跨设备阅读记录成功映射
+func TestProgressAPI_GetDevicesProgress_SuccessMapping(t *testing.T) {
+	// Given
+	mockService := new(MockReaderService)
+	mockDeviceRepo := new(MockDeviceRepository)
+	userID := primitive.NewObjectID().Hex()
+	router := setupProgressTestRouter(mockService, mockDeviceRepo, userID)
+
+	firstDeviceID := primitive.NewObjectID()
+	secondDeviceID := primitive.NewObjectID()
+	firstLastSeen := time.Date(2026, 5, 23, 8, 30, 0, 0, time.UTC)
+	secondLastSeen := time.Date(2026, 5, 23, 9, 45, 0, 0, time.UTC)
+
+	mockDeviceRepo.On("GetByUserID", mock.Anything, userID).Return([]*models.Device{
+		{
+			ID:       firstDeviceID,
+			Name:     "Chrome on Windows",
+			Type:     "desktop",
+			LastSeen: firstLastSeen,
+		},
+		{
+			ID:       secondDeviceID,
+			Name:     "Safari on iOS",
+			Type:     "mobile",
+			LastSeen: secondLastSeen,
+		},
+	}, nil)
+
+	req, _ := http.NewRequest("GET", "/api/v1/reader/progress/devices", nil)
+
+	// When
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, float64(0), response["code"])
+
+	data := response["data"].(map[string]interface{})
+	assert.Equal(t, float64(2), data["count"])
+
+	devices := data["devices"].([]interface{})
+	if assert.Len(t, devices, 2) {
+		first := devices[0].(map[string]interface{})
+		assert.Equal(t, firstDeviceID.Hex(), first["deviceId"])
+		assert.Equal(t, "Chrome on Windows", first["deviceName"])
+		assert.Equal(t, "desktop", first["deviceType"])
+		assert.Equal(t, firstLastSeen.Format(time.RFC3339Nano), first["lastSyncAt"])
+
+		second := devices[1].(map[string]interface{})
+		assert.Equal(t, secondDeviceID.Hex(), second["deviceId"])
+		assert.Equal(t, "Safari on iOS", second["deviceName"])
+		assert.Equal(t, "mobile", second["deviceType"])
+		assert.Equal(t, secondLastSeen.Format(time.RFC3339Nano), second["lastSyncAt"])
+	}
+
+	mockDeviceRepo.AssertExpectations(t)
+}
+
+// TestProgressAPI_GetDevicesProgress_StableFallback 测试依赖异常或空仓储时稳定返回
+func TestProgressAPI_GetDevicesProgress_StableFallback(t *testing.T) {
+	t.Run("nil_repo_returns_empty_payload", func(t *testing.T) {
+		// Given
+		mockService := new(MockReaderService)
+		userID := primitive.NewObjectID().Hex()
+		router := setupProgressTestRouter(mockService, nil, userID)
+
+		req, _ := http.NewRequest("GET", "/api/v1/reader/progress/devices", nil)
+
+		// When
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		// Then
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		var response map[string]interface{}
+		err := json.NewDecoder(bytes.NewReader(w.Body.Bytes())).Decode(&response)
+		assert.NoError(t, err)
+		assert.Equal(t, float64(0), response["code"])
+
+		data := response["data"].(map[string]interface{})
+		assert.Equal(t, float64(0), data["count"])
+		assert.Empty(t, data["devices"])
+	})
+
+	t.Run("repo_error_returns_empty_payload", func(t *testing.T) {
+		// Given
+		mockService := new(MockReaderService)
+		mockDeviceRepo := new(MockDeviceRepository)
+		userID := primitive.NewObjectID().Hex()
+		router := setupProgressTestRouter(mockService, mockDeviceRepo, userID)
+
+		mockDeviceRepo.On("GetByUserID", mock.Anything, userID).Return(nil, errors.New("device repo unavailable"))
+
+		req, _ := http.NewRequest("GET", "/api/v1/reader/progress/devices", nil)
+
+		// When
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		// Then
+		assert.Equal(t, http.StatusOK, w.Code)
+
+		var response map[string]interface{}
+		err := json.NewDecoder(bytes.NewReader(w.Body.Bytes())).Decode(&response)
+		assert.NoError(t, err)
+		assert.Equal(t, float64(0), response["code"])
+
+		data := response["data"].(map[string]interface{})
+		assert.Equal(t, float64(0), data["count"])
+		assert.Empty(t, data["devices"])
+
+		mockDeviceRepo.AssertExpectations(t)
+	})
 }
 
 // TestProgressAPI_Unauthorized 测试未授权访问

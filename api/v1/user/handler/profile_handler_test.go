@@ -5,9 +5,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"net/textproto"
 	"testing"
 	"time"
 
@@ -19,10 +21,16 @@ import (
 	"Qingyu_backend/models/dto"
 	serviceInterfaces "Qingyu_backend/service/interfaces/base"
 	userServiceInterface "Qingyu_backend/service/interfaces/user"
+	sharedStorage "Qingyu_backend/service/shared/storage"
 )
 
 // MockUserService 模拟用户服务
 type MockUserService struct {
+	mock.Mock
+}
+
+// MockStorageService 模拟存储服务
+type MockStorageService struct {
 	mock.Mock
 }
 
@@ -181,12 +189,95 @@ func (m *MockUserService) ConfirmPasswordReset(ctx context.Context, req *userSer
 	return args.Get(0).(*userServiceInterface.ConfirmPasswordResetResponse), args.Error(1)
 }
 
+func (m *MockStorageService) Upload(ctx context.Context, req *sharedStorage.UploadRequest) (*sharedStorage.FileInfo, error) {
+	args := m.Called(ctx, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*sharedStorage.FileInfo), args.Error(1)
+}
+
+func (m *MockStorageService) Download(ctx context.Context, fileID string) (io.ReadCloser, error) {
+	args := m.Called(ctx, fileID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(io.ReadCloser), args.Error(1)
+}
+
+func (m *MockStorageService) Delete(ctx context.Context, fileID string) error {
+	args := m.Called(ctx, fileID)
+	return args.Error(0)
+}
+
+func (m *MockStorageService) GetFileInfo(ctx context.Context, fileID string) (*sharedStorage.FileInfo, error) {
+	args := m.Called(ctx, fileID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*sharedStorage.FileInfo), args.Error(1)
+}
+
+func (m *MockStorageService) GrantAccess(ctx context.Context, fileID, userID string) error {
+	args := m.Called(ctx, fileID, userID)
+	return args.Error(0)
+}
+
+func (m *MockStorageService) RevokeAccess(ctx context.Context, fileID, userID string) error {
+	args := m.Called(ctx, fileID, userID)
+	return args.Error(0)
+}
+
+func (m *MockStorageService) CheckAccess(ctx context.Context, fileID, userID string) (bool, error) {
+	args := m.Called(ctx, fileID, userID)
+	return args.Bool(0), args.Error(1)
+}
+
+func (m *MockStorageService) ListFiles(ctx context.Context, req *sharedStorage.ListFilesRequest) ([]*sharedStorage.FileInfo, error) {
+	args := m.Called(ctx, req)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*sharedStorage.FileInfo), args.Error(1)
+}
+
+func (m *MockStorageService) GetDownloadURL(ctx context.Context, fileID string, expiresIn time.Duration) (string, error) {
+	args := m.Called(ctx, fileID, expiresIn)
+	return args.String(0), args.Error(1)
+}
+
+func (m *MockStorageService) Health(ctx context.Context) error {
+	args := m.Called(ctx)
+	return args.Error(0)
+}
+
 // setupTestRouter 设置测试路由
 func setupTestRouter(userService userServiceInterface.UserService) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	router := gin.New()
 
 	handler := NewProfileHandler(userService)
+
+	// 添加认证中间件（简化版本，直接设置user_id）
+	router.Use(func(c *gin.Context) {
+		c.Set("user_id", "test-user-id")
+		c.Next()
+	})
+
+	router.GET("/profile", handler.GetProfile)
+	router.PUT("/profile", handler.UpdateProfile)
+	router.PUT("/password", handler.UpdatePassword)
+	router.POST("/avatar", handler.UploadAvatar)
+
+	return router
+}
+
+func setupTestRouterWithStorage(userService userServiceInterface.UserService, storageSvc sharedStorage.StorageService) *gin.Engine {
+	gin.SetMode(gin.TestMode)
+	router := gin.New()
+
+	handler := NewProfileHandler(userService)
+	handler.SetStorageService(storageSvc)
 
 	// 添加认证中间件（简化版本，直接设置user_id）
 	router.Use(func(c *gin.Context) {
@@ -357,26 +448,183 @@ func TestProfileHandler_UpdatePassword(t *testing.T) {
 }
 
 func TestProfileHandler_UploadAvatar(t *testing.T) {
-	mockService := new(MockUserService)
-	router := setupTestRouter(mockService)
+	t.Run("MissingFile", func(t *testing.T) {
+		mockUserService := new(MockUserService)
+		mockStorage := new(MockStorageService)
+		router := setupTestRouterWithStorage(mockUserService, mockStorage)
 
-	// 测试用例1：没有设置存储服务
-	t.Run("StorageServiceNotSet", func(t *testing.T) {
 		body := new(bytes.Buffer)
 		writer := multipart.NewWriter(body)
+		require.NoError(t, writer.Close())
 
-		part, _ := writer.CreateFormFile("avatar", "test.jpg")
-		part.Write([]byte("fake image data"))
-
-		writer.Close()
-
-		req, _ := http.NewRequest("POST", "/avatar", body)
+		req, err := http.NewRequest("POST", "/avatar", body)
+		require.NoError(t, err)
 		req.Header.Set("Content-Type", writer.FormDataContentType())
+
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		mockStorage.AssertNotCalled(t, "Upload", mock.Anything, mock.Anything)
+		mockUserService.AssertNotCalled(t, "UpdateUser", mock.Anything, mock.Anything)
+	})
+
+	t.Run("InvalidContentType", func(t *testing.T) {
+		mockUserService := new(MockUserService)
+		mockStorage := new(MockStorageService)
+		router := setupTestRouterWithStorage(mockUserService, mockStorage)
+
+		body, contentType := createMultipartFormDataWithContentType(
+			"avatar",
+			"avatar.pdf",
+			[]byte("fake image data"),
+			"application/pdf",
+		)
+
+		req, err := http.NewRequest("POST", "/avatar", body)
+		require.NoError(t, err)
+		req.Header.Set("Content-Type", contentType)
+
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusBadRequest, w.Code)
+		mockStorage.AssertNotCalled(t, "Upload", mock.Anything, mock.Anything)
+		mockUserService.AssertNotCalled(t, "UpdateUser", mock.Anything, mock.Anything)
+	})
+
+	t.Run("StorageUploadFailed", func(t *testing.T) {
+		mockUserService := new(MockUserService)
+		mockStorage := new(MockStorageService)
+		router := setupTestRouterWithStorage(mockUserService, mockStorage)
+
+		uploadErr := fmt.Errorf("storage upload failed")
+		mockStorage.On("Upload", mock.Anything, mock.MatchedBy(func(req *sharedStorage.UploadRequest) bool {
+			return req != nil &&
+				req.UserID == "test-user-id" &&
+				req.Filename == "avatar.jpg" &&
+				req.ContentType == "image/jpeg" &&
+				req.Category == "avatar" &&
+				req.IsPublic
+		})).Return((*sharedStorage.FileInfo)(nil), uploadErr).Once()
+
+		body, contentType := createMultipartFormDataWithContentType(
+			"avatar",
+			"avatar.jpg",
+			[]byte("fake image data"),
+			"image/jpeg",
+		)
+
+		req, err := http.NewRequest("POST", "/avatar", body)
+		require.NoError(t, err)
+		req.Header.Set("Content-Type", contentType)
+
 		w := httptest.NewRecorder()
 		router.ServeHTTP(w, req)
 
 		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		mockStorage.AssertExpectations(t)
+		mockUserService.AssertNotCalled(t, "UpdateUser", mock.Anything, mock.Anything)
 	})
+
+	t.Run("UserUpdateFailed", func(t *testing.T) {
+		mockUserService := new(MockUserService)
+		mockStorage := new(MockStorageService)
+		router := setupTestRouterWithStorage(mockUserService, mockStorage)
+
+		mockStorage.On("Upload", mock.Anything, mock.MatchedBy(func(req *sharedStorage.UploadRequest) bool {
+			return req != nil &&
+				req.UserID == "test-user-id" &&
+				req.Filename == "avatar.jpg" &&
+				req.ContentType == "image/jpeg" &&
+				req.Category == "avatar" &&
+				req.IsPublic
+		})).Return(&sharedStorage.FileInfo{
+			Path: "avatars/test-avatar.png",
+		}, nil).Once()
+
+		updateErr := fmt.Errorf("update user failed")
+		mockUserService.On("UpdateUser", mock.Anything, mock.MatchedBy(func(req *userServiceInterface.UpdateUserRequest) bool {
+			avatar, ok := req.Updates["avatar"].(string)
+			return ok && req.ID == "test-user-id" && avatar == "/cdn/avatars/test-avatar.png"
+		})).Return((*userServiceInterface.UpdateUserResponse)(nil), updateErr).Once()
+
+		body, contentType := createMultipartFormDataWithContentType(
+			"avatar",
+			"avatar.jpg",
+			[]byte("fake image data"),
+			"image/jpeg",
+		)
+
+		req, err := http.NewRequest("POST", "/avatar", body)
+		require.NoError(t, err)
+		req.Header.Set("Content-Type", contentType)
+
+		w := httptest.NewRecorder()
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusInternalServerError, w.Code)
+		mockStorage.AssertExpectations(t)
+		mockUserService.AssertExpectations(t)
+	})
+}
+
+func TestProfileHandler_UploadAvatar_WithStorage(t *testing.T) {
+	mockUserService := new(MockUserService)
+	mockStorage := new(MockStorageService)
+	router := setupTestRouterWithStorage(mockUserService, mockStorage)
+
+	mockStorage.On("Upload", mock.Anything, mock.MatchedBy(func(req *sharedStorage.UploadRequest) bool {
+		return req != nil &&
+			req.UserID == "test-user-id" &&
+			req.Filename == "avatar.jpg" &&
+			req.ContentType == "image/jpeg" &&
+			req.Category == "avatar" &&
+			req.IsPublic
+	})).Return(&sharedStorage.FileInfo{
+		Path: "https://cdn.example.com/avatars/test-avatar.png",
+	}, nil).Once()
+
+	mockUserService.On("UpdateUser", mock.Anything, mock.MatchedBy(func(req *userServiceInterface.UpdateUserRequest) bool {
+		avatar, ok := req.Updates["avatar"].(string)
+		return ok && req.ID == "test-user-id" && avatar == "https://cdn.example.com/avatars/test-avatar.png"
+	})).Return(&userServiceInterface.UpdateUserResponse{
+		User: createTestUserDTO("test-user-id"),
+	}, nil).Once()
+
+	body := new(bytes.Buffer)
+	writer := multipart.NewWriter(body)
+	partHeader := textproto.MIMEHeader{}
+	partHeader.Set("Content-Disposition", `form-data; name="avatar"; filename="avatar.jpg"`)
+	partHeader.Set("Content-Type", "image/jpeg")
+
+	part, err := writer.CreatePart(partHeader)
+	require.NoError(t, err)
+	_, err = part.Write([]byte("fake image data"))
+	require.NoError(t, err)
+	require.NoError(t, writer.Close())
+
+	req, err := http.NewRequest("POST", "/avatar", body)
+	require.NoError(t, err)
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	var response map[string]interface{}
+	err = json.Unmarshal(w.Body.Bytes(), &response)
+	require.NoError(t, err)
+	assert.Equal(t, float64(0), response["code"])
+
+	data, ok := response["data"].(map[string]interface{})
+	require.True(t, ok)
+	assert.Equal(t, "https://cdn.example.com/avatars/test-avatar.png", data["avatar_url"])
+	assert.Equal(t, "头像上传成功", data["message"])
+
+	mockStorage.AssertExpectations(t)
+	mockUserService.AssertExpectations(t)
 }
 
 // 创建Multipart表单文件的辅助函数
@@ -391,11 +639,22 @@ func createMultipartFormData(fieldName, filename string, content []byte) (*bytes
 	return body, writer.FormDataContentType()
 }
 
-// 示例：在设置完storage service后测试头像上传
-func TestProfileHandler_UploadAvatar_WithStorage(t *testing.T) {
-	// 这个测试需要mock StorageService
-	// 由于当前实现中StorageService是可选依赖，这个测试暂时跳过
-	t.Skip("需要实现StorageService的mock")
+func createMultipartFormDataWithContentType(fieldName, filename string, content []byte, contentType string) (*bytes.Buffer, string) {
+	body := new(bytes.Buffer)
+	writer := multipart.NewWriter(body)
+
+	headers := textproto.MIMEHeader{}
+	headers.Set("Content-Disposition", fmt.Sprintf(`form-data; name=%q; filename=%q`, fieldName, filename))
+	headers.Set("Content-Type", contentType)
+
+	part, err := writer.CreatePart(headers)
+	if err != nil {
+		_ = writer.Close()
+		return body, writer.FormDataContentType()
+	}
+	_, _ = part.Write(content)
+	_ = writer.Close()
+	return body, writer.FormDataContentType()
 }
 
 // 测试RFC3339日期格式解析

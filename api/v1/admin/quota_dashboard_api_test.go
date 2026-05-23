@@ -282,6 +282,31 @@ func TestQuotaDashboardAPIGetTrendReturnsEmptyListWhenRepositoryReturnsNoData(t 
 	require.Len(t, resp.Data, 0)
 }
 
+func TestQuotaDashboardAPIGetTrendDefaultsNonNumericDaysToSeven(t *testing.T) {
+	repo := &quotaDashboardRepoForAPITest{
+		trend: []aiModels.TrendPoint{{Date: "2026-05-21", Consumption: 18, Users: 2}},
+	}
+	router := setupQuotaDashboardAPITestRouter(repo, &quotaDashboardAlertRepoForAPITest{}, nil, nil)
+
+	req, _ := http.NewRequest("GET", "/statistics/trend?days=abc", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, 7, repo.lastTrendDays)
+
+	var resp struct {
+		Data []struct {
+			Date        string `json:"date"`
+			Consumption int    `json:"consumption"`
+		} `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	require.Len(t, resp.Data, 1)
+	assert.Equal(t, "2026-05-21", resp.Data[0].Date)
+	assert.Equal(t, 18, resp.Data[0].Consumption)
+}
+
 func TestQuotaDashboardAPIGetReconciliationSummaryNormalizesPagingAndGroupBy(t *testing.T) {
 	repo := &quotaDashboardRepoForAPITest{
 		consumption: &aiModels.QuotaConsumptionSummary{
@@ -335,6 +360,61 @@ func TestQuotaDashboardAPIGetReconciliationSummaryNormalizesPagingAndGroupBy(t *
 	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
 	assert.Equal(t, "user", resp.Data.GroupBy)
 	assert.Equal(t, 100, resp.Data.PageSize)
+}
+
+func TestQuotaDashboardAPIGetReconciliationSummaryDefaultsAndHandlesInvalidPagingQuery(t *testing.T) {
+	repo := &quotaDashboardRepoForAPITest{
+		consumption: &aiModels.QuotaConsumptionSummary{
+			GroupBy:      "user",
+			TotalGroups:  0,
+			TotalTokens:  0,
+			TotalRecords: 0,
+			Items:        []aiModels.QuotaConsumptionSummaryItem{},
+		},
+	}
+	reader := &quotaDashboardSummaryReaderForAPITest{
+		response: &pb.QuotaConsumptionSummaryResponse{
+			Success:      true,
+			TimeRange:    "day",
+			GroupBy:      "user",
+			Page:         1,
+			PageSize:     20,
+			TotalGroups:  0,
+			TotalTokens:  0,
+			TotalRecords: 0,
+			Items:        []*pb.QuotaConsumptionSummaryItem{},
+		},
+	}
+	router := setupQuotaDashboardAPITestRouter(repo, &quotaDashboardAlertRepoForAPITest{}, reader, nil)
+
+	req, _ := http.NewRequest("GET", "/statistics/reconciliation?page=abc&pageSize=xyz", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, "", repo.lastWorkflowType)
+	assert.Equal(t, "user", repo.lastGroupBy)
+	assert.Equal(t, 1, repo.lastPage)
+	assert.Equal(t, 20, repo.lastPageSize)
+	assert.Equal(t, "day", reader.lastTimeRange)
+	assert.Equal(t, "", reader.lastWorkflowType)
+	assert.Equal(t, "user", reader.lastGroupBy)
+	assert.EqualValues(t, 1, reader.lastPage)
+	assert.EqualValues(t, 20, reader.lastPageSize)
+
+	var resp struct {
+		Data struct {
+			TimeRange string `json:"timeRange"`
+			GroupBy   string `json:"groupBy"`
+			Page      int    `json:"page"`
+			PageSize  int    `json:"pageSize"`
+		} `json:"data"`
+	}
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, "day", resp.Data.TimeRange)
+	assert.Equal(t, "user", resp.Data.GroupBy)
+	assert.Equal(t, 1, resp.Data.Page)
+	assert.Equal(t, 20, resp.Data.PageSize)
 }
 
 func TestQuotaDashboardAPIGetDashboardReturnsInternalErrorWhenSummaryFails(t *testing.T) {

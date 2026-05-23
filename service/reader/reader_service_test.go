@@ -1228,6 +1228,45 @@ func TestReaderService_DeleteReadingProgress_NotFound(t *testing.T) {
 	mockProgressRepo.AssertExpectations(t)
 }
 
+// TestReaderService_UpdateBookStatus_InvalidStatus 测试更新书籍状态-无效状态值
+func TestReaderService_UpdateBookStatus_InvalidStatus(t *testing.T) {
+	// Arrange
+	service, mockProgressRepo, _, _, _, _, _ := setupReaderService()
+	ctx := context.Background()
+	userID := primitive.NewObjectID().Hex()
+	bookID := primitive.NewObjectID().Hex()
+
+	// Act
+	err := service.UpdateBookStatus(ctx, userID, bookID, "paused")
+
+	// Assert
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "无效的状态值")
+	mockProgressRepo.AssertNotCalled(t, "GetByUserAndBook", mock.Anything, mock.Anything, mock.Anything)
+	mockProgressRepo.AssertNotCalled(t, "Create", mock.Anything, mock.Anything)
+	mockProgressRepo.AssertNotCalled(t, "Update", mock.Anything, mock.Anything, mock.Anything)
+}
+
+// TestReaderService_BatchUpdateBookStatus_TooManyBooks 测试批量更新书籍状态-数量上限
+func TestReaderService_BatchUpdateBookStatus_TooManyBooks(t *testing.T) {
+	// Arrange
+	service, mockProgressRepo, _, _, _, _, _ := setupReaderService()
+	ctx := context.Background()
+	userID := primitive.NewObjectID().Hex()
+	bookIDs := make([]string, 51)
+	for i := range bookIDs {
+		bookIDs[i] = primitive.NewObjectID().Hex()
+	}
+
+	// Act
+	err := service.BatchUpdateBookStatus(ctx, userID, bookIDs, "reading")
+
+	// Assert
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "批量更新数量不能超过50个")
+	mockProgressRepo.AssertNotCalled(t, "GetByUserAndBook", mock.Anything, mock.Anything, mock.Anything)
+}
+
 // =========================
 // 标注相关测试
 // =========================

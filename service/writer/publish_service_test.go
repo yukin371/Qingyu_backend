@@ -12,6 +12,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type stubPublicationRepository struct {
@@ -239,6 +240,111 @@ func TestPublishEventFailureNoteIsNotDuplicated(t *testing.T) {
 	eventBus.AssertExpectations(t)
 }
 
+func TestUnpublishProjectRejectsNonOwner(t *testing.T) {
+	publicationRepo := &stubPublicationRepository{
+		findPublishedByProjectIDFn: func(ctx context.Context, projectID string) (*serviceInterfaces.PublicationRecord, error) {
+			return &serviceInterfaces.PublicationRecord{
+				ID:          "record-1",
+				Type:        "project",
+				ResourceID:  projectID,
+				BookstoreID: "local",
+				CreatedBy:   "author-2",
+				Status:      serviceInterfaces.PublicationStatusPublished,
+			}, nil
+		},
+	}
+	service := NewPublishService(nil, nil, publicationRepo, new(MockBookstoreClient), nil).(*PublishService)
+
+	err := service.UnpublishProject(context.Background(), "project-1", "author-1")
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "无权取消此项目的发布")
+}
+
+func TestUnpublishProjectReturnsErrorWhenBookstoreUnpublishFails(t *testing.T) {
+	updateCalls := 0
+	record := &serviceInterfaces.PublicationRecord{
+		ID:          "record-1",
+		Type:        "project",
+		ResourceID:  "project-1",
+		BookstoreID: "local",
+		CreatedBy:   "author-1",
+		Status:      serviceInterfaces.PublicationStatusPublished,
+	}
+	publicationRepo := &stubPublicationRepository{
+		findPublishedByProjectIDFn: func(ctx context.Context, projectID string) (*serviceInterfaces.PublicationRecord, error) {
+			return record, nil
+		},
+		updateFn: func(ctx context.Context, updated *serviceInterfaces.PublicationRecord) error {
+			updateCalls++
+			return nil
+		},
+	}
+	bookstoreClient := new(MockBookstoreClient)
+	bookstoreClient.On("UnpublishProject", mock.Anything, "project-1", "local").Return(errors.New("mock unpublish failure")).Once()
+	service := NewPublishService(nil, nil, publicationRepo, bookstoreClient, nil).(*PublishService)
+
+	err := service.UnpublishProject(context.Background(), "project-1", "author-1")
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "取消发布失败")
+	assert.Equal(t, 0, updateCalls)
+	assert.Equal(t, serviceInterfaces.PublicationStatusPublished, record.Status)
+	assert.Nil(t, record.UnpublishTime)
+	bookstoreClient.AssertExpectations(t)
+}
+
+func TestUnpublishProjectMarksRecordUnpublishedAndRecordsEventFailure(t *testing.T) {
+	now := time.Now()
+	updateCalls := 0
+	record := &serviceInterfaces.PublicationRecord{
+		ID:          "record-1",
+		Type:        "project",
+		ResourceID:  "project-1",
+		BookstoreID: "local",
+		CreatedBy:   "author-1",
+		Status:      serviceInterfaces.PublicationStatusPublished,
+		UpdatedAt:   now,
+	}
+	publicationRepo := &stubPublicationRepository{
+		findPublishedByProjectIDFn: func(ctx context.Context, projectID string) (*serviceInterfaces.PublicationRecord, error) {
+			assert.Equal(t, "project-1", projectID)
+			return record, nil
+		},
+		updateFn: func(ctx context.Context, updated *serviceInterfaces.PublicationRecord) error {
+			updateCalls++
+			if updateCalls == 1 {
+				assert.Equal(t, serviceInterfaces.PublicationStatusUnpublished, updated.Status)
+				assert.NotNil(t, updated.UnpublishTime)
+				assert.Equal(t, "author-1", updated.CreatedBy)
+				assert.Empty(t, updated.ReviewNote)
+			}
+			if updateCalls == 2 {
+				assert.Equal(t, serviceInterfaces.PublicationStatusUnpublished, updated.Status)
+				assert.NotNil(t, updated.UnpublishTime)
+				assert.Contains(t, updated.ReviewNote, "event dispatch failed for project.unpublished")
+			}
+			return nil
+		},
+	}
+	bookstoreClient := new(MockBookstoreClient)
+	bookstoreClient.On("UnpublishProject", mock.Anything, "project-1", "local").Return(nil).Once()
+	eventBus := new(stubEventBus)
+	eventBus.On("PublishAsync", mock.Anything, mock.Anything).Return(errors.New("mock event failure")).Once()
+
+	service := NewPublishService(nil, nil, publicationRepo, bookstoreClient, eventBus).(*PublishService)
+
+	err := service.UnpublishProject(context.Background(), "project-1", "author-1")
+
+	assert.NoError(t, err)
+	assert.Equal(t, 2, updateCalls)
+	assert.Equal(t, serviceInterfaces.PublicationStatusUnpublished, record.Status)
+	assert.NotNil(t, record.UnpublishTime)
+	assert.Contains(t, record.ReviewNote, "event dispatch failed for project.unpublished")
+	bookstoreClient.AssertExpectations(t)
+	eventBus.AssertExpectations(t)
+}
+
 func TestReviewPublicationRejectsPendingRecord(t *testing.T) {
 	record := &serviceInterfaces.PublicationRecord{
 		ID:         "record-1",
@@ -328,6 +434,105 @@ func TestReviewPublicationApprovesDocumentAndPublishes(t *testing.T) {
 	assert.Equal(t, "reviewer-1", updated.ReviewedBy)
 	assert.NotNil(t, updated.PublishTime)
 	bookstoreClient.AssertExpectations(t)
+}
+
+func TestPublishProjectRejectsAlreadyPublishedProject(t *testing.T) {
+	authorID := primitive.NewObjectID().Hex()
+	project := createTestProject(authorID, "测试项目")
+	projectID := project.ID.Hex()
+
+	publicationRepo := &stubPublicationRepository{
+		findPublishedByProjectIDFn: func(ctx context.Context, projectID string) (*serviceInterfaces.PublicationRecord, error) {
+			return &serviceInterfaces.PublicationRecord{
+				ID:         "record-1",
+				Type:       "project",
+				ResourceID: projectID,
+				Status:     serviceInterfaces.PublicationStatusPublished,
+			}, nil
+		},
+	}
+	projectRepo := &stubProjectRepository{
+		findByIDFn: func(ctx context.Context, id string) (*writerModel.Project, error) {
+			assert.Equal(t, projectID, id)
+			return project, nil
+		},
+	}
+	service := NewPublishService(projectRepo, nil, publicationRepo, nil, nil).(*PublishService)
+
+	_, err := service.PublishProject(context.Background(), projectID, authorID, &serviceInterfaces.PublishProjectRequest{
+		BookstoreID: "store-1",
+	})
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "项目已发布")
+}
+
+func TestBatchPublishDocumentsCollectsPartialFailures(t *testing.T) {
+	authorID := primitive.NewObjectID().Hex()
+	project := createTestProject(authorID, "测试项目")
+	projectID := project.ID.Hex()
+
+	doc1 := createTestDocument(projectID, "第1章")
+	doc1.ID = primitive.NewObjectID()
+	doc2 := createTestDocument(projectID, "第2章")
+	doc2.ID = primitive.NewObjectID()
+
+	docs := map[string]*writerModel.Document{
+		doc1.ID.Hex(): doc1,
+		doc2.ID.Hex(): doc2,
+	}
+
+	projectRepo := &stubProjectRepository{
+		findByIDFn: func(ctx context.Context, id string) (*writerModel.Project, error) {
+			assert.Equal(t, projectID, id)
+			return project, nil
+		},
+	}
+	documentRepo := &stubDocumentRepository{
+		findByIDFn: func(ctx context.Context, id string) (*writerModel.Document, error) {
+			doc, ok := docs[id]
+			if !ok {
+				return nil, errors.New("not found")
+			}
+			return doc, nil
+		},
+	}
+	publicationRepo := &stubPublicationRepository{
+		findByResourceIDFn: func(ctx context.Context, resourceID string) (*serviceInterfaces.PublicationRecord, error) {
+			if resourceID == doc2.ID.Hex() {
+				return &serviceInterfaces.PublicationRecord{
+					ID:         "published-doc-2",
+					Type:       "document",
+					ResourceID: resourceID,
+					Status:     serviceInterfaces.PublicationStatusPublished,
+				}, nil
+			}
+			return nil, nil
+		},
+		createFn: func(ctx context.Context, record *serviceInterfaces.PublicationRecord) error {
+			return nil
+		},
+	}
+
+	service := NewPublishService(projectRepo, documentRepo, publicationRepo, nil, nil).(*PublishService)
+
+	result, err := service.BatchPublishDocuments(context.Background(), projectID, authorID, &serviceInterfaces.BatchPublishDocumentsRequest{
+		DocumentIDs:   []string{doc1.ID.Hex(), doc2.ID.Hex()},
+		AutoNumbering: true,
+		StartNumber:   1,
+		IsFree:        true,
+	})
+
+	assert.NoError(t, err)
+	assert.Equal(t, 1, result.SuccessCount)
+	assert.Equal(t, 1, result.FailCount)
+	if assert.Len(t, result.Results, 2) {
+		assert.True(t, result.Results[0].Success)
+		assert.Equal(t, doc1.ID.Hex(), result.Results[0].DocumentID)
+		assert.False(t, result.Results[1].Success)
+		assert.Equal(t, doc2.ID.Hex(), result.Results[1].DocumentID)
+		assert.Contains(t, result.Results[1].Error, "文档已发布")
+	}
 }
 
 func TestGetPublicationRecordsNormalizesInvalidPagination(t *testing.T) {

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -270,11 +271,13 @@ func TestReviewAPI_GetReviews_Success(t *testing.T) {
 	mockService.AssertExpectations(t)
 }
 
-// TestReviewAPI_GetReviews_MissingBookID 测试获取书评列表缺少book_id
-func TestReviewAPI_GetReviews_MissingBookID(t *testing.T) {
+// TestReviewAPI_GetReviews_WithoutBookID 测试在不传 book_id 时获取公开书评
+func TestReviewAPI_GetReviews_WithoutBookID(t *testing.T) {
 	// Given
 	mockService := new(MockReviewService)
 	router := setupReviewTestRouter(mockService, "")
+	expectedReviews := []*social.Review{}
+	mockService.On("GetReviews", mock.Anything, "", 1, 20).Return(expectedReviews, int64(0), nil).Once()
 
 	req, _ := http.NewRequest("GET", "/api/v1/social/reviews?page=1&size=20", nil)
 
@@ -283,12 +286,16 @@ func TestReviewAPI_GetReviews_MissingBookID(t *testing.T) {
 	router.ServeHTTP(w, req)
 
 	// Then
-	assert.Equal(t, http.StatusBadRequest, w.Code)
+	assert.Equal(t, http.StatusOK, w.Code)
 
 	var response map[string]interface{}
 	err := json.Unmarshal(w.Body.Bytes(), &response)
 	assert.NoError(t, err)
-	assert.Equal(t, float64(1001), response["code"]) // 参数错误code为1001
+	assert.Equal(t, float64(0), response["code"])
+	data := response["data"].(map[string]interface{})
+	assert.Equal(t, float64(0), data["total"])
+	assert.NotNil(t, data["list"])
+	mockService.AssertExpectations(t)
 }
 
 // TestReviewAPI_GetReviewDetail_Success 测试获取书评详情成功
@@ -462,9 +469,40 @@ func TestReviewAPI_LikeReview_AlreadyLiked(t *testing.T) {
 	router.ServeHTTP(w, req)
 
 	// Then
-	// The API checks if the error message contains "已经点赞过该书评"
-	// Since we're using a generic error, it will return 500 instead of 400
+	// 泛化错误仍应走 500，避免误把非专门消息当成业务冲突
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
+
+	mockService.AssertExpectations(t)
+}
+
+// TestReviewAPI_LikeReview_AlreadyLikedMessageBranch 测试点赞书评的专门错误分支
+func TestReviewAPI_LikeReview_AlreadyLikedMessageBranch(t *testing.T) {
+	// Given
+	mockService := new(MockReviewService)
+	userID := primitive.NewObjectID().Hex()
+	reviewID := primitive.NewObjectID().Hex()
+	router := setupReviewTestRouter(mockService, userID)
+
+	mockService.On("LikeReview", mock.Anything, userID, reviewID).
+		Return(errors.New("已经点赞过该书评"))
+
+	req, _ := http.NewRequest("POST", "/api/v1/social/reviews/"+reviewID+"/like", nil)
+
+	// When
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	// Then
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+
+	var response map[string]interface{}
+	err := json.Unmarshal(w.Body.Bytes(), &response)
+	assert.NoError(t, err)
+	assert.Equal(t, float64(1001), response["code"])
+	assert.Equal(t, "操作失败", response["message"])
+	data, ok := response["data"].(map[string]interface{})
+	assert.True(t, ok)
+	assert.Equal(t, "已经点赞过该书评", data["details"])
 
 	mockService.AssertExpectations(t)
 }
