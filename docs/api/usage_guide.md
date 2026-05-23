@@ -1,5 +1,41 @@
 # API 使用指南
 
+## Page Role
+
+- current-reference
+- current-owner: `docs/api/`
+- current-bounded: 当前 API 使用参考页，负责认证、请求响应格式和通用调用规则
+
+## Recommended Read Path
+
+1. 先读本页。
+2. 再读 `API接口总览.md`。
+3. 需要专题接口细节时，再进入对应专题文档。
+
+## Boundary
+
+- 本页负责通用调用规则，不逐条重复业务接口定义。
+- 具体接口细节仍应回专题 API 文档。
+
+## Quick Section Map
+
+- 概述
+- 目录
+- 认证方式
+- 通用请求格式
+- 通用响应格式
+- 错误码说明
+- 分页参数说明
+- 请求示例
+
+## Quick Takeaways
+
+- 这是当前 API 通用使用手册。
+
+## Skip Guide
+
+- 只看某个业务接口：跳去专题文档。
+
 ## 概述
 
 本文档提供 Qingyu 后端 API 的使用指南，包括认证方式、请求/响应格式、错误处理、分页规范等内容。
@@ -511,7 +547,7 @@ def make_request_with_retry(url, max_retries=3):
 
 - [API 参考文档](./reference.md)
 - [Swagger 文档](https://api.example.com/swagger)
-- [错误处理指南](./error-handling.md)
+- [错误处理指南](../standards/error_handling_guide.md)
 - [模块 API 文档](./README.md)
 
 ---

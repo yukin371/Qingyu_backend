@@ -3,6 +3,37 @@
 > **版本**: v1.0  
 > **创建日期**: 2025-10-21
 
+## Page Role
+
+- current-reference
+- current-owner: `docs/api/`
+- current-bounded: 当前审核 API 参考文档，负责审核相关接口说明
+
+## Recommended Read Path
+
+1. 先读 `README.md`。
+2. 再读本页。
+
+## Boundary
+
+- 本页是审核接口参考，不是审核能力总 owner。
+- 当前审核相关架构与实现仍需结合其他 current owner 文档确认。
+
+## Quick Section Map
+
+- API概述
+- 内容审核
+- 敏感词管理
+- 违规记录
+
+## Quick Takeaways
+
+- 这是当前审核 API 参考文档。
+
+## Skip Guide
+
+- 只看总入口：回 `README.md`。
+
 ---
 
 ## 1. API概述

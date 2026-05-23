@@ -4,6 +4,42 @@
 > **创建时间**: 2025-11-05  
 > **适用版本**: LangChain 0.1.x → 1.0.0
 
+## Page Role
+
+- legacy-migration-guide
+- current-owner: `design/ai/`
+- current-bounded: LangChain 1.0 迁移指南，用于解释当时从 0.1.x 升级到 1.0.0 的迁移规则
+
+## Recommended Read Path
+
+1. 先读本文件。
+2. 再读 `LANGCHAIN_1.0_IMPLEMENTATION_SUMMARY.md` 和 `LANGCHAIN_1.0_REFACTOR_COMPLETE.md`。
+3. 需要当前 AI 总体主线时，回 `README.md`。
+
+## Boundary
+
+- 本文是特定版本迁移指南，不是当前 AI 设计总入口。
+- 它适用于当时的版本跨度，今天是否仍适用需要重新确认。
+- 当前技术选择仍应回主线文档与现行依赖。
+
+## Quick Section Map
+
+- 概述
+- 主要变更
+- Breaking Changes
+- 迁移步骤
+- 常见问题
+
+## Quick Takeaways
+
+- 这页回答“0.1.x 到 1.0.0 当时该怎么迁”。
+- 不直接回答今天该升到什么版本。
+
+## Skip Guide
+
+- 只看当前主线：跳过本文件。
+- 只做历史升级复盘：看主要变更和迁移步骤即可。
+
 ---
 
 ## 📋 概述
@@ -357,7 +393,7 @@ agent = create_agent(
 - [LangChain 1.0 官方文档](https://python.langchain.com/docs/)
 - [LangGraph 1.0 文档](https://langchain-ai.github.io/langgraph/)
 - [LangChain 1.0 发布说明](https://blog.langchain.dev/)
-- [项目架构设计文档](doc/design/ai/LangChain_1.0_架构设计.md)
+- [AI 模块设计入口](./README.md)
 
 ---
 

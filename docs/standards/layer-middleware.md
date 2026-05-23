@@ -697,7 +697,7 @@ var _ core.ConfigurableMiddleware = (*RateLimitMiddleware)(nil)
 
 ## 7. 参考资料
 
-- [Middleware 层快速参考](../internal/middleware/README.md)
+- [Middleware 层快速参考](../../internal/middleware/)
 - [Router 层设计说明](./layer-router.md)
 - [Config 层设计说明](./layer-config.md)
 

@@ -2,6 +2,42 @@
 
 ## 概述
 
+## Page Role
+
+- current-reference
+- current-owner: `docs/api/ai/`
+- current-bounded: 当前 AI API 参考文档，负责 AI 辅助写作接口说明
+
+## Recommended Read Path
+
+1. 先读 `README.md`。
+2. 需要架构边界时，再读 `../../architecture/ai_grpc_integration.md`。
+3. 最后读本页的详细接口定义。
+
+## Boundary
+
+- 本页是 AI API 参考手册，不是 AI 架构主入口。
+- 当前 AI API owner 仍在 `docs/api/ai/README.md`。
+
+## Quick Section Map
+
+- 概述
+- 基础信息
+- 通用响应格式
+- API 接口
+- 错误码说明
+- 使用示例
+- 配置说明
+- 最佳实践
+
+## Quick Takeaways
+
+- 这是当前 AI API 的通用参考文档。
+
+## Skip Guide
+
+- 只看 AI 架构边界：跳去 `../../architecture/ai_grpc_integration.md`。
+
 青羽智能写作系统提供了一套完整的AI辅助写作API，支持内容生成、文本分析、续写优化、大纲生成等功能。
 
 ## 基础信息

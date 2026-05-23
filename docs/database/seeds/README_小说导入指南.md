@@ -213,6 +213,6 @@ CNNovel125K 数据集使用 Apache-2.0 许可证，可商用。
 
 如有问题，请查看：
 - [数据集文档](https://huggingface.co/datasets/RyokoAI/CNNovel125K)
-- [项目测试文档](../../doc/testing/)
-- [架构设计文档](../../doc/architecture/)
+- [项目测试文档](../../testing/README.md)
+- [架构设计文档](../../design/README.md)
 

@@ -3,6 +3,43 @@
 > Version: 2026-04-07 refresh  
 > Positioning: current architecture baseline for onboarding and AI context building
 
+## Page Role
+
+- current-mainline
+- current-owner: `docs/architecture/`
+- current-bounded: 当前后端架构基线正文，负责分层边界、启动路径、请求链路与主要风险标注
+
+## Recommended Read Path
+
+1. 先读 `README.md`。
+2. 再读本页建立全局架构基线。
+3. 需要运行细节时继续读 `2026-04-07-backend-runtime-flow.md` 与 `2026-04-07-backend-module-map.md`。
+
+## Boundary
+
+- 本页是当前架构基线正文，不是长期计划、阶段实施报告或 API 详细手册。
+- 依赖约束请以 `dependency-rules.md` 为准，接口细节请回 `../api/README.md`。
+
+## Quick Section Map
+
+- What This Document Is
+- Current Layered Boundaries
+- Startup Initialization Flow
+- Request Handling Flow
+- Module Reality
+- Architecture Risk Markers
+- Companion Docs
+
+## Quick Takeaways
+
+- 如果只能读一篇当前架构正文，优先读本页。
+- 本页强调“代码当前真实长什么样”，不是理想态蓝图。
+
+## Skip Guide
+
+- 只看运行时启动与请求路径：跳去 `2026-04-07-backend-runtime-flow.md`。
+- 只看模块地图：跳去 `2026-04-07-backend-module-map.md`。
+
 ## 1. What This Document Is
 
 这份文档描述当前代码库的真实架构，不是理想态蓝图。  

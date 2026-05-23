@@ -4,6 +4,42 @@
 > **日期**: 2025-10-30  
 > **状态**: ✅ 生产就绪
 
+## Page Role
+
+- phase3-legacy-quickstart
+- current-owner: `design/ai/`
+- current-bounded: Phase3 gRPC 集成的快速上手页，只服务于当时的阶段交付与验证
+
+## Recommended Read Path
+
+1. 先读 `README.md`。
+2. 再读 `phase3/README.md`。
+3. 需要回看 gRPC 快速上手流程时，再读本文件。
+
+## Boundary
+
+- 这里是阶段性 quickstart，不是当前 AI 设计入口。
+- “生产就绪”仅表示当时阶段状态，不自动代表当前仓库事实。
+- 当前 owner 仍在总入口和主线文档。
+
+## Quick Section Map
+
+- 一分钟快速开始
+- 测试方式
+- 常见命令
+- 验证结果
+- 常见问题
+
+## Quick Takeaways
+
+- 这页最适合快速回看 Phase3 gRPC 的启动和测试命令。
+- 不适合单独作为 today 运行标准。
+
+## Skip Guide
+
+- 只看当前主线：跳过本文件。
+- 只看历史启动命令：直接看“一分钟快速开始”。
+
 ---
 
 ## 🎯 一分钟快速开始
@@ -428,8 +464,8 @@ Agent初始化失败: No module named 'agents'
 
 - **集成指南**: [GRPC_INTEGRATION_GUIDE.md](GRPC_INTEGRATION_GUIDE.md)
 - **快速开始**: [PHASE3_QUICKSTART.md](PHASE3_QUICKSTART.md)
-- **完成报告**: [doc/implementation/.../Phase3_gRPC集成完成报告.md](doc/implementation/00进度指导/Phase3_gRPC集成完成报告_2025-10-30.md)
-- **Proto定义**: [proto/ai_service.proto](proto/ai_service.proto)
+- **完成报告**: [PHASE3_GRPC_INTEGRATION_COMPLETE.md](./PHASE3_GRPC_INTEGRATION_COMPLETE.md)
+- **Proto定义**: [ai_service.proto](../../../../Qingyu-Ai-Service/proto/ai_service.proto)
 
 ---
 

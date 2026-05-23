@@ -31,7 +31,7 @@
 |------|------|------|
 | `doc/design/testing/自动化测试总体方案.md` | ✅ 已更新 | 完整方案文档 (~900行) |
 | `doc/design/testing/测试最佳实践指南.md` | ✅ 已创建 | 最佳实践文档 (~600行) |
-| `doc/design/testing/README_测试设计文档.md` | ✅ 已更新 | 测试文档索引 |
+| `doc/design/testing/README.md` | ✅ 已更新 | 测试文档索引 |
 | `doc/design/testing/测试自动化实施总结_2025-10-17.md` | ✅ 已创建 | 实施总结 (~400行) |
 | `doc/design/testing/测试自动化完成报告_2025-10-17.md` | ✅ 已创建 | 完成报告 (~650行) |
 
@@ -237,22 +237,22 @@ make test-coverage-check
 ## 🔗 快速链接
 
 ### 文档
-- 📖 [测试设计文档README](./doc/design/testing/README_测试设计文档.md)
-- 📖 [自动化测试总体方案](./doc/design/testing/自动化测试总体方案.md)
-- 📖 [测试最佳实践指南](./doc/design/testing/测试最佳实践指南.md)
-- 📖 [测试自动化实施总结](./doc/design/testing/测试自动化实施总结_2025-10-17.md)
-- 📖 [测试自动化完成报告](./doc/design/testing/测试自动化完成报告_2025-10-17.md)
+- 📖 [历史测试设计区总入口](../design/testing/README.md)
+- 📖 [自动化测试总体方案](../design/testing/自动化测试总体方案.md)
+- 📖 [测试最佳实践指南](../design/testing/测试最佳实践指南.md)
+- 📖 [测试自动化实施总结](../design/testing/测试自动化实施总结_2025-10-17.md)
+- 📖 [测试自动化完成报告](../design/testing/测试自动化完成报告_2025-10-17.md)
 
 ### 代码示例
-- 💻 [Service测试示例](./test/examples/service_test_example.go)
-- 💻 [Repository测试示例](./test/examples/repository_test_example.go)
-- 💻 [测试助手函数](./test/testutil/helpers.go)
-- 💻 [测试数据工厂](./test/fixtures/factory.go)
+- 💻 [Service测试示例](../../test/examples/service_test_example.go)
+- 💻 [Repository测试示例](../../test/examples/repository_test_example.go)
+- 💻 [测试助手函数](../../test/testutil/helpers.go)
+- 💻 [测试数据工厂](../../test/fixtures/factory.go)
 
 ### 配置
-- ⚙️ [GitHub Actions配置](./.github/workflows/test.yml)
-- ⚙️ [测试环境设置脚本](./scripts/setup-test-env.sh)
-- ⚙️ [Makefile测试命令](./Makefile)
+- ⚙️ [根仓测试工作流](../../../.github/workflows/tests.yml)
+- ⚙️ [测试运行指南](./README_测试运行指南.md)
+- ⚙️ [后端 Makefile](../../Makefile)
 
 ---
 

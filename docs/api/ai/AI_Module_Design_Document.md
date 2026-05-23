@@ -1,5 +1,41 @@
 # AI模块设计文档
 
+## Page Role
+
+- current-reference
+- current-owner: `docs/api/ai/`
+- current-bounded: 当前 AI 模块 API/模块设计参考文档，负责模块层面的接口与流程说明
+
+## Recommended Read Path
+
+1. 先读 `README.md`。
+2. 再读 `AI_API_Documentation.md`。
+3. 需要模块级设计说明时，再读本文件。
+
+## Boundary
+
+- 本页是 AI 模块设计参考，不是 AI 架构主入口。
+- 当前 AI API owner 仍在 `docs/api/ai/README.md`。
+
+## Quick Section Map
+
+- 概述
+- 系统架构设计
+- API接口设计
+- 数据模型设计
+- 业务流程设计
+- 错误处理设计
+- 性能优化设计
+- 安全设计
+
+## Quick Takeaways
+
+- 这是当前 AI 模块设计参考文档。
+
+## Skip Guide
+
+- 只看 API 入口：回 `README.md`。
+
 ## 1. 概述
 
 ### 1.1 项目背景

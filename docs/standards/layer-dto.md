@@ -777,10 +777,10 @@ type DocumentTreeItem struct {
 
 ## 8. 参考资料
 
-- [DTO 层快速参考](../models/dto/README.md)
+- [DTO 层快速参考](../../models/dto/)
 - [API 层设计说明](./layer-api.md)
 - [Model 层设计说明](./layer-models.md)
-- [类型转换器文档](../models/shared/types/README.md)
+- [类型转换器文档](../../models/shared/types/)
 
 ---
 

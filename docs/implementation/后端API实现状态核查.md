@@ -4,6 +4,42 @@
 **核查范围**: Phase 0-1 API实现状态  
 **核查人**: AI Assistant
 
+## Page Role
+
+- legacy-status-report
+- current-owner: `docs/implementation/`
+- current-bounded: 历史 API 实现状态核查报告，只记录 2025-10-27 那轮核查结论
+
+## Recommended Read Path
+
+1. 先读 `README.md`。
+2. 需要当前 API owner 时，再读 `../api/README.md`。
+3. 需要回看那轮核查结论时，再读本文件。
+
+## Boundary
+
+- 本页是阶段核查报告，不是当前 API 事实总览。
+- “90%” 等状态结论只对应当时核查时点。
+- 当前接口情况应回 `docs/api/` 与现行实现确认。
+
+## Quick Section Map
+
+- 核查摘要
+- Phase 0 API 状态
+- Phase 1 API 状态
+- 需要进一步验证的问题
+- 前端对接建议
+- 待修复问题清单
+- 总体评估
+
+## Quick Takeaways
+
+- 这是历史核查报告，不是 today API 实现面板。
+
+## Skip Guide
+
+- 只看当前 API：跳过本文件。
+
 ---
 
 ## 📊 核查摘要

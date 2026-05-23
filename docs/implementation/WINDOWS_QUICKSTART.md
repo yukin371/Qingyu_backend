@@ -2,6 +2,40 @@
 
 > **针对 Windows 用户的 Phase3 v2.0 实施指南**
 
+## Page Role
+
+- legacy-quickstart
+- current-owner: `docs/implementation/`
+- current-bounded: Phase3 历史 Windows 快速开始指南
+
+## Recommended Read Path
+
+1. 先读 `README.md`。
+2. 需要回看 Windows 环境下的 Phase3 历史启动步骤时，再读本文件。
+
+## Boundary
+
+- 本页是历史 quickstart，不是当前平台运行标准的唯一来源。
+- 其中工具版本和命令需结合 today 环境复核。
+
+## Quick Section Map
+
+- 已解决的问题
+- 快速开始（Windows）
+- 生成的文件位置
+- Windows 特定问题
+- 命令对照
+- 验证清单
+- 下一步
+
+## Quick Takeaways
+
+- 这是面向 Windows 的历史 Phase3 quickstart。
+
+## Skip Guide
+
+- 只看当前 owner：跳过本文件。
+
 ---
 
 ## ✅ 已解决的问题
@@ -275,11 +309,11 @@ pip install poetry
 
 ## 🎯 下一步
 
-完成上述步骤后，继续阅读 [`NEXT_STEPS_PHASE3.md`](NEXT_STEPS_PHASE3.md) 中的**步骤 5**（部署 Milvus）。
+完成上述步骤后，继续阅读 [`phase3_行动指南.md`](./phase3_行动指南.md) 中的 **步骤 5**（部署 Milvus）。
 
 ---
 
-**祝顺利！** 如有问题，请参考 [`scripts/README.md`](scripts/README.md) 获取更多帮助。
+**祝顺利！** 如有问题，请参考 [`scripts/README.md`](../../scripts/README.md) 获取更多帮助。
 
 ---
 

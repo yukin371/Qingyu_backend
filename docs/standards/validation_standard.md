@@ -601,7 +601,7 @@ func (h *Handler) Create(c *gin.Context) {
 
 - [验证器使用指南](../../pkg/validator/README.md)
 - [API架构文档](../architecture/api_architecture.md)
-- [错误处理规范](./error_handling_standard.md)
+- [错误处理规范](./error_handling_guide.md)
 
 ## 变更历史
 

@@ -3,6 +3,42 @@
 **完成时间**: 2025-10-30  
 **状态**: 🎉 全部完成，可投入使用
 
+## Page Role
+
+- phase3-legacy-report
+- current-owner: `design/ai/`
+- current-bounded: Phase3 gRPC 集成完成报告，记录当时交付物与验收结论
+
+## Recommended Read Path
+
+1. 先读 `phase3/README.md`。
+2. 需要回看交付物和验收结论时，再读本文件。
+3. 需要当前 AI 主线时，回 `README.md`。
+
+## Boundary
+
+- 这是完成报告，不是当前设计 owner。
+- “全部完成”是阶段性表述，不应直接外推为当前仓库状态。
+- 当前实现事实仍应由现行代码与主线文档共同确认。
+
+## Quick Section Map
+
+- 交付物清单
+- 已实现能力
+- 测试与验证
+- 使用说明
+- 后续事项
+
+## Quick Takeaways
+
+- 这页回答“Phase3 gRPC 当时交付了什么”。
+- 不回答“今天是否仍完全保持该状态”。
+
+## Skip Guide
+
+- 只关心当前设计：跳过本文件。
+- 只关心历史交付范围：看交付物清单和测试验证即可。
+
 ---
 
 ## 📦 交付物清单

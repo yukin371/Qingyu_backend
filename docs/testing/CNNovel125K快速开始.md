@@ -299,7 +299,7 @@ python scripts/import_novels.py --chapter-size 5000 --max-novels 100
 
 ## 📚 相关文档
 
-- [详细导入指南](../../migration/seeds/README_小说导入指南.md)
+- [详细导入指南](../../migration/seeds/README.md)
 - [测试报告模板](./CNNovel125K测试报告.md)
 - [API 文档](../api/)
 
@@ -309,7 +309,7 @@ python scripts/import_novels.py --chapter-size 5000 --max-novels 100
 
 如遇到问题：
 1. 查看 [常见问题](#常见问题)
-2. 查看详细的 [导入指南](../../migration/seeds/README_小说导入指南.md)
+2. 查看详细的 [导入指南](../../migration/seeds/README.md)
 3. 检查日志输出
 4. 提交 Issue
 

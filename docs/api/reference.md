@@ -673,5 +673,5 @@ API版本通过URL路径指定，当前版本为 `v1`。
 ## 更多信息
 
 - [使用指南](usage_guide.md)
-- [错误处理](error_handling.md)
-- [最佳实践](best_practices.md)
+- [错误处理](../standards/error_handling_guide.md)
+- [最佳实践](../standards/p0-error-prevention-and-best-practices.md)

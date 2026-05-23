@@ -4,6 +4,42 @@
 > **最后更新**: 2025-10-19  
 > **基础路径**: `/api/v1/writer`
 
+## Page Role
+
+- current-reference
+- current-owner: `docs/api/`
+- current-bounded: 当前写作端 API 参考手册，负责写作工作流相关接口的集中说明
+
+## Recommended Read Path
+
+1. 先读 `usage_guide.md`。
+2. 再读本页。
+3. 需要 AI 写作相关接口时，再看 `Phase3创作API文档.md` 与 `AI_WRITING_ASSISTANT_APIS.md`。
+
+## Boundary
+
+- 本页是写作端接口参考手册，不是 API 总入口。
+- 发现与当前实现冲突时，应以专题 API 与现行实现复核。
+
+## Quick Section Map
+
+- 目录
+- 认证说明
+- 项目管理API
+- 文档管理API
+- 版本控制API
+- 编辑器API
+- 内容审核API
+- 数据统计API
+
+## Quick Takeaways
+
+- 这是当前写作端 API 集中参考文档。
+
+## Skip Guide
+
+- 只看 AI 写作接口：跳去专题 AI API 文档。
+
 ---
 
 ## 📋 目录

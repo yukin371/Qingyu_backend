@@ -1,5 +1,54 @@
 # MongoDB应用层优化设计
 
+> 最后整理: 2026-05-22  
+> 当前状态: `legacy-live`
+
+本文档是 MongoDB 应用层治理的历史优化方案，适合回看 Repository 抽象、验证、事务、缓存和混合架构预留是如何一起被规划的；它不等同于当前数据库实现或优化状态的唯一 owner。
+
+## Page Role
+
+- 这里负责：MongoDB 应用层问题分析、Repository 优化、验证与事务设计、性能优化和混合架构预留的历史方案。
+- 不负责：当前系统已完成的优化项、现行数据库规范、当前监控面板或运行态指标事实。
+
+## Recommended Read Path
+
+1. [README.md](./README.md)
+2. [../../database/README.md](../../database/README.md)
+3. [../../standards/layer-repository.md](../../standards/layer-repository.md)
+4. [../../migration/README.md](../../migration/README.md)
+5. [../../implementation/infrastructure/README.md](../../implementation/infrastructure/README.md)
+
+## Boundary
+
+- 如果你要找“当前数据库与迁移专题入口”，优先看 [../../database/README.md](../../database/README.md) 和 [../../migration/README.md](../../migration/README.md)。
+- 如果你要找“现行 Repository 分层规范”，优先看 [../../standards/layer-repository.md](../../standards/layer-repository.md)。
+- 如果你要找“已经落地的基础设施实施记录”，优先看 [../../implementation/infrastructure/README.md](../../implementation/infrastructure/README.md)。
+- 本页更适合解释历史优化思路，不适合直接当成当前优化已完成列表。
+
+## Quick Section Map
+
+| 如果你想看 | 直接跳到 |
+|------|------|
+| 当前问题在哪里 | [2. 当前问题分析](#2-当前问题分析) |
+| Repository 优化方案 | [3. Repository模式优化设计](#3-repository模式优化设计) |
+| 应用层验证与完整性设计 | [4. 应用层验证设计](#4-应用层验证设计) |
+| 事务处理方案 | [5. 事务处理设计](#5-事务处理设计) |
+| 性能、缓存和混合架构预留 | [6. 性能优化设计](#6-性能优化设计) / [7. 混合架构预留设计](#7-混合架构预留设计) |
+| 监控、实施计划与风险控制 | [8. 监控和告警](#8-监控和告警) / [9. 实施计划](#9-实施计划) / [10. 风险控制](#10-风险控制) |
+
+## Quick Takeaways
+
+- 这篇最有价值的地方，是它把“架构不一致、验证分散、事务困难、性能优化”归并到同一条治理主线里。
+- 如果你只想知道 MongoDB 应用层为什么要抽象 Repository，优先看“2. 当前问题分析”“3. Repository模式优化设计”“5. 事务处理设计”。
+- “实施计划”和“风险控制”更偏阶段方案，不应直接视为当前交付状态。
+
+## Skip Guide
+
+- 只想知道“当前痛点是什么”：看 [2. 当前问题分析](#2-当前问题分析)。
+- 只想知道“Repository 优化怎么做”：看 [3. Repository模式优化设计](#3-repository模式优化设计)。
+- 只想知道“性能和缓存怎么考虑”：看 [6. 性能优化设计](#6-性能优化设计)。
+- 如果你当前只关心现行规范或落地状态，不必细读本页；优先回到 `docs/database/`、`docs/standards/`、`docs/implementation/`。
+
 ## 1. 概述
 
 本文档针对青羽写作平台使用MongoDB存储用户数据的潜在问题，提出基于Repository模式的应用层验证和事务处理优化方案，同时预留混合架构改进空间。Repository层作为数据访问的统一抽象，是解决当前架构不一致问题的关键。

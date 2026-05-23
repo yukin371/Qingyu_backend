@@ -3,6 +3,42 @@
 > Date: 2026-04-07  
 > Scope: `cmd/server/main.go -> core -> service/container -> router/enter.go`
 
+## Page Role
+
+- current-reference
+- current-owner: `docs/architecture/`
+- current-bounded: 当前运行时链路参考，负责启动序列、请求路径和容器装配快照说明
+
+## Recommended Read Path
+
+1. 先读 `README.md`。
+2. 再读 `system_architecture.md` 建立总图。
+3. 最后用本页确认 `main -> core -> container -> router` 的真实执行链。
+
+## Boundary
+
+- 本页只回答“服务如何启动、请求如何流转”，不替代模块地图和依赖规则。
+- 若需要详细模块分层，请回 `2026-04-07-backend-module-map.md`；若需要实施过程，请回 `../implementation/README.md`。
+
+## Quick Section Map
+
+- Entry Chain
+- Startup Mermaid
+- Request Path
+- Request Mermaid
+- Container Assembly Snapshot
+- Runtime Risks Worth Calling Out
+
+## Quick Takeaways
+
+- 本页是运行时事实参考，不是架构愿景稿。
+- 读完本页可以快速定位启动链、容器装配点和请求入口。
+
+## Skip Guide
+
+- 只看总体架构：回 `system_architecture.md`。
+- 只看分层规则：跳去 `dependency-rules.md`。
+
 本文档只描述“当前代码如何真实启动和处理请求”。
 
 ## 1. Entry Chain

@@ -4,6 +4,41 @@
 > **最后更新**: 2025-10-16  
 > **文档类型**: API使用手册
 
+## Page Role
+
+- current-reference
+- current-owner: `docs/api/reader/`
+- current-bounded: 当前阅读端 API 使用手册，负责阅读与书城相关接口的整体验证和调用参考
+
+## Recommended Read Path
+
+1. 先读 `reader/README.md` 和 `bookstore/README.md`。
+2. 再读本页。
+
+## Boundary
+
+- 本页是使用手册，不是总入口。
+- 当前阅读端 owner 仍在 `docs/api/reader/` 与 `docs/api/bookstore/`。
+
+## Quick Section Map
+
+- 文档概述
+- 目录
+- 基础信息
+- 书城系统 API
+- 阅读器系统 API
+- 认证和权限
+- 错误码说明
+- 最佳实践
+
+## Quick Takeaways
+
+- 这是当前阅读端整体验证手册。
+
+## Skip Guide
+
+- 只看阅读器专题：去 `reader/README.md`。
+
 ---
 
 ## 📚 文档概述

@@ -350,10 +350,10 @@ go vet ./...
 
 ## 📚 更多资源
 
-- [测试组织规范](../doc/testing/测试组织规范.md) - 详细的测试分类和最佳实践
-- [单元测试示例](./examples/service_test_example.go) - 单元测试示例代码
-- [集成测试示例](./integration/README.md) - 集成测试指南
-- [性能测试指南](./performance/README.md) - 性能基准测试
+- [测试标准入口](../standards/testing/README.md) - 测试分层规则与长期标准
+- [单元测试示例](../../test/examples/service_test_example.go) - Service 层测试示例代码
+- [集成测试使用指南](./集成测试使用指南.md) - 集成测试执行与排障入口
+- [测试资源总览](./测试资源总览.md) - 专题测试资源与数据集说明
 
 ---
 

@@ -4,9 +4,9 @@
 **类型**: 技术债务
 **状态**: ✅ 已解决（模型层 `_id` 统一已完成）
 **创建日期**: 2026-03-05
-**相关报告**: [Writer DTO 重构总结报告](../../reports/2026-03-05-dto-refactoring-summary.md#21-id-类型不一致问题高优先级)
+**相关报告**: [Writer DTO 重构总结报告](../../../../docs/backend/archive/reports/2026-03-05-dto-refactoring-summary.md#21-id-类型不一致问题高优先级)
 **审查日期**: 2026-03-05
-**审查报告**: [P0问题审查报告](../../reports/2026-03-05-p0-issue-audit-report.md)
+**审查报告**: [P0问题审查报告](../../../../docs/backend/archive/reports/2026-03-05-p0-issue-audit-report.md)
 
 ---
 
@@ -188,11 +188,11 @@ func ToUserID(id string) (primitive.ObjectID, error) {
 
 ### 相关Issue（联合处理）
 - [#002: Repository Create 方法未回设 ID](./002-create-method-id-not-set-bug.md) - ID类型统一后需要确保Create方法正确回设ID
-- [#011: 前后端数据类型不一致](./011-frontend-backend-data-type-inconsistency.md) - 包含ID类型转换边界不清晰问题
+- [#011: 前后端数据类型不一致](../011-frontend-backend-data-type-inconsistency.md) - 包含ID类型转换边界不清晰问题
 - [#013: 测试用户种子数据ID未设置问题](./013-test-user-seed-id-not-set.md) - 种子数据需要使用正确的ObjectID类型
 
 ### 架构相关
-- [#010: Repository 层业务逻辑渗透](./010-repository-layer-business-logic-permeation.md) - Repository层重构时需要确保ID类型正确
+- [#010: Repository 层业务逻辑渗透](../010-repository-layer-business-logic-permeation.md) - Repository层重构时需要确保ID类型正确
 
 ## 相关代码
 

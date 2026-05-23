@@ -1,5 +1,28 @@
 # 中间件设计文档
 
+> 最后整理: 2026-05-22  
+> 当前状态: `legacy-live / summary-draft`
+
+本文档是中间件历史设计树的早期汇总稿，用来快速浏览“当时有哪些中间件专题文档”。它仍可回看，但不再是目录标准入口。
+
+## Page Role
+
+- 这里负责：早期中间件设计清单与汇总视图。
+- 不负责：当前中间件接入 owner、现行分层规则、当前目录入口。
+
+## Recommended Read Path
+
+1. [README.md](./README.md)
+2. [../../middleware/README.md](../../middleware/README.md)
+3. [../../standards/layer-middleware.md](../../standards/layer-middleware.md)
+4. [../../architecture/README.md](../../architecture/README.md)
+
+## Boundary
+
+- 当前目录标准入口是 [README.md](./README.md)，不是本文件。
+- 如果你要找“现在中间件怎么接、怎么排障”，优先看 [../../middleware/README.md](../../middleware/README.md)。
+- 如果你要找“中间件层必须遵守什么规则”，优先看 [../../standards/layer-middleware.md](../../standards/layer-middleware.md)。
+
 > **最后更新**: 2025-10-21  
 > **文档数量**: 10份  
 > **覆盖率**: 93% (14/15个文件)
@@ -139,13 +162,13 @@
 
 ### 架构文档
 
-- [青羽平台模块化架构设计v2.1](../青羽平台模块化架构设计v2.1.md)
+- [青羽平台模块化架构设计入口](../core/README.md)
 - [Repository层与Service层架构重新设计](../core/architecture/Repository层与Service层架构重新设计.md)
 
 ### 审计报告
 
-- [中间件设计文档审计报告](../审计报告/中间件设计文档审计报告_2025-10-21.md)
-- [中间件实现与设计对照表](../审计报告/中间件实现与设计对照表_2025-10-21.md)
+- [中间件设计风险审查](../../review/2026-04-07-backend-architecture-risk-review.md)
+- [中间件实现与设计对照入口](../../implementation/infrastructure/MIDDLEWARE_INTEGRATION.md)
 
 ### 实现代码
 

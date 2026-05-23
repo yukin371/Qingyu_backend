@@ -406,9 +406,9 @@ db.booklists.createIndex({ name: "text", description: "text" })
 
 ## 相关文档
 
-- [项目结构总结](../docs/项目结构总结.md)
-- [阅读统计模块](READING_STATS_IMPLEMENTATION.md)
-- [P0 中间件集成](MIDDLEWARE_INTEGRATION.md)
+- [项目结构总结](../README.md)
+- [阅读统计模块](../03-reading/READING_STATS_IMPLEMENTATION.md)
+- [P0 中间件集成](../infrastructure/MIDDLEWARE_INTEGRATION.md)
 
 ## 提交历史
 

@@ -1,8 +1,36 @@
-# 数据库迁移工具使用文档
+# 数据库专题入口
 
-> **创建日期**: 2025-10-12  
-> **版本**: v1.0  
-> **状态**: ✅ 已完成
+> 最后整理: 2026-05-22  
+> 当前状态: `current-bounded`
+
+本目录是 `Qingyu_backend/docs` 下的数据库专题入口，负责汇总数据库迁移、索引规范、数据模型修复说明与脚本样例。
+
+## Recommended Read Path
+
+1. [README.md](./README.md)
+2. [data-model-fixes-migration-guide.md](./data-model-fixes-migration-guide.md)
+3. [examples/README.md](./examples/README.md)
+4. [../migration/README.md](../migration/README.md)
+5. [../standards/layer-models.md](../standards/layer-models.md)
+
+## Current Materials
+
+- [data-model-fixes-migration-guide.md](./data-model-fixes-migration-guide.md): 数据模型修复与迁移说明
+- [examples/README.md](./examples/README.md): 数据库迁移示例入口
+- `indexes.yaml`: 索引规范文件
+- `create_search_indexes.js`: 搜索索引脚本
+- `manager.go`: 迁移管理器源码镜像
+
+## Boundary
+
+- 本目录：数据库专题、迁移工具说明、索引与样例
+- [../migration/README.md](../migration/README.md): 文档层迁移与兼容退出说明
+- [../architecture/README.md](../architecture/README.md): 当前架构与运行时事实
+- [../standards/README.md](../standards/README.md): 长期规则与分层标准
+
+## Legacy Detailed Manual
+
+以下内容保留为较早一版“数据库迁移工具使用文档”长文正文，可继续回看，但本页顶部现在才是目录入口层。
 
 ---
 
@@ -655,8 +683,8 @@ mongodump --db qingyu --out /backup
 
 - [MongoDB官方文档](https://www.mongodb.com/docs/)
 - [Go MongoDB Driver](https://pkg.go.dev/go.mongodb.org/mongo-driver/mongo)
-- [项目配置文档](../config/README.md)
-- [下一步规划](../doc/implementation/01基础设施/下一步规划.md)
+- [项目配置文档](../standards/layer-config.md)
+- [下一步规划](../implementation/README.md)
 
 ---
 

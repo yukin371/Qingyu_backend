@@ -4,6 +4,41 @@
 > **实施阶段**: Phase 1-5 (核心架构)  
 > **完成进度**: 50% (5/10 Phases)
 
+## Page Role
+
+- legacy-summary
+- current-owner: `design/ai/`
+- current-bounded: LangChain 1.0 重构阶段性实施总结，只记录当时 Phase 1-5 的结论
+
+## Recommended Read Path
+
+1. 先读 `LangChain1.0迁移指南_2025-1105.md`。
+2. 再读本文件看阶段性完成情况。
+3. 若要看更后续结论，再读 `LANGCHAIN_1.0_REFACTOR_COMPLETE.md`。
+
+## Boundary
+
+- 本页是阶段性总结，不是当前 LangChain 方案 owner。
+- “50%” 仅对应当时的分期，不应直接映射到 today 进度。
+- 当前技术路线仍需结合主线文档与现行代码确认。
+
+## Quick Section Map
+
+- 执行摘要
+- 已完成的 Phases
+- 架构变化
+- 下一阶段
+
+## Quick Takeaways
+
+- 这页主要回答“LangChain 1.0 重构前半段做到了哪”。
+- 它不是最终态说明。
+
+## Skip Guide
+
+- 只关心最终完成态：跳去 `LANGCHAIN_1.0_REFACTOR_COMPLETE.md`。
+- 只关心迁移规则：先看迁移指南。
+
 ---
 
 ## 🎉 执行摘要
@@ -190,7 +225,7 @@ parsed = provider.parse_output(raw_output)  # 始终返回 AIMessage
 #### 示例和文档
 15. `src/core/agents/examples/__init__.py`
 16. `src/core/agents/examples/creative_agent_unified.py`
-17. `MIGRATION_GUIDE_v1.0.md`
+17. `LangChain1.0迁移指南_2025-1105.md`
 18. `LANGCHAIN_1.0_REFACTOR_PROGRESS.md`
 19. `LANGCHAIN_1.0_IMPLEMENTATION_SUMMARY.md`
 
@@ -378,7 +413,7 @@ result = await agent.execute({"input": "任务"})
 
 ### 迁移现有 Agent
 
-参考 `MIGRATION_GUIDE_v1.0.md` 和 `src/core/agents/examples/creative_agent_unified.py`
+参考 `LangChain1.0迁移指南_2025-1105.md` 和 `src/core/agents/examples/creative_agent_unified.py`
 
 ---
 
@@ -403,7 +438,7 @@ result = await agent.execute({"input": "任务"})
 
 ## 🔗 相关资源
 
-- [迁移指南](MIGRATION_GUIDE_v1.0.md)
+- [迁移指南](./LangChain1.0迁移指南_2025-1105.md)
 - [进度报告](LANGCHAIN_1.0_REFACTOR_PROGRESS.md)
 - [LangChain 1.0 文档](https://python.langchain.com/docs/)
 - [LangGraph 文档](https://langchain-ai.github.io/langgraph/)

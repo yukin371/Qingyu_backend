@@ -1,5 +1,26 @@
 # CI/CD 配置指南
 
+> 最后整理: 2026-05-22  
+> 当前状态: `current-bounded`
+
+本文档负责解释 CI/CD 流水线结构、工作流职责和常见配置项，适合需要理解 GitHub Actions 或排查流水线的人阅读。
+
+## Page Role
+
+- 这里负责：CI/CD 工作流说明、环境配置、常见问题与本地检查建议。
+- 不负责：历史阶段改进记录，也不替代真实 workflow 文件。
+
+## Recommended Read Path
+
+1. [README_当前指南.md](./README_当前指南.md)
+2. [CI_CD问题解决方案.md](./CI_CD问题解决方案.md)
+3. [快速参考-CI_CD命令.md](./快速参考-CI_CD命令.md)
+
+## Boundary
+
+- 当前文档负责说明口径，真实 workflow 仍以仓库 `.github/workflows/` 下文件为准。
+- 纯历史背景材料请回到 [README_历史记录.md](./README_历史记录.md)。
+
 ## 概述
 
 本项目使用 GitHub Actions 实现完整的 CI/CD 流程，包括代码检查、测试、构建、发布等环节。
@@ -462,7 +483,7 @@ Settings → Branches → Branch protection rules → Require status checks
 - [golangci-lint 文档](https://golangci-lint.run/)
 - [gosec 文档](https://github.com/securego/gosec)
 - [Docker Buildx 文档](https://docs.docker.com/buildx/working-with-buildx/)
-- [项目测试文档](../testing/测试指南.md)
+- [项目测试文档](../testing/README.md)
 
 ## 更新历史
 

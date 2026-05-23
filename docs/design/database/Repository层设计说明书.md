@@ -1,5 +1,54 @@
 # Repository层设计说明书
 
+> 最后整理: 2026-05-22  
+> 当前状态: `legacy-live`
+
+本文档是 Repository 层的历史详细设计稿，适合回看当时如何定义统一数据访问接口、MongoDB 实现方式和事务能力；它不等同于当前代码中 Repository 层实现或规范的唯一 owner。
+
+## Page Role
+
+- 这里负责：Repository 层架构、接口设计、MongoDB 实现、事务、性能与测试的历史方案说明。
+- 不负责：当前代码目录结构事实、现行 Repository 分层规则、当前实施完成度结论。
+
+## Recommended Read Path
+
+1. [README.md](./README.md)
+2. [../../database/README.md](../../database/README.md)
+3. [../../standards/layer-repository.md](../../standards/layer-repository.md)
+4. [../../standards/layer-models.md](../../standards/layer-models.md)
+5. [../../implementation/infrastructure/README.md](../../implementation/infrastructure/README.md)
+
+## Boundary
+
+- 如果你要找“当前数据库专题 owner”，优先看 [../../database/README.md](../../database/README.md)。
+- 如果你要找“现行 Repository 分层规则”，优先看 [../../standards/layer-repository.md](../../standards/layer-repository.md)。
+- 如果你要找“已落地的基础设施实施记录”，优先看 [../../implementation/infrastructure/README.md](../../implementation/infrastructure/README.md)。
+- 本页更适合解释设计意图和分层思路，不适合作为当前代码事实的唯一依据。
+
+## Quick Section Map
+
+| 如果你想看 | 直接跳到 |
+|------|------|
+| Repository 层目标、技术栈和整体定位 | [1. 概述](#1-概述) |
+| 架构与设计模式 | [2. 架构设计](#2-架构设计) |
+| 各类接口设计 | [3. 接口设计](#3-接口设计) |
+| MongoDB 实现细节 | [4. MongoDB实现](#4-mongodb实现) |
+| 数据模型与事务 | [5. 数据模型设计](#5-数据模型设计) / [6. 事务管理](#6-事务管理) |
+| 性能、错误、测试、部署、扩展 | [7. 性能优化](#7-性能优化) / [8. 错误处理](#8-错误处理) / [9. 测试策略](#9-测试策略) / [10. 部署和维护](#10-部署和维护) / [11. 未来扩展](#11-未来扩展) |
+
+## Quick Takeaways
+
+- 这篇最值得先看的，是它把“接口抽象、MongoDB 实现、事务管理、测试部署”放进同一个 Repository 视角里。
+- 如果你只想理解 Repository 层如何分层，优先看“2. 架构设计”“3. 接口设计”“4. MongoDB实现”。
+- 后半段的测试、部署和未来扩展更偏完整方案陈述，不一定对应当前实际落地状态。
+
+## Skip Guide
+
+- 只想知道“Repository 层为什么这样分”：看 [2. 架构设计](#2-架构设计)。
+- 只想知道“接口长什么样”：看 [3. 接口设计](#3-接口设计)。
+- 只想知道“MongoDB 这一层怎么实现”：看 [4. MongoDB实现](#4-mongodb实现)。
+- 如果你当前只关心现行规范或代码事实，请优先回到 `docs/standards/`、`docs/database/` 和 `docs/implementation/`。
+
 ## 1. 概述
 
 ### 1.1 文档目的

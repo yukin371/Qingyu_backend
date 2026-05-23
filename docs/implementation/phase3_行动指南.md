@@ -3,6 +3,43 @@
 > **当前状态**: 阶段1（基础架构）100% 代码完成，Docker验证待完成  
 > **最后更新**: 2025-10-28 18:45
 
+## Page Role
+
+- legacy-action-guide
+- current-owner: `docs/implementation/`
+- current-bounded: Phase3 历史行动指南，只记录当时的下一步执行建议
+
+## Recommended Read Path
+
+1. 先读 `README.md`。
+2. 需要当前 AI 主线时，再读 `../architecture/ai_grpc_integration.md` 和 `../api/ai/README.md`。
+3. 需要回看 Phase3 当时的行动建议时，再读本文件。
+
+## Boundary
+
+- 本页是历史行动指南，不是当前实施 owner。
+- “100% 代码完成”等表述只对应当时时点。
+- 当前状态应结合现行实现与 current owner 文档确认。
+
+## Quick Section Map
+
+- 已完成
+- 实施报告
+- 立即执行
+- 后续阶段
+- 常见问题
+- 参考文档
+- 检查清单
+- 建议
+
+## Quick Takeaways
+
+- 这是 Phase3 历史行动指南，不是 today 执行面板。
+
+## Skip Guide
+
+- 只看当前 AI 主线：跳过本文件。
+
 ---
 
 ## ✅ 已完成
@@ -36,9 +73,9 @@
 ## 📚 实施报告
 
 ### 阶段 1 实施报告
-- [阶段 1.3：最终总结报告](./00进度指导/阶段1.3最终总结_2025-10-28.md) ✨ **最新**
-- [阶段 1.3：Milvus 向量数据库部署实施报告](./00进度指导/阶段1.3_Milvus向量数据库部署实施报告_2025-10-28.md)
-- [阶段 1.3：Docker部署问题说明](./00进度指导/Docker部署问题说明_2025-10-28.md)
+- [阶段 1.3：完成态专题入口](../design/ai/phase3/README.md) ✨ **最新入口**
+- [阶段 1.3：Milvus 向量数据库部署设计](../design/ai/phase3/03.系统部署架构设计.md)
+- [阶段 1.3：当前 Python AI 服务启动说明](../../../Qingyu-Ai-Service/README.md)
 - [gRPC 通信验证成功报告](./GRPC_SUCCESS_REPORT.md)
 - [配置整合总结](./CONFIGURATION_INTEGRATION_SUMMARY.md)
 
@@ -73,7 +110,11 @@ make proto
 
 **Windows (PowerShell)**:
 ```powershell
-.\scripts\generate_proto_all.ps1
+make proto
+
+# 或按需分别执行
+.\scripts\generate_proto_go.ps1
+.\scripts\generate_proto_python.ps1
 ```
 
 **手动生成（所有平台）**:
@@ -82,11 +123,11 @@ make proto
 protoc --go_out=. --go-grpc_out=. \
   --go_opt=paths=source_relative \
   --go-grpc_opt=paths=source_relative \
-  -I python_ai_service/proto \
-  python_ai_service/proto/ai_service.proto
+  -I Qingyu-Ai-Service/proto \
+  Qingyu-Ai-Service/proto/ai_service.proto
 
 # Python 代码
-cd python_ai_service
+cd Qingyu-Ai-Service
 python -m grpc_tools.protoc -I proto \
   --python_out=src/grpc_server \
   --grpc_python_out=src/grpc_server \
@@ -96,15 +137,15 @@ python -m grpc_tools.protoc -I proto \
 **预期输出**:
 - `pkg/grpc/pb/ai_service.pb.go`
 - `pkg/grpc/pb/ai_service_grpc.pb.go`
-- `python_ai_service/src/grpc_server/ai_service_pb2.py`
-- `python_ai_service/src/grpc_server/ai_service_pb2_grpc.py`
+- `Qingyu-Ai-Service/src/grpc_server/ai_service_pb2.py`
+- `Qingyu-Ai-Service/src/grpc_server/ai_service_pb2_grpc.py`
 
 ---
 
 ### 步骤 2: 安装 Python 依赖
 
 ```bash
-cd python_ai_service
+cd Qingyu-Ai-Service
 
 # 使用 Poetry（推荐）
 poetry install
@@ -119,7 +160,7 @@ pip install -r requirements.txt
 
 ```bash
 # 复制示例配置
-cp python_ai_service/.env.example python_ai_service/.env
+cp Qingyu-Ai-Service/.env.example Qingyu-Ai-Service/.env
 
 # 编辑配置，至少需要设置：
 # - OPENAI_API_KEY 或 ANTHROPIC_API_KEY
@@ -152,7 +193,7 @@ EMBEDDING_MODEL_DEVICE=cpu  # 或 cuda
 
 ```bash
 # 进入 Python 服务目录
-cd python_ai_service
+cd Qingyu-Ai-Service
 
 # 运行测试
 poetry run pytest tests/ -v
@@ -161,9 +202,9 @@ poetry run pytest tests/ -v
 poetry run uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
 
 # 或使用快速启动脚本
-./run.sh  # Linux/macOS
+./scripts/start_local_service.ps1  # PowerShell
 # 或
-run.bat   # Windows
+scripts\\start_local_service.bat   # Windows
 ```
 
 **验证**:
@@ -335,7 +376,7 @@ SERVICE_PORT=8001
 pip install grpcio-tools
 
 # 手动生成 Python 代码
-cd python_ai_service
+cd Qingyu-Ai-Service
 python -m grpc_tools.protoc -I proto \
   --python_out=src/grpc_server \
   --grpc_python_out=src/grpc_server \
@@ -347,16 +388,16 @@ python -m grpc_tools.protoc -I proto \
 ## 📚 参考文档
 
 ### 实施相关
-- [实施计划](doc/implementation/00进度指导/计划/phase3-v2-0-implementation.plan.md)
-- [实施进度](doc/implementation/00进度指导/计划/Phase3-v2.0/实施进度_2025-10-28.md)
-- [实施总结](python_ai_service/IMPLEMENTATION_SUMMARY.md)
+- [实施计划](../../../docs/plans/2026-01-24-ai-service-migration-implementation.md)
+- [实施进度](../../../Qingyu-Ai-Service/PHASE3_GRPC_README.md)
+- [实施总结](../../../Qingyu-Ai-Service/LANGCHAIN_1.0_IMPLEMENTATION_SUMMARY.md)
 
 ### 设计相关
-- [v2.0 升级指南](doc/design/ai/phase3/README_v2.0升级指南.md)
-- [A2A 流水线设计](doc/design/ai/phase3/05.A2A创作流水线Agent设计_v2.0_智能协作生态.md)
+- [v2.0 升级指南](../design/ai/README.md)
+- [A2A 流水线设计](../design/ai/phase3/05.A2A创作流水线Agent设计_v2.0_智能协作生态.md)
 
 ### Python 项目
-- [Python 服务 README](python_ai_service/README.md)
+- [Python 服务 README](../../../Qingyu-Ai-Service/README.md)
 
 ---
 

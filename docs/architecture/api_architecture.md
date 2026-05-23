@@ -1,5 +1,44 @@
 # Qingyu Backend API架构
 
+## Page Role
+
+- current-reference
+- current-owner: `docs/architecture/`
+- current-bounded: 从架构视角描述 API 分层、统一响应、权限矩阵与版本控制的当前参考文档
+
+## Recommended Read Path
+
+1. 先读 `README.md`。
+2. 再读 `system_architecture.md` 了解总分层。
+3. 需要接口入口和专题 API 时，再去 `../api/README.md`。
+
+## Boundary
+
+- 本页从架构视角解释 API 设计，不是 `docs/api/` 的总入口，也不维护每个接口的最新联调细节。
+- 详细接口说明、Swagger 导出物和专题 API owner 仍在 `../api/README.md`。
+
+## Quick Section Map
+
+- 概述
+- API 设计原则
+- 统一响应格式
+- Admin 模块 API
+- Writer 模块 API
+- 认证中间件
+- API 权限矩阵
+- API 版本控制
+- 错误码定义
+
+## Quick Takeaways
+
+- 本页适合回答“API 层按什么原则组织”，不适合当作业务接口检索首页。
+- 需要逐端点联调时，应回到 `docs/api/` 主树。
+
+## Skip Guide
+
+- 只看 API 总入口：跳去 `../api/README.md`。
+- 只看依赖规则：跳去 `dependency-rules.md`。
+
 ## 1. 概述
 
 本文档描述 Qingyu Backend 系统中的所有 API 端点，按模块分类，包含权限要求和使用说明。

@@ -500,4 +500,4 @@ func TestUserService_GetUser(t *testing.T) {
 - [testify GitHub](https://github.com/stretchr/testify)
 - [assert文档](https://pkg.go.dev/github.com/stretchr/testify/assert)
 - [mock文档](https://pkg.go.dev/github.com/stretchr/testify/mock)
-- [测试模板集](../../06_快速参考/测试模板集.md)
+- [测试模板集](../01_测试层级规范/README.md)

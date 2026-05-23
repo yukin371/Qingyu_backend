@@ -1,5 +1,41 @@
 # AI API 设计文档
 
+## Page Role
+
+- current-reference
+- current-owner: `docs/api/ai/`
+- current-bounded: 当前 AI API 设计参考文档，负责 AI 接口设计与系统层面说明
+
+## Recommended Read Path
+
+1. 先读 `README.md`。
+2. 再读 `AI_API_Documentation.md`。
+3. 需要设计层说明时，再读本文件。
+
+## Boundary
+
+- 本页是 API 设计参考，不是 AI 架构主入口。
+- 当前 AI API owner 仍在 `docs/api/ai/README.md`。
+
+## Quick Section Map
+
+- 概述
+- 系统架构设计
+- API 接口设计
+- 数据模型设计
+- 配置管理设计
+- 错误处理设计
+- 性能优化设计
+- 安全设计
+
+## Quick Takeaways
+
+- 这是当前 AI API 设计参考文档。
+
+## Skip Guide
+
+- 只看 API 入口：回 `README.md`。
+
 ## 1. 概述
 
 ### 1.1 项目背景

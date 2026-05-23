@@ -1,5 +1,39 @@
 # MCP 浏览器服务器使用说明
 
+## Page Role
+
+- legacy-runbook
+- current-owner: `docs/implementation/infrastructure/`
+- current-bounded: MCP 浏览器服务器历史使用说明，只记录当时的配置与使用方式
+
+## Recommended Read Path
+
+1. 先读 `README.md`。
+2. 需要回看浏览器 MCP 配置方式时，再读本文件。
+
+## Boundary
+
+- 本页是历史使用说明，不是当前工具 owner。
+- 服务器名、包名和使用方式都带明显时间性。
+
+## Quick Section Map
+
+- 已配置的浏览器 MCP 服务器
+- 使用方法
+- 使用示例
+- 配置文件位置
+- 故障排除
+- 更多资源
+- 注意事项
+
+## Quick Takeaways
+
+- 这是浏览器 MCP 的历史使用说明。
+
+## Skip Guide
+
+- 只看当前工具 owner：跳过本文件。
+
 ## 📋 已配置的浏览器 MCP 服务器
 
 ### 1. Puppeteer MCP Server

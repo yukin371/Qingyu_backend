@@ -6,6 +6,45 @@
 
 ---
 
+## Page Role
+
+- legacy-report
+- current-owner: `design/ai/agent/`
+- current-bounded: LangGraph 架构调整这次文档修订的历史总结页
+
+## Recommended Read Path
+
+1. 先读 `07.Python_AI_Agent系统架构设计.md`。
+2. 再读 `LangGraph迁移与开发指南.md`。
+3. 需要回看 2025-10-21 那轮文档调整时，再读本文件。
+
+## Boundary
+
+- 本页是更新总结，不是当前主线正文。
+- 它更适合回答“当时哪些文档被改了、为什么改”，不适合作为 today owner。
+- 当前主线边界仍以 `07/08/09` 为准。
+
+## Quick Section Map
+
+- 更新概述
+- 更新文档清单
+- 更新目标达成情况
+- 文档统计
+- 架构演进历程
+- 技术亮点
+- 后续工作建议
+- 相关文档索引
+
+## Quick Takeaways
+
+- 这页用于回看 LangGraph 架构调整时的文档修订影响面。
+- 它不是当前 Agent 主线设计的一部分。
+
+## Skip Guide
+
+- 只看当前主线：跳过本文件。
+- 只看那轮调整影响：看更新文档清单和架构演进历程即可。
+
 ## 📋 更新概述
 
 基于[Agent框架技术选型对比](./Agent框架技术选型对比.md)的最终结论，青羽平台确定采用**LangGraph**作为AI Agent引擎（而非纯LangChain）。本次更新系统性地调整了所有相关设计文档，以反映这一架构决策。
@@ -293,7 +332,7 @@
 
 ### 核心架构文档
 
-1. [Agent框架技术选型对比](./Agent框架技术选型对比_LangChain_vs_Others.md) - **决策依据**
+1. [Agent框架技术选型对比](./Agent框架技术选型对比.md) - **决策依据**
 2. [Python AI Agent系统架构设计](./07.Python_AI_Agent系统架构设计.md) - **架构设计**（v1.1，已更新）
 3. [LangGraph迁移与开发指南](./LangGraph迁移与开发指南.md) - **实施指南**（新增）
 4. [AI模块README](../README.md) - **文档导航**（已更新）
@@ -306,9 +345,9 @@
 
 ### 历史文档
 
-8. [数据更新说明_2025-10-21](./数据更新说明_2025-10-21.md) - GitHub星数确认过程
-9. [框架选型文档更新摘要_2025-10-21](./框架选型文档更新摘要_2025-10-21.md) - 技术选型更新过程
-10. [LangGraph推荐更新说明_2025-10-21](./LangGraph推荐更新说明_2025-10-21.md) - 最终推荐说明
+8. [Agent框架技术选型对比](./Agent框架技术选型对比.md) - GitHub星数与技术取舍汇总
+9. [Python AI Agent系统架构设计](./07.Python_AI_Agent系统架构设计.md) - 技术选型落地后的主线设计
+10. [LangGraph迁移与开发指南](./LangGraph迁移与开发指南.md) - 迁移与实战说明
 
 ---
 

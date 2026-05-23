@@ -1,5 +1,36 @@
 ## ✅ 浏览器 MCP 服务器配置完成！
 
+## Page Role
+
+- legacy-report
+- current-owner: `docs/implementation/infrastructure/`
+- current-bounded: 浏览器 MCP 配置完成确认页，只记录当时的配置结果
+
+## Recommended Read Path
+
+1. 先读 `README.md`。
+2. 需要回看配置完成状态时，再读本文件。
+
+## Boundary
+
+- 本页是历史完成确认，不是当前工具 owner。
+- 当前配置状态应结合 today 环境确认。
+
+## Quick Section Map
+
+- 已配置的服务器
+- 配置文件位置
+- 下一步操作
+- 使用示例
+
+## Quick Takeaways
+
+- 这是浏览器 MCP 配置的历史完成确认页。
+
+## Skip Guide
+
+- 只看当前配置 owner：跳过本文件。
+
 ### 📋 已配置的服务器
 
 | 服务器名 | 包名 | 功能 |

@@ -190,7 +190,7 @@ parsed = provider.parse_output(raw_output)  # 始终返回 AIMessage
 #### 示例和文档
 15. `src/core/agents/examples/__init__.py`
 16. `src/core/agents/examples/creative_agent_unified.py`
-17. `MIGRATION_GUIDE_v1.0.md`
+17. `docs/plans/2025-01-15-langchain-upgrade-design.md`
 18. `LANGCHAIN_1.0_REFACTOR_PROGRESS.md`
 19. `LANGCHAIN_1.0_IMPLEMENTATION_SUMMARY.md`
 
@@ -378,7 +378,7 @@ result = await agent.execute({"input": "任务"})
 
 ### 迁移现有 Agent
 
-参考 `MIGRATION_GUIDE_v1.0.md` 和 `src/core/agents/examples/creative_agent_unified.py`
+参考 `docs/plans/2025-01-15-langchain-upgrade-design.md` 和 `src/core/agents/examples/creative_agent_unified.py`
 
 ---
 
@@ -403,7 +403,7 @@ result = await agent.execute({"input": "任务"})
 
 ## 🔗 相关资源
 
-- [迁移指南](MIGRATION_GUIDE_v1.0.md)
+- [迁移指南](../../../docs/plans/2025-01-15-langchain-upgrade-design.md)
 - [进度报告](LANGCHAIN_1.0_REFACTOR_PROGRESS.md)
 - [LangChain 1.0 文档](https://python.langchain.com/docs/)
 - [LangGraph 文档](https://langchain-ai.github.io/langgraph/)

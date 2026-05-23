@@ -4,9 +4,9 @@
 **类型**: 兼容性问题
 **状态**: ⚠️ 部分存在问题（后端枚举源已开始收敛）
 **创建日期**: 2026-03-05
-**来源报告**: [前后端数据类型对比报告](../reports/archived/2026-03-04-frontend-backend-data-type-comparison-report.md)、[类型转换兼容性分析](../reports/archived/type-conversion-compatibility-analysis.md)
+**来源报告**: [前后端数据类型对比报告](../../../docs/backend/archive/reports/archived/2026-03-04-frontend-backend-data-type-comparison-report.md)、[类型转换兼容性分析](../../../docs/backend/archive/reports/archived/type-conversion-compatibility-analysis.md)
 **审查日期**: 2026-03-05
-**审查报告**: [P0问题审查报告](../reports/2026-03-05-p0-issue-audit-report.md)
+**审查报告**: [P0问题审查报告](../../../docs/backend/archive/reports/2026-03-05-p0-issue-audit-report.md)
 
 ---
 
@@ -409,8 +409,8 @@ API Layer (string) → Service Layer (string) → Repository Layer (ObjectID)
 
 | 文档 | 说明 |
 |------|------|
-| [前后端数据类型对比报告](../reports/archived/2026-03-04-frontend-backend-data-type-comparison-report.md) | 完整类型对比分析 |
-| [类型转换兼容性分析](../reports/archived/type-conversion-compatibility-analysis.md) | 详细问题清单 |
+| [前后端数据类型对比报告](../../../docs/backend/archive/reports/archived/2026-03-04-frontend-backend-data-type-comparison-report.md) | 完整类型对比分析 |
+| [类型转换兼容性分析](../../../docs/backend/archive/reports/archived/type-conversion-compatibility-analysis.md) | 详细问题清单 |
 | [后端 Book 模型](../../models/bookstore/book.go) | 后端数据模型 |
 | [前端 Bookstore 类型](../../../Qingyu_fronted/src/types/bookstore.ts) | 前端类型定义 |
 
@@ -419,11 +419,11 @@ API Layer (string) → Service Layer (string) → Repository Layer (ObjectID)
 ## 相关Issue
 
 ### 依赖Issue（必须先处理）
-- [#001: 统一模型层 ID 字段类型](./001-unify-id-type-in-models.md) - ⚠️ ID类型统一后，ID类型转换边界会更清晰
+- [#001: 统一模型层 ID 字段类型](./archived/001-unify-id-type-in-models.md) - ⚠️ ID类型统一后，ID类型转换边界会更清晰
 
 ### 相关Issue（联合处理）
 - [#005: API 标准化问题](./005-api-standardization-issues.md) - 响应码和分页格式需要与数据类型协调
-- [#006: 数据库索引问题](./006-database-index-issues.md) - 索引优化与数据类型相关
+- [#006: 数据库索引问题](./archived/006-database-index-issues.md) - 索引优化与数据类型相关
 
 ### 建议拆分
 本Issue规模较大（28个问题），建议按类型拆分为：

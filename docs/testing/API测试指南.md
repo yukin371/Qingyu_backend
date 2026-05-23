@@ -1,5 +1,28 @@
 # API测试指南
 
+> 最后整理: 2026-05-22  
+> 当前状态: `current-bounded`
+
+本文档是 API 测试长文说明，适合已经明确要做 HTTP API 验证、想看分层测试思路和示例代码时使用。
+
+## Page Role
+
+- 这里负责：API 测试层次、Handler 测试示例、API 相关执行方式。
+- 不负责：完整集成测试流程、gRPC 联调、测试数据初始化。
+
+## Recommended Read Path
+
+1. [README_当前指南.md](./README_当前指南.md)
+2. [Postman测试指南.md](./Postman测试指南.md)
+3. [集成测试使用指南.md](./集成测试使用指南.md)
+4. [../standards/testing/README.md](../standards/testing/README.md)
+
+## Boundary
+
+- 如果你还没准备测试环境或测试数据，先看 [集成测试使用指南.md](./集成测试使用指南.md) 和 [本地测试数据初始化指南.md](./本地测试数据初始化指南.md)。
+- 如果你要做 gRPC 或 AI 服务联调，优先看 [gRPC集成测试指南.md](./gRPC集成测试指南.md)。
+- 如果你要确认测试规范而不是执行步骤，回到 [../standards/testing/README.md](../standards/testing/README.md)。
+
 **版本**: 1.0  
 **更新日期**: 2025-10-17  
 **维护者**: 青羽后端团队
@@ -651,9 +674,9 @@ jobs:
 
 ## 📚 相关资源
 
-- [测试组织规范](./测试组织规范.md)
+- [测试标准入口](../standards/testing/README.md)
 - [Postman测试指南](./Postman测试指南.md)
-- [性能测试规范](./性能测试规范.md)
+- [测试最佳实践](./测试最佳实践.md)
 - [共享服务测试文档](./共享服务测试文档.md)
 
 ---

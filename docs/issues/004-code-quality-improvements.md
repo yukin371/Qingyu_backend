@@ -4,7 +4,7 @@
 **类型**: 代码质量
 **状态**: 待处理
 **创建日期**: 2026-03-05
-**相关报告**: [Writer DTO 重构总结报告](../reports/2026-03-05-dto-refactoring-summary.md#24-代码质量问题)
+**相关报告**: [Writer DTO 重构总结报告](../../../docs/backend/archive/reports/2026-03-05-dto-refactoring-summary.md#24-代码质量问题)
 
 ---
 
@@ -304,8 +304,8 @@ grep -r "require.NoError" --include="*_test.go" -A1 | grep "assert\|found\." | g
 ## 相关Issue
 
 ### 相关Issue（联合处理）
-- [#001: 统一模型层 ID 字段类型](./001-unify-id-type-in-models.md) - ID类型重构时需要注意代码质量
-- [#002: Repository Create 方法未回设 ID](./002-create-method-id-not-set-bug.md) - Create方法修复需要保证代码质量
+- [#001: 统一模型层 ID 字段类型](./archived/001-unify-id-type-in-models.md) - ID类型重构时需要注意代码质量
+- [#002: Repository Create 方法未回设 ID](./archived/002-create-method-id-not-set-bug.md) - Create方法修复需要保证代码质量
 - [#003: 测试基础设施改进](./003-test-infrastructure-improvements.md) - 测试Nil检查是代码质量的一部分
 
 ### 独立问题

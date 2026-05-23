@@ -4,6 +4,42 @@
 > **创建日期**: 2025-10-09
 > **最后更新**: 2025-10-09
 
+## Page Role
+
+- current-reference
+- current-owner: `docs/api/reader/`
+- current-bounded: 当前阅读器系统 API 详细参考文档，负责阅读器侧接口说明
+
+## Recommended Read Path
+
+1. 先读 `README.md`。
+2. 再读 `../usage_guide.md`。
+3. 最后读本页的详细接口定义。
+
+## Boundary
+
+- 本页是阅读器系统详细参考手册，不是 API 总入口。
+- 当前阅读器专题 owner 仍在 `docs/api/reader/README.md`。
+
+## Quick Section Map
+
+- 目录
+- 概述
+- 通用说明
+- 章节API
+- 阅读进度API
+- 标注API
+- 阅读设置API
+- 错误码说明
+
+## Quick Takeaways
+
+- 这是当前阅读器系统 API 的详细参考文档。
+
+## Skip Guide
+
+- 只看阅读器入口：回 `README.md`。
+
 ## 📋 目录
 
 - [1. 概述](#1-概述)

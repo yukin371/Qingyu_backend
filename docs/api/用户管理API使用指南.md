@@ -4,6 +4,41 @@
 **最后更新**: 2025-10-13  
 **基础路径**: `/api/v1`
 
+## Page Role
+
+- current-reference
+- current-owner: `docs/api/system/`
+- current-bounded: 当前用户管理 API 使用手册，负责用户系统接口的调用参考与示例
+
+## Recommended Read Path
+
+1. 先读 `system/README.md`。
+2. 再读本页。
+
+## Boundary
+
+- 本页是用户管理接口使用手册，不是 API 总入口。
+- 当前用户系统 owner 仍在 `docs/api/system/`。
+
+## Quick Section Map
+
+- 目录
+- 认证说明
+- 公开接口
+- 需要认证的接口
+- 管理员接口
+- 错误码说明
+- 数据结构
+- 前端集成示例
+
+## Quick Takeaways
+
+- 这是当前用户管理 API 使用手册。
+
+## Skip Guide
+
+- 只看总入口：回 `README.md`。
+
 ---
 
 ## 📋 目录

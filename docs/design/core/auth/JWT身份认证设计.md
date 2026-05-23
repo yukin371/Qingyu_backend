@@ -1,5 +1,52 @@
 # JWT身份认证设计文档
 
+> 最后整理: 2026-05-22  
+> 当前状态: `legacy-live`
+
+本文档是 JWT 身份认证的历史详细设计稿，适合回看认证分层、Token 结构、安全策略与接口设计在早期如何被组织；它不等同于当前鉴权实现与规则的唯一 owner。
+
+## Page Role
+
+- 这里负责：JWT 认证的历史架构、数据模型、Token 设计、认证中间件与安全策略说明。
+- 不负责：当前代码里的真实鉴权实现、当前接口 owner、现行安全规范结论。
+
+## Recommended Read Path
+
+1. [README.md](./README.md)
+2. [../../../architecture/README.md](../../../architecture/README.md)
+3. [../../../api/README.md](../../../api/README.md)
+4. [../../../standards/README.md](../../../standards/README.md)
+
+## Boundary
+
+- 如果你要找“当前鉴权边界 owner”，优先看 [../../../architecture/README.md](../../../architecture/README.md)。
+- 如果你要找“当前接口入口”，优先看 [../../../api/README.md](../../../api/README.md)。
+- 如果你要找“当前规则和标准”，优先看 [../../../standards/README.md](../../../standards/README.md)。
+- 本页更适合解释 JWT 认证当时如何设计，不适合作为当前实现事实的唯一依据。
+
+## Quick Section Map
+
+| 如果你想看 | 直接跳到 |
+|------|------|
+| 项目背景与认证目标 | 见“1. 概述” |
+| 技术架构与分层 | 见“2. 技术架构” |
+| 用户模型、JWT 配置与 Token 结构 | 见“3. 数据模型设计”“4. JWT Token设计” |
+| 业务逻辑、API 与数据库设计 | 见“5. 业务逻辑设计”“6. API接口设计”“7. 数据库设计” |
+| 安全、中间件、配置、错误与测试 | 见“8. 安全性设计”到“12. 测试策略” |
+| 部署、扩展与最佳实践 | 见“13. 部署和监控”到“15. 最佳实践” |
+
+## Quick Takeaways
+
+- 这篇最有价值的地方，是它把 JWT 认证的模型、接口、中间件和安全策略放成了一条完整链路。
+- 如果你只关心认证系统边界，优先看“2. 技术架构”“4. JWT Token设计”“6. API接口设计”“8. 安全性设计”。
+- 文中的库选择、结构示例和接口设计属于历史方案口径，不应直接视为当前代码事实。
+
+## Skip Guide
+
+- 只想知道“JWT 认证整体怎么分层”：看“2. 技术架构”“5. 业务逻辑设计”“9. 中间件实现”。
+- 只想知道“Token 和接口怎么设计”：看“4. JWT Token设计”“6. API接口设计”。
+- 如果你当前只关心现行实现或规则，请优先回到 `docs/architecture/`、`docs/api/`、`docs/standards/`。
+
 ## 1. 概述
 
 ### 1.1 项目背景

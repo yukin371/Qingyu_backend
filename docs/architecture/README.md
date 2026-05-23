@@ -2,6 +2,37 @@
 
 本目录是后端架构主入口，目标是让人类和 AI 在 10 分钟内建立当前可用认知，而不是在历史文档中盲目搜索。
 
+## Page Role
+
+- current-hub
+- current-owner: `docs/architecture/`
+- current-bounded: 当前后端架构主入口，负责分层边界、运行时链路和模块地图导航
+
+## Recommended Read Path
+
+1. 先读 `system_architecture.md`。
+2. 再读 `2026-04-07-backend-runtime-flow.md`。
+3. 最后读 `2026-04-07-backend-module-map.md` 与 `dependency-rules.md`。
+
+## Quick Section Map
+
+- First Read Path
+- Current Source Of Truth
+- Specialized But Still Active
+- Relationship With Neighbor Directories
+- Historical Reference Boundary
+- Maintenance Rules
+
+## Quick Takeaways
+
+- 这是当前架构主入口。
+- 本目录记录当前实际长什么样，不记录长期计划和纯实施过程。
+
+## Skip Guide
+
+- 只看 API：跳去 `../api/README.md`。
+- 只看实施过程：跳去 `../implementation/README.md`。
+
 ## First Read Path
 
 1. [system_architecture.md](./system_architecture.md)
@@ -22,6 +53,14 @@
 - [ai_grpc_integration.md](./ai_grpc_integration.md): AI 服务专项集成路径
 - [api_architecture.md](./api_architecture.md): API 分层和接口视角
 
+## Relationship With Neighbor Directories
+
+- `../ai/`：保留 AI 接入、联调和阶段集成说明，不再复制第二份架构边界。
+- `../migration/`：保留迁移与兼容退出说明，不替代当前架构事实。
+- `../middleware/`：保留中间件集成专题，不替代请求链主图和层次规则。
+- `../standards/`：记录“应该怎么做”的规则；本目录记录“当前实际长什么样”。
+- `../implementation/`：记录已经发生过的落地过程和阶段结果。
+
 ## Historical Reference Boundary
 
 以下文档保留用于历史追溯，不作为当前架构主依据：
@@ -40,3 +79,4 @@
 2. Mermaid 图必须映射真实代码路径，禁止只画理想态。
 3. 发现文档与代码不一致，先在文档中显式标注偏差，再进入重构或治理任务。
 4. 阶段性交付文档可保留，但必须明确标注为历史资料，避免与当前主入口混淆。
+5. 新增接入指南、迁移说明或排障手册时，优先判断它是否应落到 `../ai/`、`../migration/`、`../middleware/` 或 `../guides/`，不要继续把架构目录写成“大杂烩”。

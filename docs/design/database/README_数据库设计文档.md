@@ -1,6 +1,29 @@
 # 数据库设计文档
 
-本目录包含青羽写作平台的数据库设计文档，涵盖数据库选型、架构设计、优化策略等内容。
+> 最后整理: 2026-05-22  
+> 当前状态: `summary-draft`
+
+本文档是 `design/database/` 的早期汇总稿，适合快速回看当时如何把数据库选型、架构设计和优化策略组织在同一专题下；它不是当前目录的标准入口，也不等同于当前数据库专题的 owner 文档。
+
+## Page Role
+
+- 这里负责：数据库历史专题总览、早期分组方式、旧版设计原则与材料导航。
+- 不负责：当前数据库 owner、当前迁移策略、现行 Repository / Model 分层规范。
+
+## Recommended Read Path
+
+1. [README.md](./README.md)
+2. [../../database/README.md](../../database/README.md)
+3. [../../migration/README.md](../../migration/README.md)
+4. [../../standards/layer-repository.md](../../standards/layer-repository.md)
+5. [../../standards/layer-models.md](../../standards/layer-models.md)
+
+## Boundary
+
+- 如果你要找“design/database 目录现在怎么读”，优先看 [README.md](./README.md)。
+- 如果你要找“当前数据库专题 owner 和迁移样例”，优先看 [../../database/README.md](../../database/README.md)。
+- 如果你要找“文档迁移与兼容口径”，优先看 [../../migration/README.md](../../migration/README.md)。
+- 如果你要找“当前 Repository / Models 分层规范”，优先看 [../../standards/layer-repository.md](../../standards/layer-repository.md) 和 [../../standards/layer-models.md](../../standards/layer-models.md)。
 
 ## 📁 文档目录
 

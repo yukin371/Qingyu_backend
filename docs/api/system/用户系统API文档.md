@@ -5,6 +5,42 @@
 **基础路径**: `/api/v1`  
 **模块**: 用户系统 (System - User)
 
+## Page Role
+
+- current-reference
+- current-owner: `docs/api/system/`
+- current-bounded: 当前用户系统 API 详细参考文档，负责用户、认证和管理员接口说明
+
+## Recommended Read Path
+
+1. 先读 `README.md`。
+2. 再读 `../usage_guide.md`。
+3. 最后读本页的详细接口定义。
+
+## Boundary
+
+- 本页是用户系统详细参考手册，不是 API 总入口。
+- 当前用户系统 owner 仍在 `docs/api/system/README.md`。
+
+## Quick Section Map
+
+- 目录
+- 概述
+- 认证说明
+- 公开接口
+- 用户接口
+- 管理员接口
+- 数据结构
+- 错误码说明
+
+## Quick Takeaways
+
+- 这是当前用户系统 API 的详细参考文档。
+
+## Skip Guide
+
+- 只看用户系统入口：回 `README.md`。
+
 ---
 
 ## 📋 目录
@@ -289,7 +325,8 @@ curl -X POST http://localhost:8080/api/v1/register \
 > - `banned` (已封禁): 被管理员封禁，无法登录 ❌
 > - `deleted` (已删除): 账号已删除，无法登录 ❌
 > 
-> 详见：[登录状态检查修复说明](../../implementation/登录状态检查修复完成_2025-10-17.md)
+> 登录状态检查修复说明：`TBD`
+> 确认路径：检索“登录状态检查修复”历史记录，或查看父仓 `docs/plans/submodules/backend/`
 
 #### cURL 示例
 
@@ -1931,6 +1968,6 @@ func TestUserAPI_Register(t *testing.T) {
 
 **文档维护**: 如有问题或建议，请联系开发团队。  
 **相关文档**: 
-- [API设计规范](../API设计规范.md)
+- [API设计规范](../../standards/api/API设计规范.md)
 - [用户管理API使用指南](../用户管理API使用指南.md)
 

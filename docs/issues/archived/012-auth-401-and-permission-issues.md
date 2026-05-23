@@ -5,7 +5,7 @@
 **状态**: ✅ 核心问题已解决（已归档）
 **创建日期**: 2026-03-05
 **归档日期**: 2026-03-06
-**来源报告**: [401认证错误诊断报告](../../reports/archived/2026-02-08-auth-401-issue-diagnosis.md)
+**来源报告**: [401认证错误诊断报告](../../../../docs/backend/archive/reports/archived/2026-02-08-auth-401-issue-diagnosis.md)
 
 ---
 

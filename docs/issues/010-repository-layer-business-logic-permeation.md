@@ -4,9 +4,9 @@
 **类型**: 架构问题
 **状态**: ✅ Phase 4 已完成 (2026-03-07)
 **创建日期**: 2026-03-05
-**来源报告**: [Repository 层业务逻辑渗透分析报告](../reports/archived/2026-03-04-repository-layer-business-logic-analysis.md)
+**来源报告**: [Repository 层业务逻辑渗透分析报告](../../../docs/backend/archive/reports/archived/2026-03-04-repository-layer-business-logic-analysis.md)
 **审查日期**: 2026-03-05
-**审查报告**: [P0问题审查报告](../reports/2026-03-05-p0-issue-audit-report.md)
+**审查报告**: [P0问题审查报告](../../../docs/backend/archive/reports/2026-03-05-p0-issue-audit-report.md)
 
 ---
 
@@ -546,19 +546,19 @@ func (s *WalletService) UpdateBalance(ctx context.Context, userID string, amount
 
 | 文档 | 说明 |
 |------|------|
-| [Repository 层业务逻辑渗透分析报告](../reports/archived/2026-03-04-repository-layer-business-logic-analysis.md) | 完整问题清单 |
-| [后端综合审计报告](../reports/archived/backend-comprehensive-audit-summary-2026-01-26.md) | 相关问题参考 |
+| [Repository 层业务逻辑渗透分析报告](../../../docs/backend/archive/reports/archived/2026-03-04-repository-layer-business-logic-analysis.md) | 完整问题清单 |
+| [后端综合审计报告](../../../docs/backend/archive/reports/archived/backend-comprehensive-audit-summary-2026-01-26.md) | 相关问题参考 |
 
 ---
 
 ## 相关Issue
 
 ### 依赖Issue（必须先处理）
-- [#007: Service 层事务管理缺失](./007-transaction-management.md) - ⚠️ 需要先实现事务管理器，才能处理跨表事务问题
+- [#007: Service 层事务管理缺失](./archived/007-transaction-management.md) - ⚠️ 需要先实现事务管理器，才能处理跨表事务问题
 
 ### 相关Issue（联合处理）
-- [#001: 统一模型层 ID 字段类型](./001-unify-id-type-in-models.md) - Repository重构时需要确保ID类型正确
-- [#002: Repository Create 方法未回设 ID](./002-create-method-id-not-set-bug.md) - Create方法问题属于Repository层职责
+- [#001: 统一模型层 ID 字段类型](./archived/001-unify-id-type-in-models.md) - Repository重构时需要确保ID类型正确
+- [#002: Repository Create 方法未回设 ID](./archived/002-create-method-id-not-set-bug.md) - Create方法问题属于Repository层职责
 - [#003: 测试基础设施改进](./003-test-infrastructure-improvements.md) - Repository重构需要测试支持
 
 ### 建议拆分

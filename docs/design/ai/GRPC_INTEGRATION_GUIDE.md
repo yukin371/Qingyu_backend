@@ -1,5 +1,41 @@
 # Phase3 gRPC集成指南
 
+## Page Role
+
+- phase3-legacy-guide
+- current-owner: `design/ai/`
+- current-bounded: Phase3 阶段内的 gRPC 集成操作指南，只用于历史集成路径回看
+
+## Recommended Read Path
+
+1. 先读 `README.md`。
+2. 再读 `phase3/README.md`。
+3. 需要看当时的 gRPC 集成步骤时，再读本文件。
+
+## Boundary
+
+- 这是 Phase3 历史集成指南，不是 today owner。
+- 当前 AI 设计判断应回到总入口和主线文档。
+- 文中的启动方式、目录结构和 Agent 清单带有明显时间性。
+
+## Quick Section Map
+
+- 概述
+- 架构
+- 文件结构
+- 集成步骤
+- 验证方式
+
+## Quick Takeaways
+
+- 本文回答“Phase3 当时如何把 Python AI 服务接进 gRPC”。
+- 它不负责定义当前的跨服务集成边界。
+
+## Skip Guide
+
+- 只看当前主线：跳过本文件。
+- 只看当时接线步骤：重点看架构、文件结构和集成步骤。
+
 ## 📋 概述
 
 本指南介绍如何将Phase3专业Agent集成到gRPC服务中，以便Go后端可以通过gRPC调用AI服务。
@@ -435,7 +471,7 @@ server.add_secure_port(server_address, server_credentials)
 
 - [gRPC Python文档](https://grpc.io/docs/languages/python/)
 - [Protocol Buffers文档](https://developers.google.com/protocol-buffers)
-- [Phase3 Agent设计文档](doc/design/ai/phase3/)
+- [Phase3 Agent设计文档](./phase3/README.md)
 
 ## 🎯 下一步
 

@@ -428,8 +428,8 @@ Agent初始化失败: No module named 'agents'
 
 - **集成指南**: [GRPC_INTEGRATION_GUIDE.md](GRPC_INTEGRATION_GUIDE.md)
 - **快速开始**: [PHASE3_QUICKSTART.md](PHASE3_QUICKSTART.md)
-- **完成报告**: [doc/implementation/.../Phase3_gRPC集成完成报告.md](doc/implementation/00进度指导/Phase3_gRPC集成完成报告_2025-10-30.md)
-- **Proto定义**: [proto/ai_service.proto](proto/ai_service.proto)
+- **完成报告**: [GRPC_SUCCESS_REPORT.md](../implementation/GRPC_SUCCESS_REPORT.md)
+- **Proto定义**: [proto/ai_service.proto](../../../Qingyu-Ai-Service/proto/ai_service.proto)
 
 ---
 

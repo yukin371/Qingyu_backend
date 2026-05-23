@@ -1001,6 +1001,6 @@ func TestUserService_SendWelcomeEmail(t *testing.T) {
 ## 参考文档
 
 - [testify使用指南](../03_测试工具指南/testify使用指南.md)
-- [Mock框架使用指南](../03_测试工具指南/mock框架使用指南.md)
+- [Mock框架使用指南](../03_测试工具指南/testify使用指南.md)
 - [Repository层测试规范](./repository_层测试规范.md)
 - [API层测试规范](./api_层测试规范.md)

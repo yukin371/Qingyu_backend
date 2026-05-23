@@ -329,7 +329,7 @@ go test -parallel 4 ./...
 ## 相关文档
 
 - [CI/CD 配置指南](./CI_CD配置指南.md)
-- [测试指南](../testing/测试指南.md)
+- [测试指南](../testing/README.md)
 - [部署指南](./部署指南.md)
 
 ## 总结

@@ -1,5 +1,40 @@
 # P2 重构分析：分离章节内容和元数据
 
+## Page Role
+
+- legacy-analysis
+- current-owner: `docs/implementation/`
+- current-bounded: P2 历史重构分析页，只记录当时的内容/元数据拆分方案分析
+
+## Recommended Read Path
+
+1. 先读 `README.md`。
+2. 需要回看 P2 分析时，再读本文件。
+
+## Boundary
+
+- 本页是历史分析，不是当前章节模型 owner。
+- 当前数据模型与架构约束应回 `docs/architecture/` 确认。
+
+## Quick Section Map
+
+- 执行时间
+- 当前问题
+- 重构方案
+- 优点
+- 实施方案
+- 性能对比
+- 实施计划
+- 风险评估
+
+## Quick Takeaways
+
+- 这是 P2 历史分析页，不是 today 模型决策页。
+
+## Skip Guide
+
+- 只看当前模型 owner：跳过本文件。
+
 ## 执行时间
 2025-12-29
 

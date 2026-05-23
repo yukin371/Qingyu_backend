@@ -4,6 +4,41 @@
 > **当前阶段**: Phase 2 (统一 Agent 接口重构)  
 > **整体进度**: 20% (Phase 1-2 完成)
 
+## Page Role
+
+- legacy-progress
+- current-owner: `design/ai/`
+- current-bounded: LangChain 1.0 重构过程中的阶段进度快照
+
+## Recommended Read Path
+
+1. 先读 `LangChain1.0迁移指南_2025-1105.md`。
+2. 再读本文件看当时的过程快照。
+3. 需要收尾结论时，再读 `LANGCHAIN_1.0_REFACTOR_COMPLETE.md`。
+
+## Boundary
+
+- 本页是过程快照，不是当前状态页。
+- “20%” 只表示生成该文档时的阶段位置。
+- 当前状态不应从本文件直接推断。
+
+## Quick Section Map
+
+- Phase 1 已完成
+- 当前阶段
+- 待办阶段
+- 风险与问题
+
+## Quick Takeaways
+
+- 这页价值在于回看“LangChain 1.0 重构中途卡在哪、做到哪”。
+- 它不是 today 进度面板。
+
+## Skip Guide
+
+- 只看当前事实：跳过本文件。
+- 只看历史推进过程：看当前阶段和待办阶段即可。
+
 ---
 
 ## ✅ Phase 1: 依赖升级与基础重构 (已完成)
@@ -92,7 +127,7 @@ checkpointer_backend (postgres or redis)
 #### 1.6 文档创建
 
 **创建的文档**:
-- ✅ `MIGRATION_GUIDE_v1.0.md` - LangChain 1.0 迁移指南
+- ✅ `LangChain1.0迁移指南_2025-1105.md` - LangChain 1.0 迁移指南
 - ✅ `LANGCHAIN_1.0_REFACTOR_PROGRESS.md` - 进度报告（本文档）
 
 ---
@@ -235,7 +270,7 @@ class BaseAgentUnified(ABC):
 ### 对开发者
 
 1. **依赖升级**: 运行 `pip install -r requirements.txt` 升级到最新依赖
-2. **迁移指南**: 参考 `MIGRATION_GUIDE_v1.0.md` 进行代码迁移
+2. **迁移指南**: 参考 `LangChain1.0迁移指南_2025-1105.md` 进行代码迁移
 3. **新基类**: 所有新 Agent 应继承 `BaseAgentUnified`
 4. **Middleware**: 默认启用 LoggingMiddleware 和 MetricsMiddleware
 5. **Checkpointer**: 需要配置 PostgreSQL 连接信息

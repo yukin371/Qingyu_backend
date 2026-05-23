@@ -4,7 +4,7 @@
 **类型**: 测试问题
 **状态**: 待处理
 **创建日期**: 2026-03-05
-**来源报告**: [后端综合审计报告](../reports/archived/backend-comprehensive-audit-summary-2026-01-26.md)、[后端测试分析](../reports/archived/backend-testing-analysis-2026-01-26.md)
+**来源报告**: [后端综合审计报告](../../../docs/backend/archive/reports/archived/backend-comprehensive-audit-summary-2026-01-26.md)、[后端测试分析](../../../docs/backend/archive/reports/archived/backend-testing-analysis-2026-01-26.md)
 
 ---
 
@@ -430,7 +430,7 @@ func TestXxx(t *testing.T) {
 
 | 文档 | 说明 |
 |------|------|
-| [后端测试分析](../reports/archived/backend-testing-analysis-2026-01-26.md) | 测试问题详细分析 |
+| [后端测试分析](../../../docs/backend/archive/reports/archived/backend-testing-analysis-2026-01-26.md) | 测试问题详细分析 |
 | [Go 测试最佳实践](https://go.dev/doc/tutorial/add-a-test) | Go 官方测试教程 |
 | [Testify 文档](https://github.com/stretchr/testify) | Testify 使用文档 |
 
@@ -440,10 +440,10 @@ func TestXxx(t *testing.T) {
 
 ### 依赖Issue（必须先处理）
 - [#003: 测试基础设施改进](./003-test-infrastructure-improvements.md) - ⚠️ 需要先改进测试基础设施，才能有效提升覆盖率
-- [#013: 测试用户种子数据ID未设置问题](./013-test-user-seed-id-not-set.md) - 种子数据修复后，E2E测试才能运行
+- [#013: 测试用户种子数据ID未设置问题](./archived/013-test-user-seed-id-not-set.md) - 种子数据修复后，E2E测试才能运行
 
 ### 相关Issue（联合处理）
-- [#007: Service 层事务管理缺失](./007-transaction-management.md) - 事务相关代码需要测试覆盖
+- [#007: Service 层事务管理缺失](./archived/007-transaction-management.md) - 事务相关代码需要测试覆盖
 
 ### 依赖关系
 - 测试基础设施（#003）是提升覆盖率（#009）的基础

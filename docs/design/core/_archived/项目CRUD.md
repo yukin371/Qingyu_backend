@@ -13,6 +13,51 @@
 
 # 项目CRUD设计文档
 
+> 最后整理: 2026-05-22  
+> 当前状态: `legacy-superseded`
+
+本文档是早期项目 CRUD 历史方案，适合回看最初只围绕 `Project` 一层时的建模与接口设计；它已被后续更完整的项目结构设计替代，不应作为当前项目设计 owner。
+
+## Page Role
+
+- 这里负责：早期项目 CRUD 的历史模型、索引、Service 和 API 设计说明。
+- 不负责：当前项目多层结构事实、当前接口入口、当前项目模块实施状态。
+
+## Recommended Read Path
+
+1. [README.md](./README.md)
+2. [../project/README.md](../project/README.md)
+3. [项目_节点_文档_CRUD_Design.md](./项目_节点_文档_CRUD_Design.md)
+4. [../../../architecture/README.md](../../../architecture/README.md)
+5. [../../../api/README.md](../../../api/README.md)
+
+## Boundary
+
+- 如果你要找“当前项目能力历史主入口”，优先看 [../project/README.md](../project/README.md)。
+- 如果你要找“当前架构与接口事实”，优先看 [../../../architecture/README.md](../../../architecture/README.md) 和 [../../../api/README.md](../../../api/README.md)。
+- 本页是被替代的早期方案，不适合作为当前实现或当前结构依据。
+
+## Quick Section Map
+
+| 如果你想看 | 直接跳到 |
+|------|------|
+| 目标与单层 Project 视角 | [1. 概述](#1-概述) |
+| 数据模型与索引 | [2. 数据模型设计](#2-数据模型设计) / [3. 数据库设计](#3-数据库设计) |
+| Service 与 API 设计 | [4. Service层设计](#4-service层设计) / [5. API层设计](#5-api层设计) |
+| 历史总结与关联资料 | [6. 总结](#6-总结) / [关联文档](#关联文档) |
+
+## Quick Takeaways
+
+- 这篇最有价值的地方，是它能帮助回看最早只做项目级 CRUD 时的设计边界。
+- 它已经被更完整的项目结构设计替代，阅读时应视为“历史演化前一版”。
+- `legacy-superseded` 表示这页不是当前建议方案。
+
+## Skip Guide
+
+- 只想知道“当前项目设计看哪篇”：看 [../project/README.md](../project/README.md)。
+- 只想知道“最早的 Project CRUD 怎么想的”：看 [2. 数据模型设计](#2-数据模型设计) 和 [4. Service层设计](#4-service层设计)。
+- 如果你当前只关心现行项目结构，请优先回到 `design/core/project/` 与 `docs/architecture/`。
+
 ## 1. 概述
 
 本文档详细描述了青羽后端系统中项目管理模块的CRUD（创建、读取、更新、删除）功能设计。项目管理是整个文档管理系统的核心模块，负责管理用户的小说工程项目，包括项目的基本信息、状态管理、权限控制等功能。

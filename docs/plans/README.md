@@ -1,28 +1,37 @@
-# Plans Directory Migration Notice
+# 后端本地 plans 迁移说明
 
-`Qingyu_backend/docs/plans` has been migrated to the parent repository:
+> 最后整理: 2026-05-22  
+> 当前状态: `legacy-readonly`
 
-- [docs/plans/submodules/backend/](../../../docs/plans/submodules/backend/README.md)
+`Qingyu_backend/docs/plans/` 已退出“长期计划 owner”角色，当前只保留迁移说明，避免后端子模块重新长出一棵本地 plan 树。
 
-## Effective Rule
+## Recommended Read Path
 
-Do not add new backend plan/design documents in this submodule directory.
+1. [../../../docs/plans/submodules/backend/README.md](../../../docs/plans/submodules/backend/README.md)
+2. [../architecture/README.md](../architecture/README.md)
+3. [../implementation/README.md](../implementation/README.md)
 
-Create and maintain all new backend planning/design docs in:
+## Current Boundary
 
-- [docs/plans/submodules/backend/](../../../docs/plans/submodules/backend/README.md)
+- 本目录：仅保留“计划已迁移到哪里”的说明。
+- 父仓 [../../../docs/plans/submodules/backend/README.md](../../../docs/plans/submodules/backend/README.md): 后端长期计划、专题设计、实施方案与阶段计划的唯一入口。
+- `../architecture/`: 当前架构事实与边界 owner。
+- `../implementation/`: 已落地实施记录 owner。
 
-Use the parent taxonomy instead of recreating a local plan tree:
+## Parent Taxonomy
 
-- `architecture/`: current architecture and model/versioning design
-- `api-governance/`: API standardization, integration, and error handling governance
-- `publication/`: publication/review workflow design
-- `shared-and-layering/`: shared module and layering refactors
-- `testing-and-quality/`: test strategy and quality plans
-- `legacy-phases/`: historical rollout plans and completion reports
+后端新计划应统一写入父仓以下专题，而不是在本地重建平行目录：
 
-## Why
+- `architecture/`: 当前架构、模型与版本治理设计
+- `api-governance/`: API 标准化、接口治理、错误处理治理
+- `publication/`: 发布与审核工作流设计
+- `shared-and-layering/`: shared 模块与分层重构
+- `testing-and-quality/`: 测试策略与质量治理
+- `legacy-phases/`: 历史 rollout 计划与完成报告
 
-- centralizes cross-repo planning
-- avoids duplicated plan trees between parent repo and submodule
-- keeps backend implementation repo focused on code and local operational docs
+## Practical Rules
+
+1. 不要在 `Qingyu_backend/docs/plans/` 新增 backend 计划、设计或长期治理文档。
+2. 如果文档在讲“未来怎么改、分几步改、风险与验收是什么”，应写到父仓 `docs/plans/submodules/backend/`。
+3. 如果文档已经变成“当前事实”，应回写到 `../architecture/`、`../standards/` 或 `../guides/`。
+4. 如果文档已经变成“实施完成记录”，应回写到 `../implementation/` 或 `../review/`。

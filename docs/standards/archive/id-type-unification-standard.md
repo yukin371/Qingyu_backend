@@ -486,5 +486,5 @@ func TestRoundTrip(t *testing.T) {
 
 ## 相关文档
 
-- [模型一致性修复指南](./model-consistency-fix-guide.md)
-- [Qingyu_backend/models/writer/base/identifiers.go](../../Qingyu_backend/models/writer/base/identifiers.go)
+- [模型一致性修复指南](../../../../docs/architecture/model-consistency-fix-guide.md)
+- [Qingyu_backend/models/writer/base/identifiers.go](../../../models/writer/base/identifiers.go)

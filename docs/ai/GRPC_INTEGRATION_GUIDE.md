@@ -435,7 +435,7 @@ server.add_secure_port(server_address, server_credentials)
 
 - [gRPC Python文档](https://grpc.io/docs/languages/python/)
 - [Protocol Buffers文档](https://developers.google.com/protocol-buffers)
-- [Phase3 Agent设计文档](doc/design/ai/phase3/)
+- [Phase3 Agent设计文档](../design/ai/phase3/README.md)
 
 ## 🎯 下一步
 

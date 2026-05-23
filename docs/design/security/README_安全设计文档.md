@@ -1,6 +1,26 @@
 # 安全设计文档
 
-本目录包含青羽写作平台的安全相关设计文档，涵盖安全架构、威胁建模、加固措施等内容。
+> 最后整理: 2026-05-22  
+> 当前状态: `summary-draft`
+
+本文档是 `design/security/` 的早期汇总稿，适合快速回看当时如何组织安全架构、威胁建模与加固措施；它不是当前目录的标准入口，也不等同于当前安全规范的 owner 文档。
+
+## Page Role
+
+- 这里负责：安全专题的历史总览、早期目标分组、旧版安全措施导航。
+- 不负责：当前安全规范、当前鉴权与权限边界、现行运维与审计要求。
+
+## Recommended Read Path
+
+1. [README.md](./README.md)
+2. [../../architecture/README.md](../../architecture/README.md)
+3. [../../standards/README.md](../../standards/README.md)
+
+## Boundary
+
+- 如果你要找“design/security 目录现在怎么读”，优先看 [README.md](./README.md)。
+- 如果你要找“当前架构与安全边界 owner”，优先看 [../../architecture/README.md](../../architecture/README.md)。
+- 如果你要找“当前长期标准与规范口径”，优先看 [../../standards/README.md](../../standards/README.md)。
 
 ## 📁 文档目录
 
@@ -100,9 +120,9 @@
 
 ## 🔗 相关文档
 
-- [JWT身份认证设计](../core/JWT身份认证设计.md) - 认证机制的详细设计
+- [核心功能设计入口](../core/README.md) - 核心能力历史设计总入口
 - [认证中间件设计](../middleware/认证中间件设计.md) - 认证中间件实现
-- [账号权限系统设计](../shared/账号权限系统设计.md) - 权限系统的整体设计
+- [共享服务设计归档入口](../shared/README.md) - 账号权限等共享服务旧设计已迁入归档区
 
 ## 📝 更新日志
 

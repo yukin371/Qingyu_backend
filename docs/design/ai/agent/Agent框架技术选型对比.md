@@ -4,6 +4,43 @@
 > **创建时间**: 2025-10-21  
 > **适用场景**: 青羽平台AI Agent系统技术选型
 
+## Page Role
+
+- legacy-analysis
+- current-owner: `design/ai/agent/`
+- current-bounded: 仅记录当时的框架对比结论，不代表当前主线仍按此结论执行
+
+## Recommended Read Path
+
+1. 先读 `README.md`。
+2. 再读 `07.Python_AI_Agent系统架构设计.md`。
+3. 如需技术背景，再读本文件。
+
+## Boundary
+
+- 本文件是框架选型分析，不是当前实现文档。
+- 星数、星标和 GitHub 数据都带时间性，需结合当前版本重新确认。
+- 若要判断今天的技术路线，应以主线设计和实现文档为准。
+
+## Quick Section Map
+
+- 文档概述
+- 主流Agent框架概览
+- LangChain详细分析
+- LangGraph详细分析
+- 选型结论
+- 实施建议
+
+## Quick Takeaways
+
+- 这里回答“为什么当时这么选”。
+- 不回答“现在是否仍然这样做”的最终结论。
+
+## Skip Guide
+
+- 只看当前主线：跳过本文件。
+- 只看技术背景：看框架概览和选型结论即可。
+
 ---
 
 ## 📋 文档概述

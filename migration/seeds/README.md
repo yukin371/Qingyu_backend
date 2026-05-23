@@ -89,6 +89,10 @@ go build -o seed_data.exe ./cmd/seed_data
 ./seed_data.exe  # Linux/Mac: ./seed_data
 ```
 
+### 专题导入指南
+
+- [README_小说导入指南.md](./README_小说导入指南.md): CNNovel125K 小说导入专题说明。
+
 ## 操作菜单
 
 运行工具后，会显示以下菜单：

@@ -3,6 +3,12 @@
 **创建时间**: 2025-10-14  
 **维护者**: 青羽后端团队
 
+## Page Role
+
+- archive-guide
+- current-owner: `docs/implementation/_archive/`
+- current-bounded: 实施文档归档规则说明，只回答归档结构与历史资料位置
+
 ---
 
 ## 📁 归档目录结构
@@ -248,8 +254,8 @@ _archive/
 ## 🔗 相关链接
 
 - [实施文档主README](../README.md)
-- [文档结构整理方案](../文档结构整理方案_2025-10-14.md)
-- [青羽平台整体实施规划](../青羽平台整体实施规划.md)
+- [文档结构整理方案](../../../../docs/analysis/2026-04-07-documentation-reorganization-audit.md)
+- [青羽平台整体实施规划](../../../../docs/plans/submodules/backend/README.md)
 
 ---
 

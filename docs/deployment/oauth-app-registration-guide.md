@@ -296,7 +296,7 @@ GET /api/v1/shared/oauth/accounts
 ## 相关文档
 
 - [OAuth 2.0 设计文档](../design/auth/第三方登录OAuth设计文档.md)
-- [OAuth功能待完善清单](../todo/OAuth功能待完善清单.md)
+- [OAuth功能待完善清单](../issues/todo/OAuth功能待完善清单.md)
 - [OAuth集成完成报告](../design/auth/OAuth集成完成报告.md)
 
 ---

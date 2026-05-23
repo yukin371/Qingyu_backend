@@ -2,6 +2,42 @@
 
 ## 概述
 
+## Page Role
+
+- legacy-report
+- current-owner: `docs/implementation/infrastructure/`
+- current-bounded: P0 中间件集成历史实施文档，只记录当时的集成过程与结果
+
+## Recommended Read Path
+
+1. 先读 `README.md`。
+2. 需要当前中间件专题时，再读 `../../middleware/README.md`。
+3. 需要回看 P0 集成过程时，再读本文件。
+
+## Boundary
+
+- 本页是历史实施报告，不是当前中间件 owner。
+- 当前中间件规则与架构应回 current owner 文档确认。
+
+## Quick Section Map
+
+- 概述
+- 什么是 P0 中间件
+- 架构设计
+- 实施步骤
+- 中间件实现
+- 端点列表
+- Prometheus 指标
+- 配置建议
+
+## Quick Takeaways
+
+- 这是 P0 中间件集成的历史实施文档。
+
+## Skip Guide
+
+- 只看当前中间件 owner：跳过本文件。
+
 本文档记录了青羽平台 P0 (Priority 0) 核心中间件的集成过程。
 
 **实施日期**: 2026-01-04
@@ -561,9 +597,9 @@ curl http://localhost:8080/metrics
 
 ## 相关文档
 
-- [路由修复报告](ROUTER_FIX_REPORT.md)
-- [RBAC 权限控制](RBAC_IMPLEMENTATION.md)
-- [项目结构总结](../docs/项目结构总结.md)
+- [路由修复报告](./ROUTER_FIX_REPORT.md)
+- [RBAC 权限控制](../01-auth/RBAC_IMPLEMENTATION.md)
+- [项目结构总结](../README.md)
 
 ## 提交历史
 

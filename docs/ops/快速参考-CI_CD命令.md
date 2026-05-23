@@ -385,8 +385,8 @@ Closes #123"
 
 - [CI/CD 配置指南](./CI_CD配置指南.md)
 - [CI/CD 问题解决方案](./CI_CD问题解决方案.md)
-- [GitHub Actions 工作流](.github/workflows/README.md)
-- [测试指南](../testing/测试指南.md)
+- [GitHub Actions 工作流](../../.github/workflows/README.md)
+- [测试指南](../testing/README.md)
 
 ### 工具
 

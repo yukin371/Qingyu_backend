@@ -1,308 +1,94 @@
-# 青羽写作平台API文档
+# 青羽后端 API 文档入口
 
-> **最后更新**: 2025-10-18  
-> **文档状态**: ✅ 持续更新中
+> 最后整理: 2026-05-22
 
----
+## Page Role
 
-## 📚 文档概述
+- current-hub
+- current-owner: `docs/api/`
+- current-bounded: 当前后端 API 文档主入口，负责接口总览、Swagger 导出物和专题 API 导航
 
-本目录包含青羽写作平台的完整API文档，包括接口说明、使用指南和最佳实践。
+## Recommended Read Path
 
----
+1. 先读 `API接口总览.md`。
+2. 再读 `usage_guide.md`。
+3. 按业务域进入对应专题目录或专题文档。
 
-## 🚀 前端开发者快速入口
+## Quick Section Map
 
-**如果你是前端开发者**，强烈推荐先阅读：
+- 当前入口说明
+- First Read Path
+- 按主题查找
+- Topic Directories
+- Swagger 与导出物
+- 与其他目录的关系
+- 已知缺口
 
-### [📘 前端开发者文档中心](./frontend/README.md)
+## Quick Takeaways
 
-包含：
-- ⚡ [API 快速参考](./frontend/API快速参考.md) - 一页纸速查表
-- 📖 [前端集成指南](./frontend/前端集成指南.md) - 完整集成教程
-- 📚 详细的 API 参考文档
+- 这是当前 API 文档 canonical owner。
+- 历史设计和实施说明都不应反向取代这里。
 
-### 核心文档
+## Skip Guide
 
-| 文档 | 说明 | 状态 |
-|------|------|------|
-| [API 快速参考](./frontend/API快速参考.md) | 所有接口速查表 | ✅ 完成 |
-| [前端集成指南](./frontend/前端集成指南.md) | 从零开始的集成教程 | ✅ 完成 |
-| [用户系统 API](./frontend/用户系统API参考.md) | 用户注册登录、权限管理 | ✅ 完成 |
-| [认证 API](./frontend/认证API参考.md) | JWT 认证、Token 管理 | 🚧 待补充 |
-| [书城 API](./frontend/书城API参考.md) | 书籍、分类、搜索、榜单 | 🚧 待补充 |
-| [阅读器 API](./frontend/阅读器API参考.md) | 章节、进度、设置 | 🚧 待补充 |
-| [推荐系统 API](./frontend/推荐系统API参考.md) | 个性化推荐、行为追踪 | 🚧 待补充 |
+- 只看历史设计：跳去 `../design/`。
+- 只看落地实施：跳去 `../implementation/`。
 
----
+## 当前入口说明
 
-## 📖 完整文档列表
+- `Qingyu_backend/docs/api/` 是当前 API 文档、Swagger 导出物和专题接口说明的 canonical owner。
+- `Qingyu_backend/docs/guides/api/` 仅保留历史镜像与迁移提示，不再作为主入口维护。
+- 面向前端或联调同学的“从哪开始看”，优先走本 README，而不是旧的 `frontend/`、`postman/` 子目录占位链接。
 
-### 阅读端API
+## First Read Path
 
-#### 1. [阅读端API使用文档](./阅读端API使用文档.md) ⭐
-**类型**: 完整API参考文档  
-**适用对象**: 所有开发者  
-**内容**:
-- 📌 完整的API接口列表
-- 📌 请求/响应格式说明
-- 📌 参数详细说明
-- 📌 错误码参考
-- 📌 认证和权限说明
+1. [API接口总览](./API接口总览.md)
+2. [usage_guide.md](./usage_guide.md)
+3. [shared/统一响应处理指南.md](./shared/统一响应处理指南.md)
+4. [system/用户系统API文档.md](./system/用户系统API文档.md)
+5. [bookstore/书城系统API文档.md](./bookstore/书城系统API文档.md)
+6. [reader/阅读器系统API文档.md](./reader/阅读器系统API文档.md)
 
-**包含接口**:
-- 书城系统API（首页、书籍、分类、章节、评分、榜单、搜索）
-- 阅读器系统API（章节阅读、阅读进度、注记、设置）
+## 按主题查找
 
-#### 2. [阅读端API快速开始指南](./阅读端API快速开始指南.md) 🚀
-**类型**: 快速入门指南  
-**适用对象**: 新手开发者  
-**内容**:
-- 💡 7个常见使用场景
-- 💡 完整的代码示例（React）
-- 💡 工具函数库
-- 💡 移动端适配示例
-- 💡 性能优化建议
-- 💡 常见问题解答
+| 主题 | 入口文档 | 说明 |
+|------|----------|------|
+| 总览与使用 | [API接口总览](./API接口总览.md) / [usage_guide.md](./usage_guide.md) | 快速了解路由分组、使用方式和联调建议 |
+| 统一响应与共享语义 | [shared/统一响应处理指南.md](./shared/统一响应处理指南.md) / [shared/共享服务API接口文档.md](./shared/共享服务API接口文档.md) | 统一响应结构、共享服务接口口径 |
+| 用户与认证 | [system/用户系统API文档.md](./system/用户系统API文档.md) / [用户管理API使用指南.md](./用户管理API使用指南.md) | 用户、权限、账号相关接口 |
+| 阅读与书城 | [bookstore/书城系统API文档.md](./bookstore/书城系统API文档.md) / [reader/阅读器系统API文档.md](./reader/阅读器系统API文档.md) / [阅读端API使用文档.md](./阅读端API使用文档.md) | 书城、阅读器、章节与阅读流程 |
+| 推荐与统计 | [recommendation/推荐系统API文档.md](./recommendation/推荐系统API文档.md) / [统计API文档.md](./统计API文档.md) | 推荐链路与统计类接口 |
+| 写作与 AI | [写作端API完整文档.md](./写作端API完整文档.md) / [Phase3创作API文档.md](./Phase3创作API文档.md) / [AI_WRITING_ASSISTANT_APIS.md](./AI_WRITING_ASSISTANT_APIS.md) | 写作工作流、创作与 AI 辅助接口 |
+| 管理与专题 | [管理员API文档.md](./管理员API文档.md) / [admin/配置管理API文档.md](./admin/配置管理API文档.md) / [审核API文档.md](./审核API文档.md) | 管理后台、配置、审核 |
+| 文档类 API | [document/document_api.md](./document/document_api.md) / [document/character_api.md](./document/character_api.md) | 文档、角色等专题接口 |
 
-**场景覆盖**:
-1. 首页展示
-2. 书籍列表和搜索
-3. 书籍详情页
-4. 阅读器实现
-5. 注记功能
-6. 阅读设置
-7. 用户评分和评论
+## Topic Directories
 
----
+- [admin/README.md](./admin/README.md)
+- [ai/README.md](./ai/README.md)
+- [bookstore/README.md](./bookstore/README.md)
+- [document/README.md](./document/README.md)
+- [reader/README.md](./reader/README.md)
+- [recommendation/README.md](./recommendation/README.md)
+- [shared/README.md](./shared/README.md)
+- [system/README.md](./system/README.md)
 
-## 🎯 如何使用这些文档
+## Swagger 与导出物
 
-### 对于新手开发者
+- [swagger.yaml](./swagger.yaml)
+- [swagger.json](./swagger.json)
+- [SWAGGER_API_导出说明.md](./SWAGGER_API_导出说明.md)
+- [document/openapi.yaml](./document/openapi.yaml)
 
-1. **先阅读**: [阅读端API快速开始指南](./阅读端API快速开始指南.md)
-   - 通过实际场景快速上手
-   - 复制粘贴代码示例
-   - 了解最佳实践
+## 与其他目录的关系
 
-2. **再查阅**: [阅读端API使用文档](./阅读端API使用文档.md)
-   - 查找具体接口细节
-   - 了解完整的参数说明
-   - 处理错误情况
+- 设计稿请回看 [../design/reader/README.md](../design/reader/README.md)。
+- 实施落地请回看 [../implementation/03-reading/READING_STATS_IMPLEMENTATION.md](../implementation/03-reading/READING_STATS_IMPLEMENTATION.md) 与 [../implementation/06-bookstore/BOOKSTORE_API_IMPLEMENTATION_SUMMARY.md](../implementation/06-bookstore/BOOKSTORE_API_IMPLEMENTATION_SUMMARY.md)。
+- 测试入口请回看 [../testing/README.md](../testing/README.md)。
 
-### 对于经验丰富的开发者
+## 已知缺口
 
-1. **直接查阅**: [阅读端API使用文档](./阅读端API使用文档.md)
-   - 快速查找所需接口
-   - 了解接口规范
-   - 参考响应格式
-
-2. **参考**: [阅读端API快速开始指南](./阅读端API快速开始指南.md)
-   - 查看复杂场景的实现
-   - 获取工具函数
-   - 了解优化建议
-
----
-
-## 🔗 相关文档
-
-### 设计文档
-- [阅读端模块设计文档](../design/reader/README_阅读端模块设计文档.md)
-- [书城系统设计](../design/reader/书城系统设计.md)
-- [阅读器设计](../design/reader/阅读器设计.md)
-
-### 实施文档
-- [阅读端模块实施文档](../implementation/06阅读端模块/README.md)
-- [书城系统实施文档](../implementation/06阅读端模块/01书城系统/)
-- [阅读器系统实施文档](../implementation/06阅读端模块/02阅读器系统/)
-
-### 测试文档
-- [阅读端测试文档](../testing/)
-
----
-
-## 📊 API接口总览
-
-### 书城系统 (15+ 接口)
-
-| 功能模块 | 接口数量 | 认证要求 |
-|---------|---------|---------|
-| 首页数据 | 1 | 不需要 |
-| 书籍管理 | 5 | 不需要 |
-| 分类管理 | 2 | 不需要 |
-| 章节管理 | 4 | 不需要 |
-| 评分系统 | 6 | 部分需要 |
-| 榜单系统 | 4 | 不需要 |
-| 搜索功能 | 3 | 不需要 |
-
-### 阅读器系统 (20+ 接口)
-
-| 功能模块 | 接口数量 | 认证要求 |
-|---------|---------|---------|
-| 章节阅读 | 6 | 部分需要 |
-| 阅读进度 | 5 | 需要 |
-| 注记功能 | 7 | 需要 |
-| 阅读设置 | 3 | 需要 |
-
-**总计**: 35+ API接口
-
----
-
-## 🌐 服务信息
-
-### 基础URL
-- **开发环境**: `http://localhost:8080`
-- **生产环境**: `https://api.qingyu.com`
-
-### 认证方式
-- JWT Token认证
-- 在Header中添加: `Authorization: Bearer {token}`
-
-### 统一响应格式
-
-**成功响应**:
-```json
-{
-  "code": 200,
-  "message": "操作成功",
-  "data": { /* 返回数据 */ }
-}
-```
-
-**错误响应**:
-```json
-{
-  "code": 400,
-  "message": "错误信息",
-  "data": null
-}
-```
-
----
-
-## 💡 快速导航
-
-### 常用接口速查
-
-#### 获取首页数据
-```
-GET /api/v1/bookstore/homepage
-```
-
-#### 获取书籍详情
-```
-GET /api/v1/bookstore/books/{id}
-```
-
-#### 获取章节内容
-```
-GET /api/v1/reader/chapters/{id}/content
-需要认证
-```
-
-#### 保存阅读进度
-```
-POST /api/v1/reader/progress
-需要认证
-```
-
-#### 创建注记
-```
-POST /api/v1/reader/annotations
-需要认证
-```
-
----
-
-## 🛠️ 开发工具
-
-### Postman集合
-下载Postman集合文件进行接口测试:
-- [青羽 API 完整集合](./postman/Qingyu_API_Collection.json) *(开发中)*
-- [阅读端API集合](./postman/阅读端API.postman_collection.json) *(待提供)*
-
-### 代码模板
-- [Axios 请求封装模板](./frontend/前端集成指南.md#统一请求封装)
-- [Vue 3 组件模板](./frontend/用户系统API参考.md#示例代码)
-- React Hook 模板 *(开发中)*
-
-### 接口Mock
-使用Mock服务进行前端开发:
-- Mock服务地址: `http://mock.qingyu.com` *(待提供)*
-
-### API调试工具
-- Swagger UI: `http://localhost:8080/swagger/index.html` *(待配置)*
-- API文档: `http://localhost:8080/docs`
-
----
-
-## 📝 更新日志
-
-### v1.1 (2025-10-18)
-- ✅ 创建前端开发者文档中心
-- ✅ 添加 API 快速参考（一页纸速查表）
-- ✅ 完成前端集成指南（包含认证、请求封装、核心功能集成）
-- ✅ 完成用户系统 API 详细文档
-- ✅ 添加核心 API 测试（用户、认证、阅读器）
-- ✅ 整理重复的 API 结构
-
-### v1.0 (2025-10-16)
-- ✅ 创建完整的阅读端API使用文档
-- ✅ 创建阅读端API快速开始指南
-- ✅ 包含35+个API接口
-- ✅ 提供7个常见场景示例
-- ✅ 完整的代码示例和最佳实践
-
----
-
-## 🤝 贡献指南
-
-### 文档改进
-如果您发现文档有误或需要改进：
-1. 提交Issue说明问题
-2. 提交Pull Request改进文档
-
-### 新增API文档
-添加新的API文档时，请遵循以下规范：
-1. 使用Markdown格式
-2. 包含完整的接口说明
-3. 提供请求/响应示例
-4. 添加使用场景说明
-
----
-
-## 📞 技术支持
-
-### 联系方式
-
-- **文档Issues**: GitHub仓库Issues区
-- **在线支持**: 工作日 9:00-18:00
-
-### 常见问题
-请先查阅：
-- [阅读端API使用文档 - 错误码说明](./阅读端API使用文档.md#错误码说明)
-- [快速开始指南 - 常见问题](./阅读端API快速开始指南.md#常见问题)
-
----
-
-## 📚 其他模块API文档
-
-### 已完成
-- [x] 用户管理API文档（见前端文档中心）
-- [x] 认证API文档（见前端文档中心）
-
-### 进行中
-- [🚧] 推荐系统API文档
-- [🚧] 书城系统API文档
-- [🚧] 阅读器API文档
-
-### 即将推出
-- [ ] 写作端API文档
-- [ ] AI服务API文档
-- [ ] 共享服务API文档
-
----
-
-**文档维护者**: 青羽后端团队  
-**最后更新**: 2025-10-18  
-**文档版本**: v1.1
+- 旧版 `frontend/` 子目录入口已不存在；如果需要“前端专用 API 速查模板”，当前记为 `TBD`。
+  - 确认路径：优先检查父仓 `docs/plans/submodules/frontend/` 与前端仓 `Qingyu_fronted` 中是否已有稳定 owner，再决定是否在本目录补新的联调索引。
+- 旧版 Postman 集合链接已失效；如果仍需集合文件，当前记为 `TBD`。
+  - 确认路径：优先检查根仓或 API 生成链路是否已有可导出产物，不在本目录重复制造第二套入口。

@@ -2,6 +2,39 @@
 
 统一罗列系统对外 REST API 的分组、路径规范、响应格式与错误码，并链接各专项设计。
 
+## Page Role
+
+- current-reference
+- current-owner: `docs/api/`
+- current-bounded: 当前 API 总览参考页，负责接口分组、统一口径与跨专题导航
+
+## Recommended Read Path
+
+1. 先读本页。
+2. 再读 `usage_guide.md`。
+3. 需要专题细节时，再进入各专题 API 文档。
+
+## Boundary
+
+- 本页是总览参考，不展开每个专题的完整接口细节。
+- 发现链接到旧设计稿时，应优先回 `docs/api/README.md` 和现行专题文档确认。
+
+## Quick Section Map
+
+- 路径与版本
+- 统一响应格式
+- 错误码规范
+- 通用约定
+- OpenAPI/文档化
+
+## Quick Takeaways
+
+- 这是当前 API 总览参考页。
+
+## Skip Guide
+
+- 只看某个专题接口：跳去对应专题文档。
+
 ## 1. 路径与版本
 - 前缀：/api/v1
 - 分组：

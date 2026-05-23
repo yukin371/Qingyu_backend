@@ -412,7 +412,7 @@ db.books.find({}).explain("executionStats")
 
 ### 7.3 相关文档
 
-- [小说导入指南](../../migration/seeds/README_小说导入指南.md)
+- [小说导入指南](../../migration/seeds/README.md)
 - [API 文档](../api/)
 - [架构设计](../architecture/)
 

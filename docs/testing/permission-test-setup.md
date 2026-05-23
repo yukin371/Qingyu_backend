@@ -639,8 +639,8 @@ rm -rf /tmp/qingyu_test_*
 ### C. 相关文档
 
 - [权限系统集成指南](../middleware/permission-integration-guide.md)
-- [中间件架构设计](../middleware/architecture.md)
-- [RBAC模型说明](../models/auth/role.md)
+- [中间件分层规范](../standards/layer-middleware.md)
+- [RBAC实现说明](../implementation/01-auth/RBAC_IMPLEMENTATION.md)
 - [API文档](../api/README.md)
 
 ### D. 故障排查命令

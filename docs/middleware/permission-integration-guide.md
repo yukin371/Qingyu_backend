@@ -906,6 +906,6 @@ perm := normalizePermission("Book . Read")  // "book:read"
 4. 定期审查和优化权限设计
 
 **相关文档**：
-- [中间件架构设计](./architecture.md)
+- [中间件架构设计](../design/middleware/README.md)
 - [权限模型定义](../../models/auth/role.go)
-- [API文档](../../api/README.md)
+- [API文档](../api/README.md)

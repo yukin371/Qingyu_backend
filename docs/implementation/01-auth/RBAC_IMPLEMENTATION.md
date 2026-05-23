@@ -556,9 +556,9 @@ func TestRoleBasedAccess(t *testing.T) {
 
 ## 相关文档
 
-- [P0 中间件集成](MIDDLEWARE_INTEGRATION.md)
-- [路由修复报告](ROUTER_FIX_REPORT.md)
-- [项目结构总结](../docs/项目结构总结.md)
+- [P0 中间件集成](../infrastructure/MIDDLEWARE_INTEGRATION.md)
+- [路由修复报告](../infrastructure/ROUTER_FIX_REPORT.md)
+- [项目结构总结](../README.md)
 
 ## 提交历史
 

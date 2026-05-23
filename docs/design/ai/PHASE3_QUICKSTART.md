@@ -1,5 +1,40 @@
 # Phase3 快速开始指南
 
+## Page Role
+
+- phase3-legacy-quickstart
+- current-owner: `design/ai/`
+- current-bounded: Phase3 阶段能力的历史快速上手页，用于回看当时的测试与启动流程
+
+## Recommended Read Path
+
+1. 先读 `phase3/README.md`。
+2. 再读本文件看当时的快速测试路径。
+3. 需要当前 AI 总体入口时，回 `README.md`。
+
+## Boundary
+
+- 本文是阶段 quickstart，不承担当前主线 owner。
+- “已完成功能”属于当时 Phase3 范围，不代表 today 事实自动成立。
+- 当前能力边界应回主线设计与现行实现确认。
+
+## Quick Section Map
+
+- 已完成功能
+- 快速测试
+- 示例调用
+- 常见问题
+
+## Quick Takeaways
+
+- 这页适合快速回顾 Phase3 当时能跑什么、怎么试。
+- 不适合作为当前运行标准的唯一依据。
+
+## Skip Guide
+
+- 只看当前主线：跳过本文件。
+- 只看历史测试入口：直接看“快速测试”。
+
 ## 已完成功能
 
 ✅ **3个专业Agent**:

@@ -3,6 +3,41 @@
 > **更新时间**: 2025-10-28  
 > **目标**: 从固定流水线演进为智能协作生态
 
+## Page Role
+
+- phase3-legacy-guide
+- current-owner: `design/ai/phase3/`
+- current-bounded: Phase 3 内部升级说明，只服务于该阶段历史复盘
+
+## Recommended Read Path
+
+1. 先读 `README.md`。
+2. 再读 `05.A2A创作流水线Agent设计_v2.0_智能协作生态.md`。
+3. 需要对照升级动机与变化时，再读本页。
+
+## Boundary
+
+- 本文是 Phase 3 的升级指南，不是当前 AI 主线入口。
+- 其中的“v2.0”语义属于阶段内升级，不应直接等同于今天的主线版本。
+- 当前 owner 仍以上级 AI 主入口和主线文档为准。
+
+## Quick Section Map
+
+- 快速导航
+- 升级背景
+- 核心变化
+- 实施建议
+
+## Quick Takeaways
+
+- 这页回答“Phase 3 当时为什么要从 v1.0 升到 v2.0”。
+- 不回答“今天的主线版本是否仍沿用该命名”。
+
+## Skip Guide
+
+- 只看当前主线：跳过本文件。
+- 只看阶段升级脉络：重点看快速导航和核心变化。
+
 ---
 
 ## 🎯 快速导航

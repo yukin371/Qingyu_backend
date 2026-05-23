@@ -4,9 +4,9 @@
 **类型**: 业务逻辑 Bug
 **状态**: ✅ 核心问题已修复（低频批量入口已收口）
 **创建日期**: 2026-03-05
-**相关报告**: [Writer DTO 重构总结报告](../../reports/2026-03-05-dto-refactoring-summary.md#22-bug-outlinerepositorycreate-未回设-id)
+**相关报告**: [Writer DTO 重构总结报告](../../../../docs/backend/archive/reports/2026-03-05-dto-refactoring-summary.md#22-bug-outlinerepositorycreate-未回设-id)
 **审查日期**: 2026-03-05
-**审查报告**: [P0问题审查报告](../../reports/2026-03-05-p0-issue-audit-report.md)
+**审查报告**: [P0问题审查报告](../../../../docs/backend/archive/reports/2026-03-05-p0-issue-audit-report.md)
 
 ---
 
@@ -260,7 +260,7 @@ func (r *MongoBookListRepository) CreateBookList(ctx context.Context, bookList *
 - [#001: 统一模型层 ID 字段类型](./001-unify-id-type-in-models.md) - ⚠️ 需要先统一ID类型为ObjectID，Create方法才能正确回设ID
 
 ### 相关Issue（联合处理）
-- [#010: Repository 层业务逻辑渗透](./010-repository-layer-business-logic-permeation.md) - Create方法问题属于Repository层职责范围
+- [#010: Repository 层业务逻辑渗透](../010-repository-layer-business-logic-permeation.md) - Create方法问题属于Repository层职责范围
 - [#013: 测试用户种子数据ID未设置问题](./013-test-user-seed-id-not-set.md) - 种子数据Create也需要正确回设ID
 
 ### 依赖关系

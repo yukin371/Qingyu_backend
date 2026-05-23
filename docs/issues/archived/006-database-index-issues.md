@@ -4,7 +4,7 @@
 **类型**: 性能问题
 **状态**: ✅ 核心问题已解决（保留持续优化项）
 **创建日期**: 2026-03-05
-**来源报告**: [后端综合审计报告](../reports/archived/backend-comprehensive-audit-summary-2026-01-26.md)、[后端数据库分析](../reports/archived/backend-database-analysis-2026-01-26.md)
+**来源报告**: [后端综合审计报告](../../../../docs/backend/archive/reports/archived/backend-comprehensive-audit-summary-2026-01-26.md)、[后端数据库分析](../../../../docs/backend/archive/reports/archived/backend-database-analysis-2026-01-26.md)
 
 ---
 
@@ -281,8 +281,8 @@ func logSlowQuery(event *event.CommandSucceededEvent, duration time.Duration) {
 
 | 文档 | 说明 |
 |------|------|
-| [后端数据库分析](../reports/archived/backend-database-analysis-2026-01-26.md) | 数据库问题详细分析 |
-| [ID 类型诊断报告](../reports/archived/2026-02-01-id-type-diagnosis-report.md) | ID 类型与索引关系 |
+| [后端数据库分析](../../../../docs/backend/archive/reports/archived/backend-database-analysis-2026-01-26.md) | 数据库问题详细分析 |
+| [ID 类型诊断报告](../../../../docs/backend/archive/reports/archived/2026-02-01-id-type-diagnosis-report.md) | ID 类型与索引关系 |
 
 ---
 
@@ -290,8 +290,8 @@ func logSlowQuery(event *event.CommandSucceededEvent, duration time.Duration) {
 
 ### 相关Issue（联合处理）
 - [#001: 统一模型层 ID 字段类型](./001-unify-id-type-in-models.md) - ID类型统一后，索引策略需要相应调整
-- [#005: API 标准化问题](./005-api-standardization-issues.md) - API性能优化需要索引支持
-- [#011: 前后端数据类型不一致](./011-frontend-backend-data-type-inconsistency.md) - 数据类型统一后，查询模式可能改变，需要索引优化
+- [#005: API 标准化问题](../005-api-standardization-issues.md) - API性能优化需要索引支持
+- [#011: 前后端数据类型不一致](../011-frontend-backend-data-type-inconsistency.md) - 数据类型统一后，查询模式可能改变，需要索引优化
 
 ### 关联问题
 - 规范中定义的数据库索引很多未创建

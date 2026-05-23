@@ -577,7 +577,7 @@ func registerAdminRoutes(v1 *gin.RouterGroup, container *container.ServiceContai
 
 ## 7. 参考资料
 
-- [Router 层快速参考](../router/README.md)
+- [Router 层快速参考](../../router/)
 - [API 层设计说明](./layer-api.md)
 - [Middleware 层设计说明](./layer-middleware.md)
 - [Service 层设计说明](./layer-service.md)

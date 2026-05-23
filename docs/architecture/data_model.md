@@ -1,5 +1,42 @@
 # Qingyu Backend 数据模型
 
+## Page Role
+
+- current-reference
+- current-owner: `docs/architecture/`
+- current-bounded: 当前数据模型参考文档，负责领域模型、关系结构与索引设计说明
+
+## Recommended Read Path
+
+1. 先读 `README.md`。
+2. 再读 `2026-04-07-backend-module-map.md` 了解模块分组。
+3. 最后读本页确认核心模型、关系图和索引设计。
+
+## Boundary
+
+- 本页是数据模型参考，不替代 repository 实现、迁移执行说明或接口手册。
+- 数据库操作与种子说明请回 `../database/`，接口字段以 `../api/README.md` 下专题文档为准。
+
+## Quick Section Map
+
+- 概述
+- 核心业务模型
+- 管理模块
+- 认证授权模块
+- 审核模块
+- 数据模型关系图
+- 索引设计
+
+## Quick Takeaways
+
+- 本页适合回答“系统里有哪些核心模型、它们如何关联”。
+- 需要追实现时应继续结合 repository 与 implementation 文档，不要把本页当执行手册。
+
+## Skip Guide
+
+- 只看数据库专题：跳去 `../database/`。
+- 只看 API 字段与接口：跳去 `../api/README.md`。
+
 ## 1. 概述
 
 本文档描述 Qingyu Backend 系统中的数据模型结构，包括所有领域模型及其关系。

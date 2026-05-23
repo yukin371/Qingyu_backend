@@ -2,6 +2,42 @@
 
 ## 概述
 
+## Page Role
+
+- legacy-report
+- current-owner: `docs/implementation/infrastructure/`
+- current-bounded: 路由冲突修复历史报告，只记录那轮诊断与修复过程
+
+## Recommended Read Path
+
+1. 先读 `README.md`。
+2. 需要路由治理历史时，再读 `../../architecture/router/README.md`。
+3. 需要回看这次修复过程时，再读本文件。
+
+## Boundary
+
+- 本页是历史修复报告，不是当前路由层 owner。
+- 当前架构主入口仍在 `docs/architecture/README.md`。
+
+## Quick Section Map
+
+- 概述
+- 问题描述
+- 问题分析
+- 修复方案
+- 路由架构
+- 验证测试
+- 最佳实践
+- 相关文件
+
+## Quick Takeaways
+
+- 这是路由冲突修复的历史报告。
+
+## Skip Guide
+
+- 只看当前路由 owner：跳过本文件。
+
 本文档记录了青羽平台路由注册冲突问题的诊断和修复过程。
 
 **修复日期**: 2026-01-07
@@ -257,9 +293,9 @@ curl http://localhost:8080/api/v1/admin/users \
 
 ## 相关文档
 
-- [P0 中间件集成](MIDDLEWARE_INTEGRATION.md)
-- [阅读统计模块](READING_STATS_IMPLEMENTATION.md)
-- [书单系统模块](BOOKLIST_MODULE_IMPLEMENTATION.md)
+- [P0 中间件集成](./MIDDLEWARE_INTEGRATION.md)
+- [阅读统计模块](../03-reading/READING_STATS_IMPLEMENTATION.md)
+- [书单系统模块](../04-social/BOOKLIST_MODULE_IMPLEMENTATION.md)
 
 ## 提交历史
 

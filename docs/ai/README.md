@@ -1,183 +1,47 @@
-# Qingyu AI Service - Phase3 v2.0
+# 后端 AI 集成文档入口
 
-> Python 微服务：AI Agent 工作流、RAG 系统、LangGraph 编排
+> 最后整理: 2026-05-22
 
-## 📋 项目概述
+本目录只承载 `Qingyu_backend` 侧的 AI 接入说明，不再兼任 Python AI 服务总览或第二套架构入口。
 
-本服务实现了 Qingyu 写作系统的 AI 能力提升 Phase3 v2.0，包括：
+## First Read Path
 
-- ✅ **Creative Agent 工作流**：理解 → RAG检索 → 生成 → 审核 → 最终化（带重试循环）
-- ✅ **LangChain Tools**：RAGTool、CharacterTool、OutlineTool
-- ✅ **RAG 系统**：向量检索 + 元数据过滤
-- ✅ **gRPC 通信**：与 Go 后端高性能通信
-- ⏳ **上下文感知**：WorkspaceContextTool（待实现）
-- ⏳ **A2A 创作流水线**：大纲 → 角色 → 情节（待实现）
+1. [../architecture/ai_grpc_integration.md](../architecture/ai_grpc_integration.md)
+2. [GRPC_INTEGRATION_GUIDE.md](./GRPC_INTEGRATION_GUIDE.md)
+3. [PHASE3_QUICKSTART.md](./PHASE3_QUICKSTART.md)
+4. [../implementation/README.md](../implementation/README.md)
 
-## 🎯 Phase 3 MVP 状态
+## Owner Boundary
 
-**当前版本**: MVP v1.0  
-**完成度**: 核心功能 100%  
-**详细报告**: 见 [PHASE3_MVP_IMPLEMENTATION.md](./PHASE3_MVP_IMPLEMENTATION.md)
+- `../architecture/ai_grpc_integration.md`：当前后端与 AI 服务的架构边界、依赖关系和运行链路 owner。
+- `GRPC_INTEGRATION_GUIDE.md`：后端接入 AI gRPC 服务的操作型主指南。
+- `Qingyu-Ai-Service/README.md`：Python AI 服务启动、目录结构、部署和运行细节 owner。
+- 父仓 `docs/plans/`：跨仓库 AI 规划、阶段方案和长期设计 owner。
 
-## 技术栈
+## Current Documents
 
-- **框架**: FastAPI 0.109+
-- **Agent**: LangChain + LangGraph
-- **向量数据库**: Milvus 2.3+
-- **向量模型**: BAAI/bge-large-zh-v1.5
-- **通信协议**: gRPC
-- **日志**: structlog
+| 文档 | 状态 | 用途 |
+|------|------|------|
+| [GRPC_INTEGRATION_GUIDE.md](./GRPC_INTEGRATION_GUIDE.md) | `current-owner` | Go 后端接入 AI gRPC 服务的主指南 |
+| [PHASE3_QUICKSTART.md](./PHASE3_QUICKSTART.md) | `current-bounded` | Phase 3 相关快速启动与联调入口 |
+| [PHASE3_GRPC_README.md](./PHASE3_GRPC_README.md) | `current-bounded` | gRPC 目录和联调背景说明 |
+| [PHASE3_GRPC_INTEGRATION_COMPLETE.md](./PHASE3_GRPC_INTEGRATION_COMPLETE.md) | `current-bounded` | 一轮集成完成总结 |
 
-## 快速开始
+## Historical Supplements
 
-### 1. 安装依赖
+以下文档保留用于历史追溯，不应继续被当作当前总入口：
 
-```bash
-# 使用 Poetry
-poetry install
+- [LANGCHAIN_1.0_IMPLEMENTATION_SUMMARY.md](./LANGCHAIN_1.0_IMPLEMENTATION_SUMMARY.md)
+- [LANGCHAIN_1.0_REFACTOR_PROGRESS.md](./LANGCHAIN_1.0_REFACTOR_PROGRESS.md)
+- [LANGCHAIN_1.0_REFACTOR_COMPLETE.md](./LANGCHAIN_1.0_REFACTOR_COMPLETE.md)
+- [LangChain1.0迁移指南_2025-1105.md](./LangChain1.0迁移指南_2025-1105.md)
+- [Service层快速参考_2025-1028.md](./Service层快速参考_2025-1028.md)
+- [Service层完善实施总结_2025-1028.md](./Service层完善实施总结_2025-1028.md)
 
-# 或使用 pip
-pip install -r requirements.txt
-```
+## Practical Rules
 
-### 2. 配置环境变量
-
-```bash
-cp .env.example .env
-# 编辑 .env 配置 API Keys 和服务地址
-```
-
-### 3. 启动服务
-
-```bash
-# 开发模式（热重载）
-poetry run uvicorn src.main:app --reload --host 0.0.0.0 --port 8000
-
-# 生产模式
-poetry run uvicorn src.main:app --host 0.0.0.0 --port 8000 --workers 4
-```
-
-### 4. 访问 API 文档
-
-- FastAPI 文档: http://localhost:8000/docs
-- ReDoc 文档: http://localhost:8000/redoc
-
-## 📁 项目结构
-
-```
-python_ai_service/
-├── src/
-│   ├── core/                      # 核心模块
-│   │   ├── config.py              # 配置管理
-│   │   ├── logger.py              # 日志系统
-│   │   ├── exceptions.py          # 异常定义
-│   │   └── tools/                 # Tool基础框架 ✅
-│   │       ├── base.py            # BaseTool基类
-│   │       ├── registry.py        # ToolRegistry
-│   │       └── langchain/         # LangChain Tools
-│   │           ├── rag_tool.py        # RAG检索工具 ✅
-│   │           ├── character_tool.py  # 角色工具 ✅
-│   │           └── outline_tool.py    # 大纲工具 ✅
-│   ├── agents/                    # Agent系统 ✅
-│   │   ├── states/                # 状态定义
-│   │   │   ├── base_state.py      # 基础状态 ✅
-│   │   │   └── creative_state.py  # 创作状态 ✅
-│   │   ├── nodes/                 # 工作流节点
-│   │   │   ├── understanding.py   # 理解任务 ✅
-│   │   │   ├── retrieval.py       # RAG检索 ✅
-│   │   │   ├── generation.py      # 内容生成 ✅
-│   │   │   ├── review.py          # 审核评估 ✅
-│   │   │   └── finalize.py        # 最终化 ✅
-│   │   └── workflows/             # 工作流编排
-│   │       ├── creative.py        # 创作工作流 ✅
-│   │       └── routers.py         # 路由函数 ✅
-│   ├── services/                  # Service层 ✅
-│   │   ├── agent_service.py       # Agent服务 ✅
-│   │   ├── tool_service.py        # Tool服务 ✅
-│   │   └── rag_service.py         # RAG服务 ✅
-│   ├── infrastructure/            # 基础设施 ✅
-│   │   └── go_api/                # Go API客户端
-│   │       └── http_client.py     # HTTP客户端 ✅
-│   ├── rag/                       # RAG系统
-│   │   ├── milvus_client.py
-│   │   ├── embedding_service.py
-│   │   └── rag_pipeline.py
-│   ├── grpc_server/               # gRPC服务端
-│   │   └── servicer.py            # gRPC实现 ✅
-│   ├── api/                       # FastAPI路由
-│   │   └── health.py
-│   └── main.py                    # FastAPI入口
-├── proto/                         # Protobuf定义
-├── tests/                         # 测试
-├── pyproject.toml                 # Poetry配置
-├── requirements.txt               # Pip依赖 ✅
-├── PHASE3_MVP_IMPLEMENTATION.md   # MVP实施总结 ✅
-└── README.md                      # 本文件
-```
-
-**✅ 已完成** | **⏳ 进行中** | **⏸️ 待实现**
-
-## 开发规范
-
-### 代码风格
-
-- 使用 Black 格式化（行长 100）
-- 使用 isort 排序导入
-- 使用 mypy 类型检查
-- 遵循 PEP 8
-
-### 提交规范
-
-- feat: 新功能
-- fix: 修复 Bug
-- refactor: 重构
-- docs: 文档更新
-- test: 测试相关
-
-## 测试
-
-```bash
-# 运行所有测试
-poetry run pytest
-
-# 运行单个测试文件
-poetry run pytest tests/test_api.py
-
-# 生成覆盖率报告
-poetry run pytest --cov=src --cov-report=html
-```
-
-## 部署
-
-### Docker 部署
-
-```bash
-# 构建镜像
-docker build -t qingyu-ai-service:latest .
-
-# 运行容器
-docker run -p 8000:8000 qingyu-ai-service:latest
-```
-
-### Docker Compose 部署
-
-```bash
-cd ../docker
-docker-compose up -d
-```
-
-## 监控
-
-- Prometheus 指标: http://localhost:8000/metrics
-- Grafana 仪表盘: http://localhost:3000
-
-## 文档
-
-- [架构设计](../doc/design/ai/phase3/README_v2.0升级指南.md)
-- [API 文档](../doc/design/ai/phase3/14.Python_AI_Service_API设计.md)
-- [开发指南](./docs/development.md)
-
-## 许可证
-
-Copyright © 2025 Qingyu Team
-
+1. 如果文档在讲“当前架构边界”，优先更新 `../architecture/ai_grpc_integration.md`，不要在本目录复制第二份架构总览。
+2. 如果文档在讲“如何联调、如何接入、如何排查 gRPC”，优先落在本目录。
+3. 如果文档在讲“AI 服务本身如何运行”，回到 `Qingyu-Ai-Service` 仓库，不在这里复制 Python 运行手册。
+4. 如果需要追溯更老的 Phase 3 设计稿，当前记为 `TBD`。
+   确认路径：父仓 `docs/plans/submodules/backend/`、`docs/plans/` 的历史计划，以及 `Qingyu-Ai-Service` 仓库中的设计/迁移文档。

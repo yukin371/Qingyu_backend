@@ -3,6 +3,42 @@
 > **创建时间**: 2025-10-28  
 > **改进理念**: 从流水线到协作生态
 
+## Page Role
+
+- phase3-legacy-summary
+- current-owner: `design/ai/phase3/`
+- current-bounded: Phase 3 内部总结文，用于记录 v2.0 改进点和阶段性判断
+
+## Recommended Read Path
+
+1. 先读 `README.md`。
+2. 再读 `05.A2A创作流水线Agent设计_v2.0_智能协作生态.md`。
+3. 需要看改进理由与对比时，再读本页。
+
+## Boundary
+
+- 本文是阶段总结，不是当前主线规范。
+- 它适合回答“当时为什么这样升级”，不适合单独充当 today owner。
+- 当前 AI 主线仍以上级入口和 `agent/` 主线文档为准。
+
+## Quick Section Map
+
+- 改进概述
+- 三大核心改进方向
+- 对比分析
+- 预期收益
+- 后续建议
+
+## Quick Takeaways
+
+- 这页是 Phase 3 的总结文，不是当前实施事实源。
+- 重点价值在于理解升级动机和阶段判断。
+
+## Skip Guide
+
+- 只看当前 AI 主线：跳过本文件。
+- 只看 v1.0 vs v2.0 的差异：直接看三大核心改进方向和对比分析。
+
 ---
 
 ## 📋 改进概述

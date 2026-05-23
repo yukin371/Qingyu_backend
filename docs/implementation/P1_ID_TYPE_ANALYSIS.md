@@ -1,5 +1,40 @@
 # P1 重构分析：统一 ID 类型
 
+## Page Role
+
+- legacy-analysis
+- current-owner: `docs/implementation/`
+- current-bounded: P1 历史重构分析页，只记录当时的 ID 统一问题分析
+
+## Recommended Read Path
+
+1. 先读 `README.md`。
+2. 需要回看 P1 分析时，再读本文件。
+
+## Boundary
+
+- 本页是历史分析，不是当前 ID 规范 owner。
+- 当前数据模型与接口约束应回 `docs/architecture/` 与 `docs/api/` 确认。
+
+## Quick Section Map
+
+- 执行时间
+- 问题分析
+- 重构方案对比
+- 优点
+- 实施计划
+- 风险评估
+- 替代方案
+- 结论
+
+## Quick Takeaways
+
+- 这是 P1 历史分析页，不是当前规范页。
+
+## Skip Guide
+
+- 只看当前规范：跳过本文件。
+
 ## 执行时间
 2025-12-29
 

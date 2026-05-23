@@ -1,37 +1,35 @@
-# Backend Review Index
+# 后端审查文档入口
 
-> 更新日期：2026-04-07
+> 最后整理: 2026-05-22  
+> 当前状态: `current-bounded`
 
-`docs/review/` 用于沉淀“审查结论与风险判断”，不作为设计规范或实现说明的替代。
+`docs/review/` 用于沉淀“审查结论与风险判断”，回答“问题严重吗、证据是什么、需要跟进什么”，不作为设计规范或实现说明的替代。
 
-## 当前现状入口
+## Recommended Read Path
 
-优先阅读：
+1. [README.md](./README.md)
+2. [2026-04-07-backend-architecture-risk-review.md](./2026-04-07-backend-architecture-risk-review.md)
+3. [../issues/README.md](../issues/README.md)
 
-- [2026-04-07-backend-architecture-risk-review.md](./2026-04-07-backend-architecture-risk-review.md)
+## Current Materials
 
-这份文档是当前后端架构风险的主入口，覆盖：
+| 文档 | 状态 | 用途 |
+|------|------|------|
+| [2026-04-07-backend-architecture-risk-review.md](./2026-04-07-backend-architecture-risk-review.md) | `current-bounded` | 当前后端架构风险主入口，覆盖运行时入口、模块边界、命名契约和历史 issue 状态 |
 
-- 运行时入口与装配风险
-- 模块边界与职责漂移风险
-- 命名与前后端契约风险
-- 历史 issue 的已解决/部分解决/待处理盘点
+## Archive Reference
 
-## 历史审查包（2025-10-20 批次）
+- [../archive/legacy-2026-05/review/2025-10-batch/](../archive/legacy-2026-05/review/2025-10-batch/): 2025-10 批次阶段性 review 归档，仅用于回溯阶段判断，不再作为当前现状入口。
 
-以下文档保留为历史审查记录，用于回溯阶段决策，不应作为当前现状入口：
+## Boundary
 
-- `MVP阶段审查报告_2025-10-20.md`
-- `MVP审查待办事项_2025-10-20.md`
-- `MVP审查任务总结_2025-10-20.md`
-- `审查执行摘要_2025-10-20.md`
-- `设计文档更新说明_2025-10-20.md`
-- `高优先级任务完成报告_2025-10-20.md`
-- `高优先级任务全部完成报告_2025-10-20.md`
-- 其余同批 `Task*` 与阶段性总结文档
+- 本目录：审查结论、风险判断、证据汇总、整改建议。
+- `../issues/`: 可执行跟踪项与问题台账 owner。
+- `../architecture/`: 当前结构事实 owner。
+- `../implementation/`: 已实施改动与修复经过 owner。
 
-## 目录使用规则
+## Practical Rules
 
 1. 新一轮审查新增独立报告，不覆盖历史报告正文。
-2. 审查报告负责“现象、证据、影响、状态、动作”，不重复写实现细节。
-3. 可执行跟踪项必须同步到 `docs/issues/`，避免审查结论孤立。
+2. 审查报告负责“现象、证据、影响、状态、动作”，不重复写实现细节或长实施步骤。
+3. 可执行跟踪项必须同步到 `../issues/`，避免审查结论孤立。

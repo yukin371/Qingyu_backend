@@ -1,5 +1,52 @@
 # Repository层与Service层架构重新设计
 
+> 最后整理: 2026-05-22  
+> 当前状态: `legacy-live`
+
+本文档是 Repository / Service 分层重构的历史详细设计稿，适合回看接口统一、依赖注入和迁移计划当时如何被规划；它不等同于当前架构事实或当前分层标准的唯一 owner。
+
+## Page Role
+
+- 这里负责：Repository / Service 分层重构的历史目标、接口设计、依赖注入与迁移计划说明。
+- 不负责：当前代码中的真实分层状态、当前标准口径、当前实施完成度结论。
+
+## Recommended Read Path
+
+1. [README.md](./README.md)
+2. [Repository_Service_Redesign_Summary.md](./Repository_Service_Redesign_Summary.md)
+3. [../../../architecture/README.md](../../../architecture/README.md)
+4. [../../../standards/README.md](../../../standards/README.md)
+5. [../../../implementation/README.md](../../../implementation/README.md)
+
+## Boundary
+
+- 如果你要找“当前架构事实”，优先看 [../../../architecture/README.md](../../../architecture/README.md)。
+- 如果你要找“当前分层规则”，优先看 [../../../standards/README.md](../../../standards/README.md)。
+- 如果你要找“已落地实施记录”，优先看 [../../../implementation/README.md](../../../implementation/README.md)。
+- 本页更适合解释分层重构当时如何规划，不适合作为当前实现事实的唯一依据。
+
+## Quick Section Map
+
+| 如果你想看 | 直接跳到 |
+|------|------|
+| 目标与设计原则 | [1. 设计目标](#1-设计目标) |
+| 新架构与职责划分 | [2. 新架构设计](#2-新架构设计) |
+| Repository / Service 接口统一 | [3. 统一接口设计](#3-统一接口设计) |
+| 依赖注入与服务容器 | [4. 依赖注入设计](#4-依赖注入设计) |
+| 迁移计划与实施建议 | [5. 迁移计划](#5-迁移计划) / [6. 实施建议](#6-实施建议) |
+
+## Quick Takeaways
+
+- 这篇最有价值的地方，是它把接口统一、依赖注入和迁移阶段放成了一份完整的分层重构方案。
+- 如果你只关心分层改造主线，优先看“2. 新架构设计”“3. 统一接口设计”“4. 依赖注入设计”。
+- 迁移计划和实施建议属于历史方案口径，不应直接视为当前代码状态。
+
+## Skip Guide
+
+- 只想知道“Repository / Service 应该怎么分”：看 [2. 新架构设计](#2-新架构设计) 和 [3. 统一接口设计](#3-统一接口设计)。
+- 只想知道“容器和依赖注入怎么组织”：看 [4. 依赖注入设计](#4-依赖注入设计)。
+- 如果你当前只关心现行架构或规则，请优先回到 `docs/architecture/`、`docs/standards/`、`docs/implementation/`。
+
 ## 1. 设计目标
 
 ### 1.1 核心目标

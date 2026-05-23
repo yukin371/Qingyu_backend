@@ -46,7 +46,7 @@ export GOOGLE_API_KEY=your_api_key_here
 go mod download
 
 # Python 依赖
-cd python_ai_service
+cd Qingyu-Ai-Service
 pip install -r requirements.txt
 cd ..
 ```
@@ -80,7 +80,7 @@ echo $GOOGLE_API_KEY    # Linux/Mac
 打开一个**新的终端窗口**：
 
 ```bash
-cd python_ai_service
+cd Qingyu-Ai-Service
 python run_grpc_server.py
 ```
 
@@ -120,7 +120,7 @@ Press Ctrl+C to stop
 打开**另一个新终端窗口**：
 
 ```bash
-cd python_ai_service
+cd Qingyu-Ai-Service
 python tests\test_grpc_phase3.py
 ```
 
@@ -236,11 +236,11 @@ Phase3 gRPC客户端测试
 
 ```bash
 # 1. 启动 Python 服务（终端1）
-cd python_ai_service
+cd Qingyu-Ai-Service
 python run_grpc_server.py
 
 # 2. 测试连接（终端2）
-cd python_ai_service
+cd Qingyu-Ai-Service
 python -c "
 import grpc
 from grpc_service import ai_service_pb2, ai_service_pb2_grpc
@@ -281,7 +281,7 @@ grpc._channel._InactiveRpcError: failed to connect to all addresses
 
 **解决**: 先启动 Python 服务
 ```bash
-cd python_ai_service
+cd Qingyu-Ai-Service
 python run_grpc_server.py
 ```
 
@@ -310,7 +310,7 @@ ModuleNotFoundError: No module named 'grpc'
 
 **解决**:
 ```bash
-cd python_ai_service
+cd Qingyu-Ai-Service
 pip install -r requirements.txt
 ```
 
@@ -352,7 +352,7 @@ go mod tidy
 
 详细文档：
 - [gRPC 集成测试指南](./gRPC集成测试指南.md)
-- [Phase3 gRPC README](../../python_ai_service/PHASE3_GRPC_README.md)
+- [Phase3 gRPC README](../../../Qingyu-Ai-Service/PHASE3_GRPC_README.md)
 
 ---
 

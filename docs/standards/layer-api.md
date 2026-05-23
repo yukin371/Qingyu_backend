@@ -740,10 +740,10 @@ func RegisterRoutes(r *gin.RouterGroup, api *BookstoreAPI) {
 
 ## 7. 参考资料
 
-- [API 层快速参考](../api/v1/README.md)
+- [API 层快速参考](../api/README.md)
 - [DTO 层设计说明](./layer-dto.md)
 - [Service 层设计说明](./layer-service.md)
-- [错误码规范](./api-status-code-standard.md)
+- [错误码规范](../../../docs/standards/api-status-code-standard.md)
 
 ---
 

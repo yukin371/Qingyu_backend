@@ -1,8 +1,52 @@
 # 项目四层架构CRUD设计
 
-> **架构版本**: v2.1  
-> **创建日期**: 2025-10-21  
-> **维护者**: 青羽架构组
+> 最后整理: 2026-05-22  
+> 当前状态: `legacy-live`
+> 历史架构版本: v2.1  
+> 创建日期: 2025-10-21  
+> 历史维护者: 青羽架构组
+
+## Page Role
+
+- 这里负责：项目/节点/文档/内容四层结构的历史 CRUD 设计稿，包括模型拆分、协作流程和 API 草图。
+- 不负责：当前项目模块真实分层、当前路由与 API 事实、现行版本管理实现结论。
+
+## Recommended Read Path
+
+1. [README.md](./README.md)
+2. [项目路径管理设计.md](./项目路径管理设计.md)
+3. [../../../architecture/README.md](../../../architecture/README.md)
+4. [../../../api/README.md](../../../api/README.md)
+5. [../../../implementation/README.md](../../../implementation/README.md)
+
+## Boundary
+
+- 如果你要找“当前项目架构边界”，优先看 [../../../architecture/README.md](../../../architecture/README.md)。
+- 如果你要找“当前接口入口”，优先看 [../../../api/README.md](../../../api/README.md)。
+- 如果你要找“已落地实施记录”，优先看 [../../../implementation/README.md](../../../implementation/README.md)。
+- 本页更适合解释四层 CRUD 当时如何规划，不适合作为当前实现事实的唯一依据。
+
+## Quick Section Map
+
+| 如果你想看 | 直接跳到 |
+|------|------|
+| 四层结构与整体架构 | [概述](#概述) / [架构设计](#架构设计) |
+| 四层数据模型 | [四层数据模型详解](#四层数据模型详解) |
+| 典型协作流程 | [四层协作流程](#四层协作流程) |
+| 数据库与 API 设计 | [数据库设计](#数据库设计) / [API设计](#api设计) |
+| 方案优势与关联资料 | [架构优势总结](#架构优势总结) / [相关文档](#相关文档) |
+
+## Quick Takeaways
+
+- 这篇最有价值的地方，是它把项目结构拆成“Project / Node / Document / DocumentContent”四层，并配了典型流程。
+- 如果你只关心项目文档管理主线，优先看“架构设计”“四层数据模型详解”“四层协作流程”“API设计”。
+- 文中的四层划分和接口示意属于历史设计口径，不应直接视为当前代码结构事实。
+
+## Skip Guide
+
+- 只想知道“为什么要拆四层”：看 [概述](#概述) 和 [架构设计](#架构设计)。
+- 只想知道“项目创建、建章节、编辑内容怎么走”：看 [四层协作流程](#四层协作流程)。
+- 如果你当前只关心现行架构或接口事实，请优先回到 `docs/architecture/`、`docs/api/`、`docs/implementation/`。
 
 ## 📋 概述
 
@@ -862,10 +906,10 @@ PUT /api/v1/documents/:id/content
 
 ## 📚 相关文档
 
-- [数据模型设计说明](../../writing/数据模型设计说明.md) - Document/Content分离的详细解释
-- [编辑器系统设计](../../writing/编辑器系统设计.md) - 自动保存和GridFS使用
+- [核心功能设计入口](../README.md) - Document/Content 分层与核心基础设施入口
+- [后端架构总览](../../../architecture/README.md) - 当前实现侧架构入口
 - [版本控制](./版本控制.md) - 版本管理详细设计
-- [Repository层设计规范](../../architecture/repository层设计规范.md) - 数据访问层规范
+- [后端架构总览](../../../architecture/README.md) - 数据访问层规范与当前分层入口
 
 ---
 

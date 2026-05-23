@@ -1,5 +1,52 @@
 # Repository层与Service层重新设计总结
 
+> 最后整理: 2026-05-22  
+> 当前状态: `legacy-report`
+
+本文档是一次 Repository / Service 分层重构的历史总结页，适合回看当时识别出的问题、改造方向和迁移建议；它不等同于当前架构与分层事实的唯一 owner。
+
+## Page Role
+
+- 这里负责：记录一轮分层重构的历史问题分析、改造结果、文件清单和迁移建议。
+- 不负责：当前架构事实、当前分层标准、当前代码已经完全对齐的结论。
+
+## Recommended Read Path
+
+1. [README.md](./README.md)
+2. [Repository层与Service层架构重新设计.md](./Repository层与Service层架构重新设计.md)
+3. [../../../architecture/README.md](../../../architecture/README.md)
+4. [../../../standards/README.md](../../../standards/README.md)
+5. [../../../implementation/README.md](../../../implementation/README.md)
+
+## Boundary
+
+- 如果你要找“完整历史方案”，优先看 [Repository层与Service层架构重新设计.md](./Repository层与Service层架构重新设计.md)。
+- 如果你要找“当前架构事实”，优先看 [../../../architecture/README.md](../../../architecture/README.md)。
+- 如果你要找“当前分层规则”，优先看 [../../../standards/README.md](../../../standards/README.md)。
+- 本页是历史总结，不适合作为当前代码状态的唯一依据。
+
+## Quick Section Map
+
+| 如果你想看 | 直接跳到 |
+|------|------|
+| 重构背景与问题 | [2. 主要问题分析](#2-主要问题分析) |
+| 重新设计方案 | [3. 重新设计方案](#3-重新设计方案) |
+| 具体实现与接口统一 | [4. 具体实现](#4-具体实现) |
+| 文件结构与主要改进 | [5. 文件结构](#5-文件结构) / [6. 主要改进](#6-主要改进) |
+| 使用示例、迁移与后续计划 | [7. 使用示例](#7-使用示例) / [8. 迁移指南](#8-迁移指南) / [9. 后续计划](#9-后续计划) |
+
+## Quick Takeaways
+
+- 这篇最有价值的地方，是它把一轮分层重构的问题、改进项和文件级变化浓缩成了总结页。
+- 如果你只关心“当时为什么要改、最后怎么改的”，优先看“2. 主要问题分析”“3. 重新设计方案”“6. 主要改进”。
+- 文中的后续计划和完成判断属于历史报告语境，不应直接视为当前仓库状态。
+
+## Skip Guide
+
+- 只想看为什么重构：看 [2. 主要问题分析](#2-主要问题分析)。
+- 只想看改了什么：看 [4. 具体实现](#4-具体实现) 和 [5. 文件结构](#5-文件结构)。
+- 如果你当前只关心现行架构或标准，请优先回到 `docs/architecture/`、`docs/standards/`、`docs/implementation/`。
+
 ## 1. 重新设计概述
 
 基于对项目当前架构的分析，我们成功重新设计了Repository层和Service层的依赖关系，解决了原有的接口不兼容、类型不匹配等问题。

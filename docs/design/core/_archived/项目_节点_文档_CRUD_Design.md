@@ -2,7 +2,7 @@
 > 
 > 本文档基于三层架构（project-node-document），已被四层架构取代。
 > 
-> **替代文档**：[项目四层架构CRUD设计](./项目四层架构CRUD设计.md)
+> **替代文档**：[项目四层架构CRUD设计](../project/项目四层架构CRUD设计.md)
 > 
 > **过时原因**：
 > - 缺少Content层设计（不支持GridFS大文本存储）
@@ -11,11 +11,58 @@
 > 
 > **新架构**：Project → Node → Document → Content
 > 
-> 详见：[数据模型设计说明](../writing/数据模型设计说明.md)
+> 详见：[核心功能设计入口](../README.md)
 
 ---
 
 # 项目节点文档CRUD设计
+
+> 最后整理: 2026-05-22  
+> 当前状态: `legacy-superseded`
+
+本文档是基于三层结构的项目/节点/文档 CRUD 历史方案，适合回看从单层 Project 走向多层文档结构的中间阶段设计；它已被四层架构方案替代，不应作为当前项目设计 owner。
+
+## Page Role
+
+- 这里负责：三层 `project-node-document` 历史架构下的 CRUD、数据设计、接口与安全测试说明。
+- 不负责：当前四层结构事实、当前接口入口、当前项目文档管理实现状态。
+
+## Recommended Read Path
+
+1. [README.md](./README.md)
+2. [../project/项目四层架构CRUD设计.md](../project/项目四层架构CRUD设计.md)
+3. [../project/README.md](../project/README.md)
+4. [../../../architecture/README.md](../../../architecture/README.md)
+5. [../../../api/README.md](../../../api/README.md)
+
+## Boundary
+
+- 如果你要找“当前项目结构历史主入口”，优先看 [../project/README.md](../project/README.md)。
+- 如果你要找“当前四层方案”，优先看 [../project/项目四层架构CRUD设计.md](../project/项目四层架构CRUD设计.md)。
+- 如果你要找“当前架构与接口事实”，优先看 [../../../architecture/README.md](../../../architecture/README.md) 和 [../../../api/README.md](../../../api/README.md)。
+- 本页是被替代的中间方案，不适合作为当前实现依据。
+
+## Quick Section Map
+
+| 如果你想看 | 直接跳到 |
+|------|------|
+| 需求、场景与边界 | [1. 需求概述](#1-需求概述) |
+| 三层架构与模块划分 | [2. 架构设计](#2-架构设计) |
+| Router / API / Service / Model 设计 | [3. 详细设计](#3-详细设计) |
+| 数据、接口、安全、测试 | [4. 数据设计](#4-数据设计) / [5. 接口设计](#5-接口设计) / [6. 安全设计](#6-安全设计) / [7. 测试设计](#7-测试设计) |
+| 运维、风险与实施计划 | [8. 部署和运维](#8-部署和运维) / [9. 风险评估](#9-风险评估) / [10. 实施计划](#10-实施计划) |
+
+## Quick Takeaways
+
+- 这篇最有价值的地方，是它能帮助回看三层结构阶段是如何组织项目、节点和文档的。
+- 但它已经被四层架构取代，阅读时应视为“历史演化中间稿”。
+- `legacy-superseded` 表示这页不是当前建议方案。
+
+## Skip Guide
+
+- 只想知道“当前该看哪篇项目结构设计”：看 [../project/项目四层架构CRUD设计.md](../project/项目四层架构CRUD设计.md)。
+- 只想知道“三层结构时期怎么想的”：看 [2. 架构设计](#2-架构设计) 和 [3. 详细设计](#3-详细设计)。
+- 如果你当前只关心现行项目结构，请优先回到 `design/core/project/` 与 `docs/architecture/`。
 
 ## 1. 需求概述
 

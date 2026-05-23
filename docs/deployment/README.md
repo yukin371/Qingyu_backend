@@ -1,187 +1,47 @@
-# 后端 Docker 配置
+# Deployment Topic Hub
 
-后端项目的 Docker 配置文件，包含 MongoDB、Redis 和后端服务。
+本目录是 `Qingyu_backend/docs` 下的“部署专题区”，不是第二个运维总入口。
 
-## 📁 目录结构
+## Current Boundary
 
-```
-Qingyu_backend/docker/
-├── Dockerfile.dev              # 开发环境Dockerfile
-├── Dockerfile.prod             # 生产环境Dockerfile
-├── docker-compose.dev.yml      # 开发环境编排（含数据库）
-├── docker-compose.prod.yml     # 生产环境编排
-├── docker-compose.db-only.yml  # 仅数据库服务
-├── docker-compose.test.yml     # 测试环境编排（CI/CD）
-├── dev.bat                     # 开发环境启动脚本
-├── stop.bat                    # 停止服务脚本
-├── README.md                   # 本文件
-└── README_TEST.md              # 测试环境使用指南
-```
+- `../ops/README.md` 是当前运维与部署文档的 canonical owner。
+- 本目录只保留部署专题文档，例如本地启动、Docker 测试环境、OAuth 应用注册这类专门主题。
+- `Qingyu_backend/docker/` 下的 `README.md`、`README_TEST.md` 和 compose 文件是 Docker 配置的真实文件 owner；本目录只做索引与使用说明，不重复维护第二套长正文。
 
-## 🚀 快速开始
+## Recommended Read Path
 
-### 开发环境
+1. [../ops/README.md](../ops/README.md)
+2. [服务启动指南.md](./服务启动指南.md)
+3. [README_TEST.md](./README_TEST.md)
+4. [测试环境快速验证指南.md](./测试环境快速验证指南.md)
+5. [oauth-app-registration-guide.md](./oauth-app-registration-guide.md)
 
-#### 使用脚本（推荐）
-```bash
-# 在 Qingyu_backend 目录下
-cd docker
-dev.bat
-```
+## Current Topics
 
-#### 使用 docker-compose
-```bash
-cd Qingyu_backend/docker
-docker-compose -f docker-compose.dev.yml up -d
-```
+### 启动与联调
 
-这将启动：
-- MongoDB（数据库）
-- Redis（缓存）
-- Backend（Go服务，支持热重载）
+- [服务启动指南.md](./服务启动指南.md): 本地启动、联调端口、服务健康检查与基础排障
 
-### 测试环境
+### Docker 测试环境
 
-运行测试使用专用的测试环境（详见 [README_TEST.md](README_TEST.md)）：
+- [README_TEST.md](./README_TEST.md): Docker 测试环境入口，优先指向 `Qingyu_backend/docker/README_TEST.md`
+- [测试环境快速验证指南.md](./测试环境快速验证指南.md): 快速验证专题
 
-```bash
-# 使用自动化脚本（推荐）
-./scripts/run_tests_with_docker.sh   # Linux/Mac
-scripts\run_tests_with_docker.bat    # Windows
+### 外部配置专题
 
-# 或手动启动测试环境
-docker-compose -f docker-compose.test.yml up -d
-```
+- [oauth-app-registration-guide.md](./oauth-app-registration-guide.md): OAuth 第三方应用注册与环境变量配置专题
 
-测试环境特点：
-- ✅ 使用内存存储（tmpfs），测试结束自动清理
-- ✅ 完全隔离，不影响开发环境
-- ✅ 快速启动和清理
-- ✅ CI/CD友好
+## Related Owners
 
-### 生产环境
+- [../ops/README.md](../ops/README.md): 运维与部署总入口。
+- [../testing/README.md](../testing/README.md): 测试入口。
+- [../../docker/README.md](../../docker/README.md): Docker 开发/生产配置 owner。
+- [../../docker/README_TEST.md](../../docker/README_TEST.md): Docker 测试环境 owner。
+- [../../docker/测试环境快速验证指南.md](../../docker/测试环境快速验证指南.md): Docker 测试环境快速验证 owner。
 
-```bash
-cd Qingyu_backend/docker
-docker-compose -f docker-compose.prod.yml up -d --build
-```
+## Rule
 
-## 📋 服务说明
-
-### MongoDB
-- **端口**: 27017
-- **数据库**: Qingyu_writer
-- **数据持久化**: Docker Volume
-
-### Redis
-- **端口**: 6379
-- **数据持久化**: Docker Volume
-
-### Backend
-- **端口**: 8080
-- **热重载**: Air工具
-- **框架**: Gin
-
-## 🔧 配置说明
-
-### 开发环境特性
-- ✅ Air热重载（代码修改自动重启）
-- ✅ 源代码实时挂载
-- ✅ MongoDB + Redis
-- ✅ 健康检查
-
-### 生产环境特性
-- ✅ 多阶段构建优化
-- ✅ 二进制文件优化（-ldflags）
-- ✅ 密码保护（MongoDB、Redis）
-- ✅ 自动重启策略
-
-### 环境变量
-
-生产环境需要设置：
-- `MONGO_PASSWORD` - MongoDB密码
-- `REDIS_PASSWORD` - Redis密码
-
-创建 `.env` 文件：
-```env
-MONGO_PASSWORD=your_secure_password
-REDIS_PASSWORD=your_secure_password
-```
-
-## 📝 常用命令
-
-### 启动服务
-```bash
-# 开发环境（含数据库）
-docker-compose -f docker-compose.dev.yml up -d
-
-# 生产环境
-docker-compose -f docker-compose.prod.yml up -d
-```
-
-### 停止服务
-```bash
-docker-compose -f docker-compose.dev.yml down
-```
-
-### 查看日志
-```bash
-# 所有服务
-docker-compose -f docker-compose.dev.yml logs -f
-
-# 特定服务
-docker-compose -f docker-compose.dev.yml logs -f backend
-docker-compose -f docker-compose.dev.yml logs -f mongodb
-```
-
-### 进入容器
-```bash
-# 后端容器
-docker-compose -f docker-compose.dev.yml exec backend sh
-
-# MongoDB
-docker-compose -f docker-compose.dev.yml exec mongodb mongosh
-
-# Redis
-docker-compose -f docker-compose.dev.yml exec redis redis-cli
-```
-
-### 重建服务
-```bash
-docker-compose -f docker-compose.dev.yml up -d --build
-```
-
-## 🌐 访问地址
-
-- **后端API**: http://localhost:8080
-- **MongoDB**: localhost:27017
-- **Redis**: localhost:6379
-
-## 🔗 网络配置
-
-后端服务会创建并使用 `qingyu-network` 网络，前端服务可以通过加入此网络与后端通信。
-
-## 🔍 故障排除
-
-### 端口冲突
-修改 `docker-compose.dev.yml` 中的端口映射：
-```yaml
-ports:
-  - "8081:8080"  # 改为其他端口
-```
-
-### 数据库连接失败
-1. 检查健康检查状态
-2. 等待数据库完全启动（约30秒）
-3. 查看日志排查问题
-
-### 热重载不工作
-1. 检查 `.air.toml` 配置
-2. 查看容器日志
-3. 重启容器
-
-## 📚 相关文档
-
-- [测试环境使用指南](README_TEST.md) - Docker测试环境详细说明
-- [主项目文档](../README.md)
-- [CI/CD配置](../.github/workflows/ci.yml)
+1. 新增部署类专题文档，可以写在本目录；但若是运维总规则、监控、CI/CD、性能优化，应优先写到 `../ops/`。
+2. 不要把 `docker/README*.md` 的长正文复制到本目录；只保留入口和使用场景说明。
+3. 若未来某篇部署文档已经失去专题价值，应先确认备份，再考虑归档到 `../archive/`。
+4. 若只是 Docker 测试环境子话题，优先挂到 `README_TEST.md` 或 `测试环境快速验证指南.md` 这条路径，不要再新长第二套测试环境入口。

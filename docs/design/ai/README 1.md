@@ -1,6 +1,49 @@
-# Qingyu AI Service - Phase3 v2.0
+# AI 设计历史副本
 
 > Python 微服务：AI Agent 工作流、RAG 系统、LangGraph 编排
+> 最后整理：2026-05-22
+
+## Page Role
+
+- legacy-snapshot
+- current-owner: `design/ai/`
+- current-bounded: 仅保留一份与主入口相邻的历史副本，不作为新读者入口
+
+## Recommended Read Path
+
+1. 先读 `README.md`。
+2. 再读 `agent/07.Python_AI_Agent系统架构设计.md`。
+3. 如需历史副本，再回看本文件。
+
+## Boundary
+
+- 本文件是主入口的历史副本。
+- 不应作为新文档导航的默认落点。
+- 若要删改入口层，优先改 `README.md`，不是这里。
+
+## Quick Section Map
+
+- 项目概述
+- Phase 3 MVP 状态
+- 技术栈
+- 快速开始
+- 项目结构
+- 开发规范
+- 测试
+- 部署
+- 监控
+- 文档
+- 许可证
+
+## Quick Takeaways
+
+- 这是副本，不是主入口。
+- 正式导航看 `README.md`。
+
+## Skip Guide
+
+- 只看当前入口：跳过本文件。
+- 只做历史比对：只看项目概述和文档段落即可。
 
 ## 📋 项目概述
 
@@ -17,7 +60,7 @@
 
 **当前版本**: MVP v1.0  
 **完成度**: 核心功能 100%  
-**详细报告**: 见 [PHASE3_MVP_IMPLEMENTATION.md](./PHASE3_MVP_IMPLEMENTATION.md)
+**详细报告**: 见 [phase3/README.md](./phase3/README.md)
 
 ## 技术栈
 
@@ -173,9 +216,9 @@ docker-compose up -d
 
 ## 文档
 
-- [架构设计](../doc/design/ai/phase3/README_v2.0升级指南.md)
-- [API 文档](../doc/design/ai/phase3/14.Python_AI_Service_API设计.md)
-- [开发指南](./docs/development.md)
+- [架构设计](./phase3/README.md)
+- [API 文档](./phase3/14.Python_AI_Service_API设计.md)
+- [当前 AI 设计入口](./README.md)
 
 ## 许可证
 

@@ -250,8 +250,8 @@ fi
 ## 相关文档
 
 - [依赖规则文档](../architecture/dependency-rules.md)
-- [架构设计](../plan/2026-02-09-new-architecture-design.md)
-- [迁移计划](../plan/2026-02-09-migration-plan.md)
+- [架构设计](../../../docs/plans/2026-02-09-new-architecture-design.md)
+- [迁移计划](../../../docs/plans/2026-02-09-migration-plan.md)
 - [依赖检查工具](../../scripts/check-dependencies/README.md)
 
 ## 支持

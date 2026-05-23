@@ -399,9 +399,9 @@ point.HeatScore = viewScore + completionScore + dropOffScore
 
 ## 相关文档
 
-- [书城 API 实现](../feature/BOOKSTORE_API_IMPLEMENTATION_SUMMARY.md)
-- [P0 中间件集成](MIDDLEWARE_INTEGRATION.md)
-- [项目结构总结](../docs/项目结构总结.md)
+- [书城 API 实现](../06-bookstore/BOOKSTORE_API_IMPLEMENTATION_SUMMARY.md)
+- [P0 中间件集成](../infrastructure/MIDDLEWARE_INTEGRATION.md)
+- [项目结构总结](../README.md)
 
 ## 提交历史
 

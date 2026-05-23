@@ -42,13 +42,13 @@ chmod +x scripts/setup_local_test_data.sh
 
 ## 🔑 快速登录
 
-| 类型 | 用户名 | 密码 | 用途 |
+| 类型 | 用户名 | 密码来源 | 用途 |
 |------|--------|------|------|
-| 管理员 | `admin` | `Admin@123456` | 系统管理 |
-| VIP作家 | `vip_writer01` | `Vip@123456` | 高级写作 |
-| VIP读者 | `vip_reader01` | `Vip@123456` | 付费阅读 |
-| 普通作家 | `writer_xuanhuan` | `Writer@123456` | 玄幻创作 |
-| 普通读者 | `reader01` | `Reader@123456` | 基础阅读 |
+| 管理员 | `admin` | `QINGYU_TEST_ADMIN_PASSWORD` 或本地初始化输出 | 系统管理 |
+| VIP作家 | `vip_writer01` | `QINGYU_TEST_VIP_PASSWORD` 或本地初始化输出 | 高级写作 |
+| VIP读者 | `vip_reader01` | `QINGYU_TEST_VIP_PASSWORD` 或本地初始化输出 | 付费阅读 |
+| 普通作家 | `writer_xuanhuan` | `QINGYU_TEST_WRITER_PASSWORD` 或本地初始化输出 | 玄幻创作 |
+| 普通读者 | `reader01` | `QINGYU_TEST_READER_PASSWORD` 或本地初始化输出 | 基础阅读 |
 
 **完整账号列表**: 查看 [内测账号快速参考](doc/testing/内测账号快速参考.md)
 
@@ -93,7 +93,7 @@ go run cmd/server/main.go
 ```bash
 curl -X POST http://localhost:8080/api/v1/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"Admin@123456"}'
+  -d '{"username":"admin","password":"<从环境变量或初始化输出获取>"}'
 ```
 
 ### 2. 获取书城数据

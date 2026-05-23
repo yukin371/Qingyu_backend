@@ -3,6 +3,42 @@
 **版本**: v1.0  
 **日期**: 2025-10-30
 
+## Page Role
+
+- current-reference
+- current-owner: `docs/api/ai/`
+- current-bounded: 当前 Phase3 创作 API 参考文档，负责创作工作流接口说明
+
+## Recommended Read Path
+
+1. 先读 `ai/README.md`。
+2. 再读 `AI_WRITING_ASSISTANT_APIS.md`。
+3. 最后读本页的创作工作流接口定义。
+
+## Boundary
+
+- 本页是创作 API 参考手册，不是 AI 总入口。
+- 当前 AI API owner 仍在 `docs/api/ai/README.md`。
+
+## Quick Section Map
+
+- 概述
+- 基础信息
+- API列表
+- 认证
+- 错误码
+- 性能指标
+- 使用建议
+- 前端集成示例
+
+## Quick Takeaways
+
+- 这是当前 Phase3 创作 API 的专题参考文档。
+
+## Skip Guide
+
+- 只看 AI API 入口：回 `ai/README.md`。
+
 ---
 
 ## 📋 概述
@@ -535,9 +571,10 @@ const executeWorkflow = async (task, token) => {
 
 ## 📚 相关文档
 
-- [Go客户端使用](../../cmd/test_phase3_grpc/README.md)
-- [Python gRPC服务](../../python_ai_service/GRPC_INTEGRATION_GUIDE.md)
-- [完整集成报告](../implementation/00进度指导/Phase3_Go集成完成总结_2025-10-30.md)
+- [Go客户端使用](../../internal/test/cmd/test_phase3_grpc/README.md)
+- [Python gRPC服务](../ai/GRPC_INTEGRATION_GUIDE.md)
+- 完整集成报告：`TBD`
+  确认路径：父仓 `docs/plans/submodules/backend/` 与本仓 `docs/ai/`
 
 ---
 

@@ -3,6 +3,42 @@
 > Date: 2026-04-07  
 > Scope: current backend code layout and runtime composition
 
+## Page Role
+
+- current-reference
+- current-owner: `docs/architecture/`
+- current-bounded: 当前模块地图参考，负责业务域、横切能力和平台基础设施的结构说明
+
+## Recommended Read Path
+
+1. 先读 `README.md`。
+2. 再读 `system_architecture.md`。
+3. 最后读本页确认模块分组、命名漂移和阅读代码的最快路径。
+
+## Boundary
+
+- 本页是模块地图，不替代启动链路、API 手册或实施报告。
+- 依赖方向与 import 约束请回 `dependency-rules.md`。
+
+## Quick Section Map
+
+- Three-Layer Module Narrative
+- Alignment Snapshot
+- Key Structural Facts
+- Naming Drift And Legacy Burden
+- Module Boundary Diagram
+- How To Read The Codebase Fast
+
+## Quick Takeaways
+
+- 本页适合回答“后端到底有哪些模块、它们大致怎么分组”。
+- 模块命名漂移和历史包袱已被显式标注，便于治理时先避坑。
+
+## Skip Guide
+
+- 只看运行时链路：跳去 `2026-04-07-backend-runtime-flow.md`。
+- 只看专题 API：跳去 `../api/README.md`。
+
 ## 1. Three-Layer Module Narrative
 
 后端当前不是“每个模块都完全五层对齐”的纯净结构，而是三类模块并存：

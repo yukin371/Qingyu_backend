@@ -807,6 +807,6 @@ func TestUserRepository_CreateUser(t *testing.T) {
 ## 参考文档
 
 - [testify使用指南](../03_测试工具指南/testify使用指南.md)
-- [真实数据库测试规范](../04_真实数据测试规范/真实数据库测试规范.md)
-- [禁止hack规范](../04_真实数据测试规范/禁止hack规范.md)
+- [真实数据库测试规范](../04_真实数据测试规范/README.md)
+- [禁止 Mock 规范](../04_真实数据测试规范/禁止Mock规范.md)
 - [Service层测试规范](./service_层测试规范.md)

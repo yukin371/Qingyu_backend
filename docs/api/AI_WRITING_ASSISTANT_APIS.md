@@ -2,6 +2,42 @@
 
 ## 概述
 
+## Page Role
+
+- current-reference
+- current-owner: `docs/api/ai/`
+- current-bounded: 当前 AI 写作辅助 API 参考文档，负责总结、校对和敏感词检测接口说明
+
+## Recommended Read Path
+
+1. 先读 `ai/README.md`。
+2. 再读 `AI_API_Documentation.md`。
+3. 最后读本页的写作辅助接口细节。
+
+## Boundary
+
+- 本页是 AI 写作辅助专题参考，不是 AI 总入口。
+- 当前 AI API owner 仍在 `docs/api/ai/README.md`。
+
+## Quick Section Map
+
+- 概述
+- 创建的文件列表
+- API接口详细说明
+- 技术实现要点
+- 测试建议
+- 后续优化建议
+- 注意事项
+- Swagger文档集成
+
+## Quick Takeaways
+
+- 这是当前 AI 写作辅助接口的专题参考文档。
+
+## Skip Guide
+
+- 只看 AI API 入口：回 `ai/README.md`。
+
 本文档介绍了青羽写作平台新增的AI辅助功能API，包括内容总结、文本校对和敏感词检测功能。
 
 ## 创建的文件列表

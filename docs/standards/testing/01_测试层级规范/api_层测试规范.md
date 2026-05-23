@@ -1107,6 +1107,6 @@ func TestAsyncAPI(t *testing.T) {
 ## 参考文档
 
 - [testify使用指南](../03_测试工具指南/testify使用指南.md)
-- [集成测试详细规范](../02_测试类型规范/集成测试详细规范.md)
+- [集成测试详细规范](../../testing/README.md)
 - [Service层测试规范](./service_层测试规范.md)
 - [E2E测试规范](./e2e_测试规范.md)

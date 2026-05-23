@@ -1,5 +1,46 @@
 # Repository层重构设计文档
 
+## Page Role
+
+- legacy-plan
+- current-owner: `design/重构规划/`
+- current-bounded: 历史 Repository 层重构方案，仅保留当时的设计思路与迁移设想
+
+## Recommended Read Path
+
+1. 先读 `README.md`。
+2. 再读 `../../../architecture/README.md`。
+3. 需要回看旧 Repository 重构思路时，再读本文件。
+
+## Boundary
+
+- 本页是历史重构方案，不是当前 Repository 层 owner。
+- 当前共享分层与重构主线已迁到父仓 `docs/plans/submodules/backend/`。
+- 不应把本页直接当成 today 执行清单。
+
+## Quick Section Map
+
+- 概述
+- 架构设计
+- 事务管理设计
+- 查询构建器设计
+- 错误处理设计
+- 缓存策略设计
+- 实现计划
+- API兼容性保证
+- 测试策略
+- 监控和指标
+
+## Quick Takeaways
+
+- 这页记录的是历史 Repository 层重构方案。
+- 当前执行 owner 不在这里。
+
+## Skip Guide
+
+- 只看当前分层治理：去父仓 `docs/plans/submodules/backend/README.md`。
+- 只看旧 Repository 思路：看架构设计、事务管理和实现计划。
+
 ## 1. 概述
 
 ### 1.1 重构目标

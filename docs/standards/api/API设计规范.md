@@ -853,5 +853,5 @@ func TestCommentAPI_BatchDeleteComments_Success(t *testing.T)
 
 **相关文档**：
 - [架构设计规范](../architecture/架构设计规范.md)
-- [路由层设计规范](../architecture/路由层设计规范.md)
-- [测试架构规范](../testing/测试架构规范.md)
+- [路由层设计规范](../../architecture/api_architecture.md)
+- [测试架构规范](../testing/01_测试层级规范/README.md)

@@ -1,6 +1,27 @@
 # 通信设计文档
 
-本目录包含青羽写作平台的通信相关设计文档，涵盖实时通信、消息推送等功能。
+> 最后整理: 2026-05-22  
+> 当前状态: `summary-draft`
+
+本文档是 `design/communication/` 的早期汇总稿，适合快速回看当时如何把“实时通信 + 消息推送”放在同一专题下组织；它不是当前目录的标准入口，也不等同于当前通信能力的 owner 文档。
+
+## Page Role
+
+- 这里负责：历史通信专题总览、早期分组方式、当时的设计目标与技术草图。
+- 不负责：当前目录标准入口、当前通信模块实现边界、现行 API / implementation / architecture owner。
+
+## Recommended Read Path
+
+1. [README.md](./README.md)
+2. [../../architecture/README.md](../../architecture/README.md)
+3. [../../implementation/README.md](../../implementation/README.md)
+4. [../../api/README.md](../../api/README.md)
+
+## Boundary
+
+- 如果你要找“communication 目录现在怎么读”，优先看 [README.md](./README.md)。
+- 如果你要找“当前通信能力的实现与分层 owner”，优先看 [../../architecture/README.md](../../architecture/README.md) 和 [../../implementation/README.md](../../implementation/README.md)。
+- 如果你要找“当前对外接口或路由入口”，优先看 [../../api/README.md](../../api/README.md)。
 
 ## 📁 文档目录
 
@@ -68,8 +89,8 @@ Event Source → Message Queue → Push Service → User Device
 
 ## 🔗 相关文档
 
-- [消息队列设计](../shared/消息队列设计.md) - 消息队列的详细设计
-- [消息通知系统](../platform/消息通知系统.md) - 通知系统的整体设计
+- [共享服务设计归档入口](../shared/README.md) - 消息队列等共享服务旧设计已迁入归档区
+- [平台设计归档入口](../platform/README.md) - 通知系统等平台层旧设计已迁入归档区
 
 ## 📝 更新日志
 

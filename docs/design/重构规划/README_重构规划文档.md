@@ -2,6 +2,46 @@
 
 本目录包含青羽写作平台的架构重构规划文档，记录了系统演进过程中的重构计划和实施方案。
 
+## Page Role
+
+- legacy-summary-draft
+- current-owner: `design/重构规划/`
+- current-bounded: 早期重构规划汇总稿，只保留目录索引与旧目标说明
+
+## Recommended Read Path
+
+1. 先读 `README.md`。
+2. 再读父仓 `../../../../docs/plans/submodules/backend/README.md`。
+3. 如需历史汇总视角，再回看本文件。
+
+## Boundary
+
+- 本页是早期汇总稿，不是目录标准入口。
+- 当前活跃计划 owner 已迁到父仓 `docs/plans/submodules/backend/`。
+- 不应在此继续维护 today 计划状态。
+
+## Quick Section Map
+
+- 文档目录
+- 重构目标
+- 重构策略
+- 重构方法
+- 重构清单
+- 风险控制
+- 进度跟踪
+- 相关文档
+- 更新日志
+
+## Quick Takeaways
+
+- 这页适合快速回看“当时重构规划总体想做什么”。
+- 它不是当前执行面板。
+
+## Skip Guide
+
+- 只看当前计划：跳过本文件。
+- 只看历史总览：看文档目录和重构目标即可。
+
 ## 📁 文档目录
 
 ### Repository层重构
@@ -166,9 +206,9 @@ func (s *Service) SendWelcomeEmail(userID string) error {
 
 ## 🔗 相关文档
 
-- [Repository层与Service层架构重新设计](../core/Repository层与Service层架构重新设计.md)
+- [Repository层与Service层架构重新设计](../core/architecture/Repository层与Service层架构重新设计.md)
 - [Repository层设计说明书](../database/Repository层设计说明书.md)
-- [Service层设计](../core/service层设计.md)
+- [Service层设计](../core/architecture/Repository_Service_Redesign_Summary.md)
 
 ## 📝 更新日志
 

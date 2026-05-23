@@ -679,7 +679,7 @@ func (c *DatabaseConfig) GetDatabaseName() string {
 
 ## 7. 参考资料
 
-- [Config 层快速参考](../config/README.md)
+- [Config 层快速参考](../../config/)
 - [Viper 文档](https://github.com/spf13/viper)
 - [Service 层设计说明](./layer-service.md)
 

@@ -3,6 +3,40 @@
 > **版本**: v1.0  
 > **创建日期**: 2025-10-21
 
+## Page Role
+
+- current-reference
+- current-owner: `docs/api/admin/`
+- current-bounded: 当前管理员 API 参考文档，负责后台管理接口说明
+
+## Recommended Read Path
+
+1. 先读 `admin/README.md`。
+2. 再读本页。
+
+## Boundary
+
+- 本页是管理员接口参考，不是 API 总入口。
+- 当前管理端 owner 仍在 `docs/api/admin/`。
+
+## Quick Section Map
+
+- API概述
+- 用户管理
+- 内容审核
+- 敏感词管理
+- 系统配置
+- 数据统计
+- 公告管理
+
+## Quick Takeaways
+
+- 这是当前管理员 API 参考文档。
+
+## Skip Guide
+
+- 只看总入口：回 `README.md`。
+
 ---
 
 ## 1. API概述

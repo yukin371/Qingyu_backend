@@ -985,7 +985,7 @@ func Error(msg string, fields ...zap.Field) {
 
 ## 7. 参考资料
 
-- [PKG 层快速参考](../pkg/README.md)
+- [PKG 层快速参考](../../pkg/)
 - [Logger 文档](https://pkg.go.dev/go.uber.org/zap)
 - [Validator 文档](https://github.com/go-playground/validator)
 - [Redis 客户端文档](https://github.com/redis/go-redis)

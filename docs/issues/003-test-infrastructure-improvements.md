@@ -4,7 +4,7 @@
 **类型**: 测试基础设施
 **状态**: 部分修复
 **创建日期**: 2026-03-05
-**相关报告**: [Writer DTO 重构总结报告](../reports/2026-03-05-dto-refactoring-summary.md#23-测试基础设施问题)
+**相关报告**: [Writer DTO 重构总结报告](../../../docs/backend/archive/reports/2026-03-05-dto-refactoring-summary.md#23-测试基础设施问题)
 
 ---
 
@@ -267,7 +267,7 @@ func TestA(t *testing.T) {
 
 ### 相关Issue（联合处理）
 - [#009: 测试覆盖率不足](./009-test-coverage-issues.md) - 测试基础设施改进后，覆盖率才能提升
-- [#013: 测试用户种子数据ID未设置问题](./013-test-user-seed-id-not-set.md) - 种子数据是测试基础设施的一部分
+- [#013: 测试用户种子数据ID未设置问题](./archived/013-test-user-seed-id-not-set.md) - 种子数据是测试基础设施的一部分
 
 ### 依赖关系
 - 本Issue是提升测试覆盖率（#009）的基础

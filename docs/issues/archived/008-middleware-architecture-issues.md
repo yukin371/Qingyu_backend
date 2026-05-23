@@ -5,8 +5,8 @@
 **状态**: ✅ 核心问题已解决（已归档）
 **创建日期**: 2026-03-05
 **归档日期**: 2026-03-06
-**来源报告**: [后端综合审计报告](../../reports/archived/backend-comprehensive-audit-summary-2026-01-26.md)、[后端中间件分析](../../reports/archived/backend-middleware-analysis-2026-01-26.md)
-**审查报告**: [P0问题审查报告](../../reports/2026-03-05-p0-issue-audit-report.md)
+**来源报告**: [后端综合审计报告](../../../../docs/backend/archive/reports/archived/backend-comprehensive-audit-summary-2026-01-26.md)、[后端中间件分析](../../../../docs/backend/archive/reports/archived/backend-middleware-analysis-2026-01-26.md)
+**审查报告**: [P0问题审查报告](../../../../docs/backend/archive/reports/2026-03-05-p0-issue-audit-report.md)
 
 ---
 
@@ -43,4 +43,4 @@
 ## 相关 Issue
 
 - 已归档关联: [#012: 401认证错误和权限配置问题](./012-auth-401-and-permission-issues.md)
-- 持续治理关联: [#010: Repository 层业务逻辑渗透问题](../010-repository-business-logic-leakage.md)
+- 持续治理关联: [#010: Repository 层业务逻辑渗透问题](../010-repository-layer-business-logic-permeation.md)

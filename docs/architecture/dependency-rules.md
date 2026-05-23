@@ -4,6 +4,46 @@
 **创建日期**: 2026-02-09
 **适用范围**: Qingyu_backend架构重构阶段2
 
+## Page Role
+
+- current-rule
+- current-owner: `docs/architecture/`
+- current-bounded: 当前依赖方向与模块边界规则手册，负责分层依赖、Shared 依赖和违规处理口径
+
+## Recommended Read Path
+
+1. 先读 `README.md` 与 `system_architecture.md`。
+2. 再读本页确认允许依赖方向与模块约束。
+3. 实际落地时结合 `../standards/` 与 `../implementation/` 对照执行。
+
+## Boundary
+
+- 本页是规则手册，不负责描述完整运行时链路，也不替代历史重构计划。
+- 若规则与代码现状不一致，应先在 `docs/analysis/` 记录偏差，再决定是否进入治理任务。
+
+## Quick Section Map
+
+- 概述
+- 依赖方向原则
+- Shared模块依赖规则
+- 允许的Import清单
+- 接口层依赖规则
+- 特定模块规则
+- 循环依赖检测
+- 违规处理
+- 迁移路径
+- 附录：快速参考
+
+## Quick Takeaways
+
+- 本页是当前依赖规则 owner，不应再去历史设计稿里拼规则。
+- 看到跨层直连或横向强耦合时，应优先回本页核对是否违规。
+
+## Skip Guide
+
+- 只看当前架构总图：回 `system_architecture.md`。
+- 只看模块分组：跳去 `2026-04-07-backend-module-map.md`。
+
 ---
 
 ## 概述

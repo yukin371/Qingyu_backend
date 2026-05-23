@@ -454,10 +454,10 @@ async def main():
 ## 🔗 相关资源
 
 ### 项目文档
-- [迁移指南](MIGRATION_GUIDE_v1.0.md)
+- [迁移指南](../../../docs/plans/2025-01-15-langchain-upgrade-design.md)
 - [进度报告](LANGCHAIN_1.0_REFACTOR_PROGRESS.md)
 - [实施总结](LANGCHAIN_1.0_IMPLEMENTATION_SUMMARY.md)
-- [重构计划](.langchain-1-0--.plan.md)
+- [重构计划](../../../docs/plans/2025-01-15-langchain-upgrade-implementation.md)
 
 ### 外部资源
 - [LangChain 1.0 文档](https://python.langchain.com/docs/)

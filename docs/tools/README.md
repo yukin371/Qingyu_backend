@@ -1,6 +1,33 @@
-# 构建脚本说明
+# 工具文档入口
 
-本目录包含项目的构建和工具脚本。
+> 最后整理: 2026-05-22  
+> 当前状态: `current-bounded`
+
+本目录保存构建工具、迁移工具和脚本使用说明。当前入口以本页为准，不再只把它当成单一的 Protobuf 构建说明。
+
+## Recommended Read Path
+
+1. [README.md](./README.md)
+2. [QUICKSTART.md](./QUICKSTART.md)
+3. [README_MIGRATION.md](./README_MIGRATION.md)
+4. [使用说明.md](./使用说明.md)
+
+## Current Materials
+
+- [QUICKSTART.md](./QUICKSTART.md): 工具快速开始
+- [README_MIGRATION.md](./README_MIGRATION.md): 迁移相关工具说明
+- [使用说明.md](./使用说明.md): Scripts 目录使用说明
+
+## Boundary
+
+- 本目录：构建与工具使用说明
+- `Qingyu_backend/scripts/`: 实际脚本 owner
+- `Qingyu_backend/docs/testing/README.md`: 测试文档入口
+- `Qingyu_backend/docs/migration/README.md`: 文档层迁移说明入口
+
+## Legacy Detailed Manual
+
+以下内容保留为较早一版“构建脚本说明”长文正文，可继续回看，但本页顶部现在才是目录入口层。
 
 ## Protobuf 代码生成
 

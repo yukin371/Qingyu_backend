@@ -1,12 +1,60 @@
 # WebSocket实时通信设计
 
+> 最后整理: 2026-05-22  
+> 当前状态: `legacy-live`
+
+本文档是实时通信能力的历史详细设计稿，适合回看 WebSocket 模块在模块化单体时期是如何规划的；它不等同于当前通信链路的实现 owner。
+
+## Page Role
+
+- 这里负责：WebSocket 实时通信的历史架构、连接管理、房间管理、消息路由设计。
+- 不负责：当前通信模块实际代码入口、当前路由注册事实、当前 API / implementation owner。
+
+## Recommended Read Path
+
+1. [README.md](./README.md)
+2. [../../architecture/README.md](../../architecture/README.md)
+3. [../../implementation/README.md](../../implementation/README.md)
+4. [../../api/README.md](../../api/README.md)
+
+## Boundary
+
+- 如果你要找“当前运行态模块边界”，优先看 [../../architecture/README.md](../../architecture/README.md)。
+- 如果你要找“已经落地的通信相关实现记录”，优先看 [../../implementation/README.md](../../implementation/README.md)。
+- 如果你要找“当前对外接口入口”，优先看 [../../api/README.md](../../api/README.md)。
+
+## Quick Section Map
+
+| 如果你想看 | 直接跳到 |
+|------|------|
+| WebSocket 整体架构、模块和数据流 | [2. 架构设计](#2-架构设计) |
+| 连接管理与消息协议 | [3.1 WebSocket连接管理](#31-websocket连接管理) / [3.2 消息协议设计](#32-消息协议设计) |
+| Service / Repository / Model 详细设计 | [3.3 Service层设计](#33-service层设计) / [3.4 Repository层设计](#34-repository层设计) / [3.5 Model层设计](#35-model层设计) |
+| MongoDB / Redis / 索引策略 | [4. 数据设计](#4-数据设计) |
+| WebSocket / HTTP / 内部接口 | [5. 接口设计](#5-接口设计) |
+| 安全、测试、部署运维 | [6. 安全设计](#6-安全设计) / [7. 测试设计](#7-测试设计) / [8. 部署和运维](#8-部署和运维) |
+| 风险和实施计划 | [9. 风险评估](#9-风险评估) / [10. 实施计划](#10-实施计划) |
+
+## Quick Takeaways
+
+- 这篇最值得先看的，是它把实时通信拆成“连接管理、消息协议、Service/Repository、数据模型、部署运维”几个面，而不是逐段代码细节。
+- 如果你只想知道系统边界，读完“2. 架构设计”“3. 详细设计”“5. 接口设计”通常已经够用。
+- 部署、风险和实施计划更偏阶段方案背景，不适合作为当前落地事实依据。
+
+## Skip Guide
+
+- 只想知道“WebSocket 模块怎么分层”：看 [2. 架构设计](#2-架构设计)。
+- 只想知道“消息和连接怎么组织”：看 [3.1 WebSocket连接管理](#31-websocket连接管理) 和 [3.2 消息协议设计](#32-消息协议设计)。
+- 只想知道“对外暴露什么接口”：看 [5. 接口设计](#5-接口设计)。
+- 如果你当前只关心现网 owner 或实现状态，不必细读本页；优先回到 `docs/architecture/`、`docs/api/`、`docs/implementation/`。
+
 > **架构说明**: 本文档基于**模块化单体架构**设计。
 > 
 > - ✅ 当前采用单一代码库，统一部署
 > - ✅ 通过模块化保持清晰边界
 > - ✅ 为未来可能的微服务化预留空间
 > 
-> 参考：[微服务架构划分建议](../微服务架构划分建议.md)
+> 参考：[后端设计总入口](../README.md)
 
 ## 1. 需求概述
 

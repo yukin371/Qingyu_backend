@@ -1,5 +1,40 @@
 # P0 重构完成总结
 
+## Page Role
+
+- legacy-report
+- current-owner: `docs/implementation/`
+- current-bounded: P0 历史重构完成报告，只记录那轮收口结果
+
+## Recommended Read Path
+
+1. 先读 `README.md`。
+2. 需要回看 P0 重构结果时，再读本文件。
+
+## Boundary
+
+- 本页是历史完成报告，不是当前重构主线 owner。
+- 当前治理计划应回父仓 `docs/plans/submodules/backend/`。
+
+## Quick Section Map
+
+- 执行时间
+- 重构目标
+- 修改的文件清单
+- 具体修改详情
+- 架构改进
+- 微服务拆分路径清晰化
+- 编译验证
+- 后续建议
+
+## Quick Takeaways
+
+- 这是 P0 历史收尾报告，不是 today 状态页。
+
+## Skip Guide
+
+- 只看当前计划：跳过本文件。
+
 ## 执行时间
 2025-12-29
 

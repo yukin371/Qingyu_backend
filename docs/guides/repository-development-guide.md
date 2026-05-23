@@ -411,7 +411,7 @@ func (s *ReadingProgressService) GetProgress(ctx context.Context, progressID str
 
 ## 🔗 相关文档
 
-- [Repository 层设计规范](../archived_standards/repository层设计规范_v1.0_过时.md)（已过时，待更新）
+- [Repository 层设计规范](../standards/layer-repository.md)（现行规范）
 - [Repository 层测试规范](../standards/testing/01_测试层级规范/repository_层测试规范.md)
 - [MongoDB ObjectID 转换](../../models/shared/types/id.go)
 

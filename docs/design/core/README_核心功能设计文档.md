@@ -1,5 +1,29 @@
 # 核心功能设计文档
 
+> 最后整理: 2026-05-22  
+> 当前状态: `legacy-live / summary-draft`
+
+本文档是 `docs/design/core/` 的早期核心能力汇总稿，用来快速回看认证、架构、配置、事务、事件等主题曾如何被整体描述。它不再是当前目录的标准入口。
+
+## Page Role
+
+- 这里负责：核心基础设施历史设计主题的汇总导航。
+- 不负责：当前架构 owner、当前实现状态、当前目录标准入口。
+
+## Recommended Read Path
+
+1. [README.md](./README.md)
+2. [../../architecture/README.md](../../architecture/README.md)
+3. [../../standards/README.md](../../standards/README.md)
+4. [../../database/README.md](../../database/README.md)
+
+## Boundary
+
+- 当前 `core/` 目录标准入口是 [README.md](./README.md)，不是本文件。
+- 如果你要找“当前后端架构与模块边界”，优先看 [../../architecture/README.md](../../architecture/README.md)。
+- 如果你要找“当前规则与分层约束”，优先看 [../../standards/README.md](../../standards/README.md)。
+- 如果你要找数据库迁移与操作专题，请回到 [../../database/README.md](../../database/README.md)。
+
 > **架构版本**: v2.1  
 > **最后更新**: 2025-10-21  
 > **模块定位**: 青羽平台核心基础设施
@@ -12,7 +36,7 @@
 
 ### 身份认证与授权
 
-#### [JWT身份认证设计](./JWT身份认证设计.md)
+#### [JWT身份认证设计](./auth/JWT身份认证设计.md)
 **功能范围**：
 - JWT token生成和验证
 - token刷新机制
@@ -22,7 +46,7 @@
 
 ### 架构设计
 
-#### [Repository层与Service层架构重新设计](./Repository层与Service层架构重新设计.md)
+#### [Repository层与Service层架构重新设计](../shared/README.md)
 **功能范围**：
 - Repository模式设计
 - Service层设计规范
@@ -31,14 +55,14 @@
 
 **状态**：✅ 已完成
 
-#### [Repository\_Service\_Redesign\_Summary](./Repository_Service_Redesign_Summary.md)
+#### [后端架构与分层入口](../../architecture/README.md)
 **文档类型**：架构重构总结  
 **内容**：Repository和Service层重构的总结报告  
 **状态**：✅ 已完成
 
 ### v2.1新增架构设计 ⭐
 
-#### [Saga事务模式设计](./Saga事务模式设计.md)
+#### [Saga事务模式设计](./saga/Saga事务模式设计.md)
 **功能范围**：
 - Saga事务编排
 - 补偿机制设计
@@ -64,7 +88,7 @@
 
 **状态**：✅ v2.1设计完成
 
-#### [事件驱动架构设计](./事件驱动架构设计.md)
+#### [事件驱动架构设计](./event/事件驱动架构设计.md)
 **功能范围**：
 - EventBus增强设计
 - 强制事件方法定义
@@ -86,7 +110,7 @@
 
 ### 项目管理
 
-#### [项目四层架构CRUD设计](./项目四层架构CRUD设计.md) ⭐
+#### [项目四层架构CRUD设计](./project/项目四层架构CRUD设计.md) ⭐
 **功能范围**：
 - **四层架构**：Project → Node → Document → Content
 - GridFS大文本支持（>1MB）
@@ -102,7 +126,7 @@
 
 **状态**：✅ v2.1版本已完成
 
-#### [项目路径管理设计](./项目路径管理设计.md)
+#### [项目路径管理设计](./project/项目路径管理设计.md)
 **功能范围**：
 - 项目路径管理
 - 路径组织规范
@@ -111,16 +135,16 @@
 
 #### 项目CRUD.md - ⚠️ 已过时
 > 本文档已被更详细的设计取代。  
-> **替代文档**：[项目\_节点\_文档\_CRUD\_Design](./项目_节点_文档_CRUD_Design.md)
+> **替代文档**：[项目四层架构CRUD设计](./project/项目四层架构CRUD设计.md)
 
 #### 项目\_节点\_文档\_CRUD\_Design.md - ⚠️ 已过时
 > 本文档基于三层架构，已被四层架构取代。  
-> **替代文档**：[项目四层架构CRUD设计](./项目四层架构CRUD设计.md)  
+> **替代文档**：[项目四层架构CRUD设计](./project/项目四层架构CRUD设计.md)
 > **过时原因**：缺少Content层、不支持GridFS大文本存储
 
 ### 版本控制
 
-#### [版本控制](./版本控制.md)
+#### [版本控制](./project/版本控制.md)
 **功能范围**：
 - 文档版本管理
 - 历史记录
@@ -130,7 +154,7 @@
 
 ### 系统配置
 
-#### [配置系统设计](./配置系统设计.md)
+#### [配置系统设计](./config/配置系统设计.md)
 **功能范围**：
 - 配置管理
 - 环境变量
@@ -144,11 +168,11 @@
 **文档类型**：待办清单  
 **状态**：📝 维护中
 
-#### [协作编辑系统（搁置）](./协作编辑系统（搁置）.md)
+#### [协作编辑系统（搁置）](./核心功能设计待办清单.md)
 **功能范围**：实时协作编辑  
 **状态**：⏸️ 已搁置
 
-#### [插件扩展系统(搁置)](./插件扩展系统(搁置).md)
+#### [插件扩展系统(搁置)](./_archived/)
 **功能范围**：插件系统设计  
 **状态**：⏸️ 已搁置
 
@@ -191,16 +215,16 @@ type UserService interface {
 ## 🔗 相关文档
 
 ### 架构总览
-- [青羽平台模块化架构设计v2.1](../青羽平台模块化架构设计v2.1.md)
+- [后端架构总览](../../architecture/README.md)
 
 ### 重构规划
 - [事件驱动改造清单](../重构规划/事件驱动改造清单.md) - 需要添加事件的Service方法清单
 - [架构重构总结v3.0](../重构规划/架构重构总结v3.0.md) - 架构升级总结
 
 ### 相关模块
-- [数据库设计](../database/) - Repository层实现
-- [中间件设计](../middleware/) - 认证、日志、错误处理
-- [安全设计](../security/) - 安全策略
+- [数据库设计](../database/README.md) - Repository层实现
+- [中间件设计](../middleware/README.md) - 认证、日志、错误处理
+- [安全设计](../security/README.md) - 安全策略
 
 ## 📞 联系方式
 

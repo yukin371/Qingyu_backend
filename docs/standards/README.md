@@ -43,6 +43,16 @@
 - [error_handling_guide.md](./error_handling_guide.md)
 - [validation_standard.md](./validation_standard.md)
 - [p0-error-prevention-and-best-practices.md](./p0-error-prevention-and-best-practices.md)
+- [documentation-taxonomy.md](./documentation-taxonomy.md)
+
+### 专题子目录
+
+- [api/README.md](./api/README.md): API 设计与约定的专题补充
+- [architecture/README.md](./architecture/README.md): 架构标准的专题补充
+- [coding/README.md](./coding/README.md): 编码类规范专题
+- [engineering/README.md](./engineering/README.md): 工程协作类规范专题
+- [testing/README.md](./testing/README.md): 测试标准专题
+- `archive/`: 已归档标准资料
 
 ## 历史补充
 
@@ -73,3 +83,5 @@
 3. 不再使用旧路径写法 `doc/standards/...`，统一使用 `docs/standards/...`。
 4. 新增标准前先标注角色：现行标准、历史补充或阶段报告。
 5. 继续保留的过时文档，必须在本 README 中标注“历史补充”。
+6. 涉及 `Qingyu_backend/docs/` 目录治理、归档或新目录落盘时，先遵循 [documentation-taxonomy.md](./documentation-taxonomy.md)。
+7. 根层标准文件优先承载“当前必须遵循”的规则；专题子目录只做补充说明，不要在子目录里再长出第二套总则入口。

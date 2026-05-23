@@ -46,7 +46,7 @@
 ### 文档
 | 文件路径 | 说明 | 用途 |
 |---------|------|------|
-| `migration/seeds/README_小说导入指南.md` | 详细导入指南 | 完整的使用文档 |
+| `migration/seeds/README.md` | 数据导入入口 | 含小说导入专题的标准入口 |
 | `doc/testing/CNNovel125K快速开始.md` | 快速开始指南 | 快速上手教程 |
 | `doc/testing/CNNovel125K测试报告.md` | 测试报告模板 | 记录测试结果 |
 | `doc/testing/CNNovel125K功能总结.md` | 功能总结（本文档） | 功能概览 |
@@ -284,7 +284,7 @@ go run cmd/migrate/main.go -command=clean-novels [选项]
 - 格式: 纯文本 + 元数据
 
 ### 文档链接
-- [详细导入指南](../../migration/seeds/README_小说导入指南.md)
+- [详细导入指南](../../migration/seeds/README.md)
 - [快速开始](./CNNovel125K快速开始.md)
 - [测试报告模板](./CNNovel125K测试报告.md)
 - [API 文档](../api/)

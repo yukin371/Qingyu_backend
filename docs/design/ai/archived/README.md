@@ -3,6 +3,31 @@
 > **归档日期**: 2025-10-21  
 > **归档原因**: 架构升级到v2.1
 
+## Page Role
+
+- legacy-frozen-hub
+- current-owner: `design/ai/archived/`
+- current-bounded: 只保留旧架构文档的历史入口，不承载新方案
+
+## Recommended Read Path
+
+1. 先读 `../README.md`。
+2. 再读 `../agent/07.Python_AI_Agent系统架构设计.md`。
+3. 只有需要追溯旧架构时，才回到本目录。
+
+## Boundary
+
+- 本目录是历史归档区，不是当前开发入口。
+- 归档文档仅用于演进追溯和对照旧方案。
+- 新方案应落在 `agent/`、`rag/` 和 `streaming/`。
+
+## Quick Section Map
+
+- 归档说明
+- 归档文档列表
+- 如何使用归档文档
+- 当前有效文档
+
 ## 📋 归档说明
 
 本目录存放基于v1.0架构设计的AI相关设计文档。这些文档已被新的v2.1架构设计文档取代。
@@ -41,16 +66,17 @@
 
 请参考以下文档进行开发：
 
-**v2.1 AI模块设计文档**：
-- [Python AI Agent系统架构设计](../07.Python_AI_Agent系统架构设计.md)
-- [Go AI代理层设计](../08.Go_AI代理层设计.md)
-- [Agent工具调用集成设计](../09.Agent工具调用集成设计.md)
-- [RAG检索增强系统设计](../10.RAG检索增强系统设计.md)
-- [RAG事件驱动索引设计](../11.RAG事件驱动索引设计.md)
-- [AI流式接口规范](../12.AI流式接口规范.md)
+**当前 AI 主线文档**：
+- [AI 模块设计入口](../README.md)
+- [Python AI Agent系统架构设计](../agent/07.Python_AI_Agent系统架构设计.md)
+- [Go AI代理层设计](../agent/08.Go_AI代理层设计.md)
+- [Agent工具调用集成设计](../agent/09.Agent工具调用集成设计.md)
+- [RAG检索增强系统设计](../rag/10.RAG检索增强系统设计.md)
+- [RAG事件驱动索引设计](../rag/11.RAG事件驱动索引设计.md)
+- [AI流式接口规范](../streaming/12.AI流式接口规范.md)
 
 **架构总览**：
-- [青羽平台模块化架构设计v2.1](../../青羽平台模块化架构设计v2.1.md)
+- [AI 模块设计入口](../README.md)
 
 ---
 

@@ -4,7 +4,7 @@
 **类型**: 架构问题
 **状态**: Phase 1 完成 (2026-03-07)
 **创建日期**: 2026-03-05
-**来源报告**: [后端综合审计报告](../reports/archived/backend-comprehensive-audit-summary-2026-01-26.md)、[后端 API 分析](../reports/archived/backend-api-analysis-2026-01-26.md)
+**来源报告**: [后端综合审计报告](../../../docs/backend/archive/reports/archived/backend-comprehensive-audit-summary-2026-01-26.md)、[后端 API 分析](../../../docs/backend/archive/reports/archived/backend-api-analysis-2026-01-26.md)
 
 ---
 
@@ -371,9 +371,9 @@ type Pagination struct {
 
 | 文档 | 说明 |
 |------|------|
-| [后端 API 分析](../reports/archived/backend-api-analysis-2026-01-26.md) | 详细 API 问题分析 |
-| [设计审查 - API 标准化](../reports/archived/design-review-block7-api-standardization-20260127.md) | API 标准化设计审查 |
-| [前后端 API 对齐报告](../reports/archived/2026-01-25-frontend-backend-api-alignment-report.md) | 前后端 API 对比分析 |
+| [后端 API 分析](../../../docs/backend/archive/reports/archived/backend-api-analysis-2026-01-26.md) | 详细 API 问题分析 |
+| [设计审查 - API 标准化](../../../docs/backend/archive/reports/archived/design-review-block7-api-standardization-20260127.md) | API 标准化设计审查 |
+| [前后端 API 对齐报告](../../../docs/backend/archive/reports/archived/2026-01-25-frontend-backend-api-alignment-report.md) | 前后端 API 对比分析 |
 
 ---
 
@@ -383,6 +383,6 @@ type Pagination struct {
 - 无
 
 ### 相关Issue（联合处理）
-- [#001: 统一模型层 ID 字段类型](./001-unify-id-type-in-models.md) - ID类型转换影响API响应格式
+- [#001: 统一模型层 ID 字段类型](./archived/001-unify-id-type-in-models.md) - ID类型转换影响API响应格式
 - [#011: 前后端数据类型不一致](./011-frontend-backend-data-type-inconsistency.md) - 响应拦截器处理不一致与API响应格式相关
-- [#006: 数据库索引问题](./006-database-index-issues.md) - API性能优化需要索引支持
+- [#006: 数据库索引问题](./archived/006-database-index-issues.md) - API性能优化需要索引支持

@@ -2,6 +2,42 @@
 
 ## 概述
 
+## Page Role
+
+- current-reference
+- current-owner: `docs/api/shared/`
+- current-bounded: 当前共享服务 API 详细参考文档，负责认证、钱包、存储、管理等共享接口说明
+
+## Recommended Read Path
+
+1. 先读 `README.md`。
+2. 再读 `统一响应处理指南.md`。
+3. 最后读本页的详细接口定义。
+
+## Boundary
+
+- 本页是共享服务详细参考手册，不是 API 总入口。
+- 当前共享 API owner 仍在 `docs/api/shared/README.md`。
+
+## Quick Section Map
+
+- 概述
+- 基础信息
+- 通用响应格式
+- 认证服务API
+- 钱包服务API
+- 存储服务API
+- 管理服务API
+- 错误码说明
+
+## Quick Takeaways
+
+- 这是当前共享服务 API 的详细参考文档。
+
+## Skip Guide
+
+- 只看共享 API 入口：回 `README.md`。
+
 本文档描述了青羽后端共享服务的RESTful API接口。共享服务包括：
 - **认证服务**：用户注册、登录、权限管理
 - **钱包服务**：余额查询、充值、消费、转账、提现

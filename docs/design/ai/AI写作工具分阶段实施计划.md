@@ -7,6 +7,44 @@
 > - [AI写作工具改进建议](./AI写作工具改进建议.md)
 > - [AI写作工具改进可行性分析](./AI写作工具改进可行性分析.md)
 
+## Page Role
+
+- phased-plan
+- current-owner: `design/ai/`
+- current-bounded: 这里是阶段化实施草案，不是当前代码仓库的事实状态
+
+## Recommended Read Path
+
+1. 先读 `AI写作工具改进建议.md`。
+2. 再读 `AI写作工具改进可行性分析.md`。
+3. 最后读本文件，按阶段检查顺序和里程碑。
+
+## Boundary
+
+- 这里描述的是建议中的实施节奏。
+- 阶段、周期和负责人都应视实际资源重新确认。
+- 若要核对已落地内容，请回到主线设计与完成态专题。
+
+## Quick Section Map
+
+- 文档概览
+- Phase 0
+- Phase 1
+- Phase 2
+- Phase 3
+- 风险与依赖
+- 验收与里程碑
+
+## Quick Takeaways
+
+- 这份文档回答“怎么分阶段做”。
+- 它不是实时进度表。
+
+## Skip Guide
+
+- 只关心当前实现：跳过本文件。
+- 只关心排期结构：看各 Phase 和里程碑即可。
+
 ---
 
 ## 📋 文档概览

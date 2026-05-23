@@ -1,5 +1,27 @@
 # Go后端与Python AI微服务 gRPC集成测试指南
 
+> 最后整理: 2026-05-22  
+> 当前状态: `current-bounded`
+
+本文档负责 Go 后端与 AI 服务之间的 gRPC 联调测试，不是普通 HTTP API 或本地环境准备的总入口。
+
+## Page Role
+
+- 这里负责：gRPC 连接测试、功能测试、工作流测试、并发测试与错误处理。
+- 不负责：普通 HTTP API 测试、测试数据导入、后端本地启动总说明。
+
+## Recommended Read Path
+
+1. [README_当前指南.md](./README_当前指南.md)
+2. [gRPC测试专题索引.md](./gRPC测试专题索引.md)
+3. [../ai/README.md](../ai/README.md)
+4. [../deployment/服务启动指南.md](../deployment/服务启动指南.md)
+
+## Boundary
+
+- 后端本地启动方式与端口口径，以 [../deployment/服务启动指南.md](../deployment/服务启动指南.md) 为准。
+- AI 集成边界与接线说明，以 [../ai/README.md](../ai/README.md) 和 `Qingyu-Ai-Service` 当前文档为准。
+
 > **版本**: v1.0  
 > **日期**: 2025-10-31  
 > **状态**: ✅ 就绪
@@ -95,8 +117,8 @@ go mod tidy
 #### Python 依赖
 
 ```bash
-# 在 python_ai_service 目录
-cd python_ai_service
+# 在 Qingyu-Ai-Service 目录
+cd Qingyu-Ai-Service
 pip install -r requirements.txt
 ```
 
@@ -106,17 +128,17 @@ pip install -r requirements.txt
 
 ```bash
 # 在项目根目录
-protoc -I python_ai_service/proto \
+protoc -I Qingyu-Ai-Service/proto \
   --go_out=pkg/grpc/pb \
   --go-grpc_out=pkg/grpc/pb \
-  python_ai_service/proto/ai_service.proto
+  Qingyu-Ai-Service/proto/ai_service.proto
 ```
 
 #### Python 端
 
 ```bash
-# 在 python_ai_service 目录
-cd python_ai_service
+# 在 Qingyu-Ai-Service 目录
+cd Qingyu-Ai-Service
 python -m grpc_tools.protoc \
   -I proto \
   --python_out=src/grpc_service \
@@ -147,14 +169,14 @@ scripts\testing\test_grpc_integration.bat
 #### 步骤 1: 启动 Python AI 服务
 
 ```bash
-cd python_ai_service
+cd Qingyu-Ai-Service
 python run_grpc_server.py
 ```
 
 或使用批处理脚本：
 
 ```bash
-cd python_ai_service
+cd Qingyu-Ai-Service
 scripts\start_grpc_server.bat
 ```
 
@@ -163,7 +185,7 @@ scripts\start_grpc_server.bat
 在新终端窗口：
 
 ```bash
-cd python_ai_service
+cd Qingyu-Ai-Service
 python tests\test_grpc_phase3.py
 ```
 
@@ -339,7 +361,7 @@ failed to connect to AI service: context deadline exceeded
 netstat -ano | findstr :50051
 
 # 2. 重启 Python AI 服务
-cd python_ai_service
+cd Qingyu-Ai-Service
 python run_grpc_server.py
 
 # 3. 检查防火墙设置
@@ -374,13 +396,13 @@ cannot parse invalid wire-format data
 ```bash
 # 重新生成 protobuf 代码
 # Go 端
-protoc -I python_ai_service/proto \
+protoc -I Qingyu-Ai-Service/proto \
   --go_out=pkg/grpc/pb \
   --go-grpc_out=pkg/grpc/pb \
-  python_ai_service/proto/ai_service.proto
+  Qingyu-Ai-Service/proto/ai_service.proto
 
 # Python 端
-cd python_ai_service
+cd Qingyu-Ai-Service
 python -m grpc_tools.protoc \
   -I proto \
   --python_out=src/grpc_service \
@@ -411,7 +433,7 @@ ModuleNotFoundError: No module named 'grpc'
 
 **解决方法**:
 ```bash
-cd python_ai_service
+cd Qingyu-Ai-Service
 pip install -r requirements.txt
 ```
 
@@ -558,11 +580,11 @@ go test -bench=. -benchmem ./test/integration
 
 ## 参考文档
 
-- [Phase3 gRPC README](../../python_ai_service/PHASE3_GRPC_README.md)
-- [gRPC 集成指南](../../python_ai_service/GRPC_INTEGRATION_GUIDE.md)
-- [Proto 定义](../../python_ai_service/proto/ai_service.proto)
+- [Phase3 gRPC README](../../../Qingyu-Ai-Service/PHASE3_GRPC_README.md)
+- [gRPC 集成指南](../../../Qingyu-Ai-Service/GRPC_INTEGRATION_GUIDE.md)
+- [Proto 定义](../../../Qingyu-Ai-Service/proto/ai_service.proto)
 - [Go 客户端实现](../../service/ai/phase3_client.go)
-- [Python 服务端实现](../../python_ai_service/src/grpc_service/server.py)
+- [Python 服务端实现](../../../Qingyu-Ai-Service/src/grpc_service/server.py)
 
 ---
 

@@ -243,8 +243,8 @@ python scripts/data/test_novel_import.py --help
 ### 查看文档
 
 - [完整 README](README.md) - 详细文档
-- [测试数据初始化指南](docs/README_测试数据初始化.md)
-- [项目测试文档](../doc/testing/)
+- [测试数据初始化指南](../testing/本地测试数据初始化指南.md)
+- [项目测试文档](../testing/README.md)
 
 ---
 

@@ -1,5 +1,46 @@
 # Service层重构设计文档
 
+## Page Role
+
+- legacy-plan
+- current-owner: `design/重构规划/`
+- current-bounded: 历史 Service 层重构方案，仅保留当时的设计分层与迁移设想
+
+## Recommended Read Path
+
+1. 先读 `README.md`。
+2. 再读 `../../../architecture/README.md`。
+3. 需要回看旧 Service 层重构思路时，再读本文件。
+
+## Boundary
+
+- 本页是历史重构方案，不是当前 Service 层 owner。
+- 当前共享分层与重构主线已迁到父仓 `docs/plans/submodules/backend/`。
+- 不应直接把本页当 today 执行清单。
+
+## Quick Section Map
+
+- 概述
+- 架构设计
+- 专用Service设计
+- 依赖注入设计
+- 事务管理
+- 错误处理
+- 验证框架
+- 事件系统
+- API兼容性保证
+- 测试策略
+
+## Quick Takeaways
+
+- 这页记录的是历史 Service 层重构方案。
+- 当前执行 owner 不在这里。
+
+## Skip Guide
+
+- 只看当前分层治理：去父仓 `docs/plans/submodules/backend/README.md`。
+- 只看旧 Service 思路：看架构设计、依赖注入和事务管理。
+
 ## 1. 概述
 
 ### 1.1 重构目标

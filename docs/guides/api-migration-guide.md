@@ -705,7 +705,7 @@ response.Success(c, gin.H{
 ### Block 7参考文档
 
 - [Block 7 API规范化试点 - 进展报告](../../../docs/plans/submodules/backend/api-governance/2026-01-28-block7-api-standardization-progress.md)
-- [Block 7 全面回归测试报告](../reports/block7-p2-regression-test-report.md)
+- [Block 7 全面回归测试报告](../../../docs/backend/archive/reports/block7-p2-regression-test-report.md)
 
 ### 相关代码
 

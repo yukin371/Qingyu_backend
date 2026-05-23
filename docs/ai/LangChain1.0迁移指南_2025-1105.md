@@ -357,7 +357,7 @@ agent = create_agent(
 - [LangChain 1.0 官方文档](https://python.langchain.com/docs/)
 - [LangGraph 1.0 文档](https://langchain-ai.github.io/langgraph/)
 - [LangChain 1.0 发布说明](https://blog.langchain.dev/)
-- [项目架构设计文档](doc/design/ai/LangChain_1.0_架构设计.md)
+- [项目架构设计文档](../design/ai/README.md)
 
 ---
 

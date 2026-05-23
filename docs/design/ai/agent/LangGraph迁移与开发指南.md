@@ -4,6 +4,45 @@
 > **创建时间**: 2025-10-21  
 > **适用对象**: 青羽平台AI开发团队
 
+## Page Role
+
+- legacy-migration-guide
+- current-owner: `design/ai/agent/`
+- current-bounded: LangGraph 迁移与开发指南，用于解释当时从 LangChain 迁到 LangGraph 的原因与做法
+
+## Recommended Read Path
+
+1. 先读 `07.Python_AI_Agent系统架构设计.md`。
+2. 再读 `Agent框架技术选型对比.md`。
+3. 需要回看迁移路线和最佳实践时，再读本文件。
+
+## Boundary
+
+- 本页是迁移指南，不是当前主线设计正文。
+- 它回答“为什么迁”和“当时怎么迁”，不直接承担 today owner。
+- 当前主线能力边界应以 `07/08/09` 为准。
+
+## Quick Section Map
+
+- 文档概述
+- 为什么迁移到LangGraph
+- 核心概念对比
+- 迁移步骤
+- 最佳实践
+- 调试和可视化
+- 常见问题
+- 参考资源
+
+## Quick Takeaways
+
+- 这页最有价值的是迁移动机、迁移步骤和开发最佳实践。
+- 它不是当前主线架构说明本体。
+
+## Skip Guide
+
+- 只看当前主线：跳过本文件。
+- 只看迁移路线：看为什么迁移、迁移步骤和最佳实践。
+
 ## 📋 文档概述
 
 本文档为青羽平台AI模块从LangChain迁移到LangGraph提供完整指南，包括：
@@ -14,7 +53,7 @@
 - 常见问题
 
 **阅读前提**：
-- 已阅读 [Agent框架技术选型对比](./Agent框架技术选型对比_LangChain_vs_Others.md)
+- 已阅读 [Agent框架技术选型对比](./Agent框架技术选型对比.md)
 - 了解基础的LangChain概念（可选）
 - 熟悉Python异步编程
 
@@ -955,7 +994,7 @@ workflow.add_edge("outline", "generate")
 - [LangChain官方文档](https://python.langchain.com/docs/get_started/introduction)
 
 ### 青羽项目文档
-- [Agent框架技术选型对比](./Agent框架技术选型对比_LangChain_vs_Others.md) - 为什么选择LangGraph
+- [Agent框架技术选型对比](./Agent框架技术选型对比.md) - 为什么选择LangGraph
 - [Python AI Agent系统架构设计](./07.Python_AI_Agent系统架构设计.md) - 完整实现示例
 - [Agent工具调用集成设计](./09.Agent工具调用集成设计.md) - 工具调用详细设计
 

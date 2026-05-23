@@ -3,7 +3,7 @@
 [![CI/CD Pipeline](https://img.shields.io/badge/CI%2FCD-GitHub%20Actions-success?logo=github-actions)](https://github.com/yukin371/Qingyu_backend/actions)
 [![Go Version](https://img.shields.io/badge/Go-1.24-blue?logo=go)](https://golang.org)
 [![Gin Framework](https://img.shields.io/badge/Gin-1.11.0-red?logo=gin)](https://gin-gonic.com)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+![License](https://img.shields.io/badge/License-MIT-blue.svg)
 [![Documentation](https://img.shields.io/badge/docs-latest-brightgreen)](./docs)
 
 > **技术应用实践项目** - 一款基于 Go + Gin + MongoDB 的新一代智能创作平台后端，旨在实践和整合主流后端技术栈，涵盖微服务架构、消息队列、分布式部署等企业级技术方案。
@@ -230,6 +230,10 @@ curl http://localhost:8080/health
 - Redis: redis://localhost:6379
 - Milvus: localhost:19530
 
+说明：
+- `make docker-up` 这类容器化开发/部署示例通常暴露 `8080`。
+- 本地人工联调与日常开发默认口径，以 `air -c .air.toml` + `http://localhost:9090` 为准；详细说明见 [docs/deployment/服务启动指南.md](./docs/deployment/服务启动指南.md)。
+
 ### 本地开发模式
 
 如果你需要在本地修改代码并实时调试：
@@ -241,12 +245,14 @@ go mod download
 # 2. 启动基础设施（MongoDB + Redis + Milvus）
 cd docker && docker-compose -f docker-compose.db-only.yml up -d
 
-# 3. 配置文件（默认使用 config/config.yaml）
-# 可选：创建本地配置覆盖
-cp config/config.yaml config/config.local.yaml
-# 编辑 config.local.yaml，修改数据库连接等
+# 3. 检查配置口径
+# 当前可见配置文件位于 configs/ 目录
+# 具体加载结构与环境变量规则见 config/README.md
 
-# 4. 运行服务
+# 4. 默认使用热重载启动
+air -c .air.toml
+
+# 5. 如需排查热重载本身，再退回普通启动
 go run cmd/server/main.go
 
 # 或使用 Makefile 命令
@@ -258,7 +264,7 @@ make run
 如果你的环境已经有运行中的 MongoDB 和 Redis：
 
 ```bash
-# 快速启动（使用默认配置，端口 8080）
+# 快速启动（实际端口取决于当前配置；本地联调默认口径见 docs/deployment/服务启动指南）
 make run
 
 # 构建并运行
@@ -284,7 +290,7 @@ go run cmd/server/main.go
 
 ```bash
 # 健康检查
-curl http://localhost:8080/health
+curl http://localhost:9090/health
 
 # 预期响应
 {
@@ -296,7 +302,7 @@ curl http://localhost:8080/health
 }
 
 # 测试API接口
-curl http://localhost:8080/api/v1/bookstore/books
+curl http://localhost:9090/api/v1/bookstore/books
 
 # 运行快速测试
 make test-quick
@@ -328,11 +334,11 @@ docker restart qingyu-mongodb
 **解决方案**：
 ```bash
 # 检查端口占用
-netstat -tunlp | grep 8080
+netstat -tunlp | grep 9090
 
 # 修改配置文件端口
-vim config/config.local.yaml
-# server.port: "9090"
+vim configs/config.yaml
+# 或通过环境变量覆盖端口
 
 # 或使用环境变量
 export QINGYU_SERVER_PORT=9090
@@ -1192,8 +1198,8 @@ QINGYU_PROMETHEUS_ENABLED=true
 
 **内置指标端点**：
 ```bash
-# 查看所有指标
-curl http://localhost:8080/metrics
+# 查看所有指标（本地联调默认端口）
+curl http://localhost:9090/metrics
 
 # 关键指标示例
 # HTTP请求总数
@@ -1245,7 +1251,7 @@ logger.SetLevel(zap.InfoLevel)
 **排查步骤**：
 ```bash
 # 1. 检查配置文件
-cat config/config.yaml
+cat configs/config.yaml
 
 # 2. 检查环境变量
 env | grep QINGYU_
@@ -1257,7 +1263,7 @@ docker ps | grep -E "mongo|redis"
 tail -f server.log
 
 # 5. 检查端口占用
-netstat -tunlp | grep 8080
+netstat -tunlp | grep 9090
 ```
 
 #### Q2: AI服务调用失败
@@ -1309,13 +1315,13 @@ db.books.createIndex({title: 1, author: 1})
 **排查步骤**：
 ```bash
 # 1. 使用pprof分析
-go tool pprof http://localhost:8080/debug/pprof/heap
+go tool pprof http://localhost:9090/debug/pprof/heap
 
 # 2. 生成内存分布图
-go tool pprof -http=:8081 http://localhost:8080/debug/pprof/heap
+go tool pprof -http=:8081 http://localhost:9090/debug/pprof/heap
 
 # 3. 检查goroutine泄漏
-curl http://localhost:8080/debug/pprof/goroutine?debug=1
+curl http://localhost:9090/debug/pprof/goroutine?debug=1
 
 # 4. 定位问题代码
 go tool pprof -list CreateBook /path/to/profile
@@ -1358,7 +1364,7 @@ go tool pprof -list CreateBook /path/to/profile
 
 ## 许可证
 
-本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE) 文件
+本项目采用 MIT 许可证。
 
 ## 联系方式
 
@@ -1369,12 +1375,17 @@ go tool pprof -list CreateBook /path/to/profile
 ## 相关文档
 
 ### 核心文档
+- [后端文档总入口](./docs/README.md)
+- [后端模块边界](./MODULE.md)
 - [后端上下文快速指南](./docs/guides/backend-context-quickstart.md)
 - [后端架构文档索引](./docs/architecture/README.md)
-- [后端运行时架构](./docs/architecture/2026-04-07-backend-runtime-architecture.md)
+- [后端运行时链路](./docs/architecture/2026-04-07-backend-runtime-flow.md)
 - [后端模块地图](./docs/architecture/2026-04-07-backend-module-map.md)
-- [后端架构与文档标准](./docs/standards/backend-architecture-documentation-standard.md)
+- [后端标准入口](./docs/standards/README.md)
 - [后端架构风险审查](./docs/review/2026-04-07-backend-architecture-risk-review.md)
+
+### 根目录说明
+- [qingyubackend.md](./qingyubackend.md) 是 AI 规则文件，不是人工优先阅读入口。
 
 ### API 文档导出
 - 📘 [Swagger API 文档导出说明](./docs/api/SWAGGER_API_导出说明.md) - 如何将 API 文档导出到 Postman、Apifox 等工具

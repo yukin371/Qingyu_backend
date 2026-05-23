@@ -1,8 +1,51 @@
 # Saga事务模式设计
 
-> **文档版本**: v1.0  
-> **创建时间**: 2025-10-21  
-> **实施状态**: 设计阶段
+> 最后整理: 2026-05-22  
+> 当前状态: `legacy-live`
+> 历史版本: v1.0  
+> 创建时间: 2025-10-21  
+> 旧状态标记: 设计阶段
+
+## Page Role
+
+- 这里负责：Saga 事务模式的历史设计方案，包括数据模型、核心业务场景、补偿机制与实施建议。
+- 不负责：当前事务协调实现事实、现行服务边界、当前分布式事务方案结论。
+
+## Recommended Read Path
+
+1. [README.md](./README.md)
+2. [../../../architecture/README.md](../../../architecture/README.md)
+3. [../../../implementation/README.md](../../../implementation/README.md)
+4. [../../../standards/README.md](../../../standards/README.md)
+
+## Boundary
+
+- 如果你要找“当前架构与服务边界”，优先看 [../../../architecture/README.md](../../../architecture/README.md)。
+- 如果你要找“已落地的实施记录”，优先看 [../../../implementation/README.md](../../../implementation/README.md)。
+- 如果你要找“当前规则和标准”，优先看 [../../../standards/README.md](../../../standards/README.md)。
+- 本页更适合解释 Saga 当时如何规划，不适合作为当前实现事实的唯一依据。
+
+## Quick Section Map
+
+| 如果你想看 | 直接跳到 |
+|------|------|
+| Saga 模式背景与目标 | 见“文档概述”“设计目标”“一、Saga模式概述” |
+| 数据模型 | 见“二、数据模型设计” |
+| 关键业务场景 | 见“三、核心业务场景设计” |
+| MQ 补偿与最终一致性 | 见“四、基于消息队列的最终一致性” |
+| Repository 接口与实施建议 | 见“五、Repository接口”“六、实施建议” |
+
+## Quick Takeaways
+
+- 这篇最有价值的地方，是它把 Saga 数据模型、业务场景和补偿流程放成了一份完整的最终一致性方案。
+- 如果你只关心 Saga 主线，优先看“一、Saga模式概述”“三、核心业务场景设计”“四、基于消息队列的最终一致性”。
+- 文中的跨服务场景和实施建议属于历史设计阶段语境，不应直接视为当前实现事实。
+
+## Skip Guide
+
+- 只想知道“Saga 适不适合”：看“一、Saga模式概述”。
+- 只想知道“购买章节/提现怎么编排”：看“三、核心业务场景设计”。
+- 如果你当前只关心现行架构或落地状态，请优先回到 `docs/architecture/`、`docs/implementation/`。
 
 ## 📋 文档概述
 

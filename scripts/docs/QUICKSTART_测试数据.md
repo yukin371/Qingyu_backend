@@ -30,13 +30,13 @@ chmod +x scripts/setup_local_test_data.sh
 
 ### 👥 内测账号（20个）
 
-| 类型 | 数量 | 用户名示例 | 密码 |
+| 类型 | 数量 | 用户名示例 | 密码来源 |
 |------|------|-----------|------|
-| 管理员 | 3 个 | `admin` | `Admin@123456` |
-| VIP用户 | 5 个 | `vip_writer01` | `Vip@123456` |
-| 写作用户 | 5 个 | `writer_xuanhuan` | `Writer@123456` |
-| 阅读用户 | 5 个 | `reader01` | `Reader@123456` |
-| 测试用户 | 2 个 | `tester_api` | `Test@123456` |
+| 管理员 | 3 个 | `admin` | `QINGYU_TEST_ADMIN_PASSWORD` 或初始化输出 |
+| VIP用户 | 5 个 | `vip_writer01` | `QINGYU_TEST_VIP_PASSWORD` 或初始化输出 |
+| 写作用户 | 5 个 | `writer_xuanhuan` | `QINGYU_TEST_WRITER_PASSWORD` 或初始化输出 |
+| 阅读用户 | 5 个 | `reader01` | `QINGYU_TEST_READER_PASSWORD` 或初始化输出 |
+| 测试用户 | 2 个 | `tester_api` | `QINGYU_TEST_USER_PASSWORD` 或初始化输出 |
 
 ---
 
@@ -58,7 +58,7 @@ go run cmd/server/main.go
 # 使用管理员账号
 curl -X POST http://localhost:8080/api/v1/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"admin","password":"Admin@123456"}'
+  -d '{"username":"admin","password":"<从环境变量或初始化输出获取>"}'
 ```
 
 ### 3. 测试书城接口

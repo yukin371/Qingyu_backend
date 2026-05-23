@@ -4,6 +4,42 @@
 > **项目状态**: ✅ 核心架构重构完成  
 > **完成度**: 70% (Phase 1-7 核心工作完成)
 
+## Page Role
+
+- legacy-report
+- current-owner: `design/ai/`
+- current-bounded: LangChain 1.0 重构的阶段完成报告，记录当时核心工作收口情况
+
+## Recommended Read Path
+
+1. 先读 `LangChain1.0迁移指南_2025-1105.md`。
+2. 再读 `LANGCHAIN_1.0_IMPLEMENTATION_SUMMARY.md` 了解前半段。
+3. 最后读本页看阶段收尾结论。
+
+## Boundary
+
+- 本页是完成报告，不是当前技术 owner。
+- “70%” 是阶段性完成度，而非 today 全量状态。
+- 当前 LangChain 相关事实仍需结合代码与主线文档确认。
+
+## Quick Section Map
+
+- 项目总结
+- 已完成的工作
+- 架构成果
+- 测试与验证
+- 后续路线
+
+## Quick Takeaways
+
+- 这页回答“LangChain 1.0 重构收口时交付了什么”。
+- 不保证这些结论今天仍逐项成立。
+
+## Skip Guide
+
+- 只关心当前主线：跳过本文件。
+- 只关心历史交付范围：看已完成的工作和架构成果。
+
 ---
 
 ## 🎉 项目总结
@@ -203,7 +239,7 @@ class AgentServiceV2:
 20. `requirements.txt` (更新)
 21. `pyproject.toml` (更新)
 22. `src/core/config.py` (更新)
-23. `MIGRATION_GUIDE_v1.0.md`
+23. `LangChain1.0迁移指南_2025-1105.md`
 24. `LANGCHAIN_1.0_REFACTOR_PROGRESS.md`
 25. `LANGCHAIN_1.0_IMPLEMENTATION_SUMMARY.md`
 26. `LANGCHAIN_1.0_REFACTOR_COMPLETE.md` (本文档)
@@ -428,7 +464,7 @@ async def main():
 1. **依赖升级**: 必须升级到 LangChain 1.0+
 2. **PostgreSQL 必需**: Checkpointer 需要 PostgreSQL 数据库
 3. **配置必需**: 必须正确配置环境变量
-4. **旧代码迁移**: 参考 `MIGRATION_GUIDE_v1.0.md`
+4. **旧代码迁移**: 参考 `LangChain1.0迁移指南_2025-1105.md`
 
 ### 对运维
 
@@ -454,10 +490,10 @@ async def main():
 ## 🔗 相关资源
 
 ### 项目文档
-- [迁移指南](MIGRATION_GUIDE_v1.0.md)
+- [迁移指南](./LangChain1.0迁移指南_2025-1105.md)
 - [进度报告](LANGCHAIN_1.0_REFACTOR_PROGRESS.md)
 - [实施总结](LANGCHAIN_1.0_IMPLEMENTATION_SUMMARY.md)
-- [重构计划](.langchain-1-0--.plan.md)
+- [迁移指南](./LangChain1.0迁移指南_2025-1105.md)
 
 ### 外部资源
 - [LangChain 1.0 文档](https://python.langchain.com/docs/)

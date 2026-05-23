@@ -4,6 +4,45 @@
 > **创建日期**: 2026-02-27
 > **最后更新**: 2026-02-27
 
+## Page Role
+
+- current-reference
+- current-owner: `docs/architecture/`
+- current-bounded: 当前 AI gRPC 集成专题参考，负责 Go 后端与 AI 服务之间的客户端、配额、监控与错误处理说明
+
+## Recommended Read Path
+
+1. 先读 `README.md`。
+2. 再读 `system_architecture.md` 了解整体边界。
+3. 最后读本页确认 AI gRPC 接入、监控和调用约束。
+
+## Boundary
+
+- 本页是 AI gRPC 集成专题，不承担 AI 文档总入口，也不替代 API 端点手册。
+- 阶段实现和联调说明请回 `../implementation/README.md` 或 `../ai/README.md`；接口说明请回 `../api/ai/README.md`。
+
+## Quick Section Map
+
+- 目录
+- 架构概述
+- gRPC服务列表
+- UnifiedClient 使用指南
+- 配额集成说明
+- 监控使用指南
+- 错误处理说明
+- 示例代码
+- 相关文档
+
+## Quick Takeaways
+
+- 本页是当前 AI gRPC 对接参考，重点在服务间接入而不是产品能力说明。
+- 统一客户端、配额与监控链路都在这里收口，适合作为排查接入问题的首站。
+
+## Skip Guide
+
+- 只看 AI 文档入口：跳去 `../ai/README.md`。
+- 只看 AI 相关 API：跳去 `../api/ai/README.md`。
+
 ---
 
 ## 目录
@@ -663,10 +702,10 @@ func (h *MonitoringHandler) GetTraces(c *gin.Context) {
 
 ## 相关文档
 
-- [AI模块架构](./ai_module_architecture.md)
-- [配额管理](../guides/quota_management.md)
-- [服务配置](../configuration/ai_service_config.md)
-- [测试指南](../testing/ai_integration_test.md)
+- [AI模块架构](../design/ai/README.md)
+- [配额管理](../../../docs/plans/2026-04-17-admin-token-quota-management-design.md)
+- [服务配置](../../../Qingyu-Ai-Service/README.md)
+- [测试指南](../testing/gRPC测试专题索引.md)
 
 ---
 

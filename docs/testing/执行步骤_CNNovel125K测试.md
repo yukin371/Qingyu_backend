@@ -365,7 +365,7 @@ go run cmd/migrate/main.go -command=clean-novels
 ## 📚 参考文档
 
 - [快速开始指南](./CNNovel125K快速开始.md)
-- [详细导入指南](../../migration/seeds/README_小说导入指南.md)
+- [详细导入指南](../../migration/seeds/README.md)
 - [功能总结](./CNNovel125K功能总结.md)
 - [测试报告模板](./CNNovel125K测试报告.md)
 - [API 文档](../api/)

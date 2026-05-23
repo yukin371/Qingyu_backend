@@ -1,5 +1,39 @@
 # Python gRPC服务器启动指南
 
+## Page Role
+
+- legacy-runbook
+- current-owner: `docs/implementation/`
+- current-bounded: 历史 Python gRPC 手动启动排障指南
+
+## Recommended Read Path
+
+1. 先读 `README.md`。
+2. 需要当前 AI 架构背景时，再看 `../architecture/ai_grpc_integration.md`。
+3. 需要回看这套历史手动启动方法时，再读本文件。
+
+## Boundary
+
+- 本页是历史排障/启动说明，不是当前运行标准的唯一来源。
+- 其中命令与脚本路径应结合 today 代码复核。
+
+## Quick Section Map
+
+- 问题诊断
+- 手动启动步骤
+- 验证服务器运行
+- 如果仍然失败
+- 成功标志
+- 下一步
+
+## Quick Takeaways
+
+- 这是历史 gRPC 启动排障说明，不是当前主入口。
+
+## Skip Guide
+
+- 只看当前 owner：跳过本文件。
+
 ## 问题诊断
 
 Python gRPC服务器在后台启动时没有正确运行。这是因为PowerShell的后台任务机制可能导致进程立即退出。

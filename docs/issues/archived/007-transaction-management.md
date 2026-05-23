@@ -4,9 +4,9 @@
 **类型**: 架构问题
 **状态**: ✅ 核心问题已解决（已归档）
 **创建日期**: 2026-03-05
-**来源报告**: [后端综合审计报告](../../reports/archived/backend-comprehensive-audit-summary-2026-01-26.md)、[后端 Service 分析](../../reports/archived/backend-service-analysis-2026-01-26.md)
+**来源报告**: [后端综合审计报告](../../../../docs/backend/archive/reports/archived/backend-comprehensive-audit-summary-2026-01-26.md)、[后端 Service 分析](../../../../docs/backend/archive/reports/archived/backend-service-analysis-2026-01-26.md)
 **审查日期**: 2026-03-05
-**审查报告**: [P0问题审查报告](../../reports/2026-03-05-p0-issue-audit-report.md)
+**审查报告**: [P0问题审查报告](../../../../docs/backend/archive/reports/2026-03-05-p0-issue-audit-report.md)
 
 ---
 
@@ -425,16 +425,16 @@ func (s *OrderService) CreateOrder(
 
 | 文档 | 说明 |
 |------|------|
-| [后端 Service 分析](../reports/archived/backend-service-analysis-2026-01-26.md) | Service 层详细分析 |
-| [设计审查 - Service 层](../reports/archived/design-review-block6-service-layer-20260127.md) | Service 层设计审查 |
+| [后端 Service 分析](../../../../docs/backend/archive/reports/archived/backend-service-analysis-2026-01-26.md) | Service 层详细分析 |
+| [设计审查 - Service 层](../../../../docs/backend/archive/reports/archived/design-review-block6-service-layer-20260127.md) | Service 层设计审查 |
 
 ---
 
 ## 相关Issue
 
 ### 相关Issue（联合处理）
-- [#010: Repository 层业务逻辑渗透](./010-repository-layer-business-logic-permeation.md) - ⚠️ Repository层中的跨表事务需要依赖事务管理器
-- [#005: API 标准化问题](./005-api-standardization-issues.md) - 事务失败后的错误响应需要标准化
+- [#010: Repository 层业务逻辑渗透](../010-repository-layer-business-logic-permeation.md) - ⚠️ Repository层中的跨表事务需要依赖事务管理器
+- [#005: API 标准化问题](../005-api-standardization-issues.md) - 事务失败后的错误响应需要标准化
 
 ### 依赖关系
 - 本Issue是 #010 中的跨表事务问题的前置依赖

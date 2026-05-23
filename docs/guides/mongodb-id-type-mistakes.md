@@ -257,7 +257,7 @@ func (b *BaseMongoRepository) GetDB() *mongo.Database
 ## 相关文档
 
 - [Repository开发指南](./repository-development-guide.md)
-- [BaseMongoRepository使用说明](./base-repository-guide.md)
+- [BaseMongoRepository使用说明](../standards/layer-repository.md)
 - [MongoDB Go Driver文档](https://www.mongodb.com/docs/drivers/go/current/)
 
 ## 修订历史

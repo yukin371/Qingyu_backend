@@ -3,6 +3,37 @@
 > **版本**: v1.0  
 > **创建日期**: 2025-10-21
 
+## Page Role
+
+- current-reference
+- current-owner: `docs/api/`
+- current-bounded: 当前统计 API 参考文档，负责统计类接口说明
+
+## Recommended Read Path
+
+1. 先读 `README.md`。
+2. 再读本页。
+
+## Boundary
+
+- 本页是统计接口参考，不是统计能力总 owner。
+- 当前统计相关实现与架构仍需结合其他 current owner 文档确认。
+
+## Quick Section Map
+
+- API概述
+- 书籍统计
+- 聚合统计
+- 行为记录
+
+## Quick Takeaways
+
+- 这是当前统计 API 参考文档。
+
+## Skip Guide
+
+- 只看总入口：回 `README.md`。
+
 ---
 
 ## 1. API概述
