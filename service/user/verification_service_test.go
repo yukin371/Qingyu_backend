@@ -275,14 +275,14 @@ func TestVerificationService_VerifyCode_Success(t *testing.T) {
 
 	ctx := context.Background()
 	email := "test@example.com"
-	userID := primitive.NewObjectID()
+	purpose := "verify_email"
 
-	// 先生成验证码
-	code, err := service.GetVerificationTokenManager().GenerateCode(ctx, userID.Hex(), email)
+	// 当前 VerifyCode 只校验 email/code，生成验证码时的 userID 与发送链路保持一致为空
+	code, err := service.GetVerificationTokenManager().GenerateCode(ctx, "", email)
 	assert.NoError(t, err, "生成验证码应该成功")
 
-	// 执行测试 - 直接使用 tokenManager 验证
-	err = service.GetVerificationTokenManager().ValidateCode(ctx, userID.Hex(), email, code)
+	// 执行测试
+	err = service.VerifyCode(ctx, email, code, purpose)
 
 	// 验证结果
 	assert.NoError(t, err, "验证码验证应该成功")
@@ -298,11 +298,10 @@ func TestVerificationService_VerifyCode_InvalidCode(t *testing.T) {
 
 	ctx := context.Background()
 	email := "test@example.com"
-	userID := primitive.NewObjectID()
 	purpose := "verify_email"
 
 	// 先生成验证码
-	_, err := service.GetVerificationTokenManager().GenerateCode(ctx, userID.Hex(), email)
+	_, err := service.GetVerificationTokenManager().GenerateCode(ctx, "", email)
 	assert.NoError(t, err, "生成验证码应该成功")
 
 	// 使用错误的验证码

@@ -10,14 +10,65 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 
+	"Qingyu_backend/models/users"
 	userService "Qingyu_backend/service/user"
+	userMocks "Qingyu_backend/service/user/mocks"
 )
 
 // ==================== SendPasswordResetCode 测试 ====================
 
+type passwordAPIResponse struct {
+	Code    int             `json:"code"`
+	Message string          `json:"message"`
+	Data    json.RawMessage `json:"data"`
+}
+
+type passwordResetSuccessData struct {
+	ExpiresIn int    `json:"expires_in"`
+	Message   string `json:"message"`
+}
+
 func TestSendPasswordResetCode_Success(t *testing.T) {
-	t.Skip("需要集成测试环境，包括PasswordService和Repository")
+	gin.SetMode(gin.TestMode)
+
+	mockUserRepo := new(userMocks.MockUserRepository)
+	verificationService := userService.NewVerificationService(mockUserRepo, nil)
+	passwordService := userService.NewPasswordService(verificationService, mockUserRepo)
+	api := NewPasswordAPI(passwordService)
+
+	router := gin.New()
+	router.POST("/users/password/reset/send", api.SendPasswordResetCode)
+
+	email := "reset-success@example.com"
+	mockUserRepo.On("GetByEmail", mock.Anything, email).Return(&users.User{Email: email}, nil).Twice()
+
+	body, err := json.Marshal(map[string]string{"email": email})
+	require.NoError(t, err)
+
+	req, err := http.NewRequest(http.MethodPost, "/users/password/reset/send", bytes.NewBuffer(body))
+	require.NoError(t, err)
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+
+	var resp passwordAPIResponse
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, 0, resp.Code)
+	assert.Equal(t, "重置验证码已发送到您的邮箱", resp.Message)
+
+	var data passwordResetSuccessData
+	require.NotEmpty(t, resp.Data)
+	require.NoError(t, json.Unmarshal(resp.Data, &data))
+	assert.Equal(t, 300, data.ExpiresIn)
+	assert.Equal(t, "重置验证码已发送到您的邮箱", data.Message)
+
+	mockUserRepo.AssertExpectations(t)
 }
 
 func TestSendPasswordResetCode_InvalidEmail(t *testing.T) {
@@ -382,7 +433,50 @@ func TestResetPassword_InvalidCode(t *testing.T) {
 // ==================== UpdatePassword 测试 ====================
 
 func TestUpdatePassword_Success(t *testing.T) {
-	t.Skip("需要集成测试环境")
+	gin.SetMode(gin.TestMode)
+
+	mockUserRepo := new(userMocks.MockUserRepository)
+	verificationService := userService.NewVerificationService(mockUserRepo, nil)
+	passwordService := userService.NewPasswordService(verificationService, mockUserRepo)
+	api := NewPasswordAPI(passwordService)
+
+	userID := "64f1c2d8a12b4c0012345678"
+	oldPassword := "oldpassword123"
+	newPassword := "newpassword123"
+
+	user := &users.User{}
+	require.NoError(t, user.SetPassword(oldPassword))
+	mockUserRepo.On("GetByID", mock.Anything, userID).Return(user, nil).Once()
+	mockUserRepo.On("UpdatePassword", mock.Anything, userID, mock.AnythingOfType("string")).Return(nil).Once()
+
+	router := gin.New()
+	router.PUT("/users/password", func(c *gin.Context) {
+		c.Set("userID", userID)
+		api.UpdatePassword(c)
+	})
+
+	body, err := json.Marshal(map[string]string{
+		"old_password": oldPassword,
+		"new_password": newPassword,
+	})
+	require.NoError(t, err)
+
+	req, err := http.NewRequest(http.MethodPut, "/users/password", bytes.NewBuffer(body))
+	require.NoError(t, err)
+	req.Header.Set("Content-Type", "application/json")
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+
+	var resp passwordAPIResponse
+	require.NoError(t, json.Unmarshal(w.Body.Bytes(), &resp))
+	assert.Equal(t, 0, resp.Code)
+	assert.Equal(t, "操作成功", resp.Message)
+	assert.Len(t, resp.Data, 0)
+
+	mockUserRepo.AssertExpectations(t)
 }
 
 func TestUpdatePassword_MissingOldPassword(t *testing.T) {

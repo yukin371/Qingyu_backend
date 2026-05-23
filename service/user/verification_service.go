@@ -104,7 +104,7 @@ func (s *VerificationService) SendPhoneCode(ctx context.Context, phone, purpose 
 // VerifyCode 验证验证码
 func (s *VerificationService) VerifyCode(ctx context.Context, target, code, purpose string) error {
 	// 验证验证码（purpose参数暂时未使用，保留以备将来扩展）
-	err := s.tokenManager.ValidateCode(ctx, target, code, purpose)
+	err := s.tokenManager.ValidateCode(ctx, "", target, code)
 	if err != nil {
 		return fmt.Errorf("验证码无效或已过期: %w", err)
 	}

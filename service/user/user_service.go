@@ -593,7 +593,7 @@ func (s *UserServiceImpl) RequestPasswordReset(ctx context.Context, req *user2.R
 	}
 
 	// 3. 生成密码重置Token
-	tokenManager := NewPasswordResetTokenManager()
+	tokenManager := GetGlobalPasswordResetTokenManager()
 	resetToken, err := tokenManager.GenerateToken(ctx, req.Email)
 	if err != nil {
 		return nil, serviceInterfaces.NewServiceError(s.name, serviceInterfaces.ErrorTypeInternal, "生成重置Token失败", err)

@@ -202,6 +202,62 @@ func TestUserService_RequestPasswordReset_EmptyEmail(t *testing.T) {
 	assert.Contains(t, err.Error(), "邮箱不能为空")
 }
 
+// TestUserService_PasswordResetFlow_SharedTokenManager 测试请求和确认密码重置共用同一个Token管理器
+func TestUserService_PasswordResetFlow_SharedTokenManager(t *testing.T) {
+	// Arrange
+	service, mockUserRepo := setupUserService()
+	ctx := context.Background()
+
+	testEmail := "shared-manager@example.com"
+	testPassword := "newPassword123"
+
+	testUser := &usersModel.User{
+		Username: "testuser",
+		Email:    testEmail,
+		Status:   usersModel.UserStatusActive,
+	}
+	testUser.ID = primitive.NewObjectID()
+
+	mockUserRepo.On("GetByEmail", ctx, testEmail).Return(testUser, nil).Twice()
+	mockUserRepo.On("UpdatePassword", ctx, testUser.ID.Hex(), mock.AnythingOfType("string")).Return(nil)
+
+	// Act 1 - 请求密码重置，Token应写入全局管理器
+	requestResp, err := service.RequestPasswordReset(ctx, &user2.RequestPasswordResetRequest{
+		Email: testEmail,
+	})
+
+	// Assert 1
+	require.NoError(t, err)
+	require.NotNil(t, requestResp)
+	assert.True(t, requestResp.Success)
+
+	tokenManager := GetGlobalPasswordResetTokenManager()
+	tokenManager.mu.RLock()
+	tokenInfo, ok := tokenManager.tokens[testEmail]
+	tokenManager.mu.RUnlock()
+	require.True(t, ok)
+	require.NotNil(t, tokenInfo)
+	require.NotEmpty(t, tokenInfo.Token)
+
+	// Act 2 - 使用同一个全局管理器中的Token确认重置
+	confirmResp, err := service.ConfirmPasswordReset(ctx, &user2.ConfirmPasswordResetRequest{
+		Email:    testEmail,
+		Token:    tokenInfo.Token,
+		Password: testPassword,
+	})
+
+	// Assert 2
+	require.NoError(t, err)
+	require.NotNil(t, confirmResp)
+	assert.True(t, confirmResp.Success)
+
+	tokenManager.mu.RLock()
+	assert.True(t, tokenManager.tokens[testEmail].Used)
+	tokenManager.mu.RUnlock()
+
+	mockUserRepo.AssertExpectations(t)
+}
+
 // =========================
 // 确认密码重置相关测试
 // =========================
