@@ -887,7 +887,7 @@ func (r *BookRepository) FindByID(ctx context.Context, id string) (*models.Book,
 
 // 错误响应
 {
-  "code": 10001,
+  "code": 2001,
   "message": "用户不存在",
   "detail": "user_id not found: 123456"
 }
