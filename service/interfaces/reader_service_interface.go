@@ -1,10 +1,18 @@
 package interfaces
 
 import (
+	"Qingyu_backend/models"
 	readerModel "Qingyu_backend/models/reader"
 	"context"
 	"time"
 )
+
+// ReaderDevicePort 是阅读器跨设备进度场景所需的最小设备接口。
+// 具体持久化实现由组合根注入，API 层不依赖完整仓储接口。
+type ReaderDevicePort interface {
+	UpsertDevice(ctx context.Context, device *models.Device) error
+	GetByUserID(ctx context.Context, userID string) ([]*models.Device, error)
+}
 
 // ReaderService 阅读器服务接口
 type ReaderService interface {

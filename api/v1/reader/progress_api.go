@@ -10,7 +10,6 @@ import (
 	"Qingyu_backend/models"
 	readerModels "Qingyu_backend/models/reader"
 	"Qingyu_backend/pkg/response"
-	readerRepo "Qingyu_backend/repository/interfaces/reader"
 	"Qingyu_backend/service/interfaces"
 
 	"github.com/gin-gonic/gin"
@@ -25,14 +24,14 @@ const (
 // ProgressAPI 阅读进度API
 type ProgressAPI struct {
 	readerService interfaces.ReaderService
-	deviceRepo   readerRepo.DeviceRepository
+	deviceRepo    interfaces.ReaderDevicePort
 }
 
 // NewProgressAPI 创建阅读进度API实例
-func NewProgressAPI(readerService interfaces.ReaderService, deviceRepo readerRepo.DeviceRepository) *ProgressAPI {
+func NewProgressAPI(readerService interfaces.ReaderService, deviceRepo interfaces.ReaderDevicePort) *ProgressAPI {
 	return &ProgressAPI{
 		readerService: readerService,
-		deviceRepo:   deviceRepo,
+		deviceRepo:    deviceRepo,
 	}
 }
 
