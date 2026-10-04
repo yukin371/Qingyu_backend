@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"time"
 
-	serviceInterfaces "Qingyu_backend/service/interfaces"
+	"Qingyu_backend/models/dto"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -44,8 +44,8 @@ func NewMongoExportTaskRepository(db *mongo.Database) *MongoExportTaskRepository
 	}
 }
 
-func (r *MongoExportTaskRepository) toModel(doc *exportTaskDocument) *serviceInterfaces.ExportTask {
-	return &serviceInterfaces.ExportTask{
+func (r *MongoExportTaskRepository) toModel(doc *exportTaskDocument) *dto.ExportTask {
+	return &dto.ExportTask{
 		ID:            doc.ID.Hex(),
 		Type:          doc.Type,
 		ResourceID:    doc.ResourceID,
@@ -64,7 +64,7 @@ func (r *MongoExportTaskRepository) toModel(doc *exportTaskDocument) *serviceInt
 	}
 }
 
-func (r *MongoExportTaskRepository) toDoc(task *serviceInterfaces.ExportTask) (*exportTaskDocument, error) {
+func (r *MongoExportTaskRepository) toDoc(task *dto.ExportTask) (*exportTaskDocument, error) {
 	var oid primitive.ObjectID
 	if task.ID != "" {
 		var err error
@@ -95,7 +95,7 @@ func (r *MongoExportTaskRepository) toDoc(task *serviceInterfaces.ExportTask) (*
 	}, nil
 }
 
-func (r *MongoExportTaskRepository) Create(ctx context.Context, task *serviceInterfaces.ExportTask) error {
+func (r *MongoExportTaskRepository) Create(ctx context.Context, task *dto.ExportTask) error {
 	doc, err := r.toDoc(task)
 	if err != nil {
 		return fmt.Errorf("convert task failed: %w", err)
@@ -110,7 +110,7 @@ func (r *MongoExportTaskRepository) Create(ctx context.Context, task *serviceInt
 	return err
 }
 
-func (r *MongoExportTaskRepository) FindByID(ctx context.Context, id string) (*serviceInterfaces.ExportTask, error) {
+func (r *MongoExportTaskRepository) FindByID(ctx context.Context, id string) (*dto.ExportTask, error) {
 	oid, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, fmt.Errorf("invalid id: %w", err)
@@ -126,7 +126,7 @@ func (r *MongoExportTaskRepository) FindByID(ctx context.Context, id string) (*s
 	return r.toModel(&doc), nil
 }
 
-func (r *MongoExportTaskRepository) FindByProjectID(ctx context.Context, projectID string, page, pageSize int) ([]*serviceInterfaces.ExportTask, int64, error) {
+func (r *MongoExportTaskRepository) FindByProjectID(ctx context.Context, projectID string, page, pageSize int) ([]*dto.ExportTask, int64, error) {
 	filter := bson.M{"resource_id": projectID}
 	total, err := r.collection.CountDocuments(ctx, filter)
 	if err != nil {
@@ -149,14 +149,14 @@ func (r *MongoExportTaskRepository) FindByProjectID(ctx context.Context, project
 		return nil, 0, err
 	}
 
-	tasks := make([]*serviceInterfaces.ExportTask, len(docs))
+	tasks := make([]*dto.ExportTask, len(docs))
 	for i, doc := range docs {
 		tasks[i] = r.toModel(&doc)
 	}
 	return tasks, total, nil
 }
 
-func (r *MongoExportTaskRepository) Update(ctx context.Context, task *serviceInterfaces.ExportTask) error {
+func (r *MongoExportTaskRepository) Update(ctx context.Context, task *dto.ExportTask) error {
 	doc, err := r.toDoc(task)
 	if err != nil {
 		return fmt.Errorf("convert task failed: %w", err)
@@ -177,7 +177,7 @@ func (r *MongoExportTaskRepository) Delete(ctx context.Context, id string) error
 	return err
 }
 
-func (r *MongoExportTaskRepository) FindByUser(ctx context.Context, userID string, page, pageSize int) ([]*serviceInterfaces.ExportTask, int64, error) {
+func (r *MongoExportTaskRepository) FindByUser(ctx context.Context, userID string, page, pageSize int) ([]*dto.ExportTask, int64, error) {
 	filter := bson.M{"created_by": userID}
 	total, err := r.collection.CountDocuments(ctx, filter)
 	if err != nil {
@@ -200,7 +200,7 @@ func (r *MongoExportTaskRepository) FindByUser(ctx context.Context, userID strin
 		return nil, 0, err
 	}
 
-	tasks := make([]*serviceInterfaces.ExportTask, len(docs))
+	tasks := make([]*dto.ExportTask, len(docs))
 	for i, doc := range docs {
 		tasks[i] = r.toModel(&doc)
 	}

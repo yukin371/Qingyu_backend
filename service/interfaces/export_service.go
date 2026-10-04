@@ -2,7 +2,8 @@ package interfaces
 
 import (
 	"context"
-	"time"
+
+	"Qingyu_backend/models/dto"
 )
 
 // ExportService 导出服务接口
@@ -64,24 +65,9 @@ type ExportOptions struct {
 	ExcludeChapters []string `json:"excludeChapters,omitempty"` // 排除的章节ID
 }
 
-// ExportTask 导出任务
-type ExportTask struct {
-	ID            string     `json:"id"`
-	Type          string     `json:"type"`       // document, project
-	ResourceID    string     `json:"resourceId"` // 文档ID或项目ID
-	ResourceTitle string     `json:"resourceTitle"`
-	Format        string     `json:"format"`
-	Status        string     `json:"status"`            // pending, processing, completed, failed, cancelled
-	Progress      int        `json:"progress"`          // 0-100
-	FileSize      int64      `json:"fileSize"`          // 文件大小（字节）
-	FileURL       string     `json:"fileUrl,omitempty"` // 下载链接
-	ExpiresAt     time.Time  `json:"expiresAt"`         // 文件过期时间
-	ErrorMsg      string     `json:"errorMsg,omitempty"`
-	CreatedBy     string     `json:"createdBy"`
-	CreatedAt     time.Time  `json:"createdAt"`
-	UpdatedAt     time.Time  `json:"updatedAt"`
-	CompletedAt   *time.Time `json:"completedAt,omitempty"`
-}
+// ExportTask 导出任务。
+// Canonical owner: models/dto，service 层仅保留兼容别名。
+type ExportTask = dto.ExportTask
 
 // ExportFile 导出文件
 type ExportFile struct {

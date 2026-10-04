@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"Qingyu_backend/models/dto"
-	serviceInterfaces "Qingyu_backend/service/interfaces"
 	"Qingyu_backend/repository"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -67,7 +66,7 @@ func NewMongoPublicationRepository(db *mongo.Database) *MongoPublicationReposito
 	}
 }
 
-func (r *MongoPublicationRepository) Create(ctx context.Context, record *serviceInterfaces.PublicationRecord) error {
+func (r *MongoPublicationRepository) Create(ctx context.Context, record *dto.PublicationRecord) error {
 	doc, err := r.toDocument(ctx, record)
 	if err != nil {
 		return err
@@ -84,7 +83,7 @@ func (r *MongoPublicationRepository) Create(ctx context.Context, record *service
 	return err
 }
 
-func (r *MongoPublicationRepository) FindByID(ctx context.Context, id string) (*serviceInterfaces.PublicationRecord, error) {
+func (r *MongoPublicationRepository) FindByID(ctx context.Context, id string) (*dto.PublicationRecord, error) {
 	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, fmt.Errorf("invalid publication record id: %w", err)
@@ -100,7 +99,7 @@ func (r *MongoPublicationRepository) FindByID(ctx context.Context, id string) (*
 	return r.toRecord(&doc), nil
 }
 
-func (r *MongoPublicationRepository) FindByProjectID(ctx context.Context, projectID string, page, pageSize int) ([]*serviceInterfaces.PublicationRecord, int64, error) {
+func (r *MongoPublicationRepository) FindByProjectID(ctx context.Context, projectID string, page, pageSize int) ([]*dto.PublicationRecord, int64, error) {
 	if page <= 0 {
 		page = 1
 	}
@@ -135,14 +134,14 @@ func (r *MongoPublicationRepository) FindByProjectID(ctx context.Context, projec
 		return nil, 0, err
 	}
 
-	records := make([]*serviceInterfaces.PublicationRecord, 0, len(docs))
+	records := make([]*dto.PublicationRecord, 0, len(docs))
 	for i := range docs {
 		records = append(records, r.toRecord(&docs[i]))
 	}
 	return records, total, nil
 }
 
-func (r *MongoPublicationRepository) FindPending(ctx context.Context, page, pageSize int) ([]*serviceInterfaces.PublicationRecord, int64, error) {
+func (r *MongoPublicationRepository) FindPending(ctx context.Context, page, pageSize int) ([]*dto.PublicationRecord, int64, error) {
 	if page <= 0 {
 		page = 1
 	}
@@ -150,7 +149,7 @@ func (r *MongoPublicationRepository) FindPending(ctx context.Context, page, page
 		pageSize = 20
 	}
 
-	filter := bson.M{"status": serviceInterfaces.PublicationStatusPending}
+	filter := bson.M{"status": dto.PublicationStatusPending}
 	total, err := r.collection.CountDocuments(ctx, filter)
 	if err != nil {
 		return nil, 0, err
@@ -171,14 +170,14 @@ func (r *MongoPublicationRepository) FindPending(ctx context.Context, page, page
 		return nil, 0, err
 	}
 
-	records := make([]*serviceInterfaces.PublicationRecord, 0, len(docs))
+	records := make([]*dto.PublicationRecord, 0, len(docs))
 	for i := range docs {
 		records = append(records, r.toRecord(&docs[i]))
 	}
 	return records, total, nil
 }
 
-func (r *MongoPublicationRepository) FindByResourceID(ctx context.Context, resourceID string) (*serviceInterfaces.PublicationRecord, error) {
+func (r *MongoPublicationRepository) FindByResourceID(ctx context.Context, resourceID string) (*dto.PublicationRecord, error) {
 	// resource_id 存储为 string 类型，直接使用 string 查询
 	var doc publicationRecordDocument
 	if err := r.collection.FindOne(
@@ -194,7 +193,7 @@ func (r *MongoPublicationRepository) FindByResourceID(ctx context.Context, resou
 	return r.toRecord(&doc), nil
 }
 
-func (r *MongoPublicationRepository) Update(ctx context.Context, record *serviceInterfaces.PublicationRecord) error {
+func (r *MongoPublicationRepository) Update(ctx context.Context, record *dto.PublicationRecord) error {
 	doc, err := r.toDocument(ctx, record)
 	if err != nil {
 		return err
@@ -216,11 +215,11 @@ func (r *MongoPublicationRepository) Delete(ctx context.Context, id string) erro
 	return err
 }
 
-func (r *MongoPublicationRepository) FindPublishedByProjectID(ctx context.Context, projectID string) (*serviceInterfaces.PublicationRecord, error) {
+func (r *MongoPublicationRepository) FindPublishedByProjectID(ctx context.Context, projectID string) (*dto.PublicationRecord, error) {
 	filter := bson.M{
 		"project_id": projectID,
 		"type":       "project",
-		"status":     serviceInterfaces.PublicationStatusPublished,
+		"status":     dto.PublicationStatusPublished,
 	}
 
 	var doc publicationRecordDocument
@@ -233,7 +232,7 @@ func (r *MongoPublicationRepository) FindPublishedByProjectID(ctx context.Contex
 	return r.toRecord(&doc), nil
 }
 
-func (r *MongoPublicationRepository) toDocument(ctx context.Context, record *serviceInterfaces.PublicationRecord) (*publicationRecordDocument, error) {
+func (r *MongoPublicationRepository) toDocument(ctx context.Context, record *dto.PublicationRecord) (*publicationRecordDocument, error) {
 	projectID, err := r.resolveProjectID(ctx, record)
 	if err != nil {
 		return nil, err
@@ -285,8 +284,8 @@ func (r *MongoPublicationRepository) toDocument(ctx context.Context, record *ser
 	return doc, nil
 }
 
-func (r *MongoPublicationRepository) toRecord(doc *publicationRecordDocument) *serviceInterfaces.PublicationRecord {
-	return &serviceInterfaces.PublicationRecord{
+func (r *MongoPublicationRepository) toRecord(doc *publicationRecordDocument) *dto.PublicationRecord {
+	return &dto.PublicationRecord{
 		ID:              doc.ID.Hex(),
 		Type:            doc.Type,
 		ResourceID:      doc.ResourceID,
@@ -323,7 +322,7 @@ func (r *MongoPublicationRepository) toRecord(doc *publicationRecordDocument) *s
 	}
 }
 
-func (r *MongoPublicationRepository) resolveProjectID(ctx context.Context, record *serviceInterfaces.PublicationRecord) (string, error) {
+func (r *MongoPublicationRepository) resolveProjectID(ctx context.Context, record *dto.PublicationRecord) (string, error) {
 	if record.Type == "project" {
 		return record.ResourceID, nil
 	}
