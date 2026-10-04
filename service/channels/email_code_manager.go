@@ -1,4 +1,4 @@
-package emailcode
+package channels
 
 import (
 	"context"
@@ -13,7 +13,6 @@ import (
 	"time"
 
 	"Qingyu_backend/config"
-	"Qingyu_backend/service/channels"
 )
 
 const (
@@ -34,7 +33,7 @@ type codeRecord struct {
 type Manager struct {
 	enabled bool
 
-	emailService channels.EmailService
+	emailService EmailService
 	fromName     string
 	fixedCode    string
 
@@ -73,7 +72,7 @@ func NewManager() *Manager {
 		return m
 	}
 
-	m.emailService = channels.NewEmailService(&channels.EmailConfig{
+	m.emailService = NewEmailService(&EmailConfig{
 		SMTPHost:     emailCfg.SMTPHost,
 		SMTPPort:     emailCfg.SMTPPort,
 		SMTPUsername: emailCfg.Username,
@@ -116,7 +115,7 @@ func (m *Manager) SendRegisterCode(ctx context.Context, email string) error {
 	}
 	m.mu.Unlock()
 
-	code, err := generateNumericCode(defaultCodeLength)
+	var code string
 	if m.fixedCode != "" {
 		code = m.fixedCode
 	} else {
@@ -133,7 +132,7 @@ func (m *Manager) SendRegisterCode(ctx context.Context, email string) error {
 			subject = fmt.Sprintf("%s - 邮箱验证码", m.fromName)
 		}
 
-		if err := m.emailService.SendEmail(ctx, &channels.EmailRequest{
+		if err := m.emailService.SendEmail(ctx, &EmailRequest{
 			To:      []string{normalized},
 			Subject: subject,
 			Body:    body,

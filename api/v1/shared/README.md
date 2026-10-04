@@ -50,7 +50,7 @@ GET  /api/v1/auth/roles                    # 获取当前用户角色
 
 **依赖服务**:
 - `auth.AuthService` — 认证核心服务
-- `emailcode.Manager` — 邮箱验证码管理器
+- `channels.Manager` — 邮箱验证码管理器
 
 **兼容关系**: 与 `api/v1/user/handler/auth_handler.go` 存在兼容路由，差异详见下方"Auth 边界"章节。
 
@@ -188,7 +188,7 @@ DELETE /api/v1/storage/files/:file_id/access   # 撤销访问
 - ✅ 标准登录流程封装（绑定 JSON + 调用 AuthService + 统一错误响应）
 
 **依赖**:
-- `pkg/emailcode.Manager` — 邮箱验证码管理器
+- `service/channels.Manager` — 邮箱验证码管理器
 - `service/auth.AuthService` — 认证服务
 
 ---

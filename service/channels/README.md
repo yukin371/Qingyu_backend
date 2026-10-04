@@ -12,6 +12,7 @@
 **职责**: 通知渠道服务 - 负责通过各种渠道发送通知
 
 - **邮件服务** (`email_service.go`): SMTP邮件发送
+- **邮箱验证码管理器** (`email_code_manager.go`): 注册验证码生成、发送与校验
 - **短信服务**: 通过消息队列发送短信通知
 - **站内通知服务** (`inbox_notification_service.go`): 应用内消息推送
 - **消息队列服务** (`messaging_service.go`): Redis Stream消息队列

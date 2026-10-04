@@ -5,14 +5,14 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/pkg/emailcode"
 	"Qingyu_backend/pkg/response"
 	authservice "Qingyu_backend/service/auth"
+	"Qingyu_backend/service/channels"
 )
 
 // ValidateRegisterVerificationCode 校验注册邮箱验证码。
 // 返回 false 表示已写入错误响应。
-func ValidateRegisterVerificationCode(c *gin.Context, codeManager *emailcode.Manager, email, verificationCode string) bool {
+func ValidateRegisterVerificationCode(c *gin.Context, codeManager *channels.Manager, email, verificationCode string) bool {
 	if codeManager == nil || !codeManager.Enabled() {
 		return true
 	}
@@ -32,7 +32,7 @@ func ValidateRegisterVerificationCode(c *gin.Context, codeManager *emailcode.Man
 
 // SendRegisterVerificationCode 发送注册邮箱验证码。
 // 返回 false 表示已写入错误响应。
-func SendRegisterVerificationCode(ctx context.Context, c *gin.Context, codeManager *emailcode.Manager, email string) bool {
+func SendRegisterVerificationCode(ctx context.Context, c *gin.Context, codeManager *channels.Manager, email string) bool {
 	if codeManager == nil {
 		response.BadRequest(c, "邮箱验证码功能未启用，请先配置 QINGYU_EMAIL_ENABLED 和 SMTP 参数", nil)
 		return false

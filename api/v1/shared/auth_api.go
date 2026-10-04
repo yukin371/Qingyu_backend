@@ -6,23 +6,23 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"Qingyu_backend/pkg/emailcode"
 	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/auth"
+	"Qingyu_backend/service/channels"
 	serviceInterfaces "Qingyu_backend/service/interfaces/base"
 )
 
 // AuthAPI 认证服务API处理器
 type AuthAPI struct {
 	authService auth.AuthService
-	codeManager *emailcode.Manager
+	codeManager *channels.Manager
 }
 
 // NewAuthAPI 创建认证API实例
 func NewAuthAPI(authService auth.AuthService) *AuthAPI {
 	return &AuthAPI{
 		authService: authService,
-		codeManager: emailcode.NewManager(),
+		codeManager: channels.NewManager(),
 	}
 }
 

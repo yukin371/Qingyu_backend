@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"Qingyu_backend/config"
-	"Qingyu_backend/pkg/emailcode"
+	"Qingyu_backend/service/channels"
 )
 
 func TestValidateRegisterVerificationCode(t *testing.T) {
@@ -38,7 +38,7 @@ func TestValidateRegisterVerificationCode(t *testing.T) {
 		defer func() {
 			config.GlobalConfig = previousConfig
 		}()
-		manager := emailcode.NewManager()
+		manager := channels.NewManager()
 
 		ok := ValidateRegisterVerificationCode(c, manager, "test@example.com", "")
 
@@ -55,7 +55,7 @@ func TestSendRegisterVerificationCode(t *testing.T) {
 		w := httptest.NewRecorder()
 		c, _ := gin.CreateTestContext(w)
 		c.Request = httptest.NewRequest(http.MethodPost, "/api/v1/shared/auth/send-verification-code", nil)
-		manager := emailcode.NewManager()
+		manager := channels.NewManager()
 
 		ok := SendRegisterVerificationCode(c.Request.Context(), c, manager, "test@example.com")
 
