@@ -5,20 +5,27 @@ import (
 	"fmt"
 	"time"
 
+	readerModel "Qingyu_backend/models/reader"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"Qingyu_backend/pkg/websocket"
-	"Qingyu_backend/service/reader"
 )
+
+// ReaderProgressPort 是同步服务所需的最小阅读进度端口。
+// 通过端口注入阅读服务，避免 pkg 层反向依赖 service/reader。
+type ReaderProgressPort interface {
+	GetReadingProgress(ctx context.Context, userID, bookID string) (*readerModel.ReadingProgress, error)
+	SaveReadingProgress(ctx context.Context, userID, bookID, chapterID string, progress float64) error
+}
 
 // ProgressSyncService 阅读进度同步服务
 type ProgressSyncService struct {
-	readerService *reader.ReaderService
+	readerService ReaderProgressPort
 	hub           *websocket.ProgressHub
 }
 
 // NewProgressSyncService 创建进度同步服务
-func NewProgressSyncService(readerService *reader.ReaderService) *ProgressSyncService {
+func NewProgressSyncService(readerService ReaderProgressPort) *ProgressSyncService {
 	return &ProgressSyncService{
 		readerService: readerService,
 		hub:           websocket.NewProgressHub(),
@@ -109,13 +116,17 @@ func (s *ProgressSyncService) MergeOfflineProgresses(ctx context.Context, userID
 			currentProgress, err := s.readerService.GetReadingProgress(ctx, userID, bookID)
 			if err != nil {
 				// 服务器没有进度，直接使用离线进度
-				s.readerService.SaveReadingProgress(ctx, userID, bookID, latest.ChapterID, latest.Progress)
+				if err := s.readerService.SaveReadingProgress(ctx, userID, bookID, latest.ChapterID, latest.Progress); err != nil {
+					return fmt.Errorf("保存离线阅读进度失败: %w", err)
+				}
 				continue
 			}
 
 			// 使用时间戳较新的进度
 			if latest.Timestamp.After(currentProgress.LastReadAt) {
-				s.readerService.SaveReadingProgress(ctx, userID, bookID, latest.ChapterID, latest.Progress)
+				if err := s.readerService.SaveReadingProgress(ctx, userID, bookID, latest.ChapterID, latest.Progress); err != nil {
+					return fmt.Errorf("保存离线阅读进度失败: %w", err)
+				}
 			}
 		}
 	}
