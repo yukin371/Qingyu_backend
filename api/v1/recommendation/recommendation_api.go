@@ -7,18 +7,14 @@ import (
 
 	bookstoreModel "Qingyu_backend/models/bookstore"
 	"Qingyu_backend/pkg/response"
-	"Qingyu_backend/repository/interfaces/bookstore"
 	"Qingyu_backend/service/recommendation"
 )
 
-// BookRepository 书籍仓储接口
-type BookRepository = bookstore.BookRepository
-
 // RecommendationAPI 推荐API
 type RecommendationAPI struct {
-	recoService    recommendation.RecommendationService
-	tableService   recommendation.RecommendationTableService
-	bookRepo       BookRepository
+	recoService  recommendation.RecommendationService
+	tableService recommendation.RecommendationTableService
+	bookCatalog  recommendation.BookCatalogPort
 }
 
 // NewRecommendationAPI 创建推荐API实例
@@ -34,10 +30,25 @@ func (api *RecommendationAPI) WithTableService(tableService recommendation.Recom
 	return api
 }
 
-// WithBookRepository 设置书籍仓储（用于获取书籍详情）
-func (api *RecommendationAPI) WithBookRepository(bookRepo BookRepository) *RecommendationAPI {
-	api.bookRepo = bookRepo
+// WithBookCatalog 设置推荐模块读取书籍详情和列表所需的最小端口。
+func (api *RecommendationAPI) WithBookCatalog(bookCatalog recommendation.BookCatalogPort) *RecommendationAPI {
+	api.bookCatalog = bookCatalog
 	return api
+}
+
+// WithBookRepository 保留旧装配入口，迁移期转发到最小书籍目录端口。
+// Deprecated: use WithBookCatalog.
+func (api *RecommendationAPI) WithBookRepository(bookCatalog recommendation.BookCatalogPort) *RecommendationAPI {
+	return api.WithBookCatalog(bookCatalog)
+}
+
+func authenticatedUserID(c *gin.Context) (string, bool) {
+	value, exists := c.Get("user_id")
+	if !exists {
+		return "", false
+	}
+	userID, ok := value.(string)
+	return userID, ok && userID != ""
 }
 
 // GetPersonalizedRecommendations 获取个性化推荐
@@ -49,8 +60,8 @@ func (api *RecommendationAPI) WithBookRepository(bookRepo BookRepository) *Recom
 //	@Router		/api/v1/recommendation/personalized [get]
 func (api *RecommendationAPI) GetPersonalizedRecommendations(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
+	userID, ok := authenticatedUserID(c)
+	if !ok {
 		response.Unauthorized(c, "请先登录")
 		return
 	}
@@ -64,7 +75,7 @@ func (api *RecommendationAPI) GetPersonalizedRecommendations(c *gin.Context) {
 	}
 
 	// 获取推荐
-	recommendations, err := api.recoService.GetPersonalizedRecommendations(c.Request.Context(), userID.(string), limit)
+	recommendations, err := api.recoService.GetPersonalizedRecommendations(c.Request.Context(), userID, limit)
 	if err != nil {
 		c.Error(err)
 		return
@@ -121,8 +132,8 @@ func (api *RecommendationAPI) GetSimilarItems(c *gin.Context) {
 //	@Router		/api/v1/recommendation/behavior [post]
 func (api *RecommendationAPI) RecordBehavior(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
+	userID, ok := authenticatedUserID(c)
+	if !ok {
 		response.Unauthorized(c, "请先登录")
 		return
 	}
@@ -148,7 +159,7 @@ func (api *RecommendationAPI) RecordBehavior(c *gin.Context) {
 
 	// 构建行为记录请求
 	behaviorReq := &recommendation.RecordBehaviorRequest{
-		UserID:     userID.(string),
+		UserID:     userID,
 		ItemID:     req.ItemID,
 		ItemType:   req.ItemType,
 		ActionType: req.BehaviorType,
@@ -174,18 +185,18 @@ type BookRecommendationItem struct {
 	Reason   string  `json:"reason"`
 	Rank     int     `json:"rank"`
 	// 书籍详情（从bookstore服务补充）
-	BookID    string `json:"book_id,omitempty"`
-	Title     string `json:"title,omitempty"`
-	Author    string `json:"author,omitempty"`
-	Cover     string `json:"cover,omitempty"`
-	Rating    string `json:"rating,omitempty"`
+	BookID string `json:"book_id,omitempty"`
+	Title  string `json:"title,omitempty"`
+	Author string `json:"author,omitempty"`
+	Cover  string `json:"cover,omitempty"`
+	Rating string `json:"rating,omitempty"`
 }
 
 // HomepageResponse 首页推荐响应
 type HomepageResponse struct {
-	Recommendations []BookRecommendationItem      `json:"recommendations"`
-	NewBooks       []*bookstoreModel.Book       `json:"new_books"`
-	EditorPicks    []*bookstoreModel.Book       `json:"editor_picks"`
+	Recommendations []BookRecommendationItem `json:"recommendations"`
+	NewBooks        []*bookstoreModel.Book   `json:"new_books"`
+	EditorPicks     []*bookstoreModel.Book   `json:"editor_picks"`
 }
 
 // GetHomepageRecommendations 获取首页推荐
@@ -242,8 +253,8 @@ func (api *RecommendationAPI) GetHomepageRecommendations(c *gin.Context) {
 		}
 
 		// 如果有书籍仓储且ItemID看起来像真实ID，尝试获取书籍详情
-		if api.bookRepo != nil && item.ItemID != "" {
-			book, err := api.bookRepo.GetByID(ctx, item.ItemID)
+		if api.bookCatalog != nil && item.ItemID != "" {
+			book, err := api.bookCatalog.GetByID(ctx, item.ItemID)
 			if err == nil && book != nil {
 				bookRec.BookID = book.ID.Hex()
 				bookRec.Title = book.Title
@@ -258,8 +269,8 @@ func (api *RecommendationAPI) GetHomepageRecommendations(c *gin.Context) {
 
 	// 3. 获取新书上架
 	var newBooks []*bookstoreModel.Book
-	if api.bookRepo != nil {
-		books, err := api.bookRepo.GetNewReleases(ctx, limit, 0)
+	if api.bookCatalog != nil {
+		books, err := api.bookCatalog.GetNewReleases(ctx, limit, 0)
 		if err == nil {
 			newBooks = books
 		}
@@ -267,8 +278,8 @@ func (api *RecommendationAPI) GetHomepageRecommendations(c *gin.Context) {
 
 	// 4. 获取编辑推荐
 	var editorPicks []*bookstoreModel.Book
-	if api.bookRepo != nil {
-		books, err := api.bookRepo.GetFeatured(ctx, limit, 0)
+	if api.bookCatalog != nil {
+		books, err := api.bookCatalog.GetFeatured(ctx, limit, 0)
 		if err == nil {
 			editorPicks = books
 		}
@@ -310,7 +321,7 @@ func (api *RecommendationAPI) GetHotRecommendations(c *gin.Context) {
 
 	response.SuccessWithMessage(c, "获取成功", gin.H{
 		"recommendations": recommendations,
-		"count":          len(recommendations),
+		"count":           len(recommendations),
 	})
 }
 
@@ -347,7 +358,7 @@ func (api *RecommendationAPI) GetCategoryRecommendations(c *gin.Context) {
 
 	response.SuccessWithMessage(c, "获取成功", gin.H{
 		"recommendations": recommendations,
-		"count":          len(recommendations),
-		"category":       category,
+		"count":           len(recommendations),
+		"category":        category,
 	})
 }

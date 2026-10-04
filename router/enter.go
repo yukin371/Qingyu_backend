@@ -623,7 +623,7 @@ func RegisterRoutes(r *gin.Engine) {
 			// 注入书籍仓储用于获取书籍详情
 			if mongoClient := serviceContainer.GetMongoClient(); mongoClient != nil {
 				bookRepo := bookstoreRepo.NewMongoBookRepository(mongoClient, mongoDB.Name())
-				recommendationApi.WithBookRepository(bookRepo)
+				recommendationApi.WithBookCatalog(bookRepo)
 			}
 		}
 		recommendationRouter.RegisterRecommendationRoutes(v1, recommendationApi)

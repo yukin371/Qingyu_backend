@@ -1,9 +1,18 @@
 package recommendation
 
 import (
+	bookstoreModel "Qingyu_backend/models/bookstore"
 	"context"
 	"time"
 )
+
+// BookCatalogPort 是推荐模块读取书籍展示信息所需的最小接口。
+// 具体仓储由组合根注入，推荐模块不依赖 bookstore 仓储接口的完整能力集。
+type BookCatalogPort interface {
+	GetByID(ctx context.Context, id string) (*bookstoreModel.Book, error)
+	GetNewReleases(ctx context.Context, limit, offset int) ([]*bookstoreModel.Book, error)
+	GetFeatured(ctx context.Context, limit, offset int) ([]*bookstoreModel.Book, error)
+}
 
 // RecommendationService 推荐服务接口（对外暴露）
 type RecommendationService interface {
