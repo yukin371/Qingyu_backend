@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/response"
 	financeService "Qingyu_backend/service/finance"
 )
@@ -58,9 +59,8 @@ type SubscribeRequest struct {
 //	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/membership/subscribe [post]
 func (api *MembershipAPI) Subscribe(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未认证")
+	userID, ok := shared.GetUserIDWithMessage(c, "未认证")
+	if !ok {
 		return
 	}
 
@@ -70,7 +70,7 @@ func (api *MembershipAPI) Subscribe(c *gin.Context) {
 		return
 	}
 
-	membership, err := api.membershipService.Subscribe(c.Request.Context(), userID.(string), req.PlanID, req.PaymentMethod)
+	membership, err := api.membershipService.Subscribe(c.Request.Context(), userID, req.PlanID, req.PaymentMethod)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -90,13 +90,12 @@ func (api *MembershipAPI) Subscribe(c *gin.Context) {
 //	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/membership/status [get]
 func (api *MembershipAPI) GetStatus(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未认证")
+	userID, ok := shared.GetUserIDWithMessage(c, "未认证")
+	if !ok {
 		return
 	}
 
-	membership, err := api.membershipService.GetMembership(c.Request.Context(), userID.(string))
+	membership, err := api.membershipService.GetMembership(c.Request.Context(), userID)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -116,13 +115,12 @@ func (api *MembershipAPI) GetStatus(c *gin.Context) {
 //	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/membership/cancel [post]
 func (api *MembershipAPI) Cancel(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未认证")
+	userID, ok := shared.GetUserIDWithMessage(c, "未认证")
+	if !ok {
 		return
 	}
 
-	err := api.membershipService.CancelMembership(c.Request.Context(), userID.(string))
+	err := api.membershipService.CancelMembership(c.Request.Context(), userID)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -142,13 +140,12 @@ func (api *MembershipAPI) Cancel(c *gin.Context) {
 //	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/membership/renew [put]
 func (api *MembershipAPI) Renew(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未认证")
+	userID, ok := shared.GetUserIDWithMessage(c, "未认证")
+	if !ok {
 		return
 	}
 
-	membership, err := api.membershipService.RenewMembership(c.Request.Context(), userID.(string))
+	membership, err := api.membershipService.RenewMembership(c.Request.Context(), userID)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -191,13 +188,12 @@ func (api *MembershipAPI) GetBenefits(c *gin.Context) {
 //	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/membership/usage [get]
 func (api *MembershipAPI) GetUsage(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未认证")
+	userID, ok := shared.GetUserIDWithMessage(c, "未认证")
+	if !ok {
 		return
 	}
 
-	usage, err := api.membershipService.GetUsage(c.Request.Context(), userID.(string))
+	usage, err := api.membershipService.GetUsage(c.Request.Context(), userID)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -255,9 +251,8 @@ type ActivateCardRequest struct {
 //	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/membership/cards/activate [post]
 func (api *MembershipAPI) ActivateCard(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未认证")
+	userID, ok := shared.GetUserIDWithMessage(c, "未认证")
+	if !ok {
 		return
 	}
 
@@ -267,7 +262,7 @@ func (api *MembershipAPI) ActivateCard(c *gin.Context) {
 		return
 	}
 
-	membership, err := api.membershipService.ActivateCard(c.Request.Context(), userID.(string), req.Code)
+	membership, err := api.membershipService.ActivateCard(c.Request.Context(), userID, req.Code)
 	if err != nil {
 		response.InternalError(c, err)
 		return
