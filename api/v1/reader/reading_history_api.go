@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/interfaces"
 )
@@ -39,16 +40,15 @@ func (api *ReadingHistoryAPI) RecordReading(c *gin.Context) {
 	}
 
 	// 从上下文获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未认证")
+	userID, ok := shared.GetUserIDWithMessage(c, "未认证")
+	if !ok {
 		return
 	}
 
 	// 记录阅读
 	err := api.historyService.RecordReading(
 		c.Request.Context(),
-		userID.(string),
+		userID,
 		req.BookID,
 		req.ChapterID,
 		req.StartTime,
@@ -78,9 +78,8 @@ func (api *ReadingHistoryAPI) RecordReading(c *gin.Context) {
 // @Router /api/v1/reader/reading-history [get]
 func (api *ReadingHistoryAPI) GetReadingHistories(c *gin.Context) {
 	// 从上下文获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未认证")
+	userID, ok := shared.GetUserIDWithMessage(c, "未认证")
+	if !ok {
 		return
 	}
 
@@ -97,7 +96,7 @@ func (api *ReadingHistoryAPI) GetReadingHistories(c *gin.Context) {
 	if bookID != "" {
 		histories, pagination, err = api.historyService.GetUserHistoriesByBook(
 			c.Request.Context(),
-			userID.(string),
+			userID,
 			bookID,
 			page,
 			pageSize,
@@ -105,7 +104,7 @@ func (api *ReadingHistoryAPI) GetReadingHistories(c *gin.Context) {
 	} else {
 		histories, pagination, err = api.historyService.GetUserHistories(
 			c.Request.Context(),
-			userID.(string),
+			userID,
 			page,
 			pageSize,
 		)
@@ -133,9 +132,8 @@ func (api *ReadingHistoryAPI) GetReadingHistories(c *gin.Context) {
 // @Router /api/v1/reader/reading-history/stats [get]
 func (api *ReadingHistoryAPI) GetReadingStats(c *gin.Context) {
 	// 从上下文获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未认证")
+	userID, ok := shared.GetUserIDWithMessage(c, "未认证")
+	if !ok {
 		return
 	}
 
@@ -145,7 +143,7 @@ func (api *ReadingHistoryAPI) GetReadingStats(c *gin.Context) {
 	// 获取总体统计
 	stats, err := api.historyService.GetUserReadingStats(
 		c.Request.Context(),
-		userID.(string),
+		userID,
 	)
 	if err != nil {
 		c.Error(err)
@@ -155,7 +153,7 @@ func (api *ReadingHistoryAPI) GetReadingStats(c *gin.Context) {
 	// 获取每日统计
 	dailyStats, err := api.historyService.GetUserDailyReadingStats(
 		c.Request.Context(),
-		userID.(string),
+		userID,
 		days,
 	)
 	if err != nil {
@@ -180,9 +178,8 @@ func (api *ReadingHistoryAPI) GetReadingStats(c *gin.Context) {
 // @Router /api/v1/reader/reading-history/{id} [delete]
 func (api *ReadingHistoryAPI) DeleteHistory(c *gin.Context) {
 	// 从上下文获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未认证")
+	userID, ok := shared.GetUserIDWithMessage(c, "未认证")
+	if !ok {
 		return
 	}
 
@@ -195,7 +192,7 @@ func (api *ReadingHistoryAPI) DeleteHistory(c *gin.Context) {
 	// 删除历史记录
 	err := api.historyService.DeleteHistory(
 		c.Request.Context(),
-		userID.(string),
+		userID,
 		historyID,
 	)
 	if err != nil {
@@ -216,16 +213,15 @@ func (api *ReadingHistoryAPI) DeleteHistory(c *gin.Context) {
 // @Router /api/v1/reader/reading-history [delete]
 func (api *ReadingHistoryAPI) ClearHistories(c *gin.Context) {
 	// 从上下文获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未认证")
+	userID, ok := shared.GetUserIDWithMessage(c, "未认证")
+	if !ok {
 		return
 	}
 
 	// 清空历史记录
 	err := api.historyService.ClearUserHistories(
 		c.Request.Context(),
-		userID.(string),
+		userID,
 	)
 	if err != nil {
 		c.Error(err)
