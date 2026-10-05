@@ -35,13 +35,12 @@ func NewWalletAPI(walletService wallet.WalletService) *WalletAPI {
 //	@Failure		500	{object}	APIResponse
 //	@Router			/api/v1/finance/wallet/balance [get]
 func (api *WalletAPI) GetBalance(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未认证")
+	userID, ok := shared.GetUserIDWithMessage(c, "未认证")
+	if !ok {
 		return
 	}
 
-	balance, err := api.walletService.GetBalance(c.Request.Context(), userID.(string))
+	balance, err := api.walletService.GetBalance(c.Request.Context(), userID)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -63,13 +62,12 @@ func (api *WalletAPI) GetBalance(c *gin.Context) {
 //	@Failure		500	{object}	APIResponse
 //	@Router			/api/v1/finance/wallet [get]
 func (api *WalletAPI) GetWallet(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未认证")
+	userID, ok := shared.GetUserIDWithMessage(c, "未认证")
+	if !ok {
 		return
 	}
 
-	walletInfo, err := api.walletService.GetWallet(c.Request.Context(), userID.(string))
+	walletInfo, err := api.walletService.GetWallet(c.Request.Context(), userID)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -99,9 +97,8 @@ type RechargeRequest struct {
 //	@Failure		500		{object}	APIResponse
 //	@Router			/api/v1/finance/wallet/recharge [post]
 func (api *WalletAPI) Recharge(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未认证")
+	userID, ok := shared.GetUserIDWithMessage(c, "未认证")
+	if !ok {
 		return
 	}
 
@@ -113,7 +110,7 @@ func (api *WalletAPI) Recharge(c *gin.Context) {
 	// 将元转换为分
 	amountInCents := int64(req.Amount * 100)
 
-	transaction, err := api.walletService.Recharge(c.Request.Context(), userID.(string), amountInCents, req.Method)
+	transaction, err := api.walletService.Recharge(c.Request.Context(), userID, amountInCents, req.Method)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -143,9 +140,8 @@ type ConsumeRequest struct {
 //	@Failure		500		{object}	APIResponse
 //	@Router			/api/v1/finance/wallet/consume [post]
 func (api *WalletAPI) Consume(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未认证")
+	userID, ok := shared.GetUserIDWithMessage(c, "未认证")
+	if !ok {
 		return
 	}
 
@@ -157,7 +153,7 @@ func (api *WalletAPI) Consume(c *gin.Context) {
 	// 将元转换为分
 	amountInCents := int64(req.Amount * 100)
 
-	transaction, err := api.walletService.Consume(c.Request.Context(), userID.(string), amountInCents, req.Reason)
+	transaction, err := api.walletService.Consume(c.Request.Context(), userID, amountInCents, req.Reason)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -188,9 +184,8 @@ type TransferRequest struct {
 //	@Failure		500		{object}	APIResponse
 //	@Router			/api/v1/finance/wallet/transfer [post]
 func (api *WalletAPI) Transfer(c *gin.Context) {
-	fromUserID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未认证")
+	fromUserID, ok := shared.GetUserIDWithMessage(c, "未认证")
+	if !ok {
 		return
 	}
 
@@ -202,7 +197,7 @@ func (api *WalletAPI) Transfer(c *gin.Context) {
 	// 将元转换为分
 	amountInCents := int64(req.Amount * 100)
 
-	transaction, err := api.walletService.Transfer(c.Request.Context(), fromUserID.(string), req.ToUserID, amountInCents, req.Reason)
+	transaction, err := api.walletService.Transfer(c.Request.Context(), fromUserID, req.ToUserID, amountInCents, req.Reason)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -227,9 +222,8 @@ func (api *WalletAPI) Transfer(c *gin.Context) {
 //	@Failure		500			{object}	APIResponse
 //	@Router			/api/v1/finance/wallet/transactions [get]
 func (api *WalletAPI) GetTransactions(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未认证")
+	userID, ok := shared.GetUserIDWithMessage(c, "未认证")
+	if !ok {
 		return
 	}
 
@@ -245,7 +239,7 @@ func (api *WalletAPI) GetTransactions(c *gin.Context) {
 		PageSize:        pageSize,
 	}
 
-	transactions, err := api.walletService.ListTransactions(c.Request.Context(), userID.(string), req)
+	transactions, err := api.walletService.ListTransactions(c.Request.Context(), userID, req)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -277,9 +271,8 @@ type WithdrawAPIRequest struct {
 //	@Failure		500		{object}	APIResponse
 //	@Router			/api/v1/finance/wallet/withdraw [post]
 func (api *WalletAPI) RequestWithdraw(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未认证")
+	userID, ok := shared.GetUserIDWithMessage(c, "未认证")
+	if !ok {
 		return
 	}
 
@@ -291,7 +284,7 @@ func (api *WalletAPI) RequestWithdraw(c *gin.Context) {
 	// 将元转换为分
 	amountInCents := int64(req.Amount * 100)
 
-	withdrawal, err := api.walletService.RequestWithdraw(c.Request.Context(), userID.(string), amountInCents, req.Account)
+	withdrawal, err := api.walletService.RequestWithdraw(c.Request.Context(), userID, amountInCents, req.Account)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -316,9 +309,8 @@ func (api *WalletAPI) RequestWithdraw(c *gin.Context) {
 //	@Failure		500			{object}	APIResponse
 //	@Router			/api/v1/finance/wallet/withdrawals [get]
 func (api *WalletAPI) GetWithdrawRequests(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未认证")
+	userID, ok := shared.GetUserIDWithMessage(c, "未认证")
+	if !ok {
 		return
 	}
 
@@ -329,7 +321,7 @@ func (api *WalletAPI) GetWithdrawRequests(c *gin.Context) {
 
 	// 构建请求
 	req := &wallet.ListWithdrawRequestsRequest{
-		UserID:   userID.(string),
+		UserID:   userID,
 		Status:   status,
 		Page:     page,
 		PageSize: pageSize,
