@@ -3,6 +3,7 @@ package reader
 import (
 	"fmt"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/service/interfaces"
 
 	"Qingyu_backend/pkg/response"
@@ -32,9 +33,8 @@ func NewBooksAPI(readerService interfaces.ReaderService) *BooksAPI {
 //	@Router		/api/v1/reader/books [get]
 func (api *BooksAPI) GetBookshelf(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "请先登录")
+	userID, ok := shared.GetUserIDWithMessage(c, "请先登录")
+	if !ok {
 		return
 	}
 
@@ -53,7 +53,7 @@ func (api *BooksAPI) GetBookshelf(c *gin.Context) {
 	}
 
 	// 获取阅读历史（作为书架）
-	progresses, total, err := api.readerService.GetReadingHistory(c.Request.Context(), userID.(string), page, size)
+	progresses, total, err := api.readerService.GetReadingHistory(c.Request.Context(), userID, page, size)
 	if err != nil {
 		c.Error(err)
 		return
@@ -78,9 +78,8 @@ func (api *BooksAPI) GetBookshelf(c *gin.Context) {
 //	@Router		/api/v1/reader/books/{bookId} [post]
 func (api *BooksAPI) AddToBookshelf(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "请先登录")
+	userID, ok := shared.GetUserIDWithMessage(c, "请先登录")
+	if !ok {
 		return
 	}
 
@@ -91,7 +90,7 @@ func (api *BooksAPI) AddToBookshelf(c *gin.Context) {
 	}
 
 	// 通过保存初始进度来"添加到书架"
-	err := api.readerService.SaveReadingProgress(c.Request.Context(), userID.(string), bookID, "", 0)
+	err := api.readerService.SaveReadingProgress(c.Request.Context(), userID, bookID, "", 0)
 	if err != nil {
 		c.Error(err)
 		return
@@ -109,9 +108,8 @@ func (api *BooksAPI) AddToBookshelf(c *gin.Context) {
 //	@Router		/api/v1/reader/books/{bookId} [delete]
 func (api *BooksAPI) RemoveFromBookshelf(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "请先登录")
+	userID, ok := shared.GetUserIDWithMessage(c, "请先登录")
+	if !ok {
 		return
 	}
 
@@ -122,7 +120,7 @@ func (api *BooksAPI) RemoveFromBookshelf(c *gin.Context) {
 	}
 
 	// 调用Service删除阅读进度
-	err := api.readerService.DeleteReadingProgress(c.Request.Context(), userID.(string), bookID)
+	err := api.readerService.DeleteReadingProgress(c.Request.Context(), userID, bookID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -140,9 +138,8 @@ func (api *BooksAPI) RemoveFromBookshelf(c *gin.Context) {
 //	@Router		/api/v1/reader/books/recent [get]
 func (api *BooksAPI) GetRecentReading(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "请先登录")
+	userID, ok := shared.GetUserIDWithMessage(c, "请先登录")
+	if !ok {
 		return
 	}
 
@@ -154,7 +151,7 @@ func (api *BooksAPI) GetRecentReading(c *gin.Context) {
 		}
 	}
 
-	progresses, err := api.readerService.GetRecentReading(c.Request.Context(), userID.(string), limit)
+	progresses, err := api.readerService.GetRecentReading(c.Request.Context(), userID, limit)
 	if err != nil {
 		c.Error(err)
 		return
@@ -173,13 +170,12 @@ func (api *BooksAPI) GetRecentReading(c *gin.Context) {
 //	@Router		/api/v1/reader/books/unfinished [get]
 func (api *BooksAPI) GetUnfinishedBooks(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "请先登录")
+	userID, ok := shared.GetUserIDWithMessage(c, "请先登录")
+	if !ok {
 		return
 	}
 
-	progresses, err := api.readerService.GetUnfinishedBooks(c.Request.Context(), userID.(string))
+	progresses, err := api.readerService.GetUnfinishedBooks(c.Request.Context(), userID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -198,13 +194,12 @@ func (api *BooksAPI) GetUnfinishedBooks(c *gin.Context) {
 //	@Router		/api/v1/reader/books/finished [get]
 func (api *BooksAPI) GetFinishedBooks(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "请先登录")
+	userID, ok := shared.GetUserIDWithMessage(c, "请先登录")
+	if !ok {
 		return
 	}
 
-	progresses, err := api.readerService.GetFinishedBooks(c.Request.Context(), userID.(string))
+	progresses, err := api.readerService.GetFinishedBooks(c.Request.Context(), userID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -230,9 +225,8 @@ type UpdateBookStatusRequest struct {
 //	@Router		/api/v1/reader/books/{bookId}/status [put]
 func (api *BooksAPI) UpdateBookStatus(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "请先登录")
+	userID, ok := shared.GetUserIDWithMessage(c, "请先登录")
+	if !ok {
 		return
 	}
 
@@ -250,7 +244,7 @@ func (api *BooksAPI) UpdateBookStatus(c *gin.Context) {
 	}
 
 	// 调用服务层更新状态
-	err := api.readerService.UpdateBookStatus(c.Request.Context(), userID.(string), bookID, req.Status)
+	err := api.readerService.UpdateBookStatus(c.Request.Context(), userID, bookID, req.Status)
 	if err != nil {
 		c.Error(err)
 		return
@@ -274,9 +268,8 @@ type BatchUpdateBookStatusRequest struct {
 //	@Router		/api/v1/reader/books/batch/status [put]
 func (api *BooksAPI) BatchUpdateBookStatus(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "请先登录")
+	userID, ok := shared.GetUserIDWithMessage(c, "请先登录")
+	if !ok {
 		return
 	}
 
@@ -299,7 +292,7 @@ func (api *BooksAPI) BatchUpdateBookStatus(c *gin.Context) {
 	}
 
 	// 调用服务层批量更新状态
-	err := api.readerService.BatchUpdateBookStatus(c.Request.Context(), userID.(string), req.BookIDs, req.Status)
+	err := api.readerService.BatchUpdateBookStatus(c.Request.Context(), userID, req.BookIDs, req.Status)
 	if err != nil {
 		c.Error(err)
 		return
