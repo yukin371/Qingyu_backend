@@ -121,6 +121,11 @@ func (api *AnnotationsAPI) BatchUpdateAnnotations(c *gin.Context) {
 	}
 	// TODO(T3-033-security): ReaderService.UpdateAnnotation lacks a user scope;
 	// add ownership filtering before allowing cross-user IDs in this batch endpoint.
+	for _, update := range req.Updates {
+		if _, ok := parseObjectIDParam(c, "id", update.ID); !ok {
+			return
+		}
+	}
 
 	// 批量更新
 	successCount := 0
@@ -167,6 +172,11 @@ func (api *AnnotationsAPI) BatchDeleteAnnotations(c *gin.Context) {
 	}
 	// TODO(T3-033-security): ReaderService.BatchDeleteAnnotations lacks a user scope;
 	// add ownership filtering before allowing cross-user IDs in this batch endpoint.
+	for _, id := range req.IDs {
+		if _, ok := parseObjectIDParam(c, "id", id); !ok {
+			return
+		}
+	}
 
 	// 批量删除
 	err := api.readerService.BatchDeleteAnnotations(c.Request.Context(), req.IDs)
@@ -199,6 +209,9 @@ func (api *AnnotationsAPI) GetAnnotationStats(c *gin.Context) {
 		response.BadRequest(c, "参数错误", "书籍ID不能为空")
 		return
 	}
+	if _, ok := parseObjectIDParam(c, "bookId", bookID); !ok {
+		return
+	}
 
 	// 获取统计数据
 	stats, err := api.readerService.GetAnnotationStats(c.Request.Context(), userIDStr, bookID)
@@ -228,6 +241,9 @@ func (api *AnnotationsAPI) ExportAnnotations(c *gin.Context) {
 	bookID := c.Query("bookId")
 	if bookID == "" {
 		response.BadRequest(c, "参数错误", "书籍ID不能为空")
+		return
+	}
+	if _, ok := parseObjectIDParam(c, "bookId", bookID); !ok {
 		return
 	}
 
