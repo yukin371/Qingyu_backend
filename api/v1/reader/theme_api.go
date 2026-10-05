@@ -1,6 +1,7 @@
 package reader
 
 import (
+	"Qingyu_backend/api/v1/shared"
 	readerModels "Qingyu_backend/models/reader"
 
 	"Qingyu_backend/pkg/response"
@@ -87,9 +88,8 @@ func (api *ThemeAPI) GetThemeByName(c *gin.Context) {
 //	@Router		/api/v1/reader/themes [post]
 func (api *ThemeAPI) CreateCustomTheme(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	userID, ok := shared.GetUserIDWithMessage(c, "未授权")
+	if !ok {
 		return
 	}
 
@@ -107,7 +107,7 @@ func (api *ThemeAPI) CreateCustomTheme(c *gin.Context) {
 		Description: req.Description,
 		IsBuiltIn:   false,
 		IsPublic:    req.IsPublic,
-		CreatorID:   userID.(string),
+		CreatorID:   userID,
 		Colors:      req.Colors,
 		IsActive:    true,
 		UseCount:    0,
@@ -130,9 +130,8 @@ func (api *ThemeAPI) CreateCustomTheme(c *gin.Context) {
 //	@Success	200		{object} response.APIResponse
 //	@Router		/api/v1/reader/themes/{id} [put]
 func (api *ThemeAPI) UpdateTheme(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	userID, ok := shared.GetUserIDWithMessage(c, "未授权")
+	if !ok {
 		return
 	}
 
@@ -169,9 +168,8 @@ func (api *ThemeAPI) UpdateTheme(c *gin.Context) {
 //	@Success	200	{object} response.APIResponse
 //	@Router		/api/v1/reader/themes/{id} [delete]
 func (api *ThemeAPI) DeleteTheme(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	userID, ok := shared.GetUserIDWithMessage(c, "未授权")
+	if !ok {
 		return
 	}
 
@@ -201,9 +199,8 @@ func (api *ThemeAPI) DeleteTheme(c *gin.Context) {
 //	@Success	200	{object} response.APIResponse
 //	@Router		/api/v1/reader/themes/{name}/activate [post]
 func (api *ThemeAPI) ActivateTheme(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	userID, ok := shared.GetUserIDWithMessage(c, "未授权")
+	if !ok {
 		return
 	}
 
