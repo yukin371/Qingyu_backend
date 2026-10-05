@@ -346,6 +346,44 @@ func TestAnnotationsAPI_CreateAnnotation_Unauthorized(t *testing.T) {
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
 }
 
+func TestAnnotationsAPI_CreateAnnotation_InvalidBookID(t *testing.T) {
+	mockService := new(MockReaderServiceForAnnotations)
+	router := setupAnnotationsTestRouter(mockService, primitive.NewObjectID().Hex())
+
+	body := map[string]interface{}{
+		"bookId":    "not-an-object-id",
+		"chapterId": primitive.NewObjectID().Hex(),
+		"type":      "note",
+	}
+	jsonBody, _ := json.Marshal(body)
+	req, _ := http.NewRequest("POST", "/api/v1/reader/annotations", bytes.NewBuffer(jsonBody))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	mockService.AssertNotCalled(t, "CreateAnnotation", mock.Anything, mock.Anything)
+}
+
+func TestAnnotationsAPI_CreateAnnotation_InvalidChapterID(t *testing.T) {
+	mockService := new(MockReaderServiceForAnnotations)
+	router := setupAnnotationsTestRouter(mockService, primitive.NewObjectID().Hex())
+
+	body := map[string]interface{}{
+		"bookId":    primitive.NewObjectID().Hex(),
+		"chapterId": "not-an-object-id",
+		"type":      "note",
+	}
+	jsonBody, _ := json.Marshal(body)
+	req, _ := http.NewRequest("POST", "/api/v1/reader/annotations", bytes.NewBuffer(jsonBody))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	mockService.AssertNotCalled(t, "CreateAnnotation", mock.Anything, mock.Anything)
+}
+
 func TestAnnotationsAPI_UpdateAnnotation_Success(t *testing.T) {
 	// Given
 	mockService := new(MockReaderServiceForAnnotations)

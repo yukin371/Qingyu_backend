@@ -71,6 +71,18 @@ func (api *AnnotationsAPI) requireQueryParam(c *gin.Context, key string) (string
 	return value, true
 }
 
+// parseObjectIDParam validates an ObjectID path/body value at the transport boundary.
+// Passing a zero ObjectID to the service would otherwise turn malformed input into a
+// service validation error (or, for future implementations, an accidental lookup).
+func parseObjectIDParam(c *gin.Context, key, value string) (primitive.ObjectID, bool) {
+	id, err := primitive.ObjectIDFromHex(value)
+	if err != nil {
+		response.BadRequest(c, "参数验证失败", key+"必须是有效的ObjectID")
+		return primitive.NilObjectID, false
+	}
+	return id, true
+}
+
 // CreateAnnotation 创建标注
 //
 //	@Summary	创建标注
@@ -91,9 +103,19 @@ func (api *AnnotationsAPI) CreateAnnotation(c *gin.Context) {
 		return
 	}
 
-	userOID, _ := primitive.ObjectIDFromHex(userIDStr)
-	bookOID, _ := primitive.ObjectIDFromHex(req.BookID)
-	chapterOID, _ := primitive.ObjectIDFromHex(req.ChapterID)
+	userOID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		response.Unauthorized(c, "用户信息格式错误")
+		return
+	}
+	bookOID, ok := parseObjectIDParam(c, "bookId", req.BookID)
+	if !ok {
+		return
+	}
+	chapterOID, ok := parseObjectIDParam(c, "chapterId", req.ChapterID)
+	if !ok {
+		return
+	}
 
 	annotation := &readerModels.Annotation{
 		UserID:    userOID,
@@ -105,7 +127,7 @@ func (api *AnnotationsAPI) CreateAnnotation(c *gin.Context) {
 		Range:     req.Range,
 	}
 
-	err := api.readerService.CreateAnnotation(c.Request.Context(), annotation)
+	err = api.readerService.CreateAnnotation(c.Request.Context(), annotation)
 	if err != nil {
 		c.Error(err)
 		return
