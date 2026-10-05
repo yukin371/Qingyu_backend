@@ -132,6 +132,13 @@ func TestNoGlobalPackageImport(t *testing.T) {
 	})
 }
 
+func TestGetBookstoreStreamServiceBeforeInitialization(t *testing.T) {
+	container := NewServiceContainer()
+	service, err := container.GetBookstoreStreamService()
+	assert.Error(t, err)
+	assert.Nil(t, service)
+}
+
 // 测试MongoDB连接的集成测试（需要实际MongoDB）
 // 这些测试在有MongoDB连接的环境中运行
 func TestMongoDBConnection(t *testing.T) {

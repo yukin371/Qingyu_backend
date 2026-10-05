@@ -37,7 +37,9 @@ import (
 	mongoNotification "Qingyu_backend/repository/mongodb/notification"
 	notificationService "Qingyu_backend/service/notification"
 
+	bookstoreModel "Qingyu_backend/models/bookstore"
 	"Qingyu_backend/repository"
+	mongoBookstoreRepo "Qingyu_backend/repository/mongodb/bookstore"
 
 	// Shared services
 	"Qingyu_backend/service/admin"
@@ -97,6 +99,7 @@ type ServiceContainer struct {
 	userService            userInterface.UserService
 	aiService              *aiService.Service
 	bookstoreService       bookstoreService.BookstoreService
+	bookstoreStreamService *bookstoreService.BookstoreStreamService
 	chapterService         bookstoreService.ChapterService
 	chapterPurchaseService bookstoreService.ChapterPurchaseService
 	bookDetailService      bookstoreService.BookDetailService
@@ -145,6 +148,28 @@ type ServiceContainer struct {
 	// 存储相关服务端口（用于API层）
 	multipartService storage.MultipartUploadManager
 	imageProcessor   storage.ImageProcessorService
+}
+
+// bookstoreStreamRepositoryAdapter 将 Mongo 流式仓储的具体返回类型收窄为 service port。
+// adapter 只属于组合根，避免 repository 反向依赖 service 实现包。
+type bookstoreStreamRepositoryAdapter struct {
+	repo *mongoBookstoreRepo.BookStreamRepository
+}
+
+func (a *bookstoreStreamRepositoryAdapter) StreamSearch(ctx context.Context, filter *bookstoreModel.BookFilter) (bookstoreService.BookCursor, error) {
+	return a.repo.StreamSearch(ctx, filter)
+}
+
+func (a *bookstoreStreamRepositoryAdapter) StreamByCursor(ctx context.Context, filter *bookstoreModel.BookFilter) (bookstoreService.BookCursor, error) {
+	return a.repo.StreamByCursor(ctx, filter)
+}
+
+func (a *bookstoreStreamRepositoryAdapter) CountWithFilter(ctx context.Context, filter *bookstoreModel.BookFilter) (int64, error) {
+	return a.repo.CountWithFilter(ctx, filter)
+}
+
+func (a *bookstoreStreamRepositoryAdapter) GetCursorManager() bookstoreService.CursorManagerInterface {
+	return a.repo.GetCursorManager()
 }
 
 type blacklistDeleteClient interface {
@@ -266,6 +291,14 @@ func (c *ServiceContainer) GetBookstoreService() (bookstoreService.BookstoreServ
 		return nil, fmt.Errorf("BookstoreService未初始化")
 	}
 	return c.bookstoreService, nil
+}
+
+// GetBookstoreStreamService 获取书城流式查询服务。
+func (c *ServiceContainer) GetBookstoreStreamService() (*bookstoreService.BookstoreStreamService, error) {
+	if c.bookstoreStreamService == nil {
+		return nil, fmt.Errorf("BookstoreStreamService未初始化")
+	}
+	return c.bookstoreStreamService, nil
 }
 
 // GetBookDetailService 获取书籍详情服务
@@ -841,6 +874,13 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 
 	// 用缓存装饰器包装书城服务，启用首页/榜单/书籍等缓存功能
 	c.bookstoreService = bookstoreService.NewCachedBookstoreService(baseBookstoreService, bookstoreCacheService)
+	if c.mongoClient != nil && c.mongoDB != nil {
+		streamRepo, err := mongoBookstoreRepo.NewBookStreamRepositoryWithClient(c.mongoClient, c.mongoDB.Name())
+		if err != nil {
+			return fmt.Errorf("创建书城流式仓储失败: %w", err)
+		}
+		c.bookstoreStreamService = bookstoreService.NewBookstoreStreamService(&bookstoreStreamRepositoryAdapter{repo: streamRepo})
+	}
 
 	// 创建章节服务（注入 ChapterContentRepository 和 CacheService）
 	c.chapterService = bookstoreService.NewChapterService(chapterRepo, chapterContentRepo, bookstoreCacheService)

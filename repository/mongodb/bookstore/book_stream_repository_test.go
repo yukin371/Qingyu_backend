@@ -7,7 +7,18 @@ import (
 	"Qingyu_backend/models/bookstore"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
 )
+
+func TestNewBookStreamRepositoryWithClientRejectsInvalidInputs(t *testing.T) {
+	if _, err := NewBookStreamRepositoryWithClient(nil, "qingyu"); err == nil {
+		t.Fatal("expected nil client to be rejected")
+	}
+
+	if _, err := NewBookStreamRepositoryWithClient(&mongo.Client{}, ""); err == nil {
+		t.Fatal("expected empty database to be rejected")
+	}
+}
 
 // TestStreamSearch 测试流式搜索基础功能
 func TestStreamSearch(t *testing.T) {

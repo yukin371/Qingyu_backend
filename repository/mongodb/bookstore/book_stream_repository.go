@@ -18,13 +18,31 @@ type BookStreamRepository struct {
 	cursorMgr *CursorManager
 }
 
-// todo:未调用函数
 // NewBookStreamRepository 创建书籍流式仓储
 func NewBookStreamRepository(baseRepo *MongoBookRepository) *BookStreamRepository {
 	return &BookStreamRepository{
 		baseRepo:  baseRepo,
 		cursorMgr: NewCursorManager(),
 	}
+}
+
+// NewBookStreamRepositoryWithClient 从现有 Mongo 客户端创建书籍流式仓储。
+// 该构造函数将 Mongo 具体装配保留在 repository 层，组合根无需依赖内部 baseRepo 结构。
+func NewBookStreamRepositoryWithClient(client *mongo.Client, database string) (*BookStreamRepository, error) {
+	if client == nil {
+		return nil, errors.New("mongo client cannot be nil")
+	}
+	if database == "" {
+		return nil, errors.New("mongo database cannot be empty")
+	}
+
+	bookRepo := NewMongoBookRepository(client, database)
+	baseRepo, ok := bookRepo.(*MongoBookRepository)
+	if !ok || baseRepo == nil {
+		return nil, errors.New("unexpected book repository implementation")
+	}
+
+	return NewBookStreamRepository(baseRepo), nil
 }
 
 // StreamSearch 流式搜索书籍

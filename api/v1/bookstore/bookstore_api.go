@@ -22,6 +22,7 @@ import (
 type BookstoreAPI struct {
 	service       bookstoreService.BookstoreService
 	searchService *search.SearchService
+	streamService *bookstoreService.BookstoreStreamService
 	logger        *logger.Logger
 }
 
@@ -32,6 +33,11 @@ func NewBookstoreAPI(service bookstoreService.BookstoreService, searchService *s
 		searchService: searchService,
 		logger:        logger,
 	}
+}
+
+// SetStreamService 注入书城流式查询服务。
+func (api *BookstoreAPI) SetStreamService(service *bookstoreService.BookstoreStreamService) {
+	api.streamService = service
 }
 
 // APIResponse 统一API响应格式

@@ -54,10 +54,12 @@ func InitBookstoreRouter(
 	chapterService bookstore.ChapterService,
 	purchaseService bookstore.ChapterPurchaseService,
 	searchSvc *searchService.SearchService,
+	streamSvc *bookstore.BookstoreStreamService,
 	zapLogger *zap.Logger,
 ) {
 	// 创建API实例
 	bookstoreApiHandler := bookstoreApi.NewBookstoreAPI(bookstoreService, searchSvc, logger.Get())
+	bookstoreApiHandler.SetStreamService(streamSvc)
 
 	// 初始化其他服务的API处理器
 	var bookDetailApiHandler *bookstoreApi.BookDetailAPI
@@ -154,15 +156,15 @@ func InitBookstoreRouter(
 				public.GET("/books/:id/chapters/list", chapterApiHandler.GetChaptersByBookID) // 别名路由
 				public.GET("/books/:id/chapters/published", chapterApiHandler.GetPublishedChapters)
 				public.GET("/books/:id/chapters/:chapter_num", chapterApiHandler.GetChapterByBookIDAndNumber)
-				public.GET("/chapters/:id", chapterApiHandler.GetChapter)                     // 获取章节详情
-				public.GET("/chapters/:id/content", chapterApiHandler.GetChapterContent)      // 获取章节内容（公开接口）
+				public.GET("/chapters/:id", chapterApiHandler.GetChapter)                // 获取章节详情
+				public.GET("/chapters/:id/content", chapterApiHandler.GetChapterContent) // 获取章节内容（公开接口）
 			}
 
 			// ✅ Chapter Catalog API（章节目录和购买）- 需要ChapterService和PurchaseService
 			if chapterCatalogApiHandler != nil {
 				// 这些路由需要购买服务支持（VIP章节、价格、购买记录等）
-				public.GET("/books/:id/trial-chapters", chapterCatalogApiHandler.GetTrialChapters)     // 获取试读章节
-				public.GET("/books/:id/vip-chapters", chapterCatalogApiHandler.GetVIPChapters)         // 获取VIP章节列表
+				public.GET("/books/:id/trial-chapters", chapterCatalogApiHandler.GetTrialChapters) // 获取试读章节
+				public.GET("/books/:id/vip-chapters", chapterCatalogApiHandler.GetVIPChapters)     // 获取VIP章节列表
 				// 统一使用 :id，避免与已存在的 /chapters/:id 路由发生 Gin wildcard 冲突
 				public.GET("/chapters/:id/price", chapterCatalogApiHandler.GetChapterPrice)     // 获取章节价格
 				public.GET("/chapters/:id/access", chapterCatalogApiHandler.CheckChapterAccess) // 检查章节访问权限

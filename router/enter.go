@@ -254,8 +254,14 @@ func RegisterRoutes(r *gin.Engine) {
 			chapterPurchaseSvc = svc
 		}
 
-		// 注册书店路由，传入搜索服务
-		bookstoreRouter.InitBookstoreRouter(v1, bookstoreSvc, bookDetailSvc, ratingSvc, statisticsSvc, chapterSvc, chapterPurchaseSvc, searchSvc, logger)
+		// 注册书店路由，传入搜索与流式查询服务
+		var bookstoreStreamSvc *bookstore.BookstoreStreamService
+		if svc, streamErr := serviceContainer.GetBookstoreStreamService(); streamErr == nil {
+			bookstoreStreamSvc = svc
+		} else {
+			logger.Warn("书城流式服务未配置，流式搜索路由将返回不可用错误", zap.Error(streamErr))
+		}
+		bookstoreRouter.InitBookstoreRouter(v1, bookstoreSvc, bookDetailSvc, ratingSvc, statisticsSvc, chapterSvc, chapterPurchaseSvc, searchSvc, bookstoreStreamSvc, logger)
 
 		logger.Info("✓ 书店路由已注册到: /api/v1/bookstore/")
 		logger.Info("  - /api/v1/bookstore/homepage (书城首页)")

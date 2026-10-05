@@ -2,16 +2,18 @@ package bookstore
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strconv"
 
 	"Qingyu_backend/models/bookstore"
 	"Qingyu_backend/pkg/response"
-	streamService "Qingyu_backend/service/bookstore"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
+
+var errBookstoreStreamServiceUnavailable = errors.New("bookstore stream service is not configured")
 
 // StreamSearchBooks 流式搜索书籍
 //
@@ -93,15 +95,18 @@ func (api *BookstoreAPI) StreamSearchBooks(c *gin.Context) {
 		return
 	}
 
-	// 创建流式服务
-	svc := streamService.NewBookstoreStreamService(nil) // TODO: 注入真实的repository
+	if api.streamService == nil {
+		api.sendStreamError(c.Writer, errBookstoreStreamServiceUnavailable)
+		flusher.Flush()
+		return
+	}
 
 	// 发送元数据
 	api.sendStreamMeta(c.Writer, cursor, nil, true)
 	flusher.Flush()
 
 	// 执行搜索
-	result, err := svc.StreamSearch(c.Request.Context(), filter)
+	result, err := api.streamService.StreamSearch(c.Request.Context(), filter)
 	if err != nil {
 		api.sendStreamError(c.Writer, err)
 		flusher.Flush()
@@ -234,11 +239,13 @@ func (api *BookstoreAPI) StreamSearchBooksBatch(c *gin.Context) {
 		filter.Tags = tags
 	}
 
-	// 创建流式服务
-	svc := streamService.NewBookstoreStreamService(nil) // TODO: 注入真实的repository
+	if api.streamService == nil {
+		c.Error(errBookstoreStreamServiceUnavailable)
+		return
+	}
 
 	// 执行搜索
-	result, err := svc.StreamSearchWithCursor(c.Request.Context(), filter)
+	result, err := api.streamService.StreamSearchWithCursor(c.Request.Context(), filter)
 	if err != nil {
 		api.logger.Error("Stream search failed",
 			zap.Error(err),

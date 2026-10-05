@@ -45,6 +45,7 @@ func TestInitBookstoreRouterPublishedChaptersUsesBookIDParam(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		nil,
 	)
 
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/bookstore/books/507f1f77bcf86cd799439011/chapters/published", nil)
