@@ -24,6 +24,12 @@ type WriterStatsBookPort interface {
 	GetByProjectID(ctx context.Context, projectID string) (*bookstoreModel.Book, error)
 }
 
+// WriterDashboardBookPort 是作者工作台 fallback 统计所需的最小书籍接口。
+// Dashboard 只在项目统计为空时按作者读取作品，不应依赖书籍仓储的其他能力。
+type WriterDashboardBookPort interface {
+	GetByAuthorID(ctx context.Context, authorID string, limit, offset int) ([]*bookstoreModel.Book, error)
+}
+
 // DocumentSceneStatePort 是 AI 场景状态更新所需的最小文档写入接口。
 type DocumentSceneStatePort interface {
 	Update(ctx context.Context, id string, updates map[string]interface{}) error

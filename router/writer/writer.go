@@ -6,7 +6,6 @@ import (
 	"Qingyu_backend/api/v1/writer"
 	"Qingyu_backend/internal/middleware/auth"
 	"Qingyu_backend/pkg/lock"
-	bookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
 	"Qingyu_backend/service/interfaces"
 	readingStatsService "Qingyu_backend/service/reader/stats"
 	searchservice "Qingyu_backend/service/search"
@@ -29,7 +28,7 @@ func InitWriterRouter(
 	commentService writerservice.CommentService,
 	templateService *document.TemplateService,
 	statsService *readingStatsService.ReadingStatsService,
-	bookRepo bookstoreRepo.BookRepository,
+	bookRepo interfaces.WriterStatsBookPort,
 	characterService interfaces.CharacterService,
 	locationService interfaces.LocationService,
 	dashboardService *writerservice.DashboardService,

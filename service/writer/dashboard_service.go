@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	bookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
 	writerRepo "Qingyu_backend/repository/interfaces/writer"
 	"Qingyu_backend/service/interfaces"
 )
@@ -21,12 +20,12 @@ type DashboardStats struct {
 // DashboardService 仪表板统计服务
 type DashboardService struct {
 	projectRepo    writerRepo.ProjectRepository
-	bookRepo       bookstoreRepo.BookRepository
+	bookRepo       interfaces.WriterDashboardBookPort
 	publishService interfaces.PublishService
 }
 
 // NewDashboardService 创建仪表板统计服务
-func NewDashboardService(projectRepo writerRepo.ProjectRepository, bookRepo bookstoreRepo.BookRepository, publishService interfaces.PublishService) *DashboardService {
+func NewDashboardService(projectRepo writerRepo.ProjectRepository, bookRepo interfaces.WriterDashboardBookPort, publishService interfaces.PublishService) *DashboardService {
 	return &DashboardService{
 		projectRepo:    projectRepo,
 		bookRepo:       bookRepo,
