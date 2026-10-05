@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/response"
 
 	"github.com/gin-gonic/gin"
@@ -71,9 +72,8 @@ func (api *RAGApi) RetrieveAndGenerate(c *gin.Context) {
 	}
 
 	// 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "无法获取用户信息")
+	userID, ok := shared.GetUserIDWithMessage(c, "无法获取用户信息")
+	if !ok {
 		return
 	}
 
@@ -83,7 +83,7 @@ func (api *RAGApi) RetrieveAndGenerate(c *gin.Context) {
 	result, err := api.ragService.RetrieveAndGenerate(
 		ctx,
 		req.Query,
-		userID.(string),
+		userID,
 		req.ProjectID,
 		req.TopK,
 		req.IncludeOutline,
@@ -129,9 +129,8 @@ func (api *RAGApi) SearchSimilar(c *gin.Context) {
 		}
 	}
 
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "无法获取用户信息")
+	userID, ok := shared.GetUserIDWithMessage(c, "无法获取用户信息")
+	if !ok {
 		return
 	}
 
@@ -141,7 +140,7 @@ func (api *RAGApi) SearchSimilar(c *gin.Context) {
 	sources, err := api.ragService.SearchSimilar(
 		ctx,
 		query,
-		userID.(string),
+		userID,
 		topK,
 	)
 	if err != nil {

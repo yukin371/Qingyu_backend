@@ -4,6 +4,7 @@ import (
 	"io"
 	"strconv"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/models/ai"
 	aiService "Qingyu_backend/service/ai"
 	aiDto "Qingyu_backend/service/ai/dto" // Imported for Swagger annotations
@@ -111,6 +112,7 @@ func (api *ChatApi) ChatStream(c *gin.Context) {
 		response.BadRequest(c, "参数错误", err.Error())
 		return
 	}
+	userID := shared.GetUserIDOptional(c)
 
 	// 设置SSE响应头
 	c.Header("Content-Type", "text/event-stream")
@@ -158,17 +160,19 @@ func (api *ChatApi) ChatStream(c *gin.Context) {
 				})
 
 				// 异步消费配额
-				go func() {
-					userID, _ := c.Get("user_id")
+				go func(userID string) {
+					if userID == "" {
+						return
+					}
 					_ = api.quotaService.ConsumeQuota(
 						c.Request.Context(),
-						userID.(string),
+						userID,
 						chunk.TokensUsed,
 						"chat",
 						chunk.Model,
 						chunk.MessageID,
 					)
-				}()
+				}(userID)
 
 				return false
 			}
