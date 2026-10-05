@@ -20,6 +20,15 @@ func NewMessageAPI(messageService interfaces.MessageService) *MessageAPI {
 	}
 }
 
+func messageUserID(c *gin.Context) (string, bool) {
+	value, exists := c.Get("user_id")
+	if !exists {
+		return "", false
+	}
+	userID, ok := value.(string)
+	return userID, ok && userID != ""
+}
+
 // =========================
 // 会话管理
 // =========================
@@ -35,8 +44,8 @@ func NewMessageAPI(messageService interfaces.MessageService) *MessageAPI {
 // @Router /api/v1/social/messages/conversations [get]
 // @Security Bearer
 func (api *MessageAPI) GetConversations(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
+	userID, ok := messageUserID(c)
+	if !ok {
 		response.Unauthorized(c, "请先登录")
 		return
 	}
@@ -55,7 +64,7 @@ func (api *MessageAPI) GetConversations(c *gin.Context) {
 
 	conversations, total, err := api.messageService.GetConversations(
 		c.Request.Context(),
-		userID.(string),
+		userID,
 		params.Page,
 		params.Size,
 	)
@@ -91,8 +100,8 @@ func (api *MessageAPI) GetConversationMessages(c *gin.Context) {
 		return
 	}
 
-	userID, exists := c.Get("user_id")
-	if !exists {
+	userID, ok := messageUserID(c)
+	if !ok {
 		response.Unauthorized(c, "请先登录")
 		return
 	}
@@ -111,7 +120,7 @@ func (api *MessageAPI) GetConversationMessages(c *gin.Context) {
 
 	messages, total, err := api.messageService.GetConversationMessages(
 		c.Request.Context(),
-		userID.(string),
+		userID,
 		conversationID,
 		params.Page,
 		params.Size,
@@ -157,15 +166,15 @@ func (api *MessageAPI) SendMessage(c *gin.Context) {
 		return
 	}
 
-	senderID, exists := c.Get("user_id")
-	if !exists {
+	senderID, ok := messageUserID(c)
+	if !ok {
 		response.Unauthorized(c, "请先登录")
 		return
 	}
 
 	message, err := api.messageService.SendMessage(
 		c.Request.Context(),
-		senderID.(string),
+		senderID,
 		req.ReceiverID,
 		req.Content,
 		req.MessageType,
@@ -200,15 +209,15 @@ func (api *MessageAPI) MarkMessageAsRead(c *gin.Context) {
 		return
 	}
 
-	userID, exists := c.Get("user_id")
-	if !exists {
+	userID, ok := messageUserID(c)
+	if !ok {
 		response.Unauthorized(c, "请先登录")
 		return
 	}
 
 	err := api.messageService.MarkMessageAsRead(
 		c.Request.Context(),
-		userID.(string),
+		userID,
 		messageID,
 	)
 
@@ -236,15 +245,15 @@ func (api *MessageAPI) DeleteMessage(c *gin.Context) {
 		return
 	}
 
-	userID, exists := c.Get("user_id")
-	if !exists {
+	userID, ok := messageUserID(c)
+	if !ok {
 		response.Unauthorized(c, "请先登录")
 		return
 	}
 
 	err := api.messageService.DeleteMessage(
 		c.Request.Context(),
-		userID.(string),
+		userID,
 		messageID,
 	)
 
@@ -284,15 +293,15 @@ func (api *MessageAPI) CreateMention(c *gin.Context) {
 		return
 	}
 
-	senderID, exists := c.Get("user_id")
-	if !exists {
+	senderID, ok := messageUserID(c)
+	if !ok {
 		response.Unauthorized(c, "请先登录")
 		return
 	}
 
 	err := api.messageService.CreateMention(
 		c.Request.Context(),
-		senderID.(string),
+		senderID,
 		req.UserID,
 		req.ContentType,
 		req.ContentID,
@@ -318,8 +327,8 @@ func (api *MessageAPI) CreateMention(c *gin.Context) {
 // @Router /api/v1/social/mentions [get]
 // @Security Bearer
 func (api *MessageAPI) GetMentions(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
+	userID, ok := messageUserID(c)
+	if !ok {
 		response.Unauthorized(c, "请先登录")
 		return
 	}
@@ -338,7 +347,7 @@ func (api *MessageAPI) GetMentions(c *gin.Context) {
 
 	mentions, total, err := api.messageService.GetMentions(
 		c.Request.Context(),
-		userID.(string),
+		userID,
 		params.Page,
 		params.Size,
 	)
@@ -372,15 +381,15 @@ func (api *MessageAPI) MarkMentionAsRead(c *gin.Context) {
 		return
 	}
 
-	userID, exists := c.Get("user_id")
-	if !exists {
+	userID, ok := messageUserID(c)
+	if !ok {
 		response.Unauthorized(c, "请先登录")
 		return
 	}
 
 	err := api.messageService.MarkMentionAsRead(
 		c.Request.Context(),
-		userID.(string),
+		userID,
 		mentionID,
 	)
 

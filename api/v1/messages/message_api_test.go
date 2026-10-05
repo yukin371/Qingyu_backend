@@ -550,3 +550,20 @@ func TestMessageAPI_MarkMentionAsRead_EmptyMentionID(t *testing.T) {
 	// Then
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
+
+func TestMessageAPI_RejectsMalformedUserIDContext(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	router := gin.New()
+	router.Use(func(c *gin.Context) {
+		c.Set("user_id", 123)
+		c.Next()
+	})
+	api := messageAPI.NewMessageAPI(new(MockMessageService))
+	router.GET("/conversations", api.GetConversations)
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/conversations", nil))
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+	assert.Contains(t, w.Body.String(), "请先登录")
+}
