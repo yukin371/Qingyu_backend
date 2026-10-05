@@ -207,13 +207,17 @@ func RegisterWriterRoutes(r *gin.RouterGroup, searchSvc *searchservice.SearchSer
 	// 获取阅读统计服务（用于writer统计路由）
 	statsSvc, _ := serviceContainer.GetReadingStatsService()
 	bookRepo := repositoryFactory.CreateBookRepository()
+	var conceptRepo interfaces.ConceptCatalogPort
+	if mongoDB != nil {
+		conceptRepo = mongoWriterRepo.NewConceptRepository(mongoDB)
+	}
 	var dashboardSvc *writerservice.DashboardService
 	if projectRepo != nil && publishSvc != nil {
 		dashboardSvc = writerservice.NewDashboardService(projectRepo, bookRepo, publishSvc)
 	}
 
 	// 调用InitWriterRouter初始化文档编辑相关路由
-	InitWriterRouter(r, projectSvc, documentSvc, batchOpSvc, versionSvc, searchSvc, exportSvc, publishSvc, lockSvc, commentSvc, templateSvc, statsSvc, bookRepo, characterSvc, locationSvc, dashboardSvc)
+	InitWriterRouter(r, projectSvc, documentSvc, batchOpSvc, versionSvc, searchSvc, exportSvc, publishSvc, lockSvc, commentSvc, templateSvc, statsSvc, bookRepo, characterSvc, locationSvc, dashboardSvc, conceptRepo)
 
 	// 创建 Story Harness 服务
 	var contextSvc *storyharness.ContextService

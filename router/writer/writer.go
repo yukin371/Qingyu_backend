@@ -32,7 +32,8 @@ func InitWriterRouter(
 	bookRepo bookstoreRepo.BookRepository,
 	characterService interfaces.CharacterService,
 	locationService interfaces.LocationService,
-		dashboardService *writerservice.DashboardService,
+	dashboardService *writerservice.DashboardService,
+	conceptRepo interfaces.ConceptCatalogPort,
 ) {
 	// 创建API实例
 	projectApi := writer.NewProjectApi(projectService)
@@ -131,7 +132,7 @@ func InitWriterRouter(
 		}
 
 		// 设定百科路由（概念）
-		InitEncyclopediaRouter(writerGroup)
+		InitEncyclopediaRouter(writerGroup, conceptRepo)
 	}
 }
 

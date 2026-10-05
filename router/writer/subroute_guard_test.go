@@ -118,6 +118,7 @@ func TestInitWriterRouter_BatchOperationRouteRegistered(t *testing.T) {
 		nil,
 		nil,
 		nil,
+		nil,
 	)
 
 	w := performWriterRequest(engine, http.MethodPost, "/api/v1/writer/batch-operations", "{}")
