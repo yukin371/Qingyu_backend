@@ -61,6 +61,25 @@ func TestQuotaMiddlewareWithInterface(t *testing.T) {
 	})
 }
 
+func TestQuotaMiddlewareRejectsMalformedUserID(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	router := gin.New()
+	router.Use(func(c *gin.Context) {
+		c.Set("user_id", 123)
+		c.Next()
+	})
+	router.Use(NewQuotaMiddleware(&passingMockChecker{}).CheckQuota(1000))
+	router.GET("/test", func(c *gin.Context) {
+		c.String(http.StatusOK, "success")
+	})
+
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/test", nil))
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+	assert.Contains(t, w.Body.String(), "无法获取用户信息")
+}
+
 type passingMockChecker struct{}
 
 func (m *passingMockChecker) Check(ctx context.Context, userID string, amount int) error {

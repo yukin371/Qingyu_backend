@@ -43,6 +43,12 @@ func (m *QuotaMiddleware) CheckQuota(estimatedAmount int) gin.HandlerFunc {
 			c.Abort()
 			return
 		}
+		userIDString, ok := userID.(string)
+		if !ok || userIDString == "" {
+			writeQuotaError(c, http.StatusUnauthorized, "未授权", "无法获取用户信息")
+			c.Abort()
+			return
+		}
 
 		if m.checker == nil {
 			writeQuotaError(c, http.StatusServiceUnavailable, "配额检查服务未配置", "配额检查功能暂未启用")
@@ -50,7 +56,7 @@ func (m *QuotaMiddleware) CheckQuota(estimatedAmount int) gin.HandlerFunc {
 			return
 		}
 
-		err := m.checker.Check(c.Request.Context(), userID.(string), estimatedAmount)
+		err := m.checker.Check(c.Request.Context(), userIDString, estimatedAmount)
 		if err != nil {
 			if errors.Is(err, quota.ErrQuotaExhausted) || errors.Is(err, quota.ErrQuotaSuspended) {
 				m.handleQuotaError(c, err)
