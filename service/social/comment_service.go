@@ -269,14 +269,25 @@ func (s *CommentService) GetCommentDetail(ctx context.Context, commentID string)
 
 // UpdateComment 更新评论
 func (s *CommentService) UpdateComment(ctx context.Context, userID, commentID, content string) error {
+	return s.UpdateCommentFields(ctx, userID, commentID, &content, nil)
+}
+
+// UpdateCommentFields 更新评论内容和可选评分，并统一执行 owner 与可编辑时间校验。
+func (s *CommentService) UpdateCommentFields(ctx context.Context, userID, commentID string, content *string, rating *int) error {
 	if userID == "" {
 		return fmt.Errorf("用户ID不能为空")
 	}
 	if commentID == "" {
 		return fmt.Errorf("评论ID不能为空")
 	}
-	if len(content) < 1 || len(content) > 500 {
-		return fmt.Errorf("评论内容长度必须在1-500字之间")
+	if content == nil && rating == nil {
+		return fmt.Errorf("至少提供评论内容或评分")
+	}
+	if content != nil && (len(*content) < 1 || len(*content) > 5000) {
+		return fmt.Errorf("评论内容长度必须在1-5000字之间")
+	}
+	if rating != nil && (*rating < 0 || *rating > 5) {
+		return fmt.Errorf("评分必须在0-5之间")
 	}
 
 	// 获取原评论
@@ -296,8 +307,8 @@ func (s *CommentService) UpdateComment(ctx context.Context, userID, commentID, c
 	}
 
 	// 敏感词检测
-	if s.sensitiveWordRepo != nil {
-		hasSensitive, _, err := s.checkSensitiveWords(ctx, content)
+	if content != nil && s.sensitiveWordRepo != nil {
+		hasSensitive, _, err := s.checkSensitiveWords(ctx, *content)
 		if err != nil {
 			return fmt.Errorf("敏感词检测失败: %w", err)
 		}
@@ -307,8 +318,12 @@ func (s *CommentService) UpdateComment(ctx context.Context, userID, commentID, c
 	}
 
 	// 更新评论
-	updates := map[string]interface{}{
-		"content": strings.TrimSpace(content),
+	updates := make(map[string]interface{}, 2)
+	if content != nil {
+		updates["content"] = strings.TrimSpace(*content)
+	}
+	if rating != nil {
+		updates["rating"] = *rating
 	}
 
 	if err := s.commentRepo.Update(ctx, commentID, updates); err != nil {

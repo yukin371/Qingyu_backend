@@ -455,6 +455,9 @@ func (api *ChapterCommentAPI) GetChapterComment(c *gin.Context) {
 //	@Success	200			{object}	response.APIResponse
 //	@Router		/api/v1/reader/comments/{commentId} [put]
 func (api *ChapterCommentAPI) UpdateChapterComment(c *gin.Context) {
+	if !api.requireCommentService(c) {
+		return
+	}
 	userID, _, ok := api.getUserIdentity(c)
 	if !ok {
 		return
@@ -477,13 +480,15 @@ func (api *ChapterCommentAPI) UpdateChapterComment(c *gin.Context) {
 		response.BadRequest(c, "评分必须在0-5之间", "评分必须在0-5之间")
 		return
 	}
+	if req.Content == nil && req.Rating == nil {
+		response.BadRequest(c, "至少提供评论内容或评分", "至少提供评论内容或评分")
+		return
+	}
 
-	// 实际应用中应该：
-	// 1. 从数据库获取评论
-	// 2. 验证用户是否为评论作者
-	// 3. 检查是否在可编辑时间内（30分钟）
-	// 4. 更新评论内容
-	// 5. 如果评分改变，更新章节/书籍评分统计
+	if err := api.commentService.UpdateCommentFields(c.Request.Context(), userID, commentID, req.Content, req.Rating); err != nil {
+		c.Error(err)
+		return
+	}
 
 	response.Success(c, gin.H{
 		"message":   "评论更新成功",

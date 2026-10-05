@@ -63,6 +63,9 @@ func (m *chapterCommentRepoStub) Update(_ context.Context, id string, updates ma
 	if content, ok := updates["content"].(string); ok {
 		comment.Content = content
 	}
+	if rating, ok := updates["rating"].(int); ok {
+		comment.Rating = rating
+	}
 	comment.UpdatedAt = time.Now()
 	return nil
 }
@@ -220,15 +223,19 @@ type chapterServiceStub struct {
 	paragraphs []*bookstoreModel.ChapterContent
 }
 
-func (m *chapterServiceStub) CreateChapter(context.Context, *bookstoreModel.Chapter) error { return nil }
+func (m *chapterServiceStub) CreateChapter(context.Context, *bookstoreModel.Chapter) error {
+	return nil
+}
 func (m *chapterServiceStub) GetChapterByID(context.Context, string) (*bookstoreModel.Chapter, error) {
 	if m.chapter == nil {
 		return nil, errors.New("chapter not found")
 	}
 	return m.chapter, nil
 }
-func (m *chapterServiceStub) UpdateChapter(context.Context, *bookstoreModel.Chapter) error { return nil }
-func (m *chapterServiceStub) DeleteChapter(context.Context, string) error                  { return nil }
+func (m *chapterServiceStub) UpdateChapter(context.Context, *bookstoreModel.Chapter) error {
+	return nil
+}
+func (m *chapterServiceStub) DeleteChapter(context.Context, string) error { return nil }
 func (m *chapterServiceStub) GetChaptersByBookID(context.Context, string, int, int) ([]*bookstoreModel.Chapter, int64, error) {
 	return nil, 0, nil
 }
@@ -281,8 +288,8 @@ func (m *chapterServiceStub) GetChapterParagraphs(context.Context, string, strin
 	return m.paragraphs, nil
 }
 func (m *chapterServiceStub) UpdateChapterContent(context.Context, string, string) error { return nil }
-func (m *chapterServiceStub) PublishChapter(context.Context, string) error                { return nil }
-func (m *chapterServiceStub) UnpublishChapter(context.Context, string) error              { return nil }
+func (m *chapterServiceStub) PublishChapter(context.Context, string) error               { return nil }
+func (m *chapterServiceStub) UnpublishChapter(context.Context, string) error             { return nil }
 func (m *chapterServiceStub) BatchUpdateChapterPrice(context.Context, []string, float64) error {
 	return nil
 }
@@ -302,21 +309,21 @@ func mustObjectID(hex string) primitive.ObjectID {
 
 func makeChapterFixture(chapterID, bookID string) (*bookstoreModel.Chapter, []*bookstoreModel.ChapterContent) {
 	return &bookstoreModel.Chapter{
-		ID:     mustObjectID(chapterID),
-		BookID: bookID,
-		Title:  "测试章节",
-	}, []*bookstoreModel.ChapterContent{
-		{
-			ID:        primitive.NewObjectID(),
-			ChapterID: mustObjectID(chapterID),
-			Content:   "第一段内容",
-		},
-		{
-			ID:        primitive.NewObjectID(),
-			ChapterID: mustObjectID(chapterID),
-			Content:   "第二段内容",
-		},
-	}
+			ID:     mustObjectID(chapterID),
+			BookID: bookID,
+			Title:  "测试章节",
+		}, []*bookstoreModel.ChapterContent{
+			{
+				ID:        primitive.NewObjectID(),
+				ChapterID: mustObjectID(chapterID),
+				Content:   "第一段内容",
+			},
+			{
+				ID:        primitive.NewObjectID(),
+				ChapterID: mustObjectID(chapterID),
+				Content:   "第二段内容",
+			},
+		}
 }
 
 func setupChapterCommentTestRouter(userID string, repo *chapterCommentRepoStub, chapterSvc *chapterServiceStub) *gin.Engine {
@@ -355,14 +362,14 @@ func TestChapterCommentAPI_GetChapterComments_Success(t *testing.T) {
 	repo := newChapterCommentRepoStub(&socialModels.Comment{
 		IdentifiedEntity: socialModels.IdentifiedEntity{ID: primitive.NewObjectID()},
 		Timestamps:       socialModels.BaseEntity{CreatedAt: time.Now(), UpdatedAt: time.Now()},
-		TargetType: socialModels.CommentTargetTypeChapter,
-		TargetID:   chapterID,
-		BookID:     bookID,
-		ChapterID:  chapterID,
-		AuthorID:   userID,
-		Content:    "第一条章节评论",
-		Rating:     5,
-		State:      socialModels.CommentStateNormal,
+		TargetType:       socialModels.CommentTargetTypeChapter,
+		TargetID:         chapterID,
+		BookID:           bookID,
+		ChapterID:        chapterID,
+		AuthorID:         userID,
+		Content:          "第一条章节评论",
+		Rating:           5,
+		State:            socialModels.CommentStateNormal,
 		AuthorSnapshot: &socialModels.CommentAuthorSnapshot{
 			ID:       userID,
 			Username: "tester",
@@ -464,13 +471,13 @@ func TestChapterCommentAPI_DeleteChapterComment_Success(t *testing.T) {
 	comment := &socialModels.Comment{
 		IdentifiedEntity: socialModels.IdentifiedEntity{ID: primitive.NewObjectID()},
 		Timestamps:       socialModels.BaseEntity{CreatedAt: time.Now(), UpdatedAt: time.Now()},
-		TargetType: socialModels.CommentTargetTypeChapter,
-		TargetID:   chapterID,
-		BookID:     bookID,
-		ChapterID:  chapterID,
-		AuthorID:   userID,
-		Content:    "待删除评论",
-		State:      socialModels.CommentStateNormal,
+		TargetType:       socialModels.CommentTargetTypeChapter,
+		TargetID:         chapterID,
+		BookID:           bookID,
+		ChapterID:        chapterID,
+		AuthorID:         userID,
+		Content:          "待删除评论",
+		State:            socialModels.CommentStateNormal,
 	}
 	repo := newChapterCommentRepoStub(comment)
 	router := setupChapterCommentTestRouter(userID, repo, &chapterServiceStub{chapter: chapter, paragraphs: paragraphs})
@@ -484,6 +491,31 @@ func TestChapterCommentAPI_DeleteChapterComment_Success(t *testing.T) {
 	assert.False(t, exists)
 }
 
+func TestChapterCommentAPI_UpdateChapterComment_PersistsFields(t *testing.T) {
+	userID := primitive.NewObjectID().Hex()
+	comment := &socialModels.Comment{
+		IdentifiedEntity: socialModels.IdentifiedEntity{ID: primitive.NewObjectID()},
+		Timestamps:       socialModels.BaseEntity{CreatedAt: time.Now().Add(-5 * time.Minute), UpdatedAt: time.Now()},
+		AuthorID:         userID,
+		Content:          "旧内容",
+		Rating:           2,
+		State:            socialModels.CommentStateNormal,
+	}
+	repo := newChapterCommentRepoStub(comment)
+	router := setupChapterCommentTestRouter(userID, repo, &chapterServiceStub{})
+
+	body := map[string]interface{}{"content": "新内容", "rating": 5}
+	payload, _ := json.Marshal(body)
+	req, _ := http.NewRequest(http.MethodPut, "/api/v1/reader/comments/"+comment.ID.Hex(), bytes.NewReader(payload))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	require.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, "新内容", repo.comments[comment.ID.Hex()].Content)
+	assert.Equal(t, 5, repo.comments[comment.ID.Hex()].Rating)
+}
+
 func TestChapterCommentAPI_LikeChapterComment_Success(t *testing.T) {
 	userID := primitive.NewObjectID().Hex()
 	chapterID := primitive.NewObjectID().Hex()
@@ -492,13 +524,13 @@ func TestChapterCommentAPI_LikeChapterComment_Success(t *testing.T) {
 	comment := &socialModels.Comment{
 		IdentifiedEntity: socialModels.IdentifiedEntity{ID: primitive.NewObjectID()},
 		Timestamps:       socialModels.BaseEntity{CreatedAt: time.Now(), UpdatedAt: time.Now()},
-		TargetType: socialModels.CommentTargetTypeChapter,
-		TargetID:   chapterID,
-		BookID:     bookID,
-		ChapterID:  chapterID,
-		AuthorID:   "another-user",
-		Content:    "待点赞评论",
-		State:      socialModels.CommentStateNormal,
+		TargetType:       socialModels.CommentTargetTypeChapter,
+		TargetID:         chapterID,
+		BookID:           bookID,
+		ChapterID:        chapterID,
+		AuthorID:         "another-user",
+		Content:          "待点赞评论",
+		State:            socialModels.CommentStateNormal,
 	}
 	repo := newChapterCommentRepoStub(comment)
 	router := setupChapterCommentTestRouter(userID, repo, &chapterServiceStub{chapter: chapter, paragraphs: paragraphs})
@@ -522,13 +554,13 @@ func TestChapterCommentAPI_GetParagraphComments_Success(t *testing.T) {
 	topLevel := &socialModels.Comment{
 		IdentifiedEntity: socialModels.IdentifiedEntity{ID: mustObjectID(parentID)},
 		Timestamps:       socialModels.BaseEntity{CreatedAt: time.Now(), UpdatedAt: time.Now()},
-		TargetType: socialModels.CommentTargetTypeChapter,
-		TargetID:   chapterID,
-		BookID:     bookID,
-		ChapterID:  chapterID,
-		AuthorID:   userID,
-		Content:    "段落主评论",
-		State:      socialModels.CommentStateNormal,
+		TargetType:       socialModels.CommentTargetTypeChapter,
+		TargetID:         chapterID,
+		BookID:           bookID,
+		ChapterID:        chapterID,
+		AuthorID:         userID,
+		Content:          "段落主评论",
+		State:            socialModels.CommentStateNormal,
 		RichContent: map[string]interface{}{
 			"paragraph_id":    paragraphID,
 			"paragraph_index": 0,
@@ -610,13 +642,13 @@ func TestChapterCommentAPI_GetChapterParagraphComments_Success(t *testing.T) {
 	comment := &socialModels.Comment{
 		IdentifiedEntity: socialModels.IdentifiedEntity{ID: primitive.NewObjectID()},
 		Timestamps:       socialModels.BaseEntity{CreatedAt: time.Now(), UpdatedAt: time.Now()},
-		TargetType: socialModels.CommentTargetTypeChapter,
-		TargetID:   chapterID,
-		BookID:     bookID,
-		ChapterID:  chapterID,
-		AuthorID:   userID,
-		Content:    "段落概览评论",
-		State:      socialModels.CommentStateNormal,
+		TargetType:       socialModels.CommentTargetTypeChapter,
+		TargetID:         chapterID,
+		BookID:           bookID,
+		ChapterID:        chapterID,
+		AuthorID:         userID,
+		Content:          "段落概览评论",
+		State:            socialModels.CommentStateNormal,
 		RichContent: map[string]interface{}{
 			"paragraph_id":    paragraphs[1].ID.Hex(),
 			"paragraph_index": 1,
