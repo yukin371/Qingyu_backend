@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"Qingyu_backend/config"
 	bookstoreModel "Qingyu_backend/models/bookstore"
 	bookstoreService "Qingyu_backend/service/bookstore"
 
@@ -28,6 +29,9 @@ func (s publishedChapterRouteService) GetPublishedChaptersByBookID(
 
 func TestInitBookstoreRouterPublishedChaptersUsesBookIDParam(t *testing.T) {
 	gin.SetMode(gin.TestMode)
+	previousConfig := config.GlobalConfig
+	config.GlobalConfig = &config.Config{JWT: &config.JWTConfig{Secret: "router-test-secret", ExpirationHours: 1}}
+	t.Cleanup(func() { config.GlobalConfig = previousConfig })
 	r := gin.New()
 	api := r.Group("/api/v1")
 
