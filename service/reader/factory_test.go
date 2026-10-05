@@ -179,10 +179,10 @@ func (m *MockFactoryAnnotationPort) GetVersion() string                   { retu
 func (m *MockFactoryAnnotationPort) CreateAnnotation(ctx context.Context, annotation *reader.Annotation) error {
 	return nil
 }
-func (m *MockFactoryAnnotationPort) UpdateAnnotation(ctx context.Context, annotationID string, updates map[string]interface{}) error {
+func (m *MockFactoryAnnotationPort) UpdateAnnotation(ctx context.Context, userID, annotationID string, updates map[string]interface{}) error {
 	return nil
 }
-func (m *MockFactoryAnnotationPort) DeleteAnnotation(ctx context.Context, annotationID string) error {
+func (m *MockFactoryAnnotationPort) DeleteAnnotation(ctx context.Context, userID, annotationID string) error {
 	return nil
 }
 func (m *MockFactoryAnnotationPort) GetAnnotationsByChapter(ctx context.Context, userID, bookID, chapterID string) ([]*reader.Annotation, error) {
@@ -218,7 +218,7 @@ func (m *MockFactoryAnnotationPort) GetAnnotationStats(ctx context.Context, user
 func (m *MockFactoryAnnotationPort) BatchCreateAnnotations(ctx context.Context, annotations []*reader.Annotation) error {
 	return nil
 }
-func (m *MockFactoryAnnotationPort) BatchDeleteAnnotations(ctx context.Context, annotationIDs []string) error {
+func (m *MockFactoryAnnotationPort) BatchDeleteAnnotations(ctx context.Context, userID string, annotationIDs []string) error {
 	return nil
 }
 

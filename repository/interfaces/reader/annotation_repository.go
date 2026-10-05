@@ -10,8 +10,8 @@ type AnnotationRepository interface {
 	// 基础CRUD操作
 	Create(ctx context.Context, annotation *reader.Annotation) error
 	GetByID(ctx context.Context, id string) (*reader.Annotation, error)
-	Update(ctx context.Context, id string, updates map[string]interface{}) error
-	Delete(ctx context.Context, id string) error
+	Update(ctx context.Context, userID, id string, updates map[string]interface{}) error
+	Delete(ctx context.Context, userID, id string) error
 
 	// 查询操作
 	GetByUserAndBook(ctx context.Context, userID, bookID string) ([]*reader.Annotation, error)

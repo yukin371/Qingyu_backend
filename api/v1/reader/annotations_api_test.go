@@ -28,13 +28,13 @@ func (m *MockReaderServiceForAnnotations) CreateAnnotation(ctx context.Context, 
 	return args.Error(0)
 }
 
-func (m *MockReaderServiceForAnnotations) UpdateAnnotation(ctx context.Context, annotationID string, updates map[string]interface{}) error {
-	args := m.Called(ctx, annotationID, updates)
+func (m *MockReaderServiceForAnnotations) UpdateAnnotation(ctx context.Context, userID, annotationID string, updates map[string]interface{}) error {
+	args := m.Called(ctx, userID, annotationID, updates)
 	return args.Error(0)
 }
 
-func (m *MockReaderServiceForAnnotations) DeleteAnnotation(ctx context.Context, annotationID string) error {
-	args := m.Called(ctx, annotationID)
+func (m *MockReaderServiceForAnnotations) DeleteAnnotation(ctx context.Context, userID, annotationID string) error {
+	args := m.Called(ctx, userID, annotationID)
 	return args.Error(0)
 }
 
@@ -220,8 +220,8 @@ func (m *MockReaderServiceForAnnotations) BatchCreateAnnotations(ctx context.Con
 	return args.Error(0)
 }
 
-func (m *MockReaderServiceForAnnotations) BatchDeleteAnnotations(ctx context.Context, annotationIDs []string) error {
-	args := m.Called(ctx, annotationIDs)
+func (m *MockReaderServiceForAnnotations) BatchDeleteAnnotations(ctx context.Context, userID string, annotationIDs []string) error {
+	args := m.Called(ctx, userID, annotationIDs)
 	return args.Error(0)
 }
 
@@ -427,7 +427,7 @@ func TestAnnotationsAPI_BatchUpdateAnnotations_InvalidID(t *testing.T) {
 	router.ServeHTTP(w, req)
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
-	mockService.AssertNotCalled(t, "UpdateAnnotation", mock.Anything, mock.Anything, mock.Anything)
+	mockService.AssertNotCalled(t, "UpdateAnnotation", mock.Anything, mock.Anything, mock.Anything, mock.Anything)
 }
 
 func TestAnnotationsAPI_ExportAnnotations_InvalidBookID(t *testing.T) {
@@ -454,7 +454,7 @@ func TestAnnotationsAPI_UpdateAnnotation_Success(t *testing.T) {
 		"note": strPtr("更新后的笔记"),
 	}
 
-	mockService.On("UpdateAnnotation", mock.Anything, annotationID, mock.Anything).Return(nil)
+	mockService.On("UpdateAnnotation", mock.Anything, userID, annotationID, mock.Anything).Return(nil)
 
 	// When
 	jsonBody, _ := json.Marshal(reqBody)
@@ -474,7 +474,7 @@ func TestAnnotationsAPI_DeleteAnnotation_Success(t *testing.T) {
 	annotationID := primitive.NewObjectID().Hex()
 	router := setupAnnotationsTestRouter(mockService, userID)
 
-	mockService.On("DeleteAnnotation", mock.Anything, annotationID).Return(nil)
+	mockService.On("DeleteAnnotation", mock.Anything, userID, annotationID).Return(nil)
 
 	// When
 	req, _ := http.NewRequest("DELETE", "/api/v1/reader/annotations/"+annotationID, nil)

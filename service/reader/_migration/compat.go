@@ -222,13 +222,13 @@ func (a *ReaderServiceAdapter) CreateAnnotation(ctx context.Context, annotation 
 }
 
 // UpdateAnnotation 委托给 AnnotationPort
-func (a *ReaderServiceAdapter) UpdateAnnotation(ctx context.Context, annotationID string, updates map[string]interface{}) error {
-	return a.annotationPort.UpdateAnnotation(ctx, annotationID, updates)
+func (a *ReaderServiceAdapter) UpdateAnnotation(ctx context.Context, userID, annotationID string, updates map[string]interface{}) error {
+	return a.annotationPort.UpdateAnnotation(ctx, userID, annotationID, updates)
 }
 
 // DeleteAnnotation 委托给 AnnotationPort
-func (a *ReaderServiceAdapter) DeleteAnnotation(ctx context.Context, annotationID string) error {
-	return a.annotationPort.DeleteAnnotation(ctx, annotationID)
+func (a *ReaderServiceAdapter) DeleteAnnotation(ctx context.Context, userID, annotationID string) error {
+	return a.annotationPort.DeleteAnnotation(ctx, userID, annotationID)
 }
 
 // GetAnnotationsByChapter 委托给 AnnotationPort
@@ -287,8 +287,8 @@ func (a *ReaderServiceAdapter) BatchCreateAnnotations(ctx context.Context, annot
 }
 
 // BatchDeleteAnnotations 委托给 AnnotationPort
-func (a *ReaderServiceAdapter) BatchDeleteAnnotations(ctx context.Context, annotationIDs []string) error {
-	return a.annotationPort.BatchDeleteAnnotations(ctx, annotationIDs)
+func (a *ReaderServiceAdapter) BatchDeleteAnnotations(ctx context.Context, userID string, annotationIDs []string) error {
+	return a.annotationPort.BatchDeleteAnnotations(ctx, userID, annotationIDs)
 }
 
 // ============================================================================

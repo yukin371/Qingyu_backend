@@ -63,13 +63,13 @@ func (a *AnnotationImpl) CreateAnnotation(ctx context.Context, annotation *reade
 }
 
 // UpdateAnnotation 更新标注
-func (a *AnnotationImpl) UpdateAnnotation(ctx context.Context, annotationID string, updates map[string]interface{}) error {
-	return a.readerService.UpdateAnnotation(ctx, annotationID, updates)
+func (a *AnnotationImpl) UpdateAnnotation(ctx context.Context, userID, annotationID string, updates map[string]interface{}) error {
+	return a.readerService.UpdateAnnotation(ctx, userID, annotationID, updates)
 }
 
 // DeleteAnnotation 删除标注
-func (a *AnnotationImpl) DeleteAnnotation(ctx context.Context, annotationID string) error {
-	return a.readerService.DeleteAnnotation(ctx, annotationID)
+func (a *AnnotationImpl) DeleteAnnotation(ctx context.Context, userID, annotationID string) error {
+	return a.readerService.DeleteAnnotation(ctx, userID, annotationID)
 }
 
 // GetAnnotationsByChapter 获取章节的标注
@@ -128,6 +128,6 @@ func (a *AnnotationImpl) BatchCreateAnnotations(ctx context.Context, annotations
 }
 
 // BatchDeleteAnnotations 批量删除标注
-func (a *AnnotationImpl) BatchDeleteAnnotations(ctx context.Context, annotationIDs []string) error {
-	return a.readerService.BatchDeleteAnnotations(ctx, annotationIDs)
+func (a *AnnotationImpl) BatchDeleteAnnotations(ctx context.Context, userID string, annotationIDs []string) error {
+	return a.readerService.BatchDeleteAnnotations(ctx, userID, annotationIDs)
 }

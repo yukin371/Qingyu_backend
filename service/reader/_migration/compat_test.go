@@ -100,10 +100,10 @@ func (m *MockAnnotationPort) GetVersion() string     { return m.version }
 func (m *MockAnnotationPort) CreateAnnotation(ctx context.Context, annotation *readerModel.Annotation) error {
 	return nil
 }
-func (m *MockAnnotationPort) UpdateAnnotation(ctx context.Context, annotationID string, updates map[string]interface{}) error {
+func (m *MockAnnotationPort) UpdateAnnotation(ctx context.Context, userID, annotationID string, updates map[string]interface{}) error {
 	return nil
 }
-func (m *MockAnnotationPort) DeleteAnnotation(ctx context.Context, annotationID string) error {
+func (m *MockAnnotationPort) DeleteAnnotation(ctx context.Context, userID, annotationID string) error {
 	return nil
 }
 func (m *MockAnnotationPort) GetAnnotationsByChapter(ctx context.Context, userID, bookID, chapterID string) ([]*readerModel.Annotation, error) {
@@ -139,7 +139,7 @@ func (m *MockAnnotationPort) GetAnnotationStats(ctx context.Context, userID, boo
 func (m *MockAnnotationPort) BatchCreateAnnotations(ctx context.Context, annotations []*readerModel.Annotation) error {
 	return nil
 }
-func (m *MockAnnotationPort) BatchDeleteAnnotations(ctx context.Context, annotationIDs []string) error {
+func (m *MockAnnotationPort) BatchDeleteAnnotations(ctx context.Context, userID string, annotationIDs []string) error {
 	return nil
 }
 
@@ -515,14 +515,14 @@ func TestReaderServiceAdapter_Annotation(t *testing.T) {
 	})
 
 	t.Run("UpdateAnnotation", func(t *testing.T) {
-		err := adapter.UpdateAnnotation(ctx, "annotation1", map[string]interface{}{"content": "new content"})
+		err := adapter.UpdateAnnotation(ctx, "user1", "annotation1", map[string]interface{}{"content": "new content"})
 		if err != nil {
 			t.Errorf("UpdateAnnotation() error = %v", err)
 		}
 	})
 
 	t.Run("DeleteAnnotation", func(t *testing.T) {
-		err := adapter.DeleteAnnotation(ctx, "annotation1")
+		err := adapter.DeleteAnnotation(ctx, "user1", "annotation1")
 		if err != nil {
 			t.Errorf("DeleteAnnotation() error = %v", err)
 		}
@@ -636,7 +636,7 @@ func TestReaderServiceAdapter_Annotation(t *testing.T) {
 	})
 
 	t.Run("BatchDeleteAnnotations", func(t *testing.T) {
-		err := adapter.BatchDeleteAnnotations(ctx, []string{"annotation1", "annotation2"})
+		err := adapter.BatchDeleteAnnotations(ctx, "user1", []string{"annotation1", "annotation2"})
 		if err != nil {
 			t.Errorf("BatchDeleteAnnotations() error = %v", err)
 		}

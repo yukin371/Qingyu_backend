@@ -43,8 +43,8 @@ type ReaderService interface {
 	// 标注相关方法
 	// =========================
 	CreateAnnotation(ctx context.Context, annotation *readerModel.Annotation) error
-	UpdateAnnotation(ctx context.Context, annotationID string, updates map[string]interface{}) error
-	DeleteAnnotation(ctx context.Context, annotationID string) error
+	UpdateAnnotation(ctx context.Context, userID, annotationID string, updates map[string]interface{}) error
+	DeleteAnnotation(ctx context.Context, userID, annotationID string) error
 	GetAnnotationsByChapter(ctx context.Context, userID, bookID, chapterID string) ([]*readerModel.Annotation, error)
 	GetAnnotationsByBook(ctx context.Context, userID, bookID string) ([]*readerModel.Annotation, error)
 	GetNotes(ctx context.Context, userID, bookID string) ([]*readerModel.Annotation, error)
@@ -67,7 +67,7 @@ type ReaderService interface {
 	// 批量操作方法
 	// =========================
 	BatchCreateAnnotations(ctx context.Context, annotations []*readerModel.Annotation) error
-	BatchDeleteAnnotations(ctx context.Context, annotationIDs []string) error
+	BatchDeleteAnnotations(ctx context.Context, userID string, annotationIDs []string) error
 
 	// =========================
 	// 同步方法

@@ -146,8 +146,14 @@ func (api *AnnotationsAPI) CreateAnnotation(c *gin.Context) {
 //	@Router		/api/v1/reader/annotations/{id} [put]
 func (api *AnnotationsAPI) UpdateAnnotation(c *gin.Context) {
 	annotationID := c.Param("id")
-	// TODO(T3-032-security): ReaderService.UpdateAnnotation lacks a user scope;
-	// confirm ownership rules and extend the service contract before enforcing them here.
+	userID, ok := api.getUserID(c)
+	if !ok {
+		return
+	}
+	if _, err := primitive.ObjectIDFromHex(userID); err != nil {
+		response.Unauthorized(c, "用户信息格式错误")
+		return
+	}
 
 	var req UpdateAnnotationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -166,7 +172,7 @@ func (api *AnnotationsAPI) UpdateAnnotation(c *gin.Context) {
 		updates["range"] = *req.Range
 	}
 
-	err := api.readerService.UpdateAnnotation(c.Request.Context(), annotationID, updates)
+	err := api.readerService.UpdateAnnotation(c.Request.Context(), userID, annotationID, updates)
 	if err != nil {
 		c.Error(err)
 		return
@@ -184,10 +190,16 @@ func (api *AnnotationsAPI) UpdateAnnotation(c *gin.Context) {
 //	@Router		/api/v1/reader/annotations/{id} [delete]
 func (api *AnnotationsAPI) DeleteAnnotation(c *gin.Context) {
 	annotationID := c.Param("id")
-	// TODO(T3-032-security): ReaderService.DeleteAnnotation lacks a user scope;
-	// confirm ownership rules and extend the service contract before enforcing them here.
+	userID, ok := api.getUserID(c)
+	if !ok {
+		return
+	}
+	if _, err := primitive.ObjectIDFromHex(userID); err != nil {
+		response.Unauthorized(c, "用户信息格式错误")
+		return
+	}
 
-	err := api.readerService.DeleteAnnotation(c.Request.Context(), annotationID)
+	err := api.readerService.DeleteAnnotation(c.Request.Context(), userID, annotationID)
 	if err != nil {
 		c.Error(err)
 		return

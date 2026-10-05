@@ -79,10 +79,10 @@ func (m *MockAnnotationPort) GetVersion() string                   { return "1.0
 func (m *MockAnnotationPort) CreateAnnotation(ctx context.Context, annotation *readerModel.Annotation) error {
 	return nil
 }
-func (m *MockAnnotationPort) UpdateAnnotation(ctx context.Context, annotationID string, updates map[string]interface{}) error {
+func (m *MockAnnotationPort) UpdateAnnotation(ctx context.Context, userID, annotationID string, updates map[string]interface{}) error {
 	return nil
 }
-func (m *MockAnnotationPort) DeleteAnnotation(ctx context.Context, annotationID string) error {
+func (m *MockAnnotationPort) DeleteAnnotation(ctx context.Context, userID, annotationID string) error {
 	return nil
 }
 func (m *MockAnnotationPort) GetAnnotationsByChapter(ctx context.Context, userID, bookID, chapterID string) ([]*readerModel.Annotation, error) {
@@ -118,7 +118,7 @@ func (m *MockAnnotationPort) GetAnnotationStats(ctx context.Context, userID, boo
 func (m *MockAnnotationPort) BatchCreateAnnotations(ctx context.Context, annotations []*readerModel.Annotation) error {
 	return nil
 }
-func (m *MockAnnotationPort) BatchDeleteAnnotations(ctx context.Context, annotationIDs []string) error {
+func (m *MockAnnotationPort) BatchDeleteAnnotations(ctx context.Context, userID string, annotationIDs []string) error {
 	return nil
 }
 
@@ -228,8 +228,8 @@ func TestPortInterfacesMethodSignatures(t *testing.T) {
 		_ = port.GetServiceName()
 		_ = port.GetVersion()
 		_ = port.CreateAnnotation(ctx, &readerModel.Annotation{})
-		_ = port.UpdateAnnotation(ctx, "id1", map[string]interface{}{})
-		_ = port.DeleteAnnotation(ctx, "id1")
+		_ = port.UpdateAnnotation(ctx, "user1", "id1", map[string]interface{}{})
+		_ = port.DeleteAnnotation(ctx, "user1", "id1")
 		_, _ = port.GetAnnotationsByChapter(ctx, "user1", "book1", "chapter1")
 		_, _ = port.GetAnnotationsByBook(ctx, "user1", "book1")
 		_, _ = port.GetNotes(ctx, "user1", "book1")
@@ -241,7 +241,7 @@ func TestPortInterfacesMethodSignatures(t *testing.T) {
 		_, _ = port.GetPublicAnnotations(ctx, "book1", "chapter1")
 		_, _ = port.GetAnnotationStats(ctx, "user1", "book1")
 		_ = port.BatchCreateAnnotations(ctx, []*readerModel.Annotation{})
-		_ = port.BatchDeleteAnnotations(ctx, []string{})
+		_ = port.BatchDeleteAnnotations(ctx, "user1", []string{})
 	})
 
 	t.Run("ChapterContentPort has 12 methods", func(t *testing.T) {

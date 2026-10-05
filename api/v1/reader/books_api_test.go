@@ -112,12 +112,12 @@ func (m *MockReaderServiceForBooks) CreateAnnotation(ctx context.Context, annota
 	return args.Error(0)
 }
 
-func (m *MockReaderServiceForBooks) UpdateAnnotation(ctx context.Context, annotationID string, updates map[string]interface{}) error {
+func (m *MockReaderServiceForBooks) UpdateAnnotation(ctx context.Context, userID, annotationID string, updates map[string]interface{}) error {
 	args := m.Called(ctx, annotationID, updates)
 	return args.Error(0)
 }
 
-func (m *MockReaderServiceForBooks) DeleteAnnotation(ctx context.Context, annotationID string) error {
+func (m *MockReaderServiceForBooks) DeleteAnnotation(ctx context.Context, userID, annotationID string) error {
 	args := m.Called(ctx, annotationID)
 	return args.Error(0)
 }
@@ -217,7 +217,7 @@ func (m *MockReaderServiceForBooks) BatchCreateAnnotations(ctx context.Context, 
 	return args.Error(0)
 }
 
-func (m *MockReaderServiceForBooks) BatchDeleteAnnotations(ctx context.Context, annotationIDs []string) error {
+func (m *MockReaderServiceForBooks) BatchDeleteAnnotations(ctx context.Context, userID string, annotationIDs []string) error {
 	args := m.Called(ctx, annotationIDs)
 	return args.Error(0)
 }

@@ -116,11 +116,14 @@ func (api *AnnotationsAPI) BatchUpdateAnnotations(c *gin.Context) {
 		return
 	}
 
-	if _, ok := shared.GetUserIDWithMessage(c, "请先登录"); !ok {
+	userID, ok := shared.GetUserIDWithMessage(c, "请先登录")
+	if !ok {
 		return
 	}
-	// TODO(T3-033-security): ReaderService.UpdateAnnotation lacks a user scope;
-	// add ownership filtering before allowing cross-user IDs in this batch endpoint.
+	if _, err := primitive.ObjectIDFromHex(userID); err != nil {
+		response.Unauthorized(c, "用户信息格式错误")
+		return
+	}
 	for _, update := range req.Updates {
 		if _, ok := parseObjectIDParam(c, "id", update.ID); !ok {
 			return
@@ -141,7 +144,7 @@ func (api *AnnotationsAPI) BatchUpdateAnnotations(c *gin.Context) {
 			updates["range"] = *update.Updates.Range
 		}
 
-		err := api.readerService.UpdateAnnotation(c.Request.Context(), update.ID, updates)
+		err := api.readerService.UpdateAnnotation(c.Request.Context(), userID, update.ID, updates)
 		if err == nil {
 			successCount++
 		}
@@ -167,11 +170,14 @@ func (api *AnnotationsAPI) BatchDeleteAnnotations(c *gin.Context) {
 		return
 	}
 
-	if _, ok := shared.GetUserIDWithMessage(c, "请先登录"); !ok {
+	userID, ok := shared.GetUserIDWithMessage(c, "请先登录")
+	if !ok {
 		return
 	}
-	// TODO(T3-033-security): ReaderService.BatchDeleteAnnotations lacks a user scope;
-	// add ownership filtering before allowing cross-user IDs in this batch endpoint.
+	if _, err := primitive.ObjectIDFromHex(userID); err != nil {
+		response.Unauthorized(c, "用户信息格式错误")
+		return
+	}
 	for _, id := range req.IDs {
 		if _, ok := parseObjectIDParam(c, "id", id); !ok {
 			return
@@ -179,7 +185,7 @@ func (api *AnnotationsAPI) BatchDeleteAnnotations(c *gin.Context) {
 	}
 
 	// 批量删除
-	err := api.readerService.BatchDeleteAnnotations(c.Request.Context(), req.IDs)
+	err := api.readerService.BatchDeleteAnnotations(c.Request.Context(), userID, req.IDs)
 	if err != nil {
 		response.InternalError(c, err)
 		return

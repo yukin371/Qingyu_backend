@@ -400,8 +400,8 @@ func (s *ReaderService) CreateAnnotation(ctx context.Context, annotation *reader
 }
 
 // UpdateAnnotation 更新标注
-func (s *ReaderService) UpdateAnnotation(ctx context.Context, annotationID string, updates map[string]interface{}) error {
-	err := s.annotationRepo.Update(ctx, annotationID, updates)
+func (s *ReaderService) UpdateAnnotation(ctx context.Context, userID, annotationID string, updates map[string]interface{}) error {
+	err := s.annotationRepo.Update(ctx, userID, annotationID, updates)
 	if err != nil {
 		return fmt.Errorf("更新标注失败: %w", err)
 	}
@@ -410,8 +410,8 @@ func (s *ReaderService) UpdateAnnotation(ctx context.Context, annotationID strin
 }
 
 // DeleteAnnotation 删除标注
-func (s *ReaderService) DeleteAnnotation(ctx context.Context, annotationID string) error {
-	err := s.annotationRepo.Delete(ctx, annotationID)
+func (s *ReaderService) DeleteAnnotation(ctx context.Context, userID, annotationID string) error {
+	err := s.annotationRepo.Delete(ctx, userID, annotationID)
 	if err != nil {
 		return fmt.Errorf("删除标注失败: %w", err)
 	}
@@ -756,7 +756,7 @@ func (s *ReaderService) BatchCreateAnnotations(ctx context.Context, annotations 
 }
 
 // BatchDeleteAnnotations 批量删除注记
-func (s *ReaderService) BatchDeleteAnnotations(ctx context.Context, annotationIDs []string) error {
+func (s *ReaderService) BatchDeleteAnnotations(ctx context.Context, userID string, annotationIDs []string) error {
 	if len(annotationIDs) == 0 {
 		return nil
 	}
@@ -767,7 +767,7 @@ func (s *ReaderService) BatchDeleteAnnotations(ctx context.Context, annotationID
 
 	// 批量删除
 	for _, id := range annotationIDs {
-		if err := s.DeleteAnnotation(ctx, id); err != nil {
+		if err := s.DeleteAnnotation(ctx, userID, id); err != nil {
 			return fmt.Errorf("批量删除注记失败: %w", err)
 		}
 	}

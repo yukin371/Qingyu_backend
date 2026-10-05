@@ -57,10 +57,10 @@ type AnnotationPort interface {
 	CreateAnnotation(ctx context.Context, annotation *readerModel.Annotation) error
 
 	// UpdateAnnotation 更新标注
-	UpdateAnnotation(ctx context.Context, annotationID string, updates map[string]interface{}) error
+	UpdateAnnotation(ctx context.Context, userID, annotationID string, updates map[string]interface{}) error
 
 	// DeleteAnnotation 删除标注
-	DeleteAnnotation(ctx context.Context, annotationID string) error
+	DeleteAnnotation(ctx context.Context, userID, annotationID string) error
 
 	// GetAnnotationsByChapter 获取章节的标注
 	GetAnnotationsByChapter(ctx context.Context, userID, bookID, chapterID string) ([]*readerModel.Annotation, error)
@@ -96,7 +96,7 @@ type AnnotationPort interface {
 	BatchCreateAnnotations(ctx context.Context, annotations []*readerModel.Annotation) error
 
 	// BatchDeleteAnnotations 批量删除标注
-	BatchDeleteAnnotations(ctx context.Context, annotationIDs []string) error
+	BatchDeleteAnnotations(ctx context.Context, userID string, annotationIDs []string) error
 }
 
 // ChapterContentPort 章节内容获取端口

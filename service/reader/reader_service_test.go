@@ -205,13 +205,13 @@ func (m *MockAnnotationRepository) GetByID(ctx context.Context, id string) (*rea
 	return args.Get(0).(*reader.Annotation), args.Error(1)
 }
 
-func (m *MockAnnotationRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
-	args := m.Called(ctx, id, updates)
+func (m *MockAnnotationRepository) Update(ctx context.Context, userID, id string, updates map[string]interface{}) error {
+	args := m.Called(ctx, userID, id, updates)
 	return args.Error(0)
 }
 
-func (m *MockAnnotationRepository) Delete(ctx context.Context, id string) error {
-	args := m.Called(ctx, id)
+func (m *MockAnnotationRepository) Delete(ctx context.Context, userID, id string) error {
+	args := m.Called(ctx, userID, id)
 	return args.Error(0)
 }
 
@@ -1377,6 +1377,32 @@ func TestReaderService_CreateAnnotation_ValidationFailed(t *testing.T) {
 	}
 }
 
+func TestReaderService_UpdateAnnotation_ForwardsOwnerScope(t *testing.T) {
+	service, _, mockAnnotationRepo, _, _, _, _ := setupReaderService()
+	ctx := context.Background()
+	updates := map[string]interface{}{"text": "updated"}
+
+	mockAnnotationRepo.On("Update", ctx, "owner-1", "annotation-1", updates).Return(nil).Once()
+
+	err := service.UpdateAnnotation(ctx, "owner-1", "annotation-1", updates)
+
+	require.NoError(t, err)
+	mockAnnotationRepo.AssertExpectations(t)
+}
+
+func TestReaderService_DeleteAnnotation_ForwardsOwnerScope(t *testing.T) {
+	service, _, mockAnnotationRepo, _, _, _, _ := setupReaderService()
+	ctx := context.Background()
+
+	mockAnnotationRepo.On("Delete", ctx, "owner-1", "annotation-1").Return(errors.New("标注不存在")).Once()
+
+	err := service.DeleteAnnotation(ctx, "owner-1", "annotation-1")
+
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "标注不存在")
+	mockAnnotationRepo.AssertExpectations(t)
+}
+
 // TestReaderService_GetAnnotationsByChapter_Success 测试获取章节标注成功
 func TestReaderService_GetAnnotationsByChapter_Success(t *testing.T) {
 	// Arrange
@@ -1775,11 +1801,11 @@ func TestReaderService_BatchDeleteAnnotations_Success(t *testing.T) {
 
 	annotationIDs := []string{"annotation1", "annotation2", "annotation3"}
 
-	mockAnnotationRepo.On("Delete", ctx, mock.AnythingOfType("string")).
+	mockAnnotationRepo.On("Delete", ctx, "user1", mock.AnythingOfType("string")).
 		Return(nil).Times(3)
 
 	// Act
-	err := service.BatchDeleteAnnotations(ctx, annotationIDs)
+	err := service.BatchDeleteAnnotations(ctx, "user1", annotationIDs)
 
 	// Assert
 	require.NoError(t, err)
@@ -1798,12 +1824,12 @@ func TestReaderService_BatchDeleteAnnotations_TooMany(t *testing.T) {
 	}
 
 	// Act
-	err := service.BatchDeleteAnnotations(ctx, annotationIDs)
+	err := service.BatchDeleteAnnotations(ctx, "user1", annotationIDs)
 
 	// Assert
 	require.Error(t, err)
 	assert.Contains(t, err.Error(), "批量删除注记数量不能超过100个")
-	mockAnnotationRepo.AssertNotCalled(t, "Delete", mock.Anything, mock.Anything)
+	mockAnnotationRepo.AssertNotCalled(t, "Delete", mock.Anything, mock.Anything, mock.Anything)
 }
 
 // =========================

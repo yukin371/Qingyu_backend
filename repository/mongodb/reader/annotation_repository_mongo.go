@@ -26,6 +26,14 @@ func NewMongoAnnotationRepository(db *mongo.Database) *MongoAnnotationRepository
 	}
 }
 
+func annotationOwnerFilter(userID string) (primitive.ObjectID, error) {
+	ownerID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return primitive.NilObjectID, fmt.Errorf("标注不存在")
+	}
+	return ownerID, nil
+}
+
 // Create 创建标注
 func (r *MongoAnnotationRepository) Create(ctx context.Context, annotation *reader.Annotation) error {
 	if annotation.ID.IsZero() {
@@ -62,7 +70,11 @@ func (r *MongoAnnotationRepository) GetByID(ctx context.Context, id string) (*re
 }
 
 // Update 更新标注
-func (r *MongoAnnotationRepository) Update(ctx context.Context, id string, updates map[string]interface{}) error {
+func (r *MongoAnnotationRepository) Update(ctx context.Context, userID, id string, updates map[string]interface{}) error {
+	ownerID, err := annotationOwnerFilter(userID)
+	if err != nil {
+		return err
+	}
 	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return fmt.Errorf("无效的ID: %w", err)
@@ -72,7 +84,7 @@ func (r *MongoAnnotationRepository) Update(ctx context.Context, id string, updat
 
 	result, err := r.collection.UpdateOne(
 		ctx,
-		bson.M{"_id": objectID},
+		bson.M{"_id": objectID, "user_id": ownerID},
 		bson.M{"$set": updates},
 	)
 	if err != nil {
@@ -87,13 +99,17 @@ func (r *MongoAnnotationRepository) Update(ctx context.Context, id string, updat
 }
 
 // Delete 删除标注
-func (r *MongoAnnotationRepository) Delete(ctx context.Context, id string) error {
+func (r *MongoAnnotationRepository) Delete(ctx context.Context, userID, id string) error {
+	ownerID, err := annotationOwnerFilter(userID)
+	if err != nil {
+		return err
+	}
 	objectID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return fmt.Errorf("无效的ID: %w", err)
 	}
 
-	result, err := r.collection.DeleteOne(ctx, bson.M{"_id": objectID})
+	result, err := r.collection.DeleteOne(ctx, bson.M{"_id": objectID, "user_id": ownerID})
 	if err != nil {
 		return fmt.Errorf("删除标注失败: %w", err)
 	}
