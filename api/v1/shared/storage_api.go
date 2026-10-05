@@ -19,9 +19,6 @@ type StorageAPI struct {
 	imageProcessor   storage.ImageProcessorService
 }
 
-// TODO(phase3-t3): 统一改用 GetUserID/GetUserIDOptional，移除文件存储入口中的直接 user_id 类型断言；
-// 需先确认公开下载与受保护文件操作的鉴权边界和错误响应契约。
-
 type initiateMultipartUploadPayload struct {
 	FileName  string            `json:"file_name" binding:"required"`
 	FileSize  int64             `json:"file_size" binding:"required"`
@@ -130,26 +127,28 @@ func (api *StorageAPI) DownloadFile(c *gin.Context) {
 		return
 	}
 
-	// 2. 获取用户ID（可选，用于权限检查）
-	userID, _ := c.Get("user_id")
-
-	// 3. 获取文件信息
+	// 2. 获取文件信息
 	fileInfo, err := api.storageService.GetFileInfo(c.Request.Context(), fileID)
 	if err != nil {
 		NotFound(c, "文件不存在")
 		return
 	}
 
-	// 4. 权限检查
-	if !fileInfo.IsPublic && userID != nil {
-		hasAccess, err := api.storageService.CheckAccess(c.Request.Context(), fileID, userID.(string))
+	// 3. 私有文件必须具备有效的用户上下文；公开文件允许匿名下载。
+	if !fileInfo.IsPublic {
+		userID, ok := GetUserIDWithMessage(c, "未授权")
+		if !ok {
+			return
+		}
+
+		hasAccess, err := api.storageService.CheckAccess(c.Request.Context(), fileID, userID)
 		if err != nil || !hasAccess {
 			Forbidden(c, "您没有访问该文件的权限")
 			return
 		}
 	}
 
-	// 5. 下载文件
+	// 4. 下载文件
 	reader, err := api.storageService.Download(c.Request.Context(), fileID)
 	if err != nil {
 		InternalError(c, "下载失败", err)

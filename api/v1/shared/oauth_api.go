@@ -16,9 +16,6 @@ type OAuthAPI struct {
 	logger       *zap.Logger
 }
 
-// TODO(phase3-t3): 统一改用 GetUserID/GetUserIDOptional，移除受保护入口中的直接 user_id 类型断言；
-// 需先为 OAuth middleware 明确 claims 类型契约并补齐异常上下文回归测试。
-
 // NewOAuthAPI 创建OAuth API实例
 func NewOAuthAPI(oauthService auth.OAuthServiceInterface, authService auth.AuthService, logger *zap.Logger) *OAuthAPI {
 	return &OAuthAPI{

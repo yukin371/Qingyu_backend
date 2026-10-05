@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"io"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	storageModel "Qingyu_backend/models/storage"
 	storageRepo "Qingyu_backend/repository/interfaces/storage"
@@ -23,6 +25,46 @@ import (
 type apiStorageRepoAdapter struct {
 	repo storageRepo.StorageRepository
 }
+
+type downloadStorageServiceStub struct {
+	fileInfo       *storage.FileInfo
+	reader         io.ReadCloser
+	accessAllowed  bool
+	accessCallSeen bool
+}
+
+func (s *downloadStorageServiceStub) Upload(context.Context, *storage.UploadRequest) (*storage.FileInfo, error) {
+	return nil, nil
+}
+
+func (s *downloadStorageServiceStub) Download(context.Context, string) (io.ReadCloser, error) {
+	return s.reader, nil
+}
+
+func (s *downloadStorageServiceStub) Delete(context.Context, string) error { return nil }
+
+func (s *downloadStorageServiceStub) GetFileInfo(context.Context, string) (*storage.FileInfo, error) {
+	return s.fileInfo, nil
+}
+
+func (s *downloadStorageServiceStub) GrantAccess(context.Context, string, string) error { return nil }
+
+func (s *downloadStorageServiceStub) RevokeAccess(context.Context, string, string) error { return nil }
+
+func (s *downloadStorageServiceStub) CheckAccess(context.Context, string, string) (bool, error) {
+	s.accessCallSeen = true
+	return s.accessAllowed, nil
+}
+
+func (s *downloadStorageServiceStub) ListFiles(context.Context, *storage.ListFilesRequest) ([]*storage.FileInfo, error) {
+	return nil, nil
+}
+
+func (s *downloadStorageServiceStub) GetDownloadURL(context.Context, string, time.Duration) (string, error) {
+	return "", nil
+}
+
+func (s *downloadStorageServiceStub) Health(context.Context) error { return nil }
 
 func (a *apiStorageRepoAdapter) Create(ctx context.Context, file *storageModel.FileInfo) error {
 	return a.repo.CreateFile(ctx, file)
@@ -231,6 +273,45 @@ func TestStorageAPI_UploadFile_InvalidUserIDReturnsUnauthorized(t *testing.T) {
 	assert.Equal(t, http.StatusUnauthorized, recorder.Code)
 	resp := decodeAPIResponse(t, recorder)
 	assert.Equal(t, "用户信息格式错误", resp["message"])
+}
+
+func TestStorageAPI_DownloadFile_PrivateRequiresUserID(t *testing.T) {
+	api := NewStorageAPI(&downloadStorageServiceStub{
+		fileInfo: &storage.FileInfo{ID: "file-1", IsPublic: false},
+		reader:   io.NopCloser(strings.NewReader("private")),
+	}, nil, nil)
+	recorder := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(recorder)
+	c.Params = gin.Params{{Key: "id", Value: "file-1"}}
+	c.Request = httptest.NewRequest(http.MethodGet, "/files/file-1/download", nil)
+
+	api.DownloadFile(c)
+
+	assert.Equal(t, http.StatusUnauthorized, recorder.Code)
+}
+
+func TestStorageAPI_DownloadFile_PublicAllowsAnonymousAccess(t *testing.T) {
+	service := &downloadStorageServiceStub{
+		fileInfo: &storage.FileInfo{
+			ID:           "file-1",
+			OriginalName: "public.txt",
+			ContentType:  "text/plain",
+			Size:         int64(len("public")),
+			IsPublic:     true,
+		},
+		reader: io.NopCloser(strings.NewReader("public")),
+	}
+	api := NewStorageAPI(service, nil, nil)
+	recorder := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(recorder)
+	c.Params = gin.Params{{Key: "id", Value: "file-1"}}
+	c.Request = httptest.NewRequest(http.MethodGet, "/files/file-1/download", nil)
+
+	api.DownloadFile(c)
+
+	assert.Equal(t, http.StatusOK, recorder.Code)
+	assert.Equal(t, "public", recorder.Body.String())
+	assert.False(t, service.accessCallSeen)
 }
 
 func TestStorageAPI_UploadChunk_MissingUploadID(t *testing.T) {
