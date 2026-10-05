@@ -8,7 +8,6 @@ import (
 	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/models/users"
 	"Qingyu_backend/pkg/response"
-	adminrepo "Qingyu_backend/repository/interfaces/admin"
 	adminservice "Qingyu_backend/service/admin"
 )
 
@@ -45,7 +44,7 @@ func (api *UserAdminAPI) ListUsers(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
 
-	filter := &adminrepo.UserFilter{
+	filter := &adminservice.UserListFilter{
 		Keyword: c.Query("keyword"),
 		Role:    c.Query("role"),
 	}

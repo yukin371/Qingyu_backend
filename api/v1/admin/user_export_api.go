@@ -9,7 +9,6 @@ import (
 
 	"Qingyu_backend/models/users"
 	"Qingyu_backend/pkg/response"
-	adminrepo "Qingyu_backend/repository/interfaces/admin"
 	adminservice "Qingyu_backend/service/admin"
 )
 
@@ -50,7 +49,7 @@ func (api *UserExportAPI) ExportUsers(c *gin.Context) {
 	}
 
 	// 构建筛选条件
-	filter := &adminrepo.UserFilter{
+	filter := &adminservice.UserListFilter{
 		Keyword: c.Query("keyword"),
 		Role:    c.Query("role"),
 	}

@@ -8,8 +8,8 @@ import (
 
 	"Qingyu_backend/models/admin"
 	"Qingyu_backend/models/users"
-	adminrepo "Qingyu_backend/repository/interfaces/admin"
 	"Qingyu_backend/repository"
+	adminrepo "Qingyu_backend/repository/interfaces/admin"
 )
 
 var (
@@ -39,7 +39,7 @@ const MaxBatchCreateUsersCount = 1000
 // UserAdminService 用户管理服务接口
 type UserAdminService interface {
 	// GetUserList 获取用户列表
-	GetUserList(ctx context.Context, filter *adminrepo.UserFilter, page, pageSize int) ([]*users.User, int64, error)
+	GetUserList(ctx context.Context, filter *UserListFilter, page, pageSize int) ([]*users.User, int64, error)
 
 	// CreateUser 创建用户
 	CreateUser(ctx context.Context, req *CreateUserRequest) (*users.User, error)
@@ -93,6 +93,18 @@ type UserAdminService interface {
 	GetActiveUsers(ctx context.Context, days int, limit int) ([]*users.User, error)
 }
 
+// UserListFilter 是管理端用户列表查询的 service 层筛选条件。
+// repository 的过滤器只在 service 实现内部使用，避免 HTTP 层依赖持久化接口。
+type UserListFilter struct {
+	Keyword    string
+	Status     users.UserStatus
+	Role       string
+	DateFrom   *time.Time
+	DateTo     *time.Time
+	LastActive *time.Time
+	IsVIP      *bool
+}
+
 // UserAdminServiceImpl 用户管理服务实现
 type UserAdminServiceImpl struct {
 	userRepo      adminrepo.UserAdminRepository
@@ -116,7 +128,7 @@ func NewUserAdminServiceWithBanRepo(userRepo adminrepo.UserAdminRepository, banR
 }
 
 // GetUserList 获取用户列表
-func (s *UserAdminServiceImpl) GetUserList(ctx context.Context, filter *adminrepo.UserFilter, page, pageSize int) ([]*users.User, int64, error) {
+func (s *UserAdminServiceImpl) GetUserList(ctx context.Context, filter *UserListFilter, page, pageSize int) ([]*users.User, int64, error) {
 	if page < 1 {
 		page = 1
 	}
@@ -124,8 +136,23 @@ func (s *UserAdminServiceImpl) GetUserList(ctx context.Context, filter *adminrep
 		pageSize = 20
 	}
 
-	// 使用新接口 ListWithPagination
-	return s.userRepo.ListWithPagination(ctx, filter, page, pageSize)
+	// 仅在 service 边界转换为 repository 过滤器。
+	return s.userRepo.ListWithPagination(ctx, toRepositoryUserFilter(filter), page, pageSize)
+}
+
+func toRepositoryUserFilter(filter *UserListFilter) *adminrepo.UserFilter {
+	if filter == nil {
+		return nil
+	}
+	return &adminrepo.UserFilter{
+		Keyword:    filter.Keyword,
+		Status:     filter.Status,
+		Role:       filter.Role,
+		DateFrom:   filter.DateFrom,
+		DateTo:     filter.DateTo,
+		LastActive: filter.LastActive,
+		IsVIP:      filter.IsVIP,
+	}
 }
 
 // GetUserDetail 获取用户详情

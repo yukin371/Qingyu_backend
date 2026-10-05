@@ -14,7 +14,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"Qingyu_backend/models/users"
-	adminrepo "Qingyu_backend/repository/interfaces/admin"
 	adminservice "Qingyu_backend/service/admin"
 )
 
@@ -23,7 +22,7 @@ type MockUserAdminService struct {
 	mock.Mock
 }
 
-func (m *MockUserAdminService) GetUserList(ctx context.Context, filter *adminrepo.UserFilter, page, size int) ([]*users.User, int64, error) {
+func (m *MockUserAdminService) GetUserList(ctx context.Context, filter *adminservice.UserListFilter, page, size int) ([]*users.User, int64, error) {
 	args := m.Called(ctx, filter, page, size)
 	if args.Get(0) == nil {
 		return nil, args.Get(1).(int64), args.Error(2)
@@ -230,7 +229,7 @@ func TestUserAdminAPI_ListUsers_WithFilter(t *testing.T) {
 	mockService := new(MockUserAdminService)
 	router := setupUserAdminTestRouter(mockService)
 
-	mockService.On("GetUserList", mock.Anything, mock.MatchedBy(func(filter *adminrepo.UserFilter) bool {
+	mockService.On("GetUserList", mock.Anything, mock.MatchedBy(func(filter *adminservice.UserListFilter) bool {
 		return filter.Keyword == "test" && filter.Role == "author"
 	}), 1, 20).Return([]*users.User{}, int64(0), nil)
 
