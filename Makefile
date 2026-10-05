@@ -1,6 +1,6 @@
 # Qingyu Backend Makefile
 
-.PHONY: help proto proto-go proto-python run-ai-service test-ai-service
+.PHONY: help proto proto-go proto-python run-ai-service test-ai-service run-once
 .PHONY: build test test-unit test-integration test-api test-all test-coverage lint fmt vet clean run guard-arch
 .PHONY: docker-up docker-down docker-logs benchmark check security deps deps-update
 .PHONY: test-e2e test-e2e-quick test-e2e-standard test-e2e-layer1 test-e2e-layer2 test-e2e-layer3
@@ -13,6 +13,7 @@ help:
 	@echo "开发命令:"
 	@echo "  make build           - 编译项目"
 	@echo "  make run             - 运行开发服务器"
+	@echo "  make run-once        - 不使用热重载启动服务器（排查 Air 时使用）"
 	@echo "  make deps            - 下载依赖"
 	@echo "  make deps-update     - 更新依赖"
 	@echo ""
@@ -120,6 +121,11 @@ build:
 # 运行开发服务器
 run:
 	@echo "启动开发服务器..."
+	air -c .air.toml
+
+# 单次启动服务器（仅用于排查热重载本身）
+run-once:
+	@echo "单次启动开发服务器..."
 	go run cmd/server/main.go
 
 # 下载依赖
