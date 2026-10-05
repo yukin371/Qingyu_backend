@@ -36,6 +36,8 @@ type BookstoreStreamService struct {
 	streamRepo BookStreamRepositoryInterface
 }
 
+var errBookstoreStreamRepositoryUnavailable = errors.New("bookstore stream repository is not configured")
+
 // NewBookstoreStreamService 创建书城流式服务
 func NewBookstoreStreamService(streamRepo BookStreamRepositoryInterface) *BookstoreStreamService {
 	return &BookstoreStreamService{
@@ -55,6 +57,9 @@ type StreamSearchResult struct {
 func (s *BookstoreStreamService) StreamSearch(ctx context.Context, filter *bookstore.BookFilter) (*StreamSearchResult, error) {
 	if filter == nil {
 		return nil, errors.New("filter cannot be nil")
+	}
+	if s == nil || s.streamRepo == nil {
+		return nil, errBookstoreStreamRepositoryUnavailable
 	}
 
 	// 设置默认值
@@ -110,6 +115,9 @@ func (s *BookstoreStreamService) StreamSearch(ctx context.Context, filter *books
 func (s *BookstoreStreamService) StreamSearchWithCursor(ctx context.Context, filter *bookstore.BookFilter) (*StreamSearchResult, error) {
 	if filter == nil {
 		return nil, errors.New("filter cannot be nil")
+	}
+	if s == nil || s.streamRepo == nil {
+		return nil, errBookstoreStreamRepositoryUnavailable
 	}
 
 	if filter.Cursor == nil || *filter.Cursor == "" {
@@ -169,6 +177,9 @@ func (s *BookstoreStreamService) StreamSearchWithCursor(ctx context.Context, fil
 func (s *BookstoreStreamService) CountWithFilter(ctx context.Context, filter *bookstore.BookFilter) (int64, error) {
 	if filter == nil {
 		filter = &bookstore.BookFilter{}
+	}
+	if s == nil || s.streamRepo == nil {
+		return 0, errBookstoreStreamRepositoryUnavailable
 	}
 
 	return s.streamRepo.CountWithFilter(ctx, filter)

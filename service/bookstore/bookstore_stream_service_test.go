@@ -552,3 +552,17 @@ func TestBookstoreStreamService_getCursorType(t *testing.T) {
 		})
 	}
 }
+
+func TestBookstoreStreamService_RejectsMissingRepository(t *testing.T) {
+	service := NewBookstoreStreamService(nil)
+	ctx := context.Background()
+
+	_, err := service.StreamSearch(ctx, &bookstore.BookFilter{})
+	require.ErrorIs(t, err, errBookstoreStreamRepositoryUnavailable)
+
+	_, err = service.StreamSearchWithCursor(ctx, &bookstore.BookFilter{})
+	require.ErrorIs(t, err, errBookstoreStreamRepositoryUnavailable)
+
+	_, err = service.CountWithFilter(ctx, nil)
+	require.ErrorIs(t, err, errBookstoreStreamRepositoryUnavailable)
+}
