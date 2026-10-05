@@ -1,6 +1,7 @@
 package ai
 
 import (
+	"Qingyu_backend/api/v1/shared"
 	pb "Qingyu_backend/pkg/grpc/pb"
 	"Qingyu_backend/service/ai"
 
@@ -40,8 +41,7 @@ func (a *CreativeAPI) GenerateOutline(c *gin.Context) {
 	}
 
 	// 获取用户ID
-	userID, _ := c.Get("user_id")
-	userIDStr, _ := userID.(string)
+	userIDStr := shared.GetUserIDOptional(c)
 
 	// 调用gRPC服务
 	ctx, cancel := c.Request.Context(), func() {}
@@ -86,8 +86,7 @@ func (a *CreativeAPI) GenerateCharacters(c *gin.Context) {
 		return
 	}
 
-	userID, _ := c.Get("user_id")
-	userIDStr, _ := userID.(string)
+	userIDStr := shared.GetUserIDOptional(c)
 
 	ctx, cancel := c.Request.Context(), func() {}
 	defer cancel()
@@ -137,8 +136,7 @@ func (a *CreativeAPI) GeneratePlot(c *gin.Context) {
 		return
 	}
 
-	userID, _ := c.Get("user_id")
-	userIDStr, _ := userID.(string)
+	userIDStr := shared.GetUserIDOptional(c)
 
 	ctx, cancel := c.Request.Context(), func() {}
 	defer cancel()
@@ -194,8 +192,7 @@ func (a *CreativeAPI) ExecuteCreativeWorkflow(c *gin.Context) {
 		return
 	}
 
-	userID, _ := c.Get("user_id")
-	userIDStr, _ := userID.(string)
+	userIDStr := shared.GetUserIDOptional(c)
 
 	// 设置默认值
 	if req.MaxReflections == 0 {
