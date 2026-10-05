@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/user"
 	"Qingyu_backend/service/writer"
@@ -61,14 +62,8 @@ func respondStatsNotImplemented(c *gin.Context, message string) {
 //	@Router			/api/v1/user/stats/my [get]
 func (h *StatsHandler) GetMyStats(c *gin.Context) {
 	// 1. 获取当前用户ID
-	userIDInterface, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未登录")
-		return
-	}
-	userID, ok := userIDInterface.(string)
-	if !ok || userID == "" {
-		response.Unauthorized(c, "未登录")
+	userID, ok := shared.GetUserIDWithMessage(c, "未登录")
+	if !ok {
 		return
 	}
 
@@ -96,14 +91,8 @@ func (h *StatsHandler) GetMyStats(c *gin.Context) {
 //	@Router			/api/v1/user/stats/my/content [get]
 func (h *StatsHandler) GetMyContentStats(c *gin.Context) {
 	// 1. 获取当前用户ID
-	userIDInterface, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未登录")
-		return
-	}
-	userID, ok := userIDInterface.(string)
-	if !ok || userID == "" {
-		response.Unauthorized(c, "未登录")
+	userID, ok := shared.GetUserIDWithMessage(c, "未登录")
+	if !ok {
 		return
 	}
 
@@ -132,9 +121,7 @@ func (h *StatsHandler) GetMyContentStats(c *gin.Context) {
 //	@Router			/api/v1/user/stats/my/activity [get]
 func (h *StatsHandler) GetMyActivityStats(c *gin.Context) {
 	// 1. 获取当前用户ID
-	_, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未登录")
+	if _, ok := shared.GetUserIDWithMessage(c, "未登录"); !ok {
 		return
 	}
 
@@ -156,9 +143,7 @@ func (h *StatsHandler) GetMyActivityStats(c *gin.Context) {
 //	@Router			/api/v1/user/stats/my/revenue [get]
 func (h *StatsHandler) GetMyRevenueStats(c *gin.Context) {
 	// 1. 获取当前用户ID
-	_, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未登录")
+	if _, ok := shared.GetUserIDWithMessage(c, "未登录"); !ok {
 		return
 	}
 

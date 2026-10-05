@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/response"
 	readingStatsService "Qingyu_backend/service/reader/stats"
 )
@@ -31,9 +32,8 @@ func NewReadingStatsAPI(statsService *readingStatsService.ReadingStatsService) *
 // @Router /api/v1/reading-stats/my/stats [get]
 // @Security Bearer
 func (api *ReadingStatsAPI) GetMyStats(c *gin.Context) {
-	_, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "请先登录")
+	userID, ok := shared.GetUserIDWithMessage(c, "请先登录")
+	if !ok {
 		return
 	}
 
@@ -43,7 +43,7 @@ func (api *ReadingStatsAPI) GetMyStats(c *gin.Context) {
 	startDate := endDate.AddDate(0, 0, -days)
 
 	// 获取时间范围统计
-	stats, err := api.statsService.GetTimeRangeStats(c.Request.Context(), "", startDate, endDate)
+	stats, err := api.statsService.GetTimeRangeStats(c.Request.Context(), userID, startDate, endDate)
 	if err != nil {
 		c.Error(err)
 		return
@@ -62,9 +62,8 @@ func (api *ReadingStatsAPI) GetMyStats(c *gin.Context) {
 // @Router /api/v1/reading-stats/my/daily [get]
 // @Security Bearer
 func (api *ReadingStatsAPI) GetMyDailyStats(c *gin.Context) {
-	_, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "请先登录")
+	userID, ok := shared.GetUserIDWithMessage(c, "请先登录")
+	if !ok {
 		return
 	}
 
@@ -75,7 +74,7 @@ func (api *ReadingStatsAPI) GetMyDailyStats(c *gin.Context) {
 	}
 
 	// 获取每日统计
-	dailyStats, err := api.statsService.GetDailyStats(c.Request.Context(), "", days)
+	dailyStats, err := api.statsService.GetDailyStats(c.Request.Context(), userID, days)
 	if err != nil {
 		c.Error(err)
 		return
@@ -97,9 +96,7 @@ func (api *ReadingStatsAPI) GetMyDailyStats(c *gin.Context) {
 // @Router /api/v1/reading-stats/my/ranking [get]
 // @Security Bearer
 func (api *ReadingStatsAPI) GetMyRanking(c *gin.Context) {
-	_, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "请先登录")
+	if _, ok := shared.GetUserIDWithMessage(c, "请先登录"); !ok {
 		return
 	}
 
@@ -127,9 +124,7 @@ func (api *ReadingStatsAPI) GetMyRanking(c *gin.Context) {
 // @Router /api/v1/reading-stats/my/reading-time [get]
 // @Security Bearer
 func (api *ReadingStatsAPI) GetMyReadingTime(c *gin.Context) {
-	_, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "请先登录")
+	if _, ok := shared.GetUserIDWithMessage(c, "请先登录"); !ok {
 		return
 	}
 
@@ -166,9 +161,7 @@ func (api *ReadingStatsAPI) GetMyReadingTime(c *gin.Context) {
 // @Router /api/v1/reading-stats/my/history [get]
 // @Security Bearer
 func (api *ReadingStatsAPI) GetMyHistory(c *gin.Context) {
-	_, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "请先登录")
+	if _, ok := shared.GetUserIDWithMessage(c, "请先登录"); !ok {
 		return
 	}
 
@@ -203,9 +196,7 @@ func (api *ReadingStatsAPI) GetMyHistory(c *gin.Context) {
 // @Router /api/v1/reading-stats/recommendations [get]
 // @Security Bearer
 func (api *ReadingStatsAPI) GetRecommendations(c *gin.Context) {
-	_, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "请先登录")
+	if _, ok := shared.GetUserIDWithMessage(c, "请先登录"); !ok {
 		return
 	}
 

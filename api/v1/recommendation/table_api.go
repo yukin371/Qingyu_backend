@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/response"
 )
 
@@ -118,14 +119,8 @@ func (api *RecommendationAPI) UpsertAutoTable(c *gin.Context) {
 		return
 	}
 
-	updatedBy, exists := c.Get("user_id")
-	if !exists {
-		response.BadRequest(c, "用户未认证", "")
-		return
-	}
-	updatedByStr, ok := updatedBy.(string)
-	if !ok || updatedByStr == "" {
-		response.BadRequest(c, "用户ID无效", "")
+	updatedByStr, ok := shared.GetUserIDWithMessage(c, "请先登录")
+	if !ok {
 		return
 	}
 
@@ -149,14 +144,8 @@ func (api *RecommendationAPI) CreateManualTable(c *gin.Context) {
 		return
 	}
 
-	updatedBy, exists := c.Get("user_id")
-	if !exists {
-		response.BadRequest(c, "用户未认证", "")
-		return
-	}
-	updatedByStr, ok := updatedBy.(string)
-	if !ok || updatedByStr == "" {
-		response.BadRequest(c, "用户ID无效", "")
+	updatedByStr, ok := shared.GetUserIDWithMessage(c, "请先登录")
+	if !ok {
 		return
 	}
 	if err := api.tableService.CreateManualTable(c.Request.Context(), req.Name, req.Period, req.Items, updatedByStr); err != nil {
@@ -186,14 +175,8 @@ func (api *RecommendationAPI) UpdateManualTable(c *gin.Context) {
 		return
 	}
 
-	updatedBy, exists := c.Get("user_id")
-	if !exists {
-		response.BadRequest(c, "用户未认证", "")
-		return
-	}
-	updatedByStr, ok := updatedBy.(string)
-	if !ok || updatedByStr == "" {
-		response.BadRequest(c, "用户ID无效", "")
+	updatedByStr, ok := shared.GetUserIDWithMessage(c, "请先登录")
+	if !ok {
 		return
 	}
 	if err := api.tableService.UpdateManualTable(c.Request.Context(), id, req.Name, req.Period, req.Items, req.Status, updatedByStr); err != nil {

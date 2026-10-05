@@ -3,6 +3,7 @@ package admin
 import (
 	"strconv"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/response"
 	serviceInterfaces "Qingyu_backend/service/interfaces"
 
@@ -48,11 +49,9 @@ func (api *PublicationAdminAPI) ReviewPublication(c *gin.Context) {
 		return
 	}
 
-	reviewerID := ""
-	if value, exists := c.Get("user_id"); exists {
-		if id, ok := value.(string); ok {
-			reviewerID = id
-		}
+	reviewerID, ok := shared.GetUserIDWithMessage(c, "请先登录")
+	if !ok {
+		return
 	}
 
 	record, err := api.publishService.ReviewPublication(c.Request.Context(), recordID, reviewerID, req.Action == "approve", req.Note)
