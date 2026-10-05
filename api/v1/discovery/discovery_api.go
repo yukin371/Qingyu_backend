@@ -4,6 +4,7 @@ import (
 	"errors"
 	"strconv"
 
+	"Qingyu_backend/api/v1/shared"
 	discoveryService "Qingyu_backend/service/discovery"
 
 	"Qingyu_backend/pkg/response"
@@ -137,8 +138,7 @@ func (api *DiscoveryAPI) GetPersonalized(c *gin.Context) {
 	}
 
 	limit := normalizeLimit(c.DefaultQuery("limit", "10"), 10)
-	userID, _ := c.Get("user_id")
-	userIDStr, _ := userID.(string)
+	userIDStr := shared.GetUserIDOptional(c)
 
 	result, err := api.service.GetPersonalized(c.Request.Context(), userIDStr, limit)
 	if err != nil {
@@ -272,8 +272,7 @@ func (api *DiscoveryAPI) TrackAction(c *gin.Context) {
 		return
 	}
 
-	userID, _ := c.Get("user_id")
-	userIDStr, _ := userID.(string)
+	userIDStr := shared.GetUserIDOptional(c)
 
 	err := api.service.TrackAction(c.Request.Context(), userIDStr, discoveryService.TrackActionRequest{
 		ItemID:   req.ItemID,
@@ -370,8 +369,7 @@ func (api *DiscoveryAPI) UpdatePreferences(c *gin.Context) {
 		return
 	}
 
-	userID, _ := c.Get("user_id")
-	userIDStr, _ := userID.(string)
+	userIDStr := shared.GetUserIDOptional(c)
 	result, err := api.service.UpdatePreferences(c.Request.Context(), userIDStr, discoveryService.RecommendationConfig{
 		UserID: req.UserID,
 		Preferences: discoveryService.RecommendationPreferences{
