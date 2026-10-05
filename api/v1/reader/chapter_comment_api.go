@@ -599,7 +599,7 @@ func (api *ChapterCommentAPI) UnlikeChapterComment(c *gin.Context) {
 //	@Summary	获取段落级评论
 //	@Tags		阅读器-段落评论
 //	@Param		chapterId		path	string	true	"章节ID"
-//	@Param		paragraphIndex	query	int		true	"段落索引"
+//	@Param		paragraphIndex	path	int		true	"段落索引"
 //	@Success	200				{object}	response.APIResponse
 //	@Router		/api/v1/reader/chapters/{chapterId}/paragraphs/{paragraphIndex}/comments [get]
 func (api *ChapterCommentAPI) GetParagraphComments(c *gin.Context) {

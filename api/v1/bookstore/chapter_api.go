@@ -127,7 +127,7 @@ func (api *ChapterAPI) GetChaptersByBookID(c *gin.Context) {
 //	@Tags			章节
 //	@Accept			json
 //	@Produce		json
-//	@Param			book_id		path		string	true	"书籍ID"
+//	@Param			id			path		string	true	"书籍ID"
 //	@Param			chapter_num	path		int		true	"章节号"
 //	@Success 200 {object} response.APIResponse
 //	@Failure		400			{object}	response.APIResponse
@@ -135,7 +135,7 @@ func (api *ChapterAPI) GetChaptersByBookID(c *gin.Context) {
 //	@Failure		500			{object}	response.APIResponse
 //	@Router			/api/v1/bookstore/books/{id}/chapters/{chapter_num} [get]
 func (api *ChapterAPI) GetChapterByBookIDAndNumber(c *gin.Context) {
-	bookIDStr := c.Param("book_id")
+	bookIDStr := c.Param("id")
 	if bookIDStr == "" {
 		response.BadRequest(c, "参数错误", "书籍ID不能为空")
 		return

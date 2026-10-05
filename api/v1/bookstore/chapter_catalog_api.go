@@ -439,7 +439,7 @@ func (api *ChapterCatalogAPI) GetPurchases(c *gin.Context) {
 //	@Success 200 {object} response.APIResponse
 //	@Failure		400	{object}	APIResponse
 //	@Failure		500	{object}	APIResponse
-//	@Router			/api/v1/reader/purchases/{bookId} [get]
+//	@Router			/api/v1/reader/purchases/{id} [get]
 func (api *ChapterCatalogAPI) GetBookPurchases(c *gin.Context) {
 	bookIDStr := c.Param("id")
 	if bookIDStr == "" {
