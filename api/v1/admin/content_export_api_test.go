@@ -571,7 +571,7 @@ func setupContentExportAPITestRouter(bookRepo *MockBookRepository, chapterRepo *
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 
-	api := NewContentExportAPI(bookRepo, chapterRepo, exportHistoryRepo)
+	api := NewContentExportAPI(bookRepo, chapterRepo)
 
 	v1 := r.Group("/api/v1/admin")
 	{

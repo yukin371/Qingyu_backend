@@ -8,31 +8,28 @@ import (
 
 	"Qingyu_backend/models/bookstore"
 	"Qingyu_backend/pkg/response"
-	adminRepo "Qingyu_backend/repository/interfaces/admin"
-	bookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
 	base "Qingyu_backend/repository/interfaces/infrastructure"
 	adminService "Qingyu_backend/service/admin"
+	serviceinterfaces "Qingyu_backend/service/interfaces"
 )
 
 // ContentExportAPI 内容导出API处理器
 type ContentExportAPI struct {
-	bookRepo          bookstoreRepo.BookRepository
-	chapterRepo       bookstoreRepo.ChapterRepository
-	exportHistoryRepo adminRepo.ExportHistoryRepository
-	exportService     adminService.ExportService
+	bookRepo      serviceinterfaces.AdminContentBookPort
+	chapterRepo   serviceinterfaces.AdminContentChapterPort
+	exportService adminService.ExportService
 }
 
 // NewContentExportAPI 创建内容导出API实例
+// TODO(phase3-t2): 将该 API 接入 admin 生产路由和组合根；当前仅测试使用。
 func NewContentExportAPI(
-	bookRepo bookstoreRepo.BookRepository,
-	chapterRepo bookstoreRepo.ChapterRepository,
-	exportHistoryRepo adminRepo.ExportHistoryRepository,
+	bookRepo serviceinterfaces.AdminContentBookPort,
+	chapterRepo serviceinterfaces.AdminContentChapterPort,
 ) *ContentExportAPI {
 	return &ContentExportAPI{
-		bookRepo:          bookRepo,
-		chapterRepo:       chapterRepo,
-		exportHistoryRepo: exportHistoryRepo,
-		exportService:     adminService.NewExportService(),
+		bookRepo:      bookRepo,
+		chapterRepo:   chapterRepo,
+		exportService: adminService.NewExportService(),
 	}
 }
 
