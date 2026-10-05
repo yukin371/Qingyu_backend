@@ -6,7 +6,7 @@
 
 - current-hub
 - current-owner: `docs/api/`
-- current-bounded: 当前后端 API 文档主入口，负责接口总览、Swagger 导出物和专题 API 导航
+- current-bounded: 当前后端 API 人工说明入口，负责接口总览和专题 API 导航；生成契约由后端根目录 Swagger 产物负责
 
 ## Recommended Read Path
 
@@ -36,7 +36,9 @@
 
 ## 当前入口说明
 
-- `Qingyu_backend/docs/api/` 是当前 API 文档、Swagger 导出物和专题接口说明的 canonical owner。
+- `Qingyu_backend/docs/api/` 是当前 API 人工说明和专题接口说明的 canonical owner。
+- `Qingyu_backend/docs/swagger.yaml`、`docs/swagger.json`、`docs/docs.go` 是 Swagger 生成产物的唯一 owner；源头是 handler 注释与 Go 类型，不能在 `docs/api/` 另行手改一份契约。
+- `Qingyu_backend/docs/api/swagger.*` 保留为历史导出镜像，除非迁移任务明确指定，不作为前端生成或 CI 漂移检查输入。
 - `Qingyu_backend/docs/guides/api/` 仅保留历史镜像与迁移提示，不再作为主入口维护。
 - 面向前端或联调同学的“从哪开始看”，优先走本 README，而不是旧的 `frontend/`、`postman/` 子目录占位链接。
 
@@ -75,8 +77,8 @@
 
 ## Swagger 与导出物
 
-- [swagger.yaml](./swagger.yaml)
-- [swagger.json](./swagger.json)
+- [根目录 swagger.yaml](../swagger.yaml)
+- [根目录 swagger.json](../swagger.json)
 - [SWAGGER_API_导出说明.md](./SWAGGER_API_导出说明.md)
 - [document/openapi.yaml](./document/openapi.yaml)
 
