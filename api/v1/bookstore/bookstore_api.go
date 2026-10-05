@@ -11,6 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.uber.org/zap"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/logger"
 	"Qingyu_backend/pkg/response"
 	bookstoreService "Qingyu_backend/service/bookstore"
@@ -321,10 +322,7 @@ func (api *BookstoreAPI) SearchBooks(c *gin.Context) {
 	}
 
 	// 获取用户ID
-	var userID string
-	if uid, exists := c.Get("user_id"); exists {
-		userID = uid.(string)
-	}
+	userID := shared.GetUserIDOptional(c)
 
 	// 构建日志记录器
 	searchLogger := logger.WithRequest(

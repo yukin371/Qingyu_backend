@@ -54,9 +54,7 @@ func (api *BookListAPI) CreateBookList(c *gin.Context) {
 	// 获取用户信息
 	userName := ""
 	userAvatar := ""
-	if name, exists := c.Get("username"); exists {
-		userName = name.(string)
-	}
+	userName = shared.GetUserName(c)
 
 	bookList, err := api.bookListService.CreateBookList(
 		c.Request.Context(),

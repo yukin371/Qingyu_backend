@@ -54,9 +54,7 @@ func (api *ReviewAPI) CreateReview(c *gin.Context) {
 	// 获取用户信息
 	userName := ""
 	userAvatar := ""
-	if name, ok := c.Get("username"); ok {
-		userName = name.(string)
-	}
+	userName = shared.GetUserName(c)
 
 	review, err := api.reviewService.CreateReview(
 		c.Request.Context(),

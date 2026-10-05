@@ -24,17 +24,17 @@ func NewPostAPI(postService interfaces.PostService) *PostAPI {
 
 // CreatePostRequest 创建动态请求
 type CreatePostRequest struct {
-	Type      social.PostType `json:"type" binding:"required"`
-	Content   string          `json:"content" binding:"required,max=5000"`
-	Images    []string        `json:"images"`
-	BookID    string          `json:"bookId"`
-	BookTitle string          `json:"bookTitle"`
-	BookCover string          `json:"bookCover"`
-	BookAuthor string         `json:"bookAuthor"`
-	ChapterID string          `json:"chapterId"`
-	ChapterTitle string       `json:"chapterTitle"`
-	Progress  int             `json:"progress"`
-	Topics    []string        `json:"topics"`
+	Type         social.PostType `json:"type" binding:"required"`
+	Content      string          `json:"content" binding:"required,max=5000"`
+	Images       []string        `json:"images"`
+	BookID       string          `json:"bookId"`
+	BookTitle    string          `json:"bookTitle"`
+	BookCover    string          `json:"bookCover"`
+	BookAuthor   string          `json:"bookAuthor"`
+	ChapterID    string          `json:"chapterId"`
+	ChapterTitle string          `json:"chapterTitle"`
+	Progress     int             `json:"progress"`
+	Topics       []string        `json:"topics"`
 }
 
 // CreatePost 创建动态
@@ -63,11 +63,11 @@ func (api *PostAPI) CreatePost(c *gin.Context) {
 	userAvatar := ""
 	userLevel := 0
 
-	if name, ok := c.Get("username"); ok {
-		userName = name.(string)
-	}
+	userName = shared.GetUserName(c)
 	if avatar, ok := c.Get("avatar"); ok {
-		userAvatar = avatar.(string)
+		if avatarString, ok := avatar.(string); ok {
+			userAvatar = avatarString
+		}
 	}
 	if level, ok := c.Get("level"); ok {
 		userLevel, _ = level.(int)
