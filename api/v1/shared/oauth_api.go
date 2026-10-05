@@ -153,13 +153,12 @@ func (api *OAuthAPI) HandleCallback(c *gin.Context) {
 //	@Failure		500	{object}	APIResponse
 //	@Router			/api/v1/shared/oauth/accounts [get]
 func (api *OAuthAPI) GetLinkedAccounts(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	userID, ok := GetUserID(c)
+	if !ok {
 		return
 	}
 
-	accounts, err := api.oauthService.GetLinkedAccounts(c.Request.Context(), userID.(string))
+	accounts, err := api.oauthService.GetLinkedAccounts(c.Request.Context(), userID)
 	if err != nil {
 		response.InternalError(c, err)
 		return

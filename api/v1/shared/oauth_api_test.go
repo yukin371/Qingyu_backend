@@ -332,3 +332,25 @@ func TestOAuthAPI_HandleCallback_LoginModeAuthServiceFailureReturnsBadRequest(t 
 	resp := decodeSharedAPIResponse(t, recorder)
 	assert.Equal(t, "OAuth登录失败: user disabled", resp["message"])
 }
+
+func TestOAuthAPI_GetLinkedAccounts_InvalidUserIDReturnsUnauthorized(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	api := NewOAuthAPI(&oauthServiceStub{
+		getLinkedFunc: func(ctx context.Context, userID string) ([]*authModel.OAuthAccount, error) {
+			t.Fatalf("service should not be called for an invalid user ID")
+			return nil, nil
+		},
+	}, &authServiceStub{}, zap.NewNop())
+
+	recorder := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(recorder)
+	c.Set("user_id", 123)
+
+	assert.NotPanics(t, func() {
+		api.GetLinkedAccounts(c)
+	})
+	assert.Equal(t, http.StatusUnauthorized, recorder.Code)
+	resp := decodeSharedAPIResponse(t, recorder)
+	assert.Equal(t, "用户信息格式错误", resp["message"])
+}
