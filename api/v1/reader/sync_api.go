@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/response"
 	progressSync "Qingyu_backend/pkg/sync"
 	ws "Qingyu_backend/pkg/websocket"
@@ -41,13 +42,10 @@ var WebSocketUpgrader = realtimews.NewUpgrader(nil)
 //	@Router			/api/v1/reader/progress/ws [get]
 func (api *SyncAPI) SyncWebSocket(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "请先登录")
+	userIDStr, ok := shared.GetUserIDWithMessage(c, "请先登录")
+	if !ok {
 		return
 	}
-
-	userIDStr := userID.(string)
 
 	// 获取设备ID
 	deviceID := c.GetHeader("X-Device-ID")
@@ -100,13 +98,10 @@ func (api *SyncAPI) SyncProgress(c *gin.Context) {
 	}
 
 	// 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "请先登录")
+	userIDStr, ok := shared.GetUserIDWithMessage(c, "请先登录")
+	if !ok {
 		return
 	}
-
-	userIDStr := userID.(string)
 
 	// 同步进度
 	if err := api.syncService.SyncProgress(c.Request.Context(), userIDStr, req.BookID, req.ChapterID, req.DeviceID, req.Progress); err != nil {
@@ -137,13 +132,10 @@ func (api *SyncAPI) MergeOfflineProgresses(c *gin.Context) {
 	}
 
 	// 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "请先登录")
+	userIDStr, ok := shared.GetUserIDWithMessage(c, "请先登录")
+	if !ok {
 		return
 	}
-
-	userIDStr := userID.(string)
 
 	// 转换进度
 	progresses := make([]progressSync.OfflineProgress, len(req.Progresses))
@@ -186,13 +178,10 @@ func (api *SyncAPI) MergeOfflineProgresses(c *gin.Context) {
 //	@Router			/api/v1/reader/progress/sync-status [get]
 func (api *SyncAPI) GetSyncStatus(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "请先登录")
+	userIDStr, ok := shared.GetUserIDWithMessage(c, "请先登录")
+	if !ok {
 		return
 	}
-
-	userIDStr := userID.(string)
 
 	// 获取同步状态
 	status := api.syncService.GetSyncStatus(userIDStr)
