@@ -14,6 +14,9 @@ type WalletAPI struct {
 	walletService wallet.WalletService
 }
 
+// TODO(phase3-t3): 统一改用 GetUserID，移除钱包入口中的直接 user_id 类型断言；
+// 需先补齐鉴权 middleware 异常类型的回归覆盖，避免跨入口改变未授权响应。
+
 // NewWalletAPI 创建钱包API实例
 func NewWalletAPI(walletService wallet.WalletService) *WalletAPI {
 	return &WalletAPI{

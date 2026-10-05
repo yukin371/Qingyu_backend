@@ -19,6 +19,9 @@ type StorageAPI struct {
 	imageProcessor   storage.ImageProcessorService
 }
 
+// TODO(phase3-t3): 统一改用 GetUserID/GetUserIDOptional，移除文件存储入口中的直接 user_id 类型断言；
+// 需先确认公开下载与受保护文件操作的鉴权边界和错误响应契约。
+
 type initiateMultipartUploadPayload struct {
 	FileName  string            `json:"file_name" binding:"required"`
 	FileSize  int64             `json:"file_size" binding:"required"`
