@@ -354,3 +354,28 @@ func TestOAuthAPI_GetLinkedAccounts_InvalidUserIDReturnsUnauthorized(t *testing.
 	resp := decodeSharedAPIResponse(t, recorder)
 	assert.Equal(t, "用户信息格式错误", resp["message"])
 }
+
+func TestOAuthAPI_ProtectedAccountActions_InvalidUserIDReturnsUnauthorized(t *testing.T) {
+	for _, action := range []struct {
+		name   string
+		handle func(*OAuthAPI, *gin.Context)
+	}{
+		{name: "解绑账号", handle: (*OAuthAPI).UnlinkAccount},
+		{name: "设置主账号", handle: (*OAuthAPI).SetPrimaryAccount},
+	} {
+		t.Run(action.name, func(t *testing.T) {
+			api := NewOAuthAPI(&oauthServiceStub{}, &authServiceStub{}, zap.NewNop())
+			recorder := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(recorder)
+			c.Set("user_id", 123)
+			c.Params = gin.Params{{Key: "accountID", Value: "account-1"}}
+
+			assert.NotPanics(t, func() {
+				action.handle(api, c)
+			})
+			assert.Equal(t, http.StatusUnauthorized, recorder.Code)
+			resp := decodeSharedAPIResponse(t, recorder)
+			assert.Equal(t, "用户信息格式错误", resp["message"])
+		})
+	}
+}

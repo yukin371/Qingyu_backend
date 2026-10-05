@@ -182,9 +182,8 @@ func (api *OAuthAPI) GetLinkedAccounts(c *gin.Context) {
 //	@Failure		500			{object}	APIResponse
 //	@Router			/api/v1/shared/oauth/accounts/{accountID} [delete]
 func (api *OAuthAPI) UnlinkAccount(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	userID, ok := GetUserID(c)
+	if !ok {
 		return
 	}
 
@@ -194,7 +193,7 @@ func (api *OAuthAPI) UnlinkAccount(c *gin.Context) {
 		return
 	}
 
-	err := api.oauthService.UnlinkAccount(c.Request.Context(), userID.(string), accountID)
+	err := api.oauthService.UnlinkAccount(c.Request.Context(), userID, accountID)
 	if err != nil {
 		response.BadRequest(c, "解绑账号失败: "+err.Error(), nil)
 		return
@@ -218,9 +217,8 @@ func (api *OAuthAPI) UnlinkAccount(c *gin.Context) {
 //	@Failure		500			{object}	APIResponse
 //	@Router			/api/v1/shared/oauth/accounts/{accountID}/primary [put]
 func (api *OAuthAPI) SetPrimaryAccount(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	userID, ok := GetUserID(c)
+	if !ok {
 		return
 	}
 
@@ -230,7 +228,7 @@ func (api *OAuthAPI) SetPrimaryAccount(c *gin.Context) {
 		return
 	}
 
-	err := api.oauthService.SetPrimaryAccount(c.Request.Context(), userID.(string), accountID)
+	err := api.oauthService.SetPrimaryAccount(c.Request.Context(), userID, accountID)
 	if err != nil {
 		response.BadRequest(c, "设置主账号失败: "+err.Error(), nil)
 		return
