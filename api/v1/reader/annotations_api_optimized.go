@@ -1,15 +1,15 @@
 package reader
 
 import (
-	readerModels "Qingyu_backend/models/reader"
+	"encoding/json"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	"Qingyu_backend/api/v1/shared"
+	readerModels "Qingyu_backend/models/reader"
 	"Qingyu_backend/pkg/response"
-	"errors"
 )
 
 // BatchCreateAnnotationsRequest 批量创建注记请求
@@ -55,16 +55,9 @@ func (api *AnnotationsAPI) BatchCreateAnnotations(c *gin.Context) {
 		return
 	}
 
-	// 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "请先登录")
-		return
-	}
-
-	userIDStr, ok := userID.(string)
+	// 获取并校验用户ID
+	userIDStr, ok := shared.GetUserIDWithMessage(c, "请先登录")
 	if !ok {
-		response.InternalError(c, errors.New("用户ID类型错误: "))
 		return
 	}
 
@@ -113,6 +106,12 @@ func (api *AnnotationsAPI) BatchUpdateAnnotations(c *gin.Context) {
 		return
 	}
 
+	if _, ok := shared.GetUserIDWithMessage(c, "请先登录"); !ok {
+		return
+	}
+	// TODO(T3-033-security): ReaderService.UpdateAnnotation lacks a user scope;
+	// add ownership filtering before allowing cross-user IDs in this batch endpoint.
+
 	// 批量更新
 	successCount := 0
 	for _, update := range req.Updates {
@@ -153,6 +152,12 @@ func (api *AnnotationsAPI) BatchDeleteAnnotations(c *gin.Context) {
 		return
 	}
 
+	if _, ok := shared.GetUserIDWithMessage(c, "请先登录"); !ok {
+		return
+	}
+	// TODO(T3-033-security): ReaderService.BatchDeleteAnnotations lacks a user scope;
+	// add ownership filtering before allowing cross-user IDs in this batch endpoint.
+
 	// 批量删除
 	err := api.readerService.BatchDeleteAnnotations(c.Request.Context(), req.IDs)
 	if err != nil {
@@ -173,16 +178,9 @@ func (api *AnnotationsAPI) BatchDeleteAnnotations(c *gin.Context) {
 //	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/annotations/stats [get]
 func (api *AnnotationsAPI) GetAnnotationStats(c *gin.Context) {
-	// 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "请先登录")
-		return
-	}
-
-	userIDStr, ok := userID.(string)
+	// 获取并校验用户ID
+	userIDStr, ok := shared.GetUserIDWithMessage(c, "请先登录")
 	if !ok {
-		response.InternalError(c, errors.New("用户ID类型错误: "))
 		return
 	}
 
@@ -211,16 +209,9 @@ func (api *AnnotationsAPI) GetAnnotationStats(c *gin.Context) {
 //	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/annotations/export [get]
 func (api *AnnotationsAPI) ExportAnnotations(c *gin.Context) {
-	// 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "请先登录")
-		return
-	}
-
-	userIDStr, ok := userID.(string)
+	// 获取并校验用户ID
+	userIDStr, ok := shared.GetUserIDWithMessage(c, "请先登录")
 	if !ok {
-		response.InternalError(c, errors.New("用户ID类型错误: "))
 		return
 	}
 
@@ -269,9 +260,12 @@ func (api *AnnotationsAPI) ExportAnnotations(c *gin.Context) {
 }
 
 // 导出为JSON格式
-func (api *AnnotationsAPI) exportAsJSON(_ []*readerModels.Annotation) string {
-	// 简单实现，实际可以使用json.Marshal
-	return `{"annotations": []}`
+func (api *AnnotationsAPI) exportAsJSON(annotations []*readerModels.Annotation) string {
+	data, err := json.Marshal(gin.H{"annotations": annotations})
+	if err != nil {
+		return `{"annotations": []}`
+	}
+	return string(data)
 }
 
 // 导出为Markdown格式
@@ -314,16 +308,9 @@ func (api *AnnotationsAPI) exportAsText(annotations []*readerModels.Annotation) 
 //	@Success	200		{object}	response.APIResponse
 //	@Router		/api/v1/reader/annotations/sync [post]
 func (api *AnnotationsAPI) SyncAnnotations(c *gin.Context) {
-	// 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "请先登录")
-		return
-	}
-
-	userIDStr, ok := userID.(string)
+	// 获取并校验用户ID
+	userIDStr, ok := shared.GetUserIDWithMessage(c, "请先登录")
 	if !ok {
-		response.InternalError(c, errors.New("用户ID类型错误: "))
 		return
 	}
 
