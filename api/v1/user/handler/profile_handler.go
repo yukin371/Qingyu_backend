@@ -48,15 +48,14 @@ func (h *ProfileHandler) SetStorageService(storageSvc sharedStorage.StorageServi
 //	@Router			/api/v1/user/profile [get]
 func (h *ProfileHandler) GetProfile(c *gin.Context) {
 	// 从Context中获取当前用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未认证")
+	userID, ok := shared.GetUserIDWithMessage(c, "未认证")
+	if !ok {
 		return
 	}
 
 	// 调用Service层
 	serviceReq := &userServiceInterface.GetUserRequest{
-		ID: userID.(string),
+		ID: userID,
 	}
 
 	resp, err := h.userService.GetUser(c.Request.Context(), serviceReq)
@@ -95,9 +94,8 @@ func (h *ProfileHandler) GetProfile(c *gin.Context) {
 //	@Router			/api/v1/user/profile [put]
 func (h *ProfileHandler) UpdateProfile(c *gin.Context) {
 	// 从Context中获取当前用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未认证")
+	userID, ok := shared.GetUserIDWithMessage(c, "未认证")
+	if !ok {
 		return
 	}
 
@@ -148,7 +146,7 @@ func (h *ProfileHandler) UpdateProfile(c *gin.Context) {
 
 	// 调用Service层
 	serviceReq := &userServiceInterface.UpdateUserRequest{
-		ID:      userID.(string),
+		ID:      userID,
 		Updates: updates,
 	}
 
@@ -189,9 +187,8 @@ func (h *ProfileHandler) UpdateProfile(c *gin.Context) {
 //	@Router			/api/v1/user/password [put]
 func (h *ProfileHandler) UpdatePassword(c *gin.Context) {
 	// 从Context中获取当前用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未认证")
+	userID, ok := shared.GetUserIDWithMessage(c, "未认证")
+	if !ok {
 		return
 	}
 
@@ -207,7 +204,7 @@ func (h *ProfileHandler) UpdatePassword(c *gin.Context) {
 
 	// 调用Service层
 	serviceReq := &userServiceInterface.UpdatePasswordRequest{
-		ID:          userID.(string),
+		ID:          userID,
 		OldPassword: req.OldPassword,
 		NewPassword: req.NewPassword,
 	}
@@ -251,9 +248,8 @@ func (h *ProfileHandler) UpdatePassword(c *gin.Context) {
 //	@Router			/api/v1/user/avatar [post]
 func (h *ProfileHandler) UploadAvatar(c *gin.Context) {
 	// 从Context中获取当前用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未认证")
+	userID, ok := shared.GetUserIDWithMessage(c, "未认证")
+	if !ok {
 		return
 	}
 
@@ -299,7 +295,7 @@ func (h *ProfileHandler) UploadAvatar(c *gin.Context) {
 		Filename:    fileHeader.Filename,
 		ContentType: contentType,
 		Size:        fileHeader.Size,
-		UserID:      userID.(string),
+		UserID:      userID,
 		IsPublic:    true,
 		Category:    "avatar",
 	}
@@ -321,7 +317,7 @@ func (h *ProfileHandler) UploadAvatar(c *gin.Context) {
 		"avatar": avatarURL,
 	}
 	serviceReq := &userServiceInterface.UpdateUserRequest{
-		ID:      userID.(string),
+		ID:      userID,
 		Updates: updates,
 	}
 
@@ -372,9 +368,8 @@ type DowngradeRoleRequest struct {
 //	@Router			/api/v1/user/role/downgrade [post]
 func (h *ProfileHandler) DowngradeRole(c *gin.Context) {
 	// 从Context中获取当前用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未认证")
+	userID, ok := shared.GetUserIDWithMessage(c, "未认证")
+	if !ok {
 		return
 	}
 
@@ -399,7 +394,7 @@ func (h *ProfileHandler) DowngradeRole(c *gin.Context) {
 
 	// 调用Service层
 	serviceReq := &userServiceInterface.DowngradeRoleRequest{
-		UserID:     userID.(string),
+		UserID:     userID,
 		TargetRole: req.TargetRole,
 		Confirm:    req.Confirm,
 	}
