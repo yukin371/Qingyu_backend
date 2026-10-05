@@ -157,6 +157,10 @@ func NewPagination(total int64, page, pageSize int) *Pagination {
 // HandleServiceError 处理Service层错误
 // 将ServiceError转换为HTTP响应
 func HandleServiceError(c *gin.Context, err error) {
+	if err == nil {
+		return
+	}
+
 	// 检查是否为UnifiedError类型
 	if unifiedErr, ok := err.(*apperrors.UnifiedError); ok {
 		HandleUnifiedError(c, unifiedErr)

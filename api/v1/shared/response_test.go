@@ -268,6 +268,17 @@ func TestPaginationHelpers_ZeroPageSize(t *testing.T) {
 	})
 }
 
+func TestHandleServiceError_NilDoesNotPanic(t *testing.T) {
+	w := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(w)
+
+	assert.NotPanics(t, func() {
+		HandleServiceError(c, nil)
+	})
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Empty(t, w.Body.String())
+}
+
 // TestTimestampIsMilliseconds 验证时间戳是毫秒级
 func TestTimestampIsMilliseconds(t *testing.T) {
 	w := httptest.NewRecorder()
