@@ -20,6 +20,7 @@ import (
 	"Qingyu_backend/models/bookstore"
 	bookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
 	base "Qingyu_backend/repository/interfaces/infrastructure"
+	serviceinterfaces "Qingyu_backend/service/interfaces"
 )
 
 // ==================== Mock Repositories ====================
@@ -52,7 +53,7 @@ func (m *MockBookRepository) Delete(ctx context.Context, id string) error {
 	return args.Error(0)
 }
 
-func (m *MockBookRepository) List(ctx context.Context, filter base.Filter) ([]*bookstore.Book, error) {
+func (m *MockBookRepository) List(ctx context.Context, filter serviceinterfaces.AdminContentFilter) ([]*bookstore.Book, error) {
 	args := m.Called(ctx, filter)
 	// 获取返回值
 	result := args.Get(0)
@@ -297,7 +298,7 @@ func (m *MockChapterRepository) Delete(ctx context.Context, id string) error {
 	return args.Error(0)
 }
 
-func (m *MockChapterRepository) List(ctx context.Context, filter base.Filter) ([]*bookstore.Chapter, error) {
+func (m *MockChapterRepository) List(ctx context.Context, filter serviceinterfaces.AdminContentFilter) ([]*bookstore.Chapter, error) {
 	args := m.Called(ctx, filter)
 	// 获取返回值
 	result := args.Get(0)
@@ -725,12 +726,8 @@ func TestContentExportAPI_ExportBooksFromDateRange_Success(t *testing.T) {
 	router := setupContentExportAPITestRouter(mockBookRepo, mockChapterRepo, mockExportHistoryRepo)
 
 	books := createTestBooks(1)
-	mockBookRepo.On("List", mock.Anything, mock.MatchedBy(func(f base.Filter) bool {
-		// 验证时间范围过滤器
-		conditions := f.GetConditions()
-		_, hasStart := conditions["createdAt.$gte"]
-		_, hasEnd := conditions["createdAt.$lte"]
-		return hasStart && hasEnd
+	mockBookRepo.On("List", mock.Anything, mock.MatchedBy(func(f serviceinterfaces.AdminContentFilter) bool {
+		return f.CreatedAt != nil && f.CreatedAt.Start != nil && f.CreatedAt.End != nil
 	})).Return(books, int64(1), nil)
 
 	// When
@@ -885,10 +882,8 @@ func TestContentExportAPI_ExportBooksWithFilter_Success(t *testing.T) {
 	router := setupContentExportAPITestRouter(mockBookRepo, mockChapterRepo, mockExportHistoryRepo)
 
 	books := createTestBooks(1)
-	mockBookRepo.On("List", mock.Anything, mock.MatchedBy(func(f base.Filter) bool {
-		conditions := f.GetConditions()
-		_, hasStatus := conditions["status"]
-		return hasStatus
+	mockBookRepo.On("List", mock.Anything, mock.MatchedBy(func(f serviceinterfaces.AdminContentFilter) bool {
+		return f.Status == "ongoing"
 	})).Return(books, int64(1), nil)
 
 	// When
@@ -912,10 +907,8 @@ func TestContentExportAPI_ExportChaptersByBook_Success(t *testing.T) {
 	router := setupContentExportAPITestRouter(mockBookRepo, mockChapterRepo, mockExportHistoryRepo)
 
 	chapters := createTestChapters(2)
-	mockChapterRepo.On("List", mock.Anything, mock.MatchedBy(func(f base.Filter) bool {
-		conditions := f.GetConditions()
-		bookID, hasBookID := conditions["book_id"]
-		return hasBookID && bookID == "test-book-id"
+	mockChapterRepo.On("List", mock.Anything, mock.MatchedBy(func(f serviceinterfaces.AdminContentFilter) bool {
+		return f.BookID == "test-book-id"
 	})).Return(chapters, int64(2), nil)
 
 	// When

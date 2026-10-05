@@ -8,7 +8,6 @@ import (
 
 	"Qingyu_backend/models/bookstore"
 	"Qingyu_backend/pkg/response"
-	base "Qingyu_backend/repository/interfaces/infrastructure"
 	adminService "Qingyu_backend/service/admin"
 	serviceinterfaces "Qingyu_backend/service/interfaces"
 )
@@ -61,25 +60,23 @@ func (api *ContentExportAPI) ExportBooks(c *gin.Context) {
 	}
 
 	// 构建过滤器
-	filter := &base.BaseFilter{
-		Conditions: make(map[string]interface{}),
-	}
+	filter := serviceinterfaces.AdminContentFilter{}
 
 	// 添加状态筛选
 	if status := c.Query("status"); status != "" {
-		filter.Conditions["status"] = status
+		filter.Status = status
 	}
 
 	// 添加作者筛选
 	if author := c.Query("author"); author != "" {
-		filter.Conditions["author"] = author
+		filter.Author = author
 	}
 
 	// 添加日期范围筛选
 	if startDate := c.Query("start_date"); startDate != "" {
 		if parsedDate, err := time.Parse("2006-01-02", startDate); err == nil {
 			if filter.CreatedAt == nil {
-				filter.CreatedAt = &base.TimeRange{}
+				filter.CreatedAt = &serviceinterfaces.AdminContentTimeRange{}
 			}
 			filter.CreatedAt.Start = &parsedDate
 		}
@@ -90,7 +87,7 @@ func (api *ContentExportAPI) ExportBooks(c *gin.Context) {
 			// 设置为当天的23:59:59
 			endOfDay := time.Date(parsedDate.Year(), parsedDate.Month(), parsedDate.Day(), 23, 59, 59, 0, parsedDate.Location())
 			if filter.CreatedAt == nil {
-				filter.CreatedAt = &base.TimeRange{}
+				filter.CreatedAt = &serviceinterfaces.AdminContentTimeRange{}
 			}
 			filter.CreatedAt.End = &endOfDay
 		}
@@ -159,26 +156,30 @@ func (api *ContentExportAPI) ExportChapters(c *gin.Context) {
 	}
 
 	// 构建过滤器
-	filter := &base.BaseFilter{
-		Conditions: make(map[string]interface{}),
-	}
+	filter := serviceinterfaces.AdminContentFilter{}
 
 	// 添加书籍ID筛选
 	if bookID := c.Query("book_id"); bookID != "" {
-		filter.Conditions["book_id"] = bookID
+		filter.BookID = bookID
 	}
 
 	// 添加日期范围筛选（按发布时间）
 	if startDate := c.Query("start_date"); startDate != "" {
 		if parsedDate, err := time.Parse("2006-01-02", startDate); err == nil {
-			filter.Conditions["publishTime.$gte"] = parsedDate
+			if filter.PublishedAt == nil {
+				filter.PublishedAt = &serviceinterfaces.AdminContentTimeRange{}
+			}
+			filter.PublishedAt.Start = &parsedDate
 		}
 	}
 
 	if endDate := c.Query("end_date"); endDate != "" {
 		if parsedDate, err := time.Parse("2006-01-02", endDate); err == nil {
 			endOfDay := time.Date(parsedDate.Year(), parsedDate.Month(), parsedDate.Day(), 23, 59, 59, 0, parsedDate.Location())
-			filter.Conditions["publishTime.$lte"] = endOfDay
+			if filter.PublishedAt == nil {
+				filter.PublishedAt = &serviceinterfaces.AdminContentTimeRange{}
+			}
+			filter.PublishedAt.End = &endOfDay
 		}
 	}
 
