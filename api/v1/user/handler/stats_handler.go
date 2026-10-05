@@ -66,7 +66,11 @@ func (h *StatsHandler) GetMyStats(c *gin.Context) {
 		response.Unauthorized(c, "未登录")
 		return
 	}
-	userID := userIDInterface.(string)
+	userID, ok := userIDInterface.(string)
+	if !ok || userID == "" {
+		response.Unauthorized(c, "未登录")
+		return
+	}
 
 	// 2. 获取统计数据
 	statsData, err := h.userStatsService.GetUserStats(c.Request.Context(), userID)
@@ -97,7 +101,11 @@ func (h *StatsHandler) GetMyContentStats(c *gin.Context) {
 		response.Unauthorized(c, "未登录")
 		return
 	}
-	userID := userIDInterface.(string)
+	userID, ok := userIDInterface.(string)
+	if !ok || userID == "" {
+		response.Unauthorized(c, "未登录")
+		return
+	}
 
 	// 2. 获取内容统计
 	contentStats, err := h.contentStatsService.GetContentStats(c.Request.Context(), userID)

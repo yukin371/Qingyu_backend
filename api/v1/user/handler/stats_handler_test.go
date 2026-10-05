@@ -59,3 +59,25 @@ func TestStatsHandler_GetMyRevenueStats_NotImplemented(t *testing.T) {
 	assert.Equal(t, response.CodeInternalError, resp.Code)
 	assert.Equal(t, "收益统计功能开发中", resp.Message)
 }
+
+func TestStatsHandler_RejectsMalformedUserIDContext(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	router := gin.New()
+	statsHandler := NewStatsHandler(nil, nil)
+	router.GET("/stats/my", func(c *gin.Context) {
+		c.Set("user_id", 123)
+		c.Next()
+	}, statsHandler.GetMyStats)
+	router.GET("/stats/my/content", func(c *gin.Context) {
+		c.Set("user_id", 123)
+		c.Next()
+	}, statsHandler.GetMyContentStats)
+
+	for _, target := range []string{"/stats/my", "/stats/my/content"} {
+		w := httptest.NewRecorder()
+		req := httptest.NewRequest(http.MethodGet, target, nil)
+		router.ServeHTTP(w, req)
+
+		assert.Equal(t, http.StatusUnauthorized, w.Code, target)
+	}
+}
