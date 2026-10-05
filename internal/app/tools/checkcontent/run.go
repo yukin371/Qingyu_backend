@@ -3,9 +3,9 @@ package checkcontent
 import (
 	"context"
 	"fmt"
-	"os"
-	"strings"
 	"time"
+
+	"Qingyu_backend/internal/app/tools/mongodbconfig"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -16,7 +16,7 @@ import (
 func Run() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoURI()))
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongodbconfig.URI()))
 	if err != nil {
 		return fmt.Errorf("连接 MongoDB 失败: %w", err)
 	}
@@ -25,7 +25,7 @@ func Run() error {
 		return fmt.Errorf("MongoDB ping 失败: %w", err)
 	}
 
-	db := client.Database(databaseName())
+	db := client.Database(mongodbconfig.Database())
 
 	count, err := db.Collection("document_contents").CountDocuments(ctx, bson.M{})
 	if err != nil {
@@ -33,24 +33,4 @@ func Run() error {
 	}
 	fmt.Printf("document_contents total: %d\n", count)
 	return nil
-}
-
-func mongoURI() string {
-	if uri := strings.TrimSpace(os.Getenv("QINGYU_DATABASE_PRIMARY_MONGODB_URI")); uri != "" {
-		return uri
-	}
-	if uri := strings.TrimSpace(os.Getenv("MONGODB_URI")); uri != "" {
-		return uri
-	}
-	return "mongodb://localhost:27017/?directConnection=true"
-}
-
-func databaseName() string {
-	if name := strings.TrimSpace(os.Getenv("QINGYU_DATABASE_PRIMARY_MONGODB_DATABASE")); name != "" {
-		return name
-	}
-	if name := strings.TrimSpace(os.Getenv("MONGODB_DATABASE")); name != "" {
-		return name
-	}
-	return "qingyu"
 }
