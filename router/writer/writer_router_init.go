@@ -22,7 +22,16 @@ import (
 	documentService "Qingyu_backend/service/writer/document"
 	projectService "Qingyu_backend/service/writer/project"
 	storyharness "Qingyu_backend/service/writer/storyharness"
+
+	"go.mongodb.org/mongo-driver/mongo"
 )
+
+func newWriterVersionService(db *mongo.Database) *projectService.VersionService {
+	if db == nil {
+		return nil
+	}
+	return projectService.NewVersionService(db)
+}
 
 // RegisterWriterRoutes 注册所有写作相关路由到 /api/v1/writer
 func RegisterWriterRoutes(r *gin.RouterGroup, searchSvc *searchservice.SearchService) {
@@ -76,7 +85,7 @@ func RegisterWriterRoutes(r *gin.RouterGroup, searchSvc *searchservice.SearchSer
 	mongoDB := serviceContainer.GetMongoDB()
 
 	// 创建VersionService（直接使用MongoDB数据库）
-	versionSvc := projectService.NewVersionService(mongoDB)
+	versionSvc := newWriterVersionService(mongoDB)
 
 	// 创建ExportService（导出服务）
 	// 注意：需要先实现ExportTaskRepository和FileStorage接口

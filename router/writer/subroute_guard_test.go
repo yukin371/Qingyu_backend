@@ -11,7 +11,13 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
+	"go.mongodb.org/mongo-driver/mongo"
 )
+
+func TestNewWriterVersionService_RequiresMongoDatabase(t *testing.T) {
+	assert.Nil(t, newWriterVersionService(nil))
+	assert.NotNil(t, newWriterVersionService(&mongo.Database{}))
+}
 
 func newWriterRouteEngine() *gin.Engine {
 	gin.SetMode(gin.TestMode)
