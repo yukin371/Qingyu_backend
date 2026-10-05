@@ -1,7 +1,6 @@
 package reader
 
 import (
-	"errors"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -55,7 +54,7 @@ func (api *AnnotationsAPI) getUserID(c *gin.Context) (string, bool) {
 
 	userIDStr, ok := userID.(string)
 	if !ok {
-		c.Error(errors.New("用户ID类型错误"))
+		response.Unauthorized(c, "用户信息格式错误")
 		return "", false
 	}
 
@@ -89,7 +88,6 @@ func (api *AnnotationsAPI) CreateAnnotation(c *gin.Context) {
 	// 获取用户ID - getUserID 已经返回 string 类型
 	userIDStr, ok := api.getUserID(c)
 	if !ok {
-		c.Error(errors.New("用户ID类型错误"))
 		return
 	}
 
@@ -126,6 +124,8 @@ func (api *AnnotationsAPI) CreateAnnotation(c *gin.Context) {
 //	@Router		/api/v1/reader/annotations/{id} [put]
 func (api *AnnotationsAPI) UpdateAnnotation(c *gin.Context) {
 	annotationID := c.Param("id")
+	// TODO(T3-032-security): ReaderService.UpdateAnnotation lacks a user scope;
+	// confirm ownership rules and extend the service contract before enforcing them here.
 
 	var req UpdateAnnotationRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -162,6 +162,8 @@ func (api *AnnotationsAPI) UpdateAnnotation(c *gin.Context) {
 //	@Router		/api/v1/reader/annotations/{id} [delete]
 func (api *AnnotationsAPI) DeleteAnnotation(c *gin.Context) {
 	annotationID := c.Param("id")
+	// TODO(T3-032-security): ReaderService.DeleteAnnotation lacks a user scope;
+	// confirm ownership rules and extend the service contract before enforcing them here.
 
 	err := api.readerService.DeleteAnnotation(c.Request.Context(), annotationID)
 	if err != nil {

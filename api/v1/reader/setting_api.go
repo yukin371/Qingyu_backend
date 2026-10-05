@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/interfaces"
 	"errors"
@@ -47,17 +48,9 @@ func (api *SettingAPI) GetReadingSettings(c *gin.Context) {
 		return
 	}
 
-	// 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "请先登录")
-		return
-	}
-
-	// 类型断言安全检查
-	userIDStr, ok := userID.(string)
+	// 获取并校验用户ID
+	userIDStr, ok := shared.GetUserIDWithMessage(c, "请先登录")
 	if !ok || userIDStr == "" {
-		response.BadRequest(c, "参数错误", "无效的用户ID")
 		return
 	}
 
@@ -84,17 +77,9 @@ func (api *SettingAPI) SaveReadingSettings(c *gin.Context) {
 		return
 	}
 
-	// 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "请先登录")
-		return
-	}
-
-	// 类型断言安全检查
-	userIDStr, ok := userID.(string)
+	// 获取并校验用户ID
+	userIDStr, ok := shared.GetUserIDWithMessage(c, "请先登录")
 	if !ok || userIDStr == "" {
-		response.BadRequest(c, "参数错误", "无效的用户ID")
 		return
 	}
 
@@ -130,17 +115,9 @@ func (api *SettingAPI) UpdateReadingSettings(c *gin.Context) {
 		return
 	}
 
-	// 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "请先登录")
-		return
-	}
-
-	// 类型断言安全检查
-	userIDStr, ok := userID.(string)
+	// 获取并校验用户ID
+	userIDStr, ok := shared.GetUserIDWithMessage(c, "请先登录")
 	if !ok || userIDStr == "" {
-		response.BadRequest(c, "参数错误", "无效的用户ID")
 		return
 	}
 
