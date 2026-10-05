@@ -2,14 +2,14 @@ package writer
 
 import (
 	"Qingyu_backend/api/v1/writer"
-	bookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
+	serviceInterfaces "Qingyu_backend/service/interfaces"
 	readingStats "Qingyu_backend/service/reader/stats"
 
 	"github.com/gin-gonic/gin"
 )
 
 // InitStatsRouter 初始化统计路由（阅读/书店统计）
-func InitStatsRouter(r *gin.RouterGroup, service *readingStats.ReadingStatsService, bookRepo bookstoreRepo.BookRepository) {
+func InitStatsRouter(r *gin.RouterGroup, service *readingStats.ReadingStatsService, bookRepo serviceInterfaces.WriterStatsBookPort) {
 	// 创建API实例
 	statsApi := writer.NewStatsApi(service, bookRepo)
 	aggregateApi := writer.NewWriterStatsAggregateAPI(service, bookRepo)

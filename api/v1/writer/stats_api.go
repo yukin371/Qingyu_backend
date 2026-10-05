@@ -10,7 +10,7 @@ import (
 	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/models/stats"
 	"Qingyu_backend/pkg/response"
-	bookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
+	serviceInterfaces "Qingyu_backend/service/interfaces"
 	readingStats "Qingyu_backend/service/reader/stats"
 )
 
@@ -25,11 +25,11 @@ type compareBooksRequest struct {
 // 职责：处理作品、章节的阅读统计
 type StatsApi struct {
 	statsService *readingStats.ReadingStatsService
-	bookRepo     bookstoreRepo.BookRepository
+	bookRepo     serviceInterfaces.WriterStatsBookPort
 }
 
 // NewStatsApi 创建统计API
-func NewStatsApi(statsService *readingStats.ReadingStatsService, bookRepo bookstoreRepo.BookRepository) *StatsApi {
+func NewStatsApi(statsService *readingStats.ReadingStatsService, bookRepo serviceInterfaces.WriterStatsBookPort) *StatsApi {
 	return &StatsApi{
 		statsService: statsService,
 		bookRepo:     bookRepo,

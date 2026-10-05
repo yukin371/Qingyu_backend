@@ -6,14 +6,14 @@ import (
 	"Qingyu_backend/api/v1/shared"
 	statsModels "Qingyu_backend/models/stats"
 	"Qingyu_backend/pkg/response"
-	bookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
+	serviceInterfaces "Qingyu_backend/service/interfaces"
 	readingStats "Qingyu_backend/service/reader/stats"
 )
 
 // WriterStatsAggregateAPI 提供面向作者工作台的聚合统计接口。
 type WriterStatsAggregateAPI struct {
 	statsService *readingStats.ReadingStatsService
-	bookRepo     bookstoreRepo.BookRepository
+	bookRepo     serviceInterfaces.WriterStatsBookPort
 }
 
 type WriterStatsOverviewSummary struct {
@@ -83,7 +83,7 @@ type WriterStatsTodayResponse struct {
 }
 
 // NewWriterStatsAggregateAPI 创建作者聚合统计 API。
-func NewWriterStatsAggregateAPI(statsService *readingStats.ReadingStatsService, bookRepo bookstoreRepo.BookRepository) *WriterStatsAggregateAPI {
+func NewWriterStatsAggregateAPI(statsService *readingStats.ReadingStatsService, bookRepo serviceInterfaces.WriterStatsBookPort) *WriterStatsAggregateAPI {
 	return &WriterStatsAggregateAPI{
 		statsService: statsService,
 		bookRepo:     bookRepo,
