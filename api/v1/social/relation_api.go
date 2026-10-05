@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	sharedapi "Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/models/social"
 	"Qingyu_backend/pkg/response"
 )
@@ -47,12 +48,10 @@ func NewUserRelationAPI(relationService UserRelationServiceInterface) *UserRelat
 //	@Router			/api/v1/social/follow/{userId} [post]
 func (api *UserRelationAPI) FollowUser(c *gin.Context) {
 	// 获取当前用户ID
-	userIDInterface, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未登录")
+	followerID, ok := sharedapi.GetUserID(c)
+	if !ok {
 		return
 	}
-	followerID := userIDInterface.(string)
 
 	// 获取被关注用户ID
 	followeeID := c.Param("userId")
@@ -92,12 +91,10 @@ func (api *UserRelationAPI) FollowUser(c *gin.Context) {
 //	@Router			/api/v1/social/follow/{userId} [delete]
 func (api *UserRelationAPI) UnfollowUser(c *gin.Context) {
 	// 获取当前用户ID
-	userIDInterface, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未登录")
+	followerID, ok := sharedapi.GetUserID(c)
+	if !ok {
 		return
 	}
-	followerID := userIDInterface.(string)
 
 	// 获取被取消关注用户ID
 	followeeID := c.Param("userId")
@@ -137,12 +134,10 @@ func (api *UserRelationAPI) UnfollowUser(c *gin.Context) {
 //	@Router			/api/v1/social/follow/{userId}/status [get]
 func (api *UserRelationAPI) CheckIsFollowing(c *gin.Context) {
 	// 获取当前用户ID
-	userIDInterface, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未登录")
+	followerID, ok := sharedapi.GetUserID(c)
+	if !ok {
 		return
 	}
-	followerID := userIDInterface.(string)
 
 	// 获取目标用户ID
 	followeeID := c.Param("userId")
