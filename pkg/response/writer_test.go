@@ -232,6 +232,16 @@ func TestNewPaginationLastPage(t *testing.T) {
 	assert.True(t, pagination.HasPrevious)
 }
 
+func TestNewPaginationZeroPageSize(t *testing.T) {
+	pagination := NewPagination(100, 1, 0)
+
+	assert.Equal(t, int64(100), pagination.Total)
+	assert.Equal(t, 0, pagination.PageSize)
+	assert.Equal(t, 0, pagination.TotalPages)
+	assert.False(t, pagination.HasNext)
+	assert.False(t, pagination.HasPrevious)
+}
+
 func TestGetRequestID(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	w := httptest.NewRecorder()

@@ -204,9 +204,12 @@ func SuccessWithMessage(c *gin.Context, message string, data interface{}) {
 
 // NewPagination 创建分页信息
 func NewPagination(total int64, page, pageSize int) *Pagination {
-	totalPages := int(total) / pageSize
-	if int(total)%pageSize > 0 {
-		totalPages++
+	totalPages := 0
+	if pageSize > 0 {
+		totalPages = int(total) / pageSize
+		if int(total)%pageSize > 0 {
+			totalPages++
+		}
 	}
 
 	return &Pagination{
