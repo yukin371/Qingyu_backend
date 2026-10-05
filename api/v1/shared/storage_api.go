@@ -70,9 +70,8 @@ func NewStorageAPI(
 //	@Router			/api/v1/files/upload [post]
 func (api *StorageAPI) UploadFile(c *gin.Context) {
 	// 1. 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		Unauthorized(c, "未授权")
+	userID, ok := GetUserIDWithMessage(c, "未授权")
+	if !ok {
 		return
 	}
 
@@ -95,7 +94,7 @@ func (api *StorageAPI) UploadFile(c *gin.Context) {
 		Filename:    header.Filename,
 		ContentType: header.Header.Get("Content-Type"),
 		Size:        header.Size,
-		UserID:      userID.(string),
+		UserID:      userID,
 		IsPublic:    isPublic,
 		Category:    category,
 	}

@@ -52,6 +52,29 @@ func TestOAuthAPI_GetAuthorizeURL_PassesLinkModeAndUserID(t *testing.T) {
 	assert.Equal(t, "github", data["provider"])
 }
 
+func TestOAuthAPI_GetAuthorizeURL_InvalidUserIDUsesLoginMode(t *testing.T) {
+	api := NewOAuthAPI(&oauthServiceStub{
+		getAuthURLFunc: func(ctx context.Context, provider authModel.OAuthProvider, redirectURI, state string, linkMode bool, userID ...string) (string, error) {
+			assert.False(t, linkMode)
+			require.Len(t, userID, 1)
+			assert.Empty(t, userID[0])
+			return "https://provider.example.com/authorize", nil
+		},
+	}, &authServiceStub{}, zap.NewNop())
+
+	recorder := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(recorder)
+	c.Params = gin.Params{{Key: "provider", Value: "github"}}
+	c.Set("user_id", 123)
+	c.Request = httptest.NewRequest(http.MethodPost, "/oauth/authorize", bytes.NewBufferString(`{"redirect_uri":"https://app.example.com/callback","state":"state"}`))
+	c.Request.Header.Set("Content-Type", "application/json")
+
+	assert.NotPanics(t, func() {
+		api.GetAuthorizeURL(c)
+	})
+	assert.Equal(t, http.StatusOK, recorder.Code)
+}
+
 func TestOAuthAPI_HandleCallback_LinkModeUsesBindFlow(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 

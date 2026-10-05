@@ -219,6 +219,20 @@ func TestStorageAPI_ProtectedFileActions_InvalidUserIDReturnsUnauthorized(t *tes
 	}
 }
 
+func TestStorageAPI_UploadFile_InvalidUserIDReturnsUnauthorized(t *testing.T) {
+	api := NewStorageAPI(nil, nil, nil)
+	recorder := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(recorder)
+	c.Set("user_id", 123)
+
+	assert.NotPanics(t, func() {
+		api.UploadFile(c)
+	})
+	assert.Equal(t, http.StatusUnauthorized, recorder.Code)
+	resp := decodeAPIResponse(t, recorder)
+	assert.Equal(t, "用户信息格式错误", resp["message"])
+}
+
 func TestStorageAPI_UploadChunk_MissingUploadID(t *testing.T) {
 	router := setupStorageMultipartRouter()
 

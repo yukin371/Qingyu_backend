@@ -53,8 +53,10 @@ func (api *OAuthAPI) GetAuthorizeURL(c *gin.Context) {
 	linkMode := false
 	userID := ""
 	if userIDVal, exists := c.Get("user_id"); exists {
-		linkMode = true
-		userID = userIDVal.(string)
+		if uid, ok := userIDVal.(string); ok && uid != "" {
+			linkMode = true
+			userID = uid
+		}
 	}
 
 	authURL, err := api.oauthService.GetAuthURL(c.Request.Context(), provider, req.RedirectURI, req.State, linkMode, userID)
