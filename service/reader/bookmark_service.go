@@ -250,7 +250,7 @@ func (s *BookmarkServiceImpl) DeleteBookmark(ctx context.Context, userID, bookma
 	}
 
 	if err := s.bookmarkRepo.Delete(ctx, id); err != nil {
-		return ErrBookmarkNotFound
+		return fmt.Errorf("failed to delete bookmark: %w", err)
 	}
 	return nil
 }
