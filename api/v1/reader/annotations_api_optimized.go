@@ -60,13 +60,23 @@ func (api *AnnotationsAPI) BatchCreateAnnotations(c *gin.Context) {
 	if !ok {
 		return
 	}
+	userOID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		response.Unauthorized(c, "用户信息格式错误")
+		return
+	}
 
 	// 转换为注记模型
 	annotations := make([]*readerModels.Annotation, len(req.Annotations))
 	for i, annReq := range req.Annotations {
-		userOID, _ := primitive.ObjectIDFromHex(userIDStr)
-		bookOID, _ := primitive.ObjectIDFromHex(annReq.BookID)
-		chapterOID, _ := primitive.ObjectIDFromHex(annReq.ChapterID)
+		bookOID, ok := parseObjectIDParam(c, "bookId", annReq.BookID)
+		if !ok {
+			return
+		}
+		chapterOID, ok := parseObjectIDParam(c, "chapterId", annReq.ChapterID)
+		if !ok {
+			return
+		}
 
 		annotations[i] = &readerModels.Annotation{
 			UserID:    userOID,
@@ -80,7 +90,7 @@ func (api *AnnotationsAPI) BatchCreateAnnotations(c *gin.Context) {
 	}
 
 	// 批量创建
-	err := api.readerService.BatchCreateAnnotations(c.Request.Context(), annotations)
+	err = api.readerService.BatchCreateAnnotations(c.Request.Context(), annotations)
 	if err != nil {
 		response.InternalError(c, err)
 		return

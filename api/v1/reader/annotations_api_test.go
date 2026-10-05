@@ -278,6 +278,7 @@ func setupAnnotationsTestRouter(readerService interfaces.ReaderService, userID s
 	v1 := r.Group("/api/v1/reader/annotations")
 	{
 		v1.POST("", api.CreateAnnotation)
+		v1.POST("/batch", api.BatchCreateAnnotations)
 		v1.PUT("/:id", api.UpdateAnnotation)
 		v1.DELETE("/:id", api.DeleteAnnotation)
 		v1.GET("/chapter", api.GetAnnotationsByChapter)
@@ -382,6 +383,27 @@ func TestAnnotationsAPI_CreateAnnotation_InvalidChapterID(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 	mockService.AssertNotCalled(t, "CreateAnnotation", mock.Anything, mock.Anything)
+}
+
+func TestAnnotationsAPI_BatchCreateAnnotations_InvalidID(t *testing.T) {
+	mockService := new(MockReaderServiceForAnnotations)
+	router := setupAnnotationsTestRouter(mockService, primitive.NewObjectID().Hex())
+
+	body := map[string]interface{}{
+		"annotations": []map[string]string{{
+			"bookId":    "not-an-object-id",
+			"chapterId": primitive.NewObjectID().Hex(),
+			"type":      "note",
+		}},
+	}
+	jsonBody, _ := json.Marshal(body)
+	req, _ := http.NewRequest("POST", "/api/v1/reader/annotations/batch", bytes.NewBuffer(jsonBody))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	mockService.AssertNotCalled(t, "BatchCreateAnnotations", mock.Anything, mock.Anything)
 }
 
 func TestAnnotationsAPI_UpdateAnnotation_Success(t *testing.T) {
