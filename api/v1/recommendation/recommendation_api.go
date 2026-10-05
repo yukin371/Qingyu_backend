@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/api/v1/shared"
 	bookstoreModel "Qingyu_backend/models/bookstore"
 	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/recommendation"
@@ -211,11 +212,7 @@ func (api *RecommendationAPI) GetHomepageRecommendations(c *gin.Context) {
 	ctx := c.Request.Context()
 
 	// 获取用户ID（可选）
-	userID, _ := c.Get("user_id")
-	userIDStr := ""
-	if userID != nil {
-		userIDStr = userID.(string)
-	}
+	userIDStr := shared.GetUserIDOptional(c)
 
 	// 获取limit参数
 	limit := 20
