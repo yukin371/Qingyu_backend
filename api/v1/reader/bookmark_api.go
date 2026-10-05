@@ -137,6 +137,7 @@ func (api *BookmarkAPI) GetBookmarks(c *gin.Context) {
 	response.Success(c, result)
 }
 
+// TODO(T3-016-security): 在确认公开/私有书签规则并扩展 service user-scope 契约后，补充当前用户归属校验。
 // GetBookmark 获取书签详情
 //
 //	@Summary		获取书签详情
@@ -165,6 +166,7 @@ func (api *BookmarkAPI) GetBookmark(c *gin.Context) {
 	response.Success(c, bookmark)
 }
 
+// TODO(T3-016-security): 在确认公开/私有书签规则并扩展 service user-scope 契约后，补充当前用户归属校验。
 // UpdateBookmark 更新书签
 //
 //	@Summary		更新书签
@@ -209,6 +211,7 @@ func (api *BookmarkAPI) UpdateBookmark(c *gin.Context) {
 	response.Success(c, nil)
 }
 
+// TODO(T3-016-security): 在确认公开/私有书签规则并扩展 service user-scope 契约后，补充当前用户归属校验。
 // DeleteBookmark 删除书签
 //
 //	@Summary		删除书签
