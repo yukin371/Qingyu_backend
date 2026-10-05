@@ -455,9 +455,8 @@ func (api *ChapterCommentAPI) GetChapterComment(c *gin.Context) {
 //	@Success	200			{object}	response.APIResponse
 //	@Router		/api/v1/reader/comments/{commentId} [put]
 func (api *ChapterCommentAPI) UpdateChapterComment(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "请先登录")
+	userID, _, ok := api.getUserIdentity(c)
+	if !ok {
 		return
 	}
 
