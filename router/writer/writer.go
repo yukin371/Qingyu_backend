@@ -80,8 +80,10 @@ func InitWriterRouter(
 		// 文档管理路由
 		InitDocumentRouter(writerGroup, documentApi, lockApi)
 
-		// 版本控制路由
-		InitVersionRouter(writerGroup, versionApi)
+		// 版本控制路由依赖 MongoDB；数据库未连接时保持基础 writer 路由可用。
+		if versionService != nil {
+			InitVersionRouter(writerGroup, versionApi)
+		}
 
 		// 编辑器路由
 		InitEditorRouter(writerGroup, editorApi)

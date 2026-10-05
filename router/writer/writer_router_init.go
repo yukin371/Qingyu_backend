@@ -106,15 +106,19 @@ func RegisterWriterRoutes(r *gin.RouterGroup, searchSvc *searchservice.SearchSer
 		zap.L().Warn("RegisterWriterRoutes: mongoDB为nil，跳过ExportService创建")
 	}
 
-	// 创建PublishService（发布服务）
-	publicationRepo := mongoWriterRepo.NewMongoPublicationRepository(mongoDB)
-	publishSvc := writerservice.NewPublishService(
-		writerservice.NewPublishProjectRepositoryAdapter(projectRepo),
-		writerservice.NewPublishDocumentRepositoryAdapter(documentRepo, mongoDB),
-		publicationRepo,
-		writerservice.NewLocalBookstoreClient(mongoDB),
-		writerservice.NewPublishEventBusAdapter(eventBus),
-	)
+	// 创建PublishService（发布服务）。发布记录和书城适配器依赖 MongoDB，
+	// 未连接数据库时保持 nil，由路由层跳过发布相关入口，避免组合根 panic。
+	var publishSvc interfaces.PublishService
+	if mongoDB != nil {
+		publicationRepo := mongoWriterRepo.NewMongoPublicationRepository(mongoDB)
+		publishSvc = writerservice.NewPublishService(
+			writerservice.NewPublishProjectRepositoryAdapter(projectRepo),
+			writerservice.NewPublishDocumentRepositoryAdapter(documentRepo, mongoDB),
+			publicationRepo,
+			writerservice.NewLocalBookstoreClient(mongoDB),
+			writerservice.NewPublishEventBusAdapter(eventBus),
+		)
+	}
 
 	// 创建DocumentLockService（文档锁服务）
 	// 从服务容器获取Redis客户端
@@ -124,11 +128,13 @@ func RegisterWriterRoutes(r *gin.RouterGroup, searchSvc *searchservice.SearchSer
 		lockSvc = lock.NewRedisDocumentLockService(redisClient, "doclock")
 	}
 
-	// 创建CommentService（批注服务）
+	// 创建CommentService（批注服务）。批注仓储依赖 MongoDB。
 	var commentSvc writerservice.CommentService
-	// 直接创建 writer comment repository（因为 factory 的 CreateCommentRepository 返回的是 reading 模块的）
-	commentRepo := writerrepo.NewMongoCommentRepository(mongoDB)
-	commentSvc = writerservice.NewCommentService(commentRepo)
+	if mongoDB != nil {
+		// 直接创建 writer comment repository（因为 factory 的 CreateCommentRepository 返回的是 reading 模块的）
+		commentRepo := writerrepo.NewMongoCommentRepository(mongoDB)
+		commentSvc = writerservice.NewCommentService(commentRepo)
+	}
 
 	// 创建TemplateService（模板服务）
 	var templateSvc *documentService.TemplateService

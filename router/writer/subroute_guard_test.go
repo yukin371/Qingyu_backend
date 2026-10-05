@@ -125,4 +125,8 @@ func TestInitWriterRouter_BatchOperationRouteRegistered(t *testing.T) {
 
 	assert.NotEqual(t, http.StatusNotFound, w.Code)
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
+
+	// 没有版本服务时不注册会触发 nil dereference 的版本路由。
+	versionResponse := performWriterRequest(engine, http.MethodGet, "/api/v1/writer/document/doc-1/versions", "")
+	assert.Equal(t, http.StatusNotFound, versionResponse.Code)
 }
