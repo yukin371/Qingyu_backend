@@ -132,6 +132,56 @@ func TestGetUserIDWithMessage(t *testing.T) {
 	})
 }
 
+func TestAddUserIDToContext(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+
+	tests := []struct {
+		name          string
+		userID        any
+		setUserID     bool
+		expectedValue string
+		expectsValue  bool
+	}{
+		{
+			name:          "字符串用户ID写入context",
+			userID:        "user-123",
+			setUserID:     true,
+			expectedValue: "user-123",
+			expectsValue:  true,
+		},
+		{
+			name:      "缺失用户ID保持原始context",
+			setUserID: false,
+		},
+		{
+			name:      "错误类型用户ID不触发panic",
+			userID:    123,
+			setUserID: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(w)
+			c.Request = httptest.NewRequest(http.MethodPost, "/", nil)
+			if tt.setUserID {
+				c.Set("user_id", tt.userID)
+			}
+
+			ctx := AddUserIDToContext(c)
+			value, ok := ctx.Value("userId").(string)
+
+			assert.Equal(t, tt.expectsValue, ok)
+			if tt.expectsValue {
+				assert.Equal(t, tt.expectedValue, value)
+			} else {
+				assert.Empty(t, value)
+			}
+		})
+	}
+}
+
 func TestGetBearerToken(t *testing.T) {
 	tests := []struct {
 		name          string

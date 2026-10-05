@@ -327,7 +327,9 @@ func RespondWithPaginated(c *gin.Context, data interface{}, total, page, size in
 func AddUserIDToContext(c *gin.Context) context.Context {
 	ctx := c.Request.Context()
 	if userID, exists := c.Get("user_id"); exists {
-		ctx = context.WithValue(ctx, "userId", userID.(string))
+		if userIDString, ok := userID.(string); ok && userIDString != "" {
+			ctx = context.WithValue(ctx, "userId", userIDString)
+		}
 	}
 	return ctx
 }
