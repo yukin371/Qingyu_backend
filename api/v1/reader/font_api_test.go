@@ -116,7 +116,7 @@ func TestFontAPI_GetFontByName_EmptyName(t *testing.T) {
 	assert.Equal(t, http.StatusMovedPermanently, w.Code)
 }
 
-func TestFontAPI_CreateCustomFont_Success(t *testing.T) {
+func TestFontAPI_CreateCustomFont_NotImplemented(t *testing.T) {
 	// Given
 	userID := primitive.NewObjectID().Hex()
 	router := setupFontTestRouter(userID)
@@ -138,7 +138,7 @@ func TestFontAPI_CreateCustomFont_Success(t *testing.T) {
 	router.ServeHTTP(w, req)
 
 	// Then
-	assert.Equal(t, http.StatusCreated, w.Code)
+	assert.Equal(t, http.StatusNotImplemented, w.Code)
 }
 
 func TestFontAPI_CreateCustomFont_Unauthorized(t *testing.T) {
@@ -160,7 +160,7 @@ func TestFontAPI_CreateCustomFont_Unauthorized(t *testing.T) {
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
 }
 
-func TestFontAPI_UpdateFont_Success(t *testing.T) {
+func TestFontAPI_UpdateFont_NotImplemented(t *testing.T) {
 	// Given
 	userID := primitive.NewObjectID().Hex()
 	fontID := primitive.NewObjectID().Hex()
@@ -179,7 +179,7 @@ func TestFontAPI_UpdateFont_Success(t *testing.T) {
 	router.ServeHTTP(w, req)
 
 	// Then
-	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, http.StatusNotImplemented, w.Code)
 }
 
 func TestFontAPI_UpdateFont_Unauthorized(t *testing.T) {
@@ -221,7 +221,7 @@ func TestFontAPI_UpdateFont_EmptyFontID(t *testing.T) {
 	assert.Equal(t, http.StatusNotFound, w.Code)
 }
 
-func TestFontAPI_DeleteFont_Success(t *testing.T) {
+func TestFontAPI_DeleteFont_NotImplemented(t *testing.T) {
 	// Given
 	userID := primitive.NewObjectID().Hex()
 	fontID := primitive.NewObjectID().Hex()
@@ -233,7 +233,7 @@ func TestFontAPI_DeleteFont_Success(t *testing.T) {
 	router.ServeHTTP(w, req)
 
 	// Then
-	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, http.StatusNotImplemented, w.Code)
 }
 
 func TestFontAPI_DeleteFont_Unauthorized(t *testing.T) {

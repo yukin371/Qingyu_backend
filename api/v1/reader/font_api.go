@@ -1,6 +1,9 @@
 package reader
 
 import (
+	"net/http"
+	"time"
+
 	"Qingyu_backend/api/v1/shared"
 	readerModels "Qingyu_backend/models/reader"
 
@@ -8,6 +11,15 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
+
+func respondFontNotImplemented(c *gin.Context, message string) {
+	response.JSON(c, http.StatusNotImplemented, response.APIResponse{
+		Code:      response.CodeInternalError,
+		Message:   message,
+		Timestamp: time.Now().UnixMilli(),
+		RequestID: c.GetString("requestId"),
+	})
+}
 
 // FontAPI 字体API
 type FontAPI struct {
@@ -93,11 +105,11 @@ func (api *FontAPI) GetFontByName(c *gin.Context) {
 //	@Summary	创建自定义字体
 //	@Tags		阅读器-字体
 //	@Param		request	body object	true	"创建字体请求"
-//	@Success	200		{object}	response.APIResponse
+//	@Success	501		{object}	response.APIResponse
 //	@Router		/api/v1/reader/fonts [post]
 func (api *FontAPI) CreateCustomFont(c *gin.Context) {
 	// 获取用户ID
-	userID, ok := shared.GetUserIDWithMessage(c, "请先登录")
+	_, ok := shared.GetUserIDWithMessage(c, "请先登录")
 	if !ok {
 		return
 	}
@@ -108,28 +120,7 @@ func (api *FontAPI) CreateCustomFont(c *gin.Context) {
 		return
 	}
 
-	// 创建自定义字体
-	font := &readerModels.ReaderFont{
-		ID:          "", // 应该使用ObjectID生成
-		Name:        req.Name,
-		DisplayName: req.DisplayName,
-		FontFamily:  req.FontFamily,
-		Description: req.Description,
-		Category:    req.Category,
-		FontURL:     req.FontURL,
-		PreviewText: req.PreviewText,
-		IsBuiltIn:   false,
-		IsActive:    true,
-		SupportSize: []int{12, 14, 16, 18, 20, 22, 24},
-		UseCount:    0,
-	}
-
-	// 实际应用中应该保存到数据库
-	response.Created(c, gin.H{
-		"font":    font,
-		"message": "自定义字体创建成功",
-		"userId":  userID,
-	})
+	respondFontNotImplemented(c, "自定义字体持久化功能开发中")
 }
 
 // TODO(T3-018-security): 在确认字体归属规则并补 user-scope service 契约后，执行当前用户 owner 校验。
@@ -139,10 +130,10 @@ func (api *FontAPI) CreateCustomFont(c *gin.Context) {
 //	@Tags		阅读器-字体
 //	@Param		id		path	string						true	"字体ID"
 //	@Param		request	body object	true	"更新字体请求"
-//	@Success	200		{object}	response.APIResponse
+//	@Success	501		{object}	response.APIResponse
 //	@Router		/api/v1/reader/fonts/{id} [put]
 func (api *FontAPI) UpdateFont(c *gin.Context) {
-	userID, ok := shared.GetUserIDWithMessage(c, "请先登录")
+	_, ok := shared.GetUserIDWithMessage(c, "请先登录")
 	if !ok {
 		return
 	}
@@ -159,16 +150,7 @@ func (api *FontAPI) UpdateFont(c *gin.Context) {
 		return
 	}
 
-	// 实际应用中应该：
-	// 1. 从数据库获取字体
-	// 2. 验证用户权限
-	// 3. 更新字体
-
-	response.Success(c, gin.H{
-		"message": "字体更新成功",
-		"fontId":  fontID,
-		"userId":  userID,
-	})
+	respondFontNotImplemented(c, "自定义字体持久化功能开发中")
 }
 
 // TODO(T3-018-security): 在确认字体归属规则并补 user-scope service 契约后，执行当前用户 owner 校验。
@@ -177,10 +159,10 @@ func (api *FontAPI) UpdateFont(c *gin.Context) {
 //	@Summary	删除自定义字体
 //	@Tags		阅读器-字体
 //	@Param		id	path	string	true	"字体ID"
-//	@Success	200	{object}	response.APIResponse
+//	@Success	501	{object}	response.APIResponse
 //	@Router		/api/v1/reader/fonts/{id} [delete]
 func (api *FontAPI) DeleteFont(c *gin.Context) {
-	userID, ok := shared.GetUserIDWithMessage(c, "请先登录")
+	_, ok := shared.GetUserIDWithMessage(c, "请先登录")
 	if !ok {
 		return
 	}
@@ -191,11 +173,7 @@ func (api *FontAPI) DeleteFont(c *gin.Context) {
 		return
 	}
 
-	response.Success(c, gin.H{
-		"message": "字体删除成功",
-		"fontId":  fontID,
-		"userId":  userID,
-	})
+	respondFontNotImplemented(c, "自定义字体持久化功能开发中")
 }
 
 // SetFontPreference 设置字体偏好
