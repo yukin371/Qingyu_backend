@@ -4,18 +4,18 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"Qingyu_backend/api/v1/shared"
-	"Qingyu_backend/pkg/response"
 	writerModels "Qingyu_backend/models/writer"
-	writerInterface "Qingyu_backend/repository/interfaces/writer"
+	"Qingyu_backend/pkg/response"
+	serviceInterfaces "Qingyu_backend/service/interfaces"
 )
 
 // EncyclopediaApi 设定百科API
 type EncyclopediaApi struct {
-	conceptRepo writerInterface.ConceptRepository
+	conceptRepo serviceInterfaces.ConceptCatalogPort
 }
 
 // NewEncyclopediaApi 创建设定百科API
-func NewEncyclopediaApi(conceptRepo writerInterface.ConceptRepository) *EncyclopediaApi {
+func NewEncyclopediaApi(conceptRepo serviceInterfaces.ConceptCatalogPort) *EncyclopediaApi {
 	return &EncyclopediaApi{conceptRepo: conceptRepo}
 }
 
