@@ -152,6 +152,7 @@ func InitBookstoreRouter(
 			if chapterApiHandler != nil {
 				public.GET("/books/:id/chapters", chapterApiHandler.GetChaptersByBookID)      // 获取章节列表（使用ChapterAPI）
 				public.GET("/books/:id/chapters/list", chapterApiHandler.GetChaptersByBookID) // 别名路由
+				public.GET("/books/:id/chapters/published", chapterApiHandler.GetPublishedChapters)
 				public.GET("/chapters/:id", chapterApiHandler.GetChapter)                     // 获取章节详情
 				public.GET("/chapters/:id/content", chapterApiHandler.GetChapterContent)      // 获取章节内容（公开接口）
 			}

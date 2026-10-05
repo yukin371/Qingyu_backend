@@ -270,7 +270,7 @@ func (api *ChapterAPI) GetPaidChapters(c *gin.Context) {
 //	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/bookstore/books/{id}/chapters/published [get]
 func (api *ChapterAPI) GetPublishedChapters(c *gin.Context) {
-	bookIDStr := c.Param("book_id")
+	bookIDStr := c.Param("id")
 	if bookIDStr == "" {
 		response.BadRequest(c, "参数错误", "书籍ID不能为空")
 		return
