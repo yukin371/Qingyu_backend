@@ -194,6 +194,31 @@ func TestStorageAPI_MultipartInit_InvalidUserIDReturnsUnauthorized(t *testing.T)
 	assert.Equal(t, "用户信息格式错误", resp["message"])
 }
 
+func TestStorageAPI_ProtectedFileActions_InvalidUserIDReturnsUnauthorized(t *testing.T) {
+	for _, action := range []struct {
+		name   string
+		handle func(*StorageAPI, *gin.Context)
+	}{
+		{name: "删除文件", handle: (*StorageAPI).DeleteFile},
+		{name: "查询文件列表", handle: (*StorageAPI).ListFiles},
+	} {
+		t.Run(action.name, func(t *testing.T) {
+			api := NewStorageAPI(nil, nil, nil)
+			recorder := httptest.NewRecorder()
+			c, _ := gin.CreateTestContext(recorder)
+			c.Set("user_id", 123)
+			c.Params = gin.Params{{Key: "id", Value: "file-1"}}
+
+			assert.NotPanics(t, func() {
+				action.handle(api, c)
+			})
+			assert.Equal(t, http.StatusUnauthorized, recorder.Code)
+			resp := decodeAPIResponse(t, recorder)
+			assert.Equal(t, "用户信息格式错误", resp["message"])
+		})
+	}
+}
+
 func TestStorageAPI_UploadChunk_MissingUploadID(t *testing.T) {
 	router := setupStorageMultipartRouter()
 

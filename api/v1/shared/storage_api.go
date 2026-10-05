@@ -213,9 +213,8 @@ func (api *StorageAPI) GetFileInfo(c *gin.Context) {
 func (api *StorageAPI) DeleteFile(c *gin.Context) {
 	// 1. 获取文件ID和用户ID
 	fileID := c.Param("id")
-	userID, exists := c.Get("user_id")
-	if !exists {
-		Unauthorized(c, "未授权")
+	userID, ok := GetUserID(c)
+	if !ok {
 		return
 	}
 
@@ -227,7 +226,7 @@ func (api *StorageAPI) DeleteFile(c *gin.Context) {
 	}
 
 	// 3. 权限检查（只有文件所有者可以删除）
-	if fileInfo.UserID != userID.(string) {
+	if fileInfo.UserID != userID {
 		Forbidden(c, "只有文件所有者可以删除文件")
 		return
 	}
@@ -258,9 +257,8 @@ func (api *StorageAPI) DeleteFile(c *gin.Context) {
 //	@Router			/api/v1/files [get]
 func (api *StorageAPI) ListFiles(c *gin.Context) {
 	// 1. 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		Unauthorized(c, "未授权")
+	userID, ok := GetUserID(c)
+	if !ok {
 		return
 	}
 
@@ -271,7 +269,7 @@ func (api *StorageAPI) ListFiles(c *gin.Context) {
 
 	// 3. 查询文件列表
 	files, err := api.storageService.ListFiles(c.Request.Context(), &storage.ListFilesRequest{
-		UserID:   userID.(string),
+		UserID:   userID,
 		Category: category,
 		Page:     page,
 		PageSize: pageSize,
