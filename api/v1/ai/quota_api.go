@@ -3,8 +3,7 @@ package ai
 import (
 	"strconv"
 
-	aiModel "Qingyu_backend/models/ai"                     // Imported for Swagger annotations
-	aiInterfaces "Qingyu_backend/repository/interfaces/ai" // Imported for Swagger annotations
+	"Qingyu_backend/api/v1/shared"
 	aiService "Qingyu_backend/service/ai"
 
 	"Qingyu_backend/pkg/response"
@@ -33,13 +32,12 @@ func NewQuotaApi(quotaService *aiService.QuotaService) *QuotaApi {
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/ai/quota [get]
 func (api *QuotaApi) GetQuotaInfo(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "无法获取用户信息")
+	userID, ok := shared.GetUserIDWithMessage(c, "无法获取用户信息")
+	if !ok {
 		return
 	}
 
-	quota, err := api.quotaService.GetQuotaInfo(c.Request.Context(), userID.(string))
+	quota, err := api.quotaService.GetQuotaInfo(c.Request.Context(), userID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -57,13 +55,12 @@ func (api *QuotaApi) GetQuotaInfo(c *gin.Context) {
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/ai/quota/all [get]
 func (api *QuotaApi) GetAllQuotas(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "无法获取用户信息")
+	userID, ok := shared.GetUserIDWithMessage(c, "无法获取用户信息")
+	if !ok {
 		return
 	}
 
-	quotas, err := api.quotaService.GetAllQuotas(c.Request.Context(), userID.(string))
+	quotas, err := api.quotaService.GetAllQuotas(c.Request.Context(), userID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -81,13 +78,12 @@ func (api *QuotaApi) GetAllQuotas(c *gin.Context) {
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/ai/quota/statistics [get]
 func (api *QuotaApi) GetQuotaStatistics(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "无法获取用户信息")
+	userID, ok := shared.GetUserIDWithMessage(c, "无法获取用户信息")
+	if !ok {
 		return
 	}
 
-	stats, err := api.quotaService.GetQuotaStatistics(c.Request.Context(), userID.(string))
+	stats, err := api.quotaService.GetQuotaStatistics(c.Request.Context(), userID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -107,9 +103,8 @@ func (api *QuotaApi) GetQuotaStatistics(c *gin.Context) {
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/ai/quota/transactions [get]
 func (api *QuotaApi) GetTransactionHistory(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "无法获取用户信息")
+	userID, ok := shared.GetUserIDWithMessage(c, "无法获取用户信息")
+	if !ok {
 		return
 	}
 
@@ -127,7 +122,7 @@ func (api *QuotaApi) GetTransactionHistory(c *gin.Context) {
 		}
 	}
 
-	transactions, err := api.quotaService.GetTransactionHistory(c.Request.Context(), userID.(string), limit, offset)
+	transactions, err := api.quotaService.GetTransactionHistory(c.Request.Context(), userID, limit, offset)
 	if err != nil {
 		c.Error(err)
 		return
@@ -152,9 +147,8 @@ type RechargeRequest struct {
 // @Success 200 {object} response.APIResponse
 // @Router /api/v1/ai/quota/recharge [post]
 func (api *QuotaApi) RechargeQuota(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "无法获取用户信息")
+	userID, ok := shared.GetUserIDWithMessage(c, "无法获取用户信息")
+	if !ok {
 		return
 	}
 
@@ -165,7 +159,7 @@ func (api *QuotaApi) RechargeQuota(c *gin.Context) {
 	}
 
 	// 调用充值服务
-	err := api.quotaService.RechargeQuota(c.Request.Context(), userID.(string), req.Amount, req.Reason, userID.(string))
+	err := api.quotaService.RechargeQuota(c.Request.Context(), userID, req.Amount, req.Reason, userID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -176,6 +170,3 @@ func (api *QuotaApi) RechargeQuota(c *gin.Context) {
 
 // 注意：管理员配额管理功能已迁移到 admin 模块
 // 参见: api/v1/admin/quota_admin_api.go
-
-var _ = aiModel.UserQuota{}
-var _ = aiInterfaces.QuotaStatistics{}
