@@ -336,9 +336,8 @@ func (api *StorageAPI) GetDownloadURL(c *gin.Context) {
 //	@Router			/api/v1/files/multipart/init [post]
 func (api *StorageAPI) InitiateMultipartUpload(c *gin.Context) {
 	// 1. 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		Unauthorized(c, "未授权")
+	userID, ok := GetUserID(c)
+	if !ok {
 		return
 	}
 
@@ -356,7 +355,7 @@ func (api *StorageAPI) InitiateMultipartUpload(c *gin.Context) {
 		MimeType:   payload.MimeType,
 		ChunkSize:  payload.ChunkSize,
 		MD5Hash:    payload.MD5Hash,
-		UploadedBy: userID.(string),
+		UploadedBy: userID,
 		Category:   payload.Category,
 		IsPublic:   payload.IsPublic,
 		Metadata:   payload.Metadata,

@@ -178,6 +178,22 @@ func TestStorageAPI_MultipartInit_ValidationError(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, w.Code)
 }
 
+func TestStorageAPI_MultipartInit_InvalidUserIDReturnsUnauthorized(t *testing.T) {
+	api := NewStorageAPI(nil, nil, nil)
+	recorder := httptest.NewRecorder()
+	c, _ := gin.CreateTestContext(recorder)
+	c.Set("user_id", 123)
+	c.Request = httptest.NewRequest(http.MethodPost, "/api/v1/files/multipart/init", strings.NewReader(`{"file_name":"demo.txt","file_size":11}`))
+	c.Request.Header.Set("Content-Type", "application/json")
+
+	assert.NotPanics(t, func() {
+		api.InitiateMultipartUpload(c)
+	})
+	assert.Equal(t, http.StatusUnauthorized, recorder.Code)
+	resp := decodeAPIResponse(t, recorder)
+	assert.Equal(t, "用户信息格式错误", resp["message"])
+}
+
 func TestStorageAPI_UploadChunk_MissingUploadID(t *testing.T) {
 	router := setupStorageMultipartRouter()
 
