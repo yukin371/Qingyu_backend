@@ -37,13 +37,12 @@ func NewWalletAPI(walletService wallet.WalletService) *WalletAPI {
 //	@Failure		500	{object}	APIResponse
 //	@Router			/api/v1/shared/wallet/balance [get]
 func (api *WalletAPI) GetBalance(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未认证")
+	userID, ok := GetUserID(c)
+	if !ok {
 		return
 	}
 
-	balance, err := api.walletService.GetBalance(c.Request.Context(), userID.(string))
+	balance, err := api.walletService.GetBalance(c.Request.Context(), userID)
 	if err != nil {
 		response.InternalError(c, err)
 		return
