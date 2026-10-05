@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/logger"
 	"Qingyu_backend/pkg/response"
 	searchService "Qingyu_backend/service/search"
@@ -166,9 +167,9 @@ func (api *GrayscaleAPI) UpdateGrayscaleConfig(c *gin.Context) {
 	}
 
 	// 获取用户ID
-	var userID string
-	if uid, exists := c.Get("user_id"); exists {
-		userID = uid.(string)
+	userID, ok := shared.GetUserIDWithMessage(c, "无法获取用户信息")
+	if !ok {
+		return
 	}
 
 	// 构建日志记录器

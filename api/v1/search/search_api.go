@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
+	"Qingyu_backend/api/v1/shared"
 	searchModels "Qingyu_backend/models/search"
 	"Qingyu_backend/pkg/logger"
 	"Qingyu_backend/pkg/response"
@@ -67,10 +68,7 @@ func (api *SearchAPI) Search(c *gin.Context) {
 	}
 
 	// 获取用户ID
-	var userID string
-	if uid, exists := c.Get("user_id"); exists {
-		userID = uid.(string)
-	}
+	userID := shared.GetUserIDOptional(c)
 
 	// 构建日志记录器
 	searchLogger := logger.WithRequest(
