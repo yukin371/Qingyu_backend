@@ -2,12 +2,9 @@ package main
 
 import (
 	"log"
-	"os"
-	"path/filepath"
 
-	"Qingyu_backend/config"
-	"Qingyu_backend/core"
 	_ "Qingyu_backend/docs" // Import generated docs
+	serverapp "Qingyu_backend/internal/app/server"
 )
 
 // @title           青羽写作平台 API
@@ -46,73 +43,7 @@ import (
 // @tag.description 钱包、充值、提现功能
 
 func main() {
-	// 获取当前工作目录（用于调试）
-	wd, _ := os.Getwd()
-
-	// 获取配置文件路径
-	// Docker环境使用绝对路径，本地开发使用环境变量或当前目录
-	log.Printf("[Main] Working directory: %s", wd)
-	log.Printf("[Main] CONFIG_FILE env: %s", os.Getenv("CONFIG_FILE"))
-	log.Printf("[Main] CONFIG_PATH env: %s", os.Getenv("CONFIG_PATH"))
-
-	configPath := os.Getenv("CONFIG_FILE")
-	if configPath == "" {
-		configPath = os.Getenv("CONFIG_PATH")
-	}
-	if configPath == "" {
-		// 默认尝试 /app/configs/config.yaml（Docker环境新路径）
-		if _, err := os.Stat("/app/configs/config.yaml"); err == nil {
-			configPath = "/app/configs/config.yaml"
-			log.Printf("[Main] Found Docker config at: %s", configPath)
-		} else if _, err := os.Stat("/app/config/config.yaml"); err == nil {
-			// 兼容旧路径
-			configPath = "/app/config/config.yaml"
-			log.Printf("[Main] Found Docker config at: %s", configPath)
-		} else {
-			// 否则使用当前目录（本地环境）
-			configPath = "."
-			log.Printf("[Main] Using current directory for config: %s", configPath)
-		}
-	}
-	configPath = filepath.Clean(configPath)
-
-	log.Printf("[Main] Final config path: %s", configPath)
-
-	// 加载配置
-	_, err := config.LoadConfig(configPath)
-	if err != nil {
-		log.Fatalf("Failed to load configuration: %v", err)
-	}
-	log.Println("[Main] Configuration loaded successfully")
-
-	// 注册配置重载处理器
-	config.RegisterReloadHandler("database", func() {
-		if err := core.InitDB(); err != nil {
-			log.Printf("Failed to reload database configuration: %v", err)
-		}
-	})
-
-	config.RegisterReloadHandler("server", func() {
-		// 服务器配置变更时的处理逻辑
-		log.Println("Server configuration reloaded")
-	})
-
-	// 启用配置热重载
-	config.EnableHotReload()
-
-	// 初始化数据库
-	if err := core.InitDB(); err != nil {
-		log.Fatalf("Failed to initialize database: %v", err)
-	}
-
-	// 初始化服务器
-	r, err := core.InitServer()
-	if err != nil {
-		log.Fatalf("Failed to initialize server: %v", err)
-	}
-
-	// 运行服务器
-	if err := core.RunServer(r); err != nil {
-		log.Fatalf("Failed to run server: %v", err)
+	if err := serverapp.Run(); err != nil {
+		log.Fatal(err)
 	}
 }
