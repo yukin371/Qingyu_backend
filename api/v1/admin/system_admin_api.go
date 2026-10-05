@@ -7,6 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/admin"
 )
@@ -46,14 +47,13 @@ func (api *SystemAdminAPI) ReviewWithdraw(c *gin.Context) {
 	}
 
 	// 从context获取管理员ID
-	adminID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	adminID, ok := shared.GetUserIDWithMessage(c, "未授权")
+	if !ok {
 		return
 	}
 
 	// 调用Service层
-	err := api.admin.ReviewWithdraw(c.Request.Context(), req.WithdrawID, adminID.(string), req.Approved, req.Reason)
+	err := api.admin.ReviewWithdraw(c.Request.Context(), req.WithdrawID, adminID, req.Approved, req.Reason)
 	if err != nil {
 		c.Error(err)
 		return
@@ -307,16 +307,15 @@ func (api *SystemAdminAPI) CreateAnnouncement(c *gin.Context) {
 	}
 
 	// 从context获取管理员ID
-	adminID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	adminID, ok := shared.GetUserIDWithMessage(c, "未授权")
+	if !ok {
 		return
 	}
 
 	ctx := c.Request.Context()
 
 	// 调用AdminService创建公告
-	announcement, err := api.admin.CreateAnnouncement(ctx, adminID.(string), req.Title, req.Content, req.Type, req.Priority)
+	announcement, err := api.admin.CreateAnnouncement(ctx, adminID, req.Title, req.Content, req.Type, req.Priority)
 	if err != nil {
 		c.Error(err)
 		return

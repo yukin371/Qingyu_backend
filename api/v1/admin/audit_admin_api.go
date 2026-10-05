@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/response"
 )
 
@@ -99,9 +100,8 @@ func (api *AuditAdminAPI) ReviewAudit(c *gin.Context) {
 	}
 
 	// 从context获取管理员ID
-	reviewerID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	reviewerID, ok := shared.GetUserIDWithMessage(c, "未授权")
+	if !ok {
 		return
 	}
 
@@ -109,7 +109,7 @@ func (api *AuditAdminAPI) ReviewAudit(c *gin.Context) {
 	approved := req.Action == "approve"
 
 	// 调用Service层
-	err := api.auditService.ReviewAudit(c.Request.Context(), auditID, reviewerID.(string), approved, req.ReviewNote)
+	err := api.auditService.ReviewAudit(c.Request.Context(), auditID, reviewerID, approved, req.ReviewNote)
 	if err != nil {
 		c.Error(err)
 		return
@@ -153,9 +153,8 @@ func (api *AuditAdminAPI) ReviewAppeal(c *gin.Context) {
 	}
 
 	// 从context获取管理员ID
-	reviewerID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	reviewerID, ok := shared.GetUserIDWithMessage(c, "未授权")
+	if !ok {
 		return
 	}
 
@@ -163,7 +162,7 @@ func (api *AuditAdminAPI) ReviewAppeal(c *gin.Context) {
 	approved := req.Action == "approve"
 
 	// 调用Service层
-	err := api.auditService.ReviewAppeal(c.Request.Context(), auditID, reviewerID.(string), approved, req.ReviewNote)
+	err := api.auditService.ReviewAppeal(c.Request.Context(), auditID, reviewerID, approved, req.ReviewNote)
 	if err != nil {
 		c.Error(err)
 		return
@@ -265,9 +264,8 @@ func (api *AuditAdminAPI) BatchReviewAudit(c *gin.Context) {
 	}
 
 	// 从context获取管理员ID
-	reviewerID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权")
+	reviewerID, ok := shared.GetUserIDWithMessage(c, "未授权")
+	if !ok {
 		return
 	}
 
@@ -280,7 +278,7 @@ func (api *AuditAdminAPI) BatchReviewAudit(c *gin.Context) {
 	approved := req.Action == "approve"
 
 	for _, auditID := range req.AuditIDs {
-		if err := api.auditService.ReviewAudit(c.Request.Context(), auditID, reviewerID.(string), approved, req.ReviewNote); err != nil {
+		if err := api.auditService.ReviewAudit(c.Request.Context(), auditID, reviewerID, approved, req.ReviewNote); err != nil {
 			result.Failed++
 			result.Errors = append(result.Errors, auditID+": "+err.Error())
 		} else {
