@@ -20,7 +20,6 @@ type ContentExportAPI struct {
 }
 
 // NewContentExportAPI 创建内容导出API实例
-// TODO(phase3-t2): 将该 API 接入 admin 生产路由和组合根；当前仅测试使用。
 func NewContentExportAPI(
 	bookRepo serviceinterfaces.AdminContentBookPort,
 	chapterRepo serviceinterfaces.AdminContentChapterPort,

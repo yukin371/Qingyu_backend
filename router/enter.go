@@ -885,6 +885,8 @@ func RegisterRoutes(r *gin.Engine) {
 	var quotaDashboardSvc *aiService.QuotaDashboardService
 	var quotaPolicySvc *aiService.QuotaPolicyService
 	var quotaAlertSvc *aiService.QuotaAlertService
+	var contentBookPort serviceInterfaces.AdminContentBookPort
+	var contentChapterPort serviceInterfaces.AdminContentChapterPort
 
 	if mongoDB != nil && repositoryFactory != nil && quotaService != nil {
 		quotaRepo := repositoryFactory.CreateQuotaRepository()
@@ -921,6 +923,10 @@ func RegisterRoutes(r *gin.Engine) {
 			logger.Info("✓ Quota scheduler 已启动")
 		})
 	}
+	if mongoDB != nil && repositoryFactory != nil {
+		contentBookPort = newAdminContentBookPort(repositoryFactory.CreateBookRepository())
+		contentChapterPort = newAdminContentChapterPort(repositoryFactory.CreateBookstoreChapterRepository())
+	}
 
 	// 创建用户管理服务（UserAdminService - 管理员专用）
 	// 和权限管理服务（PermissionService）
@@ -954,6 +960,7 @@ func RegisterRoutes(r *gin.Engine) {
 		// 如果 MongoDB 不可用，不注册用户管理和权限管理路由
 		adminRouter.RegisterAdminRoutes(v1, userSvc, quotaService, auditSvc, adminSvc, configSvc, announcementSvc, nil, nil, serviceContainer.GetPersistedEventBus(), nil, publicationSvc, nil, quotaAdminSvc, quotaDashboardSvc, quotaPolicySvc, quotaAlertSvc)
 	}
+	adminRouter.RegisterContentExportRoutes(v1, contentBookPort, contentChapterPort)
 
 	logger.Info("✓ 管理员路由已注册到: /api/v1/admin/")
 	logger.Info("  - /api/v1/admin/users/* (用户管理)")

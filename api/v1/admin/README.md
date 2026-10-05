@@ -134,12 +134,12 @@ api/v1/admin/
 
 | 方法 | 路径 | 说明 | Handler |
 |------|------|------|---------|
-| POST | /api/v1/admin/export/books/csv | 导出书籍为CSV | ContentExportAPI.ExportBooksToCSV |
-| POST | /api/v1/admin/export/books/excel | 导出书籍为Excel | ContentExportAPI.ExportBooksToExcel |
-| POST | /api/v1/admin/export/chapters/csv | 导出章节为CSV | ContentExportAPI.ExportChaptersToCSV |
-| GET | /api/v1/admin/export/books/template | 获取书籍导出模板 | ContentExportAPI.GetBookExportTemplate |
-| GET | /api/v1/admin/export/chapters/template | 获取章节导出模板 | ContentExportAPI.GetChapterExportTemplate |
-| GET | /api/v1/admin/export/history | 导出历史 | - |
+| GET | /api/v1/admin/content/books/export | 导出书籍（csv/excel） | ContentExportAPI.ExportBooks |
+| GET | /api/v1/admin/content/chapters/export | 导出章节（csv/excel） | ContentExportAPI.ExportChapters |
+| GET | /api/v1/admin/content/books/export/template | 获取书籍导出模板 | ContentExportAPI.GetBookExportTemplate |
+| GET | /api/v1/admin/content/chapters/export/template | 获取章节导出模板 | ContentExportAPI.GetChapterExportTemplate |
+
+内容导出路由由组合根在 MongoDB 与书籍/章节读取端口可用时注册，并沿用 `/admin` 路由组的 JWT 与 `admin` 角色校验。旧的 `/admin/export/*` POST 路径不属于当前生产契约。
 
 ### 审计日志
 

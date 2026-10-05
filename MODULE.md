@@ -6,6 +6,9 @@
 - 作为主业务真相的主要持有者，负责与 MongoDB/Redis/Milvus 等核心数据组件的交互并保持一致的错误/响应语义。
 - 支撑中台能力（配置、鉴权、日志、依赖注入容器）并为 Python AI 服务、前端与子系统提供统一的边界。
 
+> 当前目录仍处于历史结构与目标模块结构并存的迁移期。目标边界以父仓库
+> `docs/architecture/目标架构与模块边界.md` 和 `docs/standards/开发治理与变更流程.md` 为准；本文件描述当前 owner 和迁移注意事项，不代表所有目录已完成收敛。
+
 ## Owns
 - `router/enter.go` 及所有公共路由注册、中间件链（鉴权、限流、日志）的编排。
 - `service/` 中的业务实现，确保多模块复用时的依赖准确；`repository/` 中的存储接口与缓存协作。
@@ -36,8 +39,13 @@
 3. 命名漂移（`notification/notifications`、`user/users`、`stats/reading-stats` 等）依然存在，改名需同步 API 文档与前端 contract。
 4. 缺乏明确的 ownership 时容易重复实现 shared helper，改动前必须回答 “本实现是否已经存在” 这类强制问题。
 5. Phase 5 已完成 writer factory / compat / port adapter 核心退场，删除前备份归档在 `backup/writer-compat-predelete-20260430` 与 `backup/ai-adapter-predelete-20260503` 两个后端 tag；后续不要把这些旧文件名当作当前运行态 owner。
+6. `pkg/sync` 的阅读进度同步只依赖 `ReaderProgressPort`，不得重新直接导入 `service/reader`；本次迁移存档为 `migration/phase3-t1-progress-port-20261005`。
+7. 邮箱验证码管理器已归入 `service/channels`，认证 API 只消费 `channels.Manager`；不得恢复 `pkg/emailcode` 兼容入口。本次迁移存档为 `migration/phase3-t2-emailcode-predelete-20261005`。
+8. writer Mongo 仓储直接使用 `models/dto` 的 `ExportTask`、`PublicationRecord`；`service/interfaces` 只保留导出任务兼容别名，仓储不得重新导入 service 包。本次迁移存档为 `migration/phase3-t2-writer-repository-dto-20261005`。
+9. admin 内容导出 handler 只依赖 `service/interfaces.AdminContentBookPort` 与 `AdminContentChapterPort`；repository 的 `infrastructure.Filter` 只能在组合根 adapter 中映射，不能重新泄漏到 `api/v1/admin` 或 service port。生产路由由 `router/admin.RegisterContentExportRoutes` 独立注册，并沿用 JWT + `admin` 角色边界；Mongo 或读取端口不可用时跳过该组路由。
 
 ## 文档同步触发条件
 - 新增/调整 API 时同步更新 `docs/api`、`docs/architecture` 与 swagger 产物。
 - 任何涉及 `router/enter.go`、`service/shared`、命名空间调整的改动需在 `docs/standards` 与 `docs/review` 下写 review/risk 说明。
 - 关键模块重构（例如 writer、reader、ai）的边界、备份归档或验证方式变化时更新 `Qingyu_backend/MODULE.md` 并在父仓库 `docs/plans/submodules/backend/` 创建或回写 plan 梳理。
+- 后端新增业务能力必须明确所属领域和 handler -> service -> repository 依赖方向；不得以新增顶层 shared helper 规避 owner 决策。

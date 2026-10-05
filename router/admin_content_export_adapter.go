@@ -26,6 +26,9 @@ type adminContentBookPortAdapter struct {
 var _ serviceinterfaces.AdminContentBookPort = (*adminContentBookPortAdapter)(nil)
 
 func newAdminContentBookPort(repository adminContentBookRepository) serviceinterfaces.AdminContentBookPort {
+	if repository == nil {
+		return nil
+	}
 	return &adminContentBookPortAdapter{repository: repository}
 }
 
@@ -41,6 +44,9 @@ type adminContentChapterPortAdapter struct {
 var _ serviceinterfaces.AdminContentChapterPort = (*adminContentChapterPortAdapter)(nil)
 
 func newAdminContentChapterPort(repository adminContentChapterRepository) serviceinterfaces.AdminContentChapterPort {
+	if repository == nil {
+		return nil
+	}
 	return &adminContentChapterPortAdapter{repository: repository}
 }
 

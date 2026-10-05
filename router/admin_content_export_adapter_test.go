@@ -16,6 +16,11 @@ type adminContentBookRepositoryStub struct {
 	filter infrastructure.Filter
 }
 
+func TestAdminContentPortsSkipNilRepositories(t *testing.T) {
+	require.Nil(t, newAdminContentBookPort(nil))
+	require.Nil(t, newAdminContentChapterPort(nil))
+}
+
 func (s *adminContentBookRepositoryStub) List(_ context.Context, filter infrastructure.Filter) ([]*bookstore.Book, error) {
 	s.filter = filter
 	return nil, nil
