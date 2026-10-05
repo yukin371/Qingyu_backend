@@ -614,7 +614,7 @@ func TestUserService_ListUsers_ZeroPageSize(t *testing.T) {
 
 	req := &user2.ListUsersRequest{
 		Page:     1,
-		PageSize: 20, // 设置有效的页面大小
+		PageSize: 0, // 0 表示不限制分页
 	}
 
 	mockUserRepo.On("List", ctx, mock.Anything).Return(expectedUsers, nil)
@@ -627,6 +627,7 @@ func TestUserService_ListUsers_ZeroPageSize(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotNil(t, resp)
 	assert.Len(t, resp.Users, 0)
+	assert.Equal(t, 0, resp.TotalPages)
 
 	mockUserRepo.AssertExpectations(t)
 }

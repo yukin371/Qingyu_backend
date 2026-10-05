@@ -292,8 +292,11 @@ func (s *UserServiceImpl) ListUsers(ctx context.Context, req *user2.ListUsersReq
 	// 5. 转换用户列表为 DTO
 	userDTOs := ToUserDTOs(users)
 
-	// 6. 计算总页数
-	totalPages := int((total + int64(req.PageSize) - 1) / int64(req.PageSize))
+	// 6. 计算总页数。PageSize 为 0 表示不限制分页，不能参与除法。
+	totalPages := 0
+	if req.PageSize > 0 {
+		totalPages = int((total + int64(req.PageSize) - 1) / int64(req.PageSize))
+	}
 
 	return &user2.ListUsersResponse{
 		Users:      userDTOs,
