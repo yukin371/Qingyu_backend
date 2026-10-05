@@ -54,7 +54,7 @@ func TestDataValidator_ValidateNoOrphanedRecords_WithOrphanedReadingProgress(t *
 	orphanProgress := bson.D{
 		bson.E{Key: "_id", Value: primitive.NewObjectID()},
 		bson.E{Key: "user_id", Value: userID},
-		{"book_id", primitive.NewObjectID()}, // 不存在的书籍ID
+		bson.E{Key: "book_id", Value: primitive.NewObjectID()}, // 不存在的书籍ID
 		bson.E{Key: "chapter_id", Value: primitive.NewObjectID()},
 		bson.E{Key: "progress", Value: 0.5},
 		bson.E{Key: "created_at", Value: time.Now()},
@@ -110,9 +110,9 @@ func TestDataValidator_ValidateIDFormatConsistency_DetectsObjectIDInStringField(
 
 	like := bson.D{
 		bson.E{Key: "_id", Value: primitive.NewObjectID()},
-		{"user_id", userID.Hex()}, // 正确：使用 string (ObjectID.Hex())
+		bson.E{Key: "user_id", Value: userID.Hex()}, // 正确：使用 string (ObjectID.Hex())
 		bson.E{Key: "target_type", Value: "book"},
-		{"target_id", bookID.Hex()}, // 正确：使用 string
+		bson.E{Key: "target_id", Value: bookID.Hex()}, // 正确：使用 string
 		bson.E{Key: "created_at", Value: time.Now()},
 	}
 	_, err := testDB.Database.Collection("likes").InsertOne(context.Background(), like)
@@ -180,7 +180,7 @@ func TestDataValidator_ValidateReadingProgressOrphans(t *testing.T) {
 	orphanProgress := bson.D{
 		bson.E{Key: "_id", Value: primitive.NewObjectID()},
 		bson.E{Key: "user_id", Value: userID},
-		{"book_id", primitive.NewObjectID()}, // 不存在的书籍
+		bson.E{Key: "book_id", Value: primitive.NewObjectID()}, // 不存在的书籍
 		bson.E{Key: "chapter_id", Value: primitive.NewObjectID()},
 		bson.E{Key: "progress", Value: 0.5},
 		bson.E{Key: "created_at", Value: time.Now()},
@@ -212,7 +212,7 @@ func TestDataValidator_ValidateReadingHistoryOrphans(t *testing.T) {
 	orphanHistory := bson.D{
 		bson.E{Key: "_id", Value: primitive.NewObjectID()},
 		bson.E{Key: "user_id", Value: userID},
-		{"book_id", primitive.NewObjectID()}, // 不存在的书籍
+		bson.E{Key: "book_id", Value: primitive.NewObjectID()}, // 不存在的书籍
 		bson.E{Key: "chapter_id", Value: primitive.NewObjectID()},
 		bson.E{Key: "read_duration", Value: 100},
 		bson.E{Key: "progress", Value: 0.5},
@@ -246,7 +246,7 @@ func TestDataValidator_ValidateBookmarkOrphans(t *testing.T) {
 	orphanBookmark := bson.D{
 		bson.E{Key: "_id", Value: primitive.NewObjectID()},
 		bson.E{Key: "user_id", Value: userID},
-		{"book_id", primitive.NewObjectID()}, // 不存在的书籍
+		bson.E{Key: "book_id", Value: primitive.NewObjectID()}, // 不存在的书籍
 		bson.E{Key: "chapter_id", Value: primitive.NewObjectID()},
 		bson.E{Key: "position", Value: 100},
 		bson.E{Key: "color", Value: "yellow"},
@@ -280,7 +280,7 @@ func TestDataValidator_ValidateLikeOrphans(t *testing.T) {
 		bson.E{Key: "_id", Value: primitive.NewObjectID()},
 		bson.E{Key: "user_id", Value: userID.Hex()},
 		bson.E{Key: "target_type", Value: "book"},
-		{"target_id", primitive.NewObjectID().Hex()}, // 不存在的书籍
+		bson.E{Key: "target_id", Value: primitive.NewObjectID().Hex()}, // 不存在的书籍
 		bson.E{Key: "created_at", Value: time.Now()},
 	}
 	_, err := testDB.Database.Collection("likes").InsertOne(context.Background(), orphanLike)
@@ -305,7 +305,7 @@ func TestDataValidator_ValidateNotificationOrphans(t *testing.T) {
 	// 创建孤儿通知（引用不存在的用户）
 	orphanNotification := bson.D{
 		bson.E{Key: "_id", Value: primitive.NewObjectID().Hex()},
-		{"user_id", primitive.NewObjectID().Hex()}, // 不存在的用户
+		bson.E{Key: "user_id", Value: primitive.NewObjectID().Hex()}, // 不存在的用户
 		bson.E{Key: "type", Value: "system"},
 		bson.E{Key: "priority", Value: "normal"},
 		bson.E{Key: "title", Value: "Test"},

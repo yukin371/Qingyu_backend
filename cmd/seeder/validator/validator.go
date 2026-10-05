@@ -264,13 +264,13 @@ func (v *DataValidator) ValidateLikeOrphans(ctx context.Context) (int64, error) 
 	// Like 使用 string 类型的 user_id 和 target_id，需要先转换为 ObjectID 再关联
 	pipeline := mongo.Pipeline{
 		bson.D{{Key: "$addFields", Value: bson.D{
-			{"user_oid", bson.D{{Key: "$convert", Value: bson.D{
+			bson.E{Key: "user_oid", Value: bson.D{{Key: "$convert", Value: bson.D{
 				bson.E{Key: "input", Value: "$user_id"},
 				bson.E{Key: "to", Value: "objectId"},
 				bson.E{Key: "onError", Value: nil},
 				bson.E{Key: "onNull", Value: nil},
 			}}}},
-			{"target_oid", bson.D{{Key: "$convert", Value: bson.D{
+			bson.E{Key: "target_oid", Value: bson.D{{Key: "$convert", Value: bson.D{
 				bson.E{Key: "input", Value: "$target_id"},
 				bson.E{Key: "to", Value: "objectId"},
 				bson.E{Key: "onError", Value: nil},
@@ -290,7 +290,7 @@ func (v *DataValidator) ValidateLikeOrphans(ctx context.Context) (int64, error) 
 			bson.E{Key: "as", Value: "book"},
 		}}},
 		bson.D{{Key: "$match", Value: bson.D{
-			{"$or", bson.A{
+			bson.E{Key: "$or", Value: bson.A{
 				bson.D{{Key: "user", Value: bson.D{{Key: "$size", Value: 0}}}},
 				bson.D{{Key: "book", Value: bson.D{{Key: "$size", Value: 0}}}},
 			}},
