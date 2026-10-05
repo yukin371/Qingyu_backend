@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/csv"
 	"fmt"
+	"sort"
 	"strconv"
 
 	"github.com/xuri/excelize/v2"
@@ -216,21 +217,33 @@ type ExportDataAdapter struct {
 	data []map[string]string
 }
 
+var _ Exportable = (*ExportDataAdapter)(nil)
+
 // NewExportDataAdapter 创建导出数据适配器
 func NewExportDataAdapter(data []map[string]string) *ExportDataAdapter {
 	return &ExportDataAdapter{data: data}
 }
 
-// ToExportRow 实现Exportable接口
-func (a *ExportDataAdapter) ToExportRow(index int) []string {
+// ToExportRow 实现Exportable接口，默认导出第一行。
+func (a *ExportDataAdapter) ToExportRow() []string {
+	return a.ToExportRowAt(0)
+}
+
+// ToExportRowAt 按索引获取导出行，供批量适配场景使用。
+func (a *ExportDataAdapter) ToExportRowAt(index int) []string {
 	if index >= len(a.data) {
 		return []string{}
 	}
-	row := make([]string, len(a.data[index]))
-	i := 0
-	for _, v := range a.data[index] {
-		row[i] = v
-		i++
+
+	keys := make([]string, 0, len(a.data[index]))
+	for key := range a.data[index] {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+
+	row := make([]string, 0, len(keys))
+	for _, key := range keys {
+		row = append(row, a.data[index][key])
 	}
 	return row
 }

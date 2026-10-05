@@ -410,18 +410,18 @@ func TestExportService_ExportDataAdapter_ToExportRow(t *testing.T) {
 	adapter := NewExportDataAdapter(data)
 
 	// 测试有效索引
-	row := adapter.ToExportRow(0)
+	row := adapter.ToExportRowAt(0)
 	assert.NotNil(t, row)
 	assert.Equal(t, 3, len(row))
 
 	// 测试索引越界
-	row = adapter.ToExportRow(10)
+	row = adapter.ToExportRowAt(10)
 	assert.NotNil(t, row)
 	assert.Equal(t, 0, len(row))
 
 	// 测试空数据
 	emptyAdapter := NewExportDataAdapter([]map[string]string{})
-	row = emptyAdapter.ToExportRow(0)
+	row = emptyAdapter.ToExportRowAt(0)
 	assert.NotNil(t, row)
 	assert.Equal(t, 0, len(row))
 }
