@@ -101,10 +101,7 @@ func ErrorResponseWithRequestID(code int, message string, err error, requestID s
 
 // PaginatedResponseHelper 分页响应辅助函数
 func PaginatedResponseHelper(data interface{}, total int64, page, pageSize int, message string) PaginatedResponse {
-	totalPages := int(total) / pageSize
-	if int(total)%pageSize > 0 {
-		totalPages++
-	}
+	totalPages := paginationTotalPages(total, pageSize)
 
 	return PaginatedResponse{
 		Code:      200,
@@ -124,10 +121,7 @@ func PaginatedResponseHelper(data interface{}, total int64, page, pageSize int, 
 
 // PaginatedResponseWithRequestID 带RequestID的分页响应
 func PaginatedResponseWithRequestID(data interface{}, total int64, page, pageSize int, message, requestID string) PaginatedResponse {
-	totalPages := int(total) / pageSize
-	if int(total)%pageSize > 0 {
-		totalPages++
-	}
+	totalPages := paginationTotalPages(total, pageSize)
 
 	return PaginatedResponse{
 		Code:      200,
@@ -148,10 +142,7 @@ func PaginatedResponseWithRequestID(data interface{}, total int64, page, pageSiz
 
 // NewPagination 创建分页信息
 func NewPagination(total int64, page, pageSize int) *Pagination {
-	totalPages := int(total) / pageSize
-	if int(total)%pageSize > 0 {
-		totalPages++
-	}
+	totalPages := paginationTotalPages(total, pageSize)
 
 	return &Pagination{
 		Total:       total,
@@ -284,10 +275,7 @@ func ValidationError(c *gin.Context, err error) {
 // Paginated 返回分页响应
 // 统一的分页响应格式
 func Paginated(c *gin.Context, data interface{}, total int64, page, pageSize int, message string) {
-	totalPages := int(total) / pageSize
-	if int(total)%pageSize > 0 {
-		totalPages++
-	}
+	totalPages := paginationTotalPages(total, pageSize)
 
 	c.JSON(http.StatusOK, PaginatedResponse{
 		Code:      200,
@@ -304,6 +292,18 @@ func Paginated(c *gin.Context, data interface{}, total int64, page, pageSize int
 			HasPrevious: page > 1,
 		},
 	})
+}
+
+func paginationTotalPages(total int64, pageSize int) int {
+	if pageSize <= 0 {
+		return 0
+	}
+
+	totalPages := int(total) / pageSize
+	if int(total)%pageSize > 0 {
+		totalPages++
+	}
+	return totalPages
 }
 
 // SuccessWithRequestID 返回带RequestID的成功响应

@@ -247,6 +247,27 @@ func TestPaginated_PaginatedResponse(t *testing.T) {
 	assert.Contains(t, w.Body.String(), `"request_id":"test-request-paginated"`)
 }
 
+func TestPaginationHelpers_ZeroPageSize(t *testing.T) {
+	t.Run("constructors do not divide by zero", func(t *testing.T) {
+		assert.NotPanics(t, func() {
+			assert.Equal(t, 0, PaginatedResponseHelper(nil, 100, 1, 0, "成功").Pagination.TotalPages)
+			assert.Equal(t, 0, PaginatedResponseWithRequestID(nil, 100, 1, 0, "成功", "request").Pagination.TotalPages)
+			assert.Equal(t, 0, NewPagination(100, 1, 0).TotalPages)
+		})
+	})
+
+	t.Run("gin response does not panic", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		c, _ := gin.CreateTestContext(w)
+
+		assert.NotPanics(t, func() {
+			Paginated(c, nil, 100, 1, 0, "成功")
+		})
+		assert.Equal(t, http.StatusOK, w.Code)
+		assert.Contains(t, w.Body.String(), `"total_pages":0`)
+	})
+}
+
 // TestTimestampIsMilliseconds 验证时间戳是毫秒级
 func TestTimestampIsMilliseconds(t *testing.T) {
 	w := httptest.NewRecorder()
