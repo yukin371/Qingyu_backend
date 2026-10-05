@@ -269,6 +269,9 @@ func (s *CommentService) GetCommentDetail(ctx context.Context, commentID string)
 
 // UpdateComment 更新评论
 func (s *CommentService) UpdateComment(ctx context.Context, userID, commentID, content string) error {
+	if len(content) < 1 || len(content) > 500 {
+		return fmt.Errorf("评论内容长度必须在1-500字之间")
+	}
 	return s.UpdateCommentFields(ctx, userID, commentID, &content, nil)
 }
 
