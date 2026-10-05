@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	"Qingyu_backend/api/v1/shared"
 	readerModels "Qingyu_backend/models/reader"
 	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/interfaces"
@@ -47,14 +48,13 @@ func (api *BookmarkAPI) CreateBookmark(c *gin.Context) {
 	}
 
 	// 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "请先登录")
+	userID, ok := shared.GetUserIDWithMessage(c, "请先登录")
+	if !ok {
 		return
 	}
 
 	// 解析ID
-	bookmark, err := req.ToBookmark(userID.(string))
+	bookmark, err := req.ToBookmark(userID)
 	if err != nil {
 		response.BadRequest(c, "参数错误", err.Error())
 		return
@@ -92,9 +92,8 @@ func (api *BookmarkAPI) CreateBookmark(c *gin.Context) {
 //	@Router			/api/v1/reader/books/{bookId}/bookmarks [get]
 func (api *BookmarkAPI) GetBookmarks(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "请先登录")
+	userID, ok := shared.GetUserIDWithMessage(c, "请先登录")
+	if !ok {
 		return
 	}
 
@@ -125,9 +124,9 @@ func (api *BookmarkAPI) GetBookmarks(c *gin.Context) {
 	var err error
 
 	if bookID != "" {
-		result, err = api.bookmarkService.GetBookBookmarks(c.Request.Context(), userID.(string), bookID, page, size)
+		result, err = api.bookmarkService.GetBookBookmarks(c.Request.Context(), userID, bookID, page, size)
 	} else {
-		result, err = api.bookmarkService.GetUserBookmarks(c.Request.Context(), userID.(string), filter, page, size)
+		result, err = api.bookmarkService.GetUserBookmarks(c.Request.Context(), userID, filter, page, size)
 	}
 
 	if err != nil {
@@ -250,14 +249,13 @@ func (api *BookmarkAPI) DeleteBookmark(c *gin.Context) {
 //	@Router			/api/v1/reader/bookmarks/export [get]
 func (api *BookmarkAPI) ExportBookmarks(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "请先登录")
+	userID, ok := shared.GetUserIDWithMessage(c, "请先登录")
+	if !ok {
 		return
 	}
 
 	format := c.DefaultQuery("format", "json")
-	data, contentType, err := api.bookmarkService.ExportBookmarks(c.Request.Context(), userID.(string), format)
+	data, contentType, err := api.bookmarkService.ExportBookmarks(c.Request.Context(), userID, format)
 	if err != nil {
 		c.Error(err)
 		return
@@ -281,13 +279,12 @@ func (api *BookmarkAPI) ExportBookmarks(c *gin.Context) {
 //	@Router			/api/v1/reader/bookmarks/stats [get]
 func (api *BookmarkAPI) GetBookmarkStats(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "请先登录")
+	userID, ok := shared.GetUserIDWithMessage(c, "请先登录")
+	if !ok {
 		return
 	}
 
-	stats, err := api.bookmarkService.GetBookmarkStats(c.Request.Context(), userID.(string))
+	stats, err := api.bookmarkService.GetBookmarkStats(c.Request.Context(), userID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -311,9 +308,8 @@ func (api *BookmarkAPI) GetBookmarkStats(c *gin.Context) {
 //	@Router			/api/v1/reader/bookmarks/search [get]
 func (api *BookmarkAPI) SearchBookmarks(c *gin.Context) {
 	// 获取用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "请先登录")
+	userID, ok := shared.GetUserIDWithMessage(c, "请先登录")
+	if !ok {
 		return
 	}
 
@@ -326,7 +322,7 @@ func (api *BookmarkAPI) SearchBookmarks(c *gin.Context) {
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	size, _ := strconv.Atoi(c.DefaultQuery("size", "20"))
 
-	result, err := api.bookmarkService.SearchBookmarks(c.Request.Context(), userID.(string), keyword, page, size)
+	result, err := api.bookmarkService.SearchBookmarks(c.Request.Context(), userID, keyword, page, size)
 	if err != nil {
 		c.Error(err)
 		return
