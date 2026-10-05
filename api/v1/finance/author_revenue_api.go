@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/api/v1/shared"
 	financeModel "Qingyu_backend/models/finance"
 	"Qingyu_backend/pkg/response"
 	financeService "Qingyu_backend/service/finance"
@@ -96,20 +97,20 @@ func mapRevenueDetail(item *financeModel.RevenueDetail) gin.H {
 	}
 
 	return gin.H{
-		"id":                  objectIDToString(item.ID),
-		"author_id":           item.AuthorID,
-		"book_id":             objectIDToString(item.BookID),
-		"book_title":          item.BookTitle,
-		"type":                item.Type,
-		"total_amount":        item.TotalAmount.ToYuan(),
-		"total_amount_cents":  item.TotalAmount.ToCents(),
-		"total_income":        item.TotalIncome.ToYuan(),
-		"total_income_cents":  item.TotalIncome.ToCents(),
-		"transaction_count":   item.TransactionCount,
-		"first_earning_at":    item.FirstEarningAt,
-		"last_earning_at":     item.LastEarningAt,
-		"created_at":          item.CreatedAt,
-		"updated_at":          item.UpdatedAt,
+		"id":                 objectIDToString(item.ID),
+		"author_id":          item.AuthorID,
+		"book_id":            objectIDToString(item.BookID),
+		"book_title":         item.BookTitle,
+		"type":               item.Type,
+		"total_amount":       item.TotalAmount.ToYuan(),
+		"total_amount_cents": item.TotalAmount.ToCents(),
+		"total_income":       item.TotalIncome.ToYuan(),
+		"total_income_cents": item.TotalIncome.ToCents(),
+		"transaction_count":  item.TransactionCount,
+		"first_earning_at":   item.FirstEarningAt,
+		"last_earning_at":    item.LastEarningAt,
+		"created_at":         item.CreatedAt,
+		"updated_at":         item.UpdatedAt,
 	}
 }
 
@@ -119,23 +120,23 @@ func mapRevenueStatistics(item *financeModel.RevenueStatistics) gin.H {
 	}
 
 	return gin.H{
-		"author_id":               item.AuthorID,
-		"period":                  item.Period,
-		"period_start":            item.PeriodStart,
-		"period_end":              item.PeriodEnd,
-		"total_revenue":           item.TotalRevenue.ToYuan(),
-		"total_revenue_cents":     item.TotalRevenue.ToCents(),
-		"chapter_income":          item.ChapterIncome.ToYuan(),
-		"chapter_income_cents":    item.ChapterIncome.ToCents(),
-		"reward_income":           item.RewardIncome.ToYuan(),
-		"reward_income_cents":     item.RewardIncome.ToCents(),
-		"vip_reading_income":      item.VIPReadingIncome.ToYuan(),
+		"author_id":                item.AuthorID,
+		"period":                   item.Period,
+		"period_start":             item.PeriodStart,
+		"period_end":               item.PeriodEnd,
+		"total_revenue":            item.TotalRevenue.ToYuan(),
+		"total_revenue_cents":      item.TotalRevenue.ToCents(),
+		"chapter_income":           item.ChapterIncome.ToYuan(),
+		"chapter_income_cents":     item.ChapterIncome.ToCents(),
+		"reward_income":            item.RewardIncome.ToYuan(),
+		"reward_income_cents":      item.RewardIncome.ToCents(),
+		"vip_reading_income":       item.VIPReadingIncome.ToYuan(),
 		"vip_reading_income_cents": item.VIPReadingIncome.ToCents(),
-		"transaction_count":       item.TransactionCount,
-		"reader_count":            item.ReaderCount,
-		"book_count":              item.BookCount,
-		"created_at":              item.CreatedAt,
-		"updated_at":              item.UpdatedAt,
+		"transaction_count":        item.TransactionCount,
+		"reader_count":             item.ReaderCount,
+		"book_count":               item.BookCount,
+		"created_at":               item.CreatedAt,
+		"updated_at":               item.UpdatedAt,
 	}
 }
 
@@ -183,16 +184,15 @@ func mapSettlement(item *financeModel.Settlement) gin.H {
 //	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/author/earnings [get]
 func (api *AuthorRevenueAPI) GetEarnings(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未认证")
+	userID, ok := shared.GetUserIDWithMessage(c, "未认证")
+	if !ok {
 		return
 	}
 
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
 
-	earnings, total, err := api.revenueService.GetEarnings(c.Request.Context(), userID.(string), page, pageSize)
+	earnings, total, err := api.revenueService.GetEarnings(c.Request.Context(), userID, page, pageSize)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -220,9 +220,8 @@ func (api *AuthorRevenueAPI) GetEarnings(c *gin.Context) {
 //	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/author/earnings/{bookId} [get]
 func (api *AuthorRevenueAPI) GetBookEarnings(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未认证")
+	userID, ok := shared.GetUserIDWithMessage(c, "未认证")
+	if !ok {
 		return
 	}
 
@@ -232,7 +231,7 @@ func (api *AuthorRevenueAPI) GetBookEarnings(c *gin.Context) {
 		return
 	}
 
-	earnings, total, err := api.revenueService.GetBookEarnings(c.Request.Context(), userID.(string), bookID)
+	earnings, total, err := api.revenueService.GetBookEarnings(c.Request.Context(), userID, bookID)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -262,16 +261,15 @@ func (api *AuthorRevenueAPI) GetBookEarnings(c *gin.Context) {
 //	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/author/withdrawals [get]
 func (api *AuthorRevenueAPI) GetWithdrawals(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未认证")
+	userID, ok := shared.GetUserIDWithMessage(c, "未认证")
+	if !ok {
 		return
 	}
 
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
 
-	withdrawals, total, err := api.revenueService.GetWithdrawals(c.Request.Context(), userID.(string), page, pageSize)
+	withdrawals, total, err := api.revenueService.GetWithdrawals(c.Request.Context(), userID, page, pageSize)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -308,9 +306,8 @@ type WithdrawRequest struct {
 //	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/author/withdraw [post]
 func (api *AuthorRevenueAPI) Withdraw(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未认证")
+	userID, ok := shared.GetUserIDWithMessage(c, "未认证")
+	if !ok {
 		return
 	}
 
@@ -329,7 +326,7 @@ func (api *AuthorRevenueAPI) Withdraw(c *gin.Context) {
 	}
 	withdrawal, err := api.revenueService.CreateWithdrawalRequest(
 		c.Request.Context(),
-		userID.(string),
+		userID,
 		req.Amount,
 		req.Method,
 		accountInfo,
@@ -355,16 +352,15 @@ func (api *AuthorRevenueAPI) Withdraw(c *gin.Context) {
 //	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/author/revenue-details [get]
 func (api *AuthorRevenueAPI) GetRevenueDetails(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未认证")
+	userID, ok := shared.GetUserIDWithMessage(c, "未认证")
+	if !ok {
 		return
 	}
 
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
 
-	details, total, err := api.revenueService.GetRevenueDetails(c.Request.Context(), userID.(string), page, pageSize)
+	details, total, err := api.revenueService.GetRevenueDetails(c.Request.Context(), userID, page, pageSize)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -390,15 +386,14 @@ func (api *AuthorRevenueAPI) GetRevenueDetails(c *gin.Context) {
 //	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/author/revenue-statistics [get]
 func (api *AuthorRevenueAPI) GetRevenueStatistics(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未认证")
+	userID, ok := shared.GetUserIDWithMessage(c, "未认证")
+	if !ok {
 		return
 	}
 
 	period := c.DefaultQuery("period", "monthly")
 
-	statistics, err := api.revenueService.GetRevenueStatistics(c.Request.Context(), userID.(string), period)
+	statistics, err := api.revenueService.GetRevenueStatistics(c.Request.Context(), userID, period)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -425,16 +420,15 @@ func (api *AuthorRevenueAPI) GetRevenueStatistics(c *gin.Context) {
 //	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/author/settlements [get]
 func (api *AuthorRevenueAPI) GetSettlements(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未认证")
+	userID, ok := shared.GetUserIDWithMessage(c, "未认证")
+	if !ok {
 		return
 	}
 
 	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
 	pageSize, _ := strconv.Atoi(c.DefaultQuery("page_size", "20"))
 
-	settlements, total, err := api.revenueService.GetSettlements(c.Request.Context(), userID.(string), page, pageSize)
+	settlements, total, err := api.revenueService.GetSettlements(c.Request.Context(), userID, page, pageSize)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -486,13 +480,12 @@ func (api *AuthorRevenueAPI) GetSettlement(c *gin.Context) {
 //	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/author/tax-info [get]
 func (api *AuthorRevenueAPI) GetTaxInfo(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未认证")
+	userID, ok := shared.GetUserIDWithMessage(c, "未认证")
+	if !ok {
 		return
 	}
 
-	taxInfo, err := api.revenueService.GetTaxInfo(c.Request.Context(), userID.(string))
+	taxInfo, err := api.revenueService.GetTaxInfo(c.Request.Context(), userID)
 	if err != nil {
 		response.InternalError(c, err)
 		return
@@ -521,9 +514,8 @@ type UpdateTaxInfoRequest struct {
 //	@Success 200 {object} response.APIResponse
 //	@Router			/api/v1/finance/author/tax-info [put]
 func (api *AuthorRevenueAPI) UpdateTaxInfo(c *gin.Context) {
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未认证")
+	userID, ok := shared.GetUserIDWithMessage(c, "未认证")
+	if !ok {
 		return
 	}
 
@@ -541,7 +533,7 @@ func (api *AuthorRevenueAPI) UpdateTaxInfo(c *gin.Context) {
 		TaxRate:  0.00, // 根据实际情况设置税率
 	}
 
-	err := api.revenueService.UpdateTaxInfo(c.Request.Context(), userID.(string), taxInfo)
+	err := api.revenueService.UpdateTaxInfo(c.Request.Context(), userID, taxInfo)
 	if err != nil {
 		response.InternalError(c, err)
 		return
