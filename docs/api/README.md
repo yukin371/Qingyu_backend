@@ -86,9 +86,20 @@
 - 实施落地请回看 [../implementation/03-reading/READING_STATS_IMPLEMENTATION.md](../implementation/03-reading/READING_STATS_IMPLEMENTATION.md) 与 [../implementation/06-bookstore/BOOKSTORE_API_IMPLEMENTATION_SUMMARY.md](../implementation/06-bookstore/BOOKSTORE_API_IMPLEMENTATION_SUMMARY.md)。
 - 测试入口请回看 [../testing/README.md](../testing/README.md)。
 
+## 发布投影契约
+
+发布记录的 `externalId` 与书城章节的 `projectChapterId` 是 workflow 发布投影的跨模块字段：
+
+- `PublicationRecord.externalId`：项目发布记录返回书城书籍 ID；文档发布记录返回书城章节 ID。
+- `bookstore.Chapter.projectChapterId`：书城章节回指 writer 文档 ID，前端用它恢复文档正文映射。
+- `GET /api/v1/writer/projects/{id}/publications` 的 `id` 是 writer 项目 ID；分页参数使用 `page` 与 `pageSize`。
+- `GET /api/v1/bookstore/books/{id}/chapters/published` 的 `id` 是书城书籍 ID；分页参数使用 `page` 与 `size`。
+
+这两个字段由后端 DTO/模型拥有，Swagger 生成物必须从 Go 注释和类型生成；前端 adapter 只负责读取和校验，不重新定义字段语义。跨部署实现尚未由集成测试完全覆盖时，迁移计划中的 TODO 不得标记为完成。
+
 ## 已知缺口
 
 - 旧版 `frontend/` 子目录入口已不存在；如果需要“前端专用 API 速查模板”，当前记为 `TBD`。
-  - 确认路径：优先检查父仓 `docs/plans/submodules/frontend/` 与前端仓 `Qingyu_fronted` 中是否已有稳定 owner，再决定是否在本目录补新的联调索引。
+  - 确认路径：优先检查父仓 `docs/plans/submodules/frontend/` 与前端仓 `Qingyu_frontend` 中是否已有稳定 owner，再决定是否在本目录补新的联调索引。
 - 旧版 Postman 集合链接已失效；如果仍需集合文件，当前记为 `TBD`。
   - 确认路径：优先检查根仓或 API 生成链路是否已有可导出产物，不在本目录重复制造第二套入口。

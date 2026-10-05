@@ -56,7 +56,7 @@ func respondStatsNotImplemented(c *gin.Context, message string) {
 //	@Tags			用户管理-统计
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	response.APIResponse{data=stats.UserStats}
+//	@Success		200	{object}	response.APIResponse{data=user.UserStats}
 //	@Failure		401	{object}	response.APIResponse
 //	@Failure		500	{object}	response.APIResponse
 //	@Router			/api/v1/user/stats/my [get]
@@ -85,7 +85,7 @@ func (h *StatsHandler) GetMyStats(c *gin.Context) {
 //	@Tags			用户管理-统计
 //	@Accept			json
 //	@Produce		json
-//	@Success		200	{object}	response.APIResponse{data=stats.ContentStats}
+//	@Success		200	{object}	response.APIResponse{data=writer.ContentStats}
 //	@Failure		401	{object}	response.APIResponse
 //	@Failure		500	{object}	response.APIResponse
 //	@Router			/api/v1/user/stats/my/content [get]
@@ -115,7 +115,7 @@ func (h *StatsHandler) GetMyContentStats(c *gin.Context) {
 //	@Accept			json
 //	@Produce		json
 //	@Param			days	query		int	false	"统计天数（默认7）"
-//	@Success		200	{object}	response.APIResponse{data=stats.ActivityStats}
+//	@Success		501	{object}	response.APIResponse
 //	@Failure		401	{object}	response.APIResponse
 //	@Failure		500	{object}	response.APIResponse
 //	@Router			/api/v1/user/stats/my/activity [get]
@@ -137,7 +137,7 @@ func (h *StatsHandler) GetMyActivityStats(c *gin.Context) {
 //	@Produce		json
 //	@Param			start_date	query		string	false	"开始日期（YYYY-MM-DD）"
 //	@Param			end_date	query		string	false	"结束日期（YYYY-MM-DD）"
-//	@Success		200			{object}	response.APIResponse{data=stats.RevenueStats}
+//	@Success		501		{object}	response.APIResponse
 //	@Failure		401			{object}	response.APIResponse
 //	@Failure		500			{object}	response.APIResponse
 //	@Router			/api/v1/user/stats/my/revenue [get]

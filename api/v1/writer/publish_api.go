@@ -37,7 +37,7 @@ func isValidProjectID(id string) bool {
 // @Produce json
 // @Param id path string true "项目ID"
 // @Param request body object true "发布请求"
-// @Success 202 {object} response.APIResponse
+// @Success 202 {object} response.APIResponse{data=interfaces.PublicationRecord}
 // @Failure 400 {object} response.APIResponse
 // @Failure 404 {object} response.APIResponse
 // @Router /api/v1/writer/projects/{id}/publish [post]
@@ -131,7 +131,7 @@ func (api *PublishApi) GetProjectPublicationStatus(c *gin.Context) {
 // @Param id path string true "文档ID"
 // @Param projectId query string false "项目ID（可选，如不提供则从文档中获取）"
 // @Param request body object true "发布请求"
-// @Success 202 {object} response.APIResponse
+// @Success 202 {object} response.APIResponse{data=interfaces.PublicationRecord}
 // @Failure 400 {object} response.APIResponse
 // @Failure 404 {object} response.APIResponse
 // @Router /api/v1/writer/documents/{id}/publish [post]
@@ -212,7 +212,7 @@ func (api *PublishApi) UpdateDocumentPublishStatus(c *gin.Context) {
 // @Produce json
 // @Param id path string true "项目ID"
 // @Param request body object true "批量发布请求"
-// @Success 202 {object} response.APIResponse
+// @Success 202 {object} response.APIResponse{data=interfaces.BatchPublishResult}
 // @Failure 400 {object} response.APIResponse
 // @Failure 404 {object} response.APIResponse
 // @Router /api/v1/writer/projects/{id}/documents/batch-publish [post]
@@ -247,8 +247,8 @@ func (api *PublishApi) BatchPublishDocuments(c *gin.Context) {
 // @Produce json
 // @Param id path string true "项目ID"
 // @Param page query int false "页码" default(1)
-// @Param pageSize query int false "每页数量" default(20)
-// @Success 200 {object} response.APIResponse
+// @Param pageSize query int false "每页数量（兼容 size、page_size）" default(20)
+// @Success 200 {object} response.PaginatedResponse{data=[]interfaces.PublicationRecord}
 // @Failure 400 {object} response.APIResponse
 // @Router /api/v1/writer/projects/{id}/publications [get]
 func (api *PublishApi) GetPublicationRecords(c *gin.Context) {
@@ -279,7 +279,7 @@ func (api *PublishApi) GetPublicationRecords(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path string true "记录ID"
-// @Success 200 {object} response.APIResponse
+// @Success 200 {object} response.APIResponse{data=interfaces.PublicationRecord}
 // @Failure 404 {object} response.APIResponse
 // @Router /api/v1/writer/publications/{id} [get]
 func (api *PublishApi) GetPublicationRecord(c *gin.Context) {

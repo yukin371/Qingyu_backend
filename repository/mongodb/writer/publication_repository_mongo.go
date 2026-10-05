@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"Qingyu_backend/models/dto"
-	"Qingyu_backend/repository"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -107,12 +106,11 @@ func (r *MongoPublicationRepository) FindByProjectID(ctx context.Context, projec
 		pageSize = 20
 	}
 
-	projectObjectID, err := repository.ParseID(projectID)
-	if err != nil {
-		return nil, 0, fmt.Errorf("invalid project ID: %w", err)
-	}
-
-	filter := bson.M{"project_id": projectObjectID}
+	// publicationRecordDocument.ProjectID is intentionally stored as a string.
+	// Keep the read filter aligned with Create/Update and with
+	// FindPublishedByProjectID; querying with an ObjectID silently returns no
+	// records for otherwise valid projects.
+	filter := bson.M{"project_id": projectID}
 	total, err := r.collection.CountDocuments(ctx, filter)
 	if err != nil {
 		return nil, 0, err
