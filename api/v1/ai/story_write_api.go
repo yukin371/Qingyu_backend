@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	aiService "Qingyu_backend/service/ai"
-	writerRepo "Qingyu_backend/repository/interfaces/writer"
+	serviceInterfaces "Qingyu_backend/service/interfaces"
 
 	"Qingyu_backend/pkg/response"
 
@@ -15,15 +15,15 @@ import (
 // StoryWriteApi 故事上下文写作 API
 type StoryWriteApi struct {
 	contextEngine *aiService.StoryContextEngine
-	quotaService *aiService.QuotaService
-	documentRepo writerRepo.DocumentRepository
+	quotaService  *aiService.QuotaService
+	documentRepo  serviceInterfaces.DocumentSceneStatePort
 }
 
 // NewStoryWriteApi 创建故事上下文写作 API 实例
 func NewStoryWriteApi(
 	contextEngine *aiService.StoryContextEngine,
 	quotaService *aiService.QuotaService,
-	documentRepo writerRepo.DocumentRepository,
+	documentRepo serviceInterfaces.DocumentSceneStatePort,
 ) *StoryWriteApi {
 	return &StoryWriteApi{
 		contextEngine: contextEngine,
@@ -94,11 +94,11 @@ func (api *StoryWriteApi) Generate(c *gin.Context) {
 
 	// 构建 gRPC 请求
 	grpcReq := &aiService.StoryWriteRequest{
-		ProjectID:      req.ProjectID,
-		DocumentID:     req.DocumentID,
-		Mode:           req.Mode,
-		Instruction:    req.Instruction,
-		SelectedText:   req.SelectedText,
+		ProjectID:       req.ProjectID,
+		DocumentID:      req.DocumentID,
+		Mode:            req.Mode,
+		Instruction:     req.Instruction,
+		SelectedText:    req.SelectedText,
 		AssembledPrompt: prompt,
 		Options: &aiService.GenerateOptions{
 			Model:       "glm-4-flash",
@@ -117,11 +117,11 @@ func (api *StoryWriteApi) Generate(c *gin.Context) {
 
 	// 返回生成结果
 	response.SuccessWithMessage(c, "AI 生成成功", gin.H{
-		"content":       grpcResp.Content,
-		"tokensUsed":    grpcResp.TokensUsed,
-		"model":         grpcResp.Model,
-		"generatedAt":   grpcResp.GeneratedAt,
-		"contextStats":  grpcResp.ContextStats,
+		"content":      grpcResp.Content,
+		"tokensUsed":   grpcResp.TokensUsed,
+		"model":        grpcResp.Model,
+		"generatedAt":  grpcResp.GeneratedAt,
+		"contextStats": grpcResp.ContextStats,
 	})
 }
 
@@ -191,7 +191,7 @@ func (api *StoryWriteApi) UpdateSceneState(c *gin.Context) {
 	// 更新文档的场景状态
 	if err := api.documentRepo.Update(
 		c.Request.Context(), documentID, map[string]interface{}{
-			"scene_goal":       req.SceneGoal,
+			"scene_goal":      req.SceneGoal,
 			"active_conflict": req.ActiveConflict,
 		},
 	); err != nil {

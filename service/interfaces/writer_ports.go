@@ -23,3 +23,8 @@ type WriterStatsBookPort interface {
 	GetByID(ctx context.Context, id string) (*bookstoreModel.Book, error)
 	GetByProjectID(ctx context.Context, projectID string) (*bookstoreModel.Book, error)
 }
+
+// DocumentSceneStatePort 是 AI 场景状态更新所需的最小文档写入接口。
+type DocumentSceneStatePort interface {
+	Update(ctx context.Context, id string, updates map[string]interface{}) error
+}
