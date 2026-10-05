@@ -26,12 +26,22 @@ func NewMongoAnnotationRepository(db *mongo.Database) *MongoAnnotationRepository
 	}
 }
 
-func annotationOwnerFilter(userID string) (primitive.ObjectID, error) {
+func annotationOwnerFilter(userID string) (interface{}, error) {
 	ownerID, err := primitive.ObjectIDFromHex(userID)
 	if err != nil {
-		return primitive.NilObjectID, fmt.Errorf("标注不存在")
+		return nil, fmt.Errorf("标注不存在")
 	}
-	return ownerID, nil
+	// Keep legacy string-backed records readable while canonical writes use ObjectID.
+	return bson.M{"$in": []interface{}{ownerID, userID}}, nil
+}
+
+func annotationIDMatch(field, value string) (interface{}, error) {
+	id, err := primitive.ObjectIDFromHex(value)
+	if err != nil {
+		return nil, fmt.Errorf("无效的%s", field)
+	}
+	// Existing databases may contain string IDs; canonical records use ObjectID.
+	return bson.M{"$in": []interface{}{id, value}}, nil
 }
 
 // Create 创建标注
@@ -123,9 +133,17 @@ func (r *MongoAnnotationRepository) Delete(ctx context.Context, userID, id strin
 
 // GetByUserAndBook 获取用户在某本书的所有标注
 func (r *MongoAnnotationRepository) GetByUserAndBook(ctx context.Context, userID, bookID string) ([]*reader.Annotation, error) {
+	owner, err := annotationIDMatch("用户ID", userID)
+	if err != nil {
+		return nil, err
+	}
+	book, err := annotationIDMatch("书籍ID", bookID)
+	if err != nil {
+		return nil, err
+	}
 	filter := bson.M{
-		"user_id": userID,
-		"book_id": bookID,
+		"user_id": owner,
+		"book_id": book,
 	}
 	opts := options.Find().SetSort(bson.D{{Key: "created_at", Value: -1}})
 
@@ -145,10 +163,22 @@ func (r *MongoAnnotationRepository) GetByUserAndBook(ctx context.Context, userID
 
 // GetByUserAndChapter 获取用户在某章节的所有标注
 func (r *MongoAnnotationRepository) GetByUserAndChapter(ctx context.Context, userID, bookID, chapterID string) ([]*reader.Annotation, error) {
+	owner, err := annotationIDMatch("用户ID", userID)
+	if err != nil {
+		return nil, err
+	}
+	book, err := annotationIDMatch("书籍ID", bookID)
+	if err != nil {
+		return nil, err
+	}
+	chapter, err := annotationIDMatch("章节ID", chapterID)
+	if err != nil {
+		return nil, err
+	}
 	filter := bson.M{
-		"user_id":    userID,
-		"book_id":    bookID,
-		"chapter_id": chapterID,
+		"user_id":    owner,
+		"book_id":    book,
+		"chapter_id": chapter,
 	}
 	opts := options.Find().SetSort(bson.D{{Key: "start_offset", Value: 1}})
 
@@ -168,9 +198,17 @@ func (r *MongoAnnotationRepository) GetByUserAndChapter(ctx context.Context, use
 
 // GetByType 根据类型获取标注
 func (r *MongoAnnotationRepository) GetByType(ctx context.Context, userID, bookID string, annotationType string) ([]*reader.Annotation, error) {
+	owner, err := annotationIDMatch("用户ID", userID)
+	if err != nil {
+		return nil, err
+	}
+	book, err := annotationIDMatch("书籍ID", bookID)
+	if err != nil {
+		return nil, err
+	}
 	filter := bson.M{
-		"user_id": userID,
-		"book_id": bookID,
+		"user_id": owner,
+		"book_id": book,
 		"type":    annotationType,
 	}
 	opts := options.Find().SetSort(bson.D{{Key: "created_at", Value: -1}})
@@ -196,10 +234,22 @@ func (r *MongoAnnotationRepository) GetNotes(ctx context.Context, userID, bookID
 
 // GetNotesByChapter 获取章节笔记
 func (r *MongoAnnotationRepository) GetNotesByChapter(ctx context.Context, userID, bookID, chapterID string) ([]*reader.Annotation, error) {
+	owner, err := annotationIDMatch("用户ID", userID)
+	if err != nil {
+		return nil, err
+	}
+	book, err := annotationIDMatch("书籍ID", bookID)
+	if err != nil {
+		return nil, err
+	}
+	chapter, err := annotationIDMatch("章节ID", chapterID)
+	if err != nil {
+		return nil, err
+	}
 	filter := bson.M{
-		"user_id":    userID,
-		"book_id":    bookID,
-		"chapter_id": chapterID,
+		"user_id":    owner,
+		"book_id":    book,
+		"chapter_id": chapter,
 		"type":       string(reader.AnnotationTypeNote),
 	}
 	opts := options.Find().SetSort(bson.D{{Key: "start_offset", Value: 1}})
@@ -220,8 +270,12 @@ func (r *MongoAnnotationRepository) GetNotesByChapter(ctx context.Context, userI
 
 // SearchNotes 搜索笔记
 func (r *MongoAnnotationRepository) SearchNotes(ctx context.Context, userID string, keyword string) ([]*reader.Annotation, error) {
+	owner, err := annotationIDMatch("用户ID", userID)
+	if err != nil {
+		return nil, err
+	}
 	filter := bson.M{
-		"user_id": userID,
+		"user_id": owner,
 		"type":    string(reader.AnnotationTypeNote),
 		"$or": []bson.M{
 			{"content": bson.M{"$regex": keyword, "$options": "i"}},
@@ -252,15 +306,27 @@ func (r *MongoAnnotationRepository) GetBookmarks(ctx context.Context, userID, bo
 // GetBookmarkByPosition 根据位置获取书签
 func (r *MongoAnnotationRepository) GetBookmarkByPosition(ctx context.Context, userID, bookID, chapterID string, startOffset int) (*reader.Annotation, error) {
 	var annotation reader.Annotation
+	owner, err := annotationIDMatch("用户ID", userID)
+	if err != nil {
+		return nil, err
+	}
+	book, err := annotationIDMatch("书籍ID", bookID)
+	if err != nil {
+		return nil, err
+	}
+	chapter, err := annotationIDMatch("章节ID", chapterID)
+	if err != nil {
+		return nil, err
+	}
 	filter := bson.M{
-		"user_id":      userID,
-		"book_id":      bookID,
-		"chapter_id":   chapterID,
+		"user_id":      owner,
+		"book_id":      book,
+		"chapter_id":   chapter,
 		"type":         string(reader.AnnotationTypeBookmark),
 		"start_offset": startOffset,
 	}
 
-	err := r.collection.FindOne(ctx, filter).Decode(&annotation)
+	err = r.collection.FindOne(ctx, filter).Decode(&annotation)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil // 书签不存在
@@ -274,14 +340,22 @@ func (r *MongoAnnotationRepository) GetBookmarkByPosition(ctx context.Context, u
 // GetLatestBookmark 获取最新的书签
 func (r *MongoAnnotationRepository) GetLatestBookmark(ctx context.Context, userID, bookID string) (*reader.Annotation, error) {
 	var annotation reader.Annotation
+	owner, err := annotationIDMatch("用户ID", userID)
+	if err != nil {
+		return nil, err
+	}
+	book, err := annotationIDMatch("书籍ID", bookID)
+	if err != nil {
+		return nil, err
+	}
 	filter := bson.M{
-		"user_id": userID,
-		"book_id": bookID,
+		"user_id": owner,
+		"book_id": book,
 		"type":    string(reader.AnnotationTypeBookmark),
 	}
 	opts := options.FindOne().SetSort(bson.D{{Key: "created_at", Value: -1}})
 
-	err := r.collection.FindOne(ctx, filter, opts).Decode(&annotation)
+	err = r.collection.FindOne(ctx, filter, opts).Decode(&annotation)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
@@ -299,10 +373,22 @@ func (r *MongoAnnotationRepository) GetHighlights(ctx context.Context, userID, b
 
 // GetHighlightsByChapter 获取章节高亮
 func (r *MongoAnnotationRepository) GetHighlightsByChapter(ctx context.Context, userID, bookID, chapterID string) ([]*reader.Annotation, error) {
+	owner, err := annotationIDMatch("用户ID", userID)
+	if err != nil {
+		return nil, err
+	}
+	book, err := annotationIDMatch("书籍ID", bookID)
+	if err != nil {
+		return nil, err
+	}
+	chapter, err := annotationIDMatch("章节ID", chapterID)
+	if err != nil {
+		return nil, err
+	}
 	filter := bson.M{
-		"user_id":    userID,
-		"book_id":    bookID,
-		"chapter_id": chapterID,
+		"user_id":    owner,
+		"book_id":    book,
+		"chapter_id": chapter,
 		"type":       string(reader.AnnotationTypeHighlight),
 	}
 	opts := options.Find().SetSort(bson.D{{Key: "start_offset", Value: 1}})
@@ -323,7 +409,11 @@ func (r *MongoAnnotationRepository) GetHighlightsByChapter(ctx context.Context, 
 
 // CountByUser 统计用户的标注数量
 func (r *MongoAnnotationRepository) CountByUser(ctx context.Context, userID string) (int64, error) {
-	count, err := r.collection.CountDocuments(ctx, bson.M{"user_id": userID})
+	owner, err := annotationIDMatch("用户ID", userID)
+	if err != nil {
+		return 0, err
+	}
+	count, err := r.collection.CountDocuments(ctx, bson.M{"user_id": owner})
 	if err != nil {
 		return 0, fmt.Errorf("统计标注数失败: %w", err)
 	}
@@ -333,9 +423,17 @@ func (r *MongoAnnotationRepository) CountByUser(ctx context.Context, userID stri
 
 // CountByBook 统计用户在某本书的标注数量
 func (r *MongoAnnotationRepository) CountByBook(ctx context.Context, userID, bookID string) (int64, error) {
+	owner, err := annotationIDMatch("用户ID", userID)
+	if err != nil {
+		return 0, err
+	}
+	book, err := annotationIDMatch("书籍ID", bookID)
+	if err != nil {
+		return 0, err
+	}
 	count, err := r.collection.CountDocuments(ctx, bson.M{
-		"user_id": userID,
-		"book_id": bookID,
+		"user_id": owner,
+		"book_id": book,
 	})
 	if err != nil {
 		return 0, fmt.Errorf("统计书籍标注数失败: %w", err)
@@ -346,8 +444,12 @@ func (r *MongoAnnotationRepository) CountByBook(ctx context.Context, userID, boo
 
 // CountByType 统计某类型的标注数量
 func (r *MongoAnnotationRepository) CountByType(ctx context.Context, userID string, annotationType string) (int64, error) {
+	owner, err := annotationIDMatch("用户ID", userID)
+	if err != nil {
+		return 0, err
+	}
 	count, err := r.collection.CountDocuments(ctx, bson.M{
-		"user_id": userID,
+		"user_id": owner,
 		"type":    annotationType,
 	})
 	if err != nil {
@@ -399,12 +501,20 @@ func (r *MongoAnnotationRepository) BatchDelete(ctx context.Context, annotationI
 
 // DeleteByBook 删除某本书的所有标注
 func (r *MongoAnnotationRepository) DeleteByBook(ctx context.Context, userID, bookID string) error {
+	owner, err := annotationIDMatch("用户ID", userID)
+	if err != nil {
+		return err
+	}
+	book, err := annotationIDMatch("书籍ID", bookID)
+	if err != nil {
+		return err
+	}
 	filter := bson.M{
-		"user_id": userID,
-		"book_id": bookID,
+		"user_id": owner,
+		"book_id": book,
 	}
 
-	_, err := r.collection.DeleteMany(ctx, filter)
+	_, err = r.collection.DeleteMany(ctx, filter)
 	if err != nil {
 		return fmt.Errorf("删除书籍标注失败: %w", err)
 	}
@@ -414,13 +524,25 @@ func (r *MongoAnnotationRepository) DeleteByBook(ctx context.Context, userID, bo
 
 // DeleteByChapter 删除某章节的所有标注
 func (r *MongoAnnotationRepository) DeleteByChapter(ctx context.Context, userID, bookID, chapterID string) error {
+	owner, err := annotationIDMatch("用户ID", userID)
+	if err != nil {
+		return err
+	}
+	book, err := annotationIDMatch("书籍ID", bookID)
+	if err != nil {
+		return err
+	}
+	chapter, err := annotationIDMatch("章节ID", chapterID)
+	if err != nil {
+		return err
+	}
 	filter := bson.M{
-		"user_id":    userID,
-		"book_id":    bookID,
-		"chapter_id": chapterID,
+		"user_id":    owner,
+		"book_id":    book,
+		"chapter_id": chapter,
 	}
 
-	_, err := r.collection.DeleteMany(ctx, filter)
+	_, err = r.collection.DeleteMany(ctx, filter)
 	if err != nil {
 		return fmt.Errorf("删除章节标注失败: %w", err)
 	}
@@ -433,14 +555,23 @@ func (r *MongoAnnotationRepository) SyncAnnotations(ctx context.Context, userID 
 	if len(annotations) == 0 {
 		return nil
 	}
+	owner, err := annotationOwnerFilter(userID)
+	if err != nil {
+		return err
+	}
+	ownerID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return fmt.Errorf("标注不存在")
+	}
 
 	models := make([]mongo.WriteModel, len(annotations))
 	for i, annotation := range annotations {
 		if annotation.ID.IsZero() {
 			annotation.ID = primitive.NewObjectID()
 		}
+		annotation.UserID = ownerID
 
-		filter := bson.M{"_id": annotation.ID}
+		filter := bson.M{"_id": annotation.ID, "user_id": owner}
 		update := bson.M{
 			"$set": bson.M{
 				"user_id":    annotation.UserID,
@@ -464,7 +595,7 @@ func (r *MongoAnnotationRepository) SyncAnnotations(ctx context.Context, userID 
 	}
 
 	opts := options.BulkWrite().SetOrdered(false)
-	_, err := r.collection.BulkWrite(ctx, models, opts)
+	_, err = r.collection.BulkWrite(ctx, models, opts)
 	if err != nil {
 		return fmt.Errorf("同步标注失败: %w", err)
 	}
@@ -474,7 +605,11 @@ func (r *MongoAnnotationRepository) SyncAnnotations(ctx context.Context, userID 
 
 // GetRecentAnnotations 获取最近的标注
 func (r *MongoAnnotationRepository) GetRecentAnnotations(ctx context.Context, userID string, limit int) ([]*reader.Annotation, error) {
-	filter := bson.M{"user_id": userID}
+	owner, err := annotationIDMatch("用户ID", userID)
+	if err != nil {
+		return nil, err
+	}
+	filter := bson.M{"user_id": owner}
 	opts := options.Find().
 		SetSort(bson.D{{Key: "created_at", Value: -1}}).
 		SetLimit(int64(limit))
@@ -495,9 +630,17 @@ func (r *MongoAnnotationRepository) GetRecentAnnotations(ctx context.Context, us
 
 // GetPublicAnnotations 获取公开的标注
 func (r *MongoAnnotationRepository) GetPublicAnnotations(ctx context.Context, bookID, chapterID string) ([]*reader.Annotation, error) {
+	book, err := annotationIDMatch("书籍ID", bookID)
+	if err != nil {
+		return nil, err
+	}
+	chapter, err := annotationIDMatch("章节ID", chapterID)
+	if err != nil {
+		return nil, err
+	}
 	filter := bson.M{
-		"book_id":    bookID,
-		"chapter_id": chapterID,
+		"book_id":    book,
+		"chapter_id": chapter,
 		"is_public":  true,
 	}
 	opts := options.Find().SetSort(bson.D{{Key: "created_at", Value: -1}})
@@ -518,8 +661,12 @@ func (r *MongoAnnotationRepository) GetPublicAnnotations(ctx context.Context, bo
 
 // GetSharedAnnotations 获取用户分享的标注
 func (r *MongoAnnotationRepository) GetSharedAnnotations(ctx context.Context, userID string) ([]*reader.Annotation, error) {
+	owner, err := annotationIDMatch("用户ID", userID)
+	if err != nil {
+		return nil, err
+	}
 	filter := bson.M{
-		"user_id":   userID,
+		"user_id":   owner,
 		"is_public": true,
 	}
 	opts := options.Find().SetSort(bson.D{{Key: "created_at", Value: -1}})
