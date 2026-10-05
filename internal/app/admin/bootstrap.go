@@ -1,8 +1,9 @@
-package main
+package adminapp
 
 import (
 	"context"
 	"errors"
+	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -52,8 +53,9 @@ func shouldCreateBootstrapAdmin(findErr error, adminCount int64) (bool, error) {
 	}
 }
 
-func runBootstrap(args []string) error {
-	fs := newBootstrapFlagSet()
+func RunBootstrap(args []string) error {
+	fs := flag.NewFlagSet("bootstrap", flag.ContinueOnError)
+	fs.SetOutput(os.Stdout)
 
 	opts := bootstrapOptions{}
 	fs.StringVar(&opts.Username, "username", "", "管理员用户名")

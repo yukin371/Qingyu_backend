@@ -1,9 +1,10 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"os"
+
+	adminapp "Qingyu_backend/internal/app/admin"
 )
 
 func main() {
@@ -21,7 +22,7 @@ func run(args []string) error {
 
 	switch args[0] {
 	case "bootstrap":
-		return runBootstrap(args[1:])
+		return adminapp.RunBootstrap(args[1:])
 	case "-h", "--help", "help":
 		printUsage(os.Stdout)
 		return nil
@@ -39,10 +40,4 @@ func printUsage(out *os.File) {
 	_, _ = fmt.Fprintln(out, "说明:")
 	_, _ = fmt.Fprintln(out, "  - 默认从环境变量 QINGYU_BOOTSTRAP_ADMIN_PASSWORD 读取初始密码")
 	_, _ = fmt.Fprintln(out, "  - 推荐通过环境变量注入密码，避免命令历史泄漏")
-}
-
-func newBootstrapFlagSet() *flag.FlagSet {
-	fs := flag.NewFlagSet("bootstrap", flag.ContinueOnError)
-	fs.SetOutput(os.Stdout)
-	return fs
 }
