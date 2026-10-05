@@ -137,7 +137,6 @@ func (api *BookmarkAPI) GetBookmarks(c *gin.Context) {
 	response.Success(c, result)
 }
 
-// TODO(T3-016-security): 在确认公开/私有书签规则并扩展 service user-scope 契约后，补充当前用户归属校验。
 // GetBookmark 获取书签详情
 //
 //	@Summary		获取书签详情
@@ -151,9 +150,14 @@ func (api *BookmarkAPI) GetBookmarks(c *gin.Context) {
 //	@Failure		404	{object}	response.APIResponse
 //	@Router			/api/v1/reader/bookmarks/{id} [get]
 func (api *BookmarkAPI) GetBookmark(c *gin.Context) {
+	userID, ok := shared.GetUserIDWithMessage(c, "请先登录")
+	if !ok {
+		return
+	}
+
 	bookmarkID := c.Param("id")
 
-	bookmark, err := api.bookmarkService.GetBookmark(c.Request.Context(), bookmarkID)
+	bookmark, err := api.bookmarkService.GetBookmark(c.Request.Context(), userID, bookmarkID)
 	if err != nil {
 		if err == readerservice.ErrBookmarkNotFound {
 			response.NotFound(c, "书签不存在")
@@ -166,7 +170,6 @@ func (api *BookmarkAPI) GetBookmark(c *gin.Context) {
 	response.Success(c, bookmark)
 }
 
-// TODO(T3-016-security): 在确认公开/私有书签规则并扩展 service user-scope 契约后，补充当前用户归属校验。
 // UpdateBookmark 更新书签
 //
 //	@Summary		更新书签
@@ -183,6 +186,11 @@ func (api *BookmarkAPI) GetBookmark(c *gin.Context) {
 //	@Router			/api/v1/reader/bookmarks/{id} [put]
 //	@Router			/api/v1/reader/bookmarks/{id} [patch]
 func (api *BookmarkAPI) UpdateBookmark(c *gin.Context) {
+	userID, ok := shared.GetUserIDWithMessage(c, "请先登录")
+	if !ok {
+		return
+	}
+
 	bookmarkID := c.Param("id")
 
 	var req UpdateBookmarkRequest
@@ -199,7 +207,7 @@ func (api *BookmarkAPI) UpdateBookmark(c *gin.Context) {
 		Tags:     req.Tags,
 	}
 
-	if err := api.bookmarkService.UpdateBookmark(c.Request.Context(), bookmarkID, bookmark); err != nil {
+	if err := api.bookmarkService.UpdateBookmark(c.Request.Context(), userID, bookmarkID, bookmark); err != nil {
 		if err == readerservice.ErrBookmarkNotFound {
 			response.NotFound(c, "书签不存在")
 			return
@@ -211,7 +219,6 @@ func (api *BookmarkAPI) UpdateBookmark(c *gin.Context) {
 	response.Success(c, nil)
 }
 
-// TODO(T3-016-security): 在确认公开/私有书签规则并扩展 service user-scope 契约后，补充当前用户归属校验。
 // DeleteBookmark 删除书签
 //
 //	@Summary		删除书签
@@ -225,9 +232,14 @@ func (api *BookmarkAPI) UpdateBookmark(c *gin.Context) {
 //	@Failure		404	{object}	response.APIResponse
 //	@Router			/api/v1/reader/bookmarks/{id} [delete]
 func (api *BookmarkAPI) DeleteBookmark(c *gin.Context) {
+	userID, ok := shared.GetUserIDWithMessage(c, "请先登录")
+	if !ok {
+		return
+	}
+
 	bookmarkID := c.Param("id")
 
-	if err := api.bookmarkService.DeleteBookmark(c.Request.Context(), bookmarkID); err != nil {
+	if err := api.bookmarkService.DeleteBookmark(c.Request.Context(), userID, bookmarkID); err != nil {
 		if err == readerservice.ErrBookmarkNotFound {
 			response.NotFound(c, "书签不存在")
 			return

@@ -13,7 +13,7 @@ type BookmarkService interface {
 	CreateBookmark(ctx context.Context, bookmark *readerModels.Bookmark) error
 
 	// GetBookmark 获取书签详情
-	GetBookmark(ctx context.Context, bookmarkID string) (*readerModels.Bookmark, error)
+	GetBookmark(ctx context.Context, userID, bookmarkID string) (*readerModels.Bookmark, error)
 
 	// GetUserBookmarks 获取用户书签列表
 	GetUserBookmarks(ctx context.Context, userID string, filter *readerModels.BookmarkFilter, page, size int) (*readerservice.BookmarkListResponse, error)
@@ -22,10 +22,10 @@ type BookmarkService interface {
 	GetBookBookmarks(ctx context.Context, userID, bookID string, page, size int) (*readerservice.BookmarkListResponse, error)
 
 	// UpdateBookmark 更新书签
-	UpdateBookmark(ctx context.Context, bookmarkID string, bookmark *readerModels.Bookmark) error
+	UpdateBookmark(ctx context.Context, userID, bookmarkID string, bookmark *readerModels.Bookmark) error
 
 	// DeleteBookmark 删除书签
-	DeleteBookmark(ctx context.Context, bookmarkID string) error
+	DeleteBookmark(ctx context.Context, userID, bookmarkID string) error
 
 	// ExportBookmarks 导出书签
 	ExportBookmarks(ctx context.Context, userID, format string) ([]byte, string, error)

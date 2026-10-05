@@ -28,7 +28,7 @@ type BookmarkService interface {
 	CreateBookmark(ctx context.Context, bookmark *readermodels.Bookmark) error
 
 	// GetBookmark 获取书签详情
-	GetBookmark(ctx context.Context, bookmarkID string) (*readermodels.Bookmark, error)
+	GetBookmark(ctx context.Context, userID, bookmarkID string) (*readermodels.Bookmark, error)
 
 	// GetUserBookmarks 获取用户书签列表
 	GetUserBookmarks(ctx context.Context, userID string, filter *readermodels.BookmarkFilter, page, size int) (*BookmarkListResponse, error)
@@ -37,10 +37,10 @@ type BookmarkService interface {
 	GetBookBookmarks(ctx context.Context, userID, bookID string, page, size int) (*BookmarkListResponse, error)
 
 	// UpdateBookmark 更新书签
-	UpdateBookmark(ctx context.Context, bookmarkID string, bookmark *readermodels.Bookmark) error
+	UpdateBookmark(ctx context.Context, userID, bookmarkID string, bookmark *readermodels.Bookmark) error
 
 	// DeleteBookmark 删除书签
-	DeleteBookmark(ctx context.Context, bookmarkID string) error
+	DeleteBookmark(ctx context.Context, userID, bookmarkID string) error
 
 	// ExportBookmarks 导出书签
 	ExportBookmarks(ctx context.Context, userID, format string) ([]byte, string, error)
@@ -108,7 +108,13 @@ func (s *BookmarkServiceImpl) CreateBookmark(ctx context.Context, bookmark *read
 }
 
 // GetBookmark 获取书签详情
-func (s *BookmarkServiceImpl) GetBookmark(ctx context.Context, bookmarkID string) (*readermodels.Bookmark, error) {
+
+func (s *BookmarkServiceImpl) GetBookmark(ctx context.Context, userID, bookmarkID string) (*readermodels.Bookmark, error) {
+	userOID, err := repository.ParseID(userID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid user ID: %w", err)
+	}
+
 	id, err := repository.ParseID(bookmarkID)
 	if err != nil {
 		return nil, fmt.Errorf("invalid bookmark ID: %w", err)
@@ -116,6 +122,9 @@ func (s *BookmarkServiceImpl) GetBookmark(ctx context.Context, bookmarkID string
 
 	bookmark, err := s.bookmarkRepo.GetByID(ctx, id)
 	if err != nil {
+		return nil, ErrBookmarkNotFound
+	}
+	if bookmark.UserID != userOID {
 		return nil, ErrBookmarkNotFound
 	}
 
@@ -182,7 +191,13 @@ func (s *BookmarkServiceImpl) GetBookBookmarks(ctx context.Context, userID, book
 }
 
 // UpdateBookmark 更新书签
-func (s *BookmarkServiceImpl) UpdateBookmark(ctx context.Context, bookmarkID string, bookmark *readermodels.Bookmark) error {
+
+func (s *BookmarkServiceImpl) UpdateBookmark(ctx context.Context, userID, bookmarkID string, bookmark *readermodels.Bookmark) error {
+	userOID, err := repository.ParseID(userID)
+	if err != nil {
+		return fmt.Errorf("invalid user ID: %w", err)
+	}
+
 	id, err := repository.ParseID(bookmarkID)
 	if err != nil {
 		return fmt.Errorf("invalid bookmark ID: %w", err)
@@ -191,6 +206,9 @@ func (s *BookmarkServiceImpl) UpdateBookmark(ctx context.Context, bookmarkID str
 	// 获取现有书签
 	existing, err := s.bookmarkRepo.GetByID(ctx, id)
 	if err != nil {
+		return ErrBookmarkNotFound
+	}
+	if existing.UserID != userOID {
 		return ErrBookmarkNotFound
 	}
 
@@ -214,13 +232,27 @@ func (s *BookmarkServiceImpl) UpdateBookmark(ctx context.Context, bookmarkID str
 }
 
 // DeleteBookmark 删除书签
-func (s *BookmarkServiceImpl) DeleteBookmark(ctx context.Context, bookmarkID string) error {
+
+func (s *BookmarkServiceImpl) DeleteBookmark(ctx context.Context, userID, bookmarkID string) error {
+	userOID, err := repository.ParseID(userID)
+	if err != nil {
+		return fmt.Errorf("invalid user ID: %w", err)
+	}
+
 	id, err := repository.ParseID(bookmarkID)
 	if err != nil {
 		return fmt.Errorf("invalid bookmark ID: %w", err)
 	}
 
-	return s.bookmarkRepo.Delete(ctx, id)
+	bookmark, err := s.bookmarkRepo.GetByID(ctx, id)
+	if err != nil || bookmark.UserID != userOID {
+		return ErrBookmarkNotFound
+	}
+
+	if err := s.bookmarkRepo.Delete(ctx, id); err != nil {
+		return ErrBookmarkNotFound
+	}
+	return nil
 }
 
 // ExportBookmarks 导出书签

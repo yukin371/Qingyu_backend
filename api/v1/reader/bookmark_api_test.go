@@ -29,8 +29,8 @@ func (m *MockBookmarkService) CreateBookmark(ctx context.Context, bookmark *read
 	return args.Error(0)
 }
 
-func (m *MockBookmarkService) GetBookmark(ctx context.Context, bookmarkID string) (*readerModels.Bookmark, error) {
-	args := m.Called(ctx, bookmarkID)
+func (m *MockBookmarkService) GetBookmark(ctx context.Context, userID, bookmarkID string) (*readerModels.Bookmark, error) {
+	args := m.Called(ctx, userID, bookmarkID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -53,13 +53,13 @@ func (m *MockBookmarkService) GetBookBookmarks(ctx context.Context, userID, book
 	return args.Get(0).(*readerservice.BookmarkListResponse), args.Error(1)
 }
 
-func (m *MockBookmarkService) UpdateBookmark(ctx context.Context, bookmarkID string, bookmark *readerModels.Bookmark) error {
-	args := m.Called(ctx, bookmarkID, bookmark)
+func (m *MockBookmarkService) UpdateBookmark(ctx context.Context, userID, bookmarkID string, bookmark *readerModels.Bookmark) error {
+	args := m.Called(ctx, userID, bookmarkID, bookmark)
 	return args.Error(0)
 }
 
-func (m *MockBookmarkService) DeleteBookmark(ctx context.Context, bookmarkID string) error {
-	args := m.Called(ctx, bookmarkID)
+func (m *MockBookmarkService) DeleteBookmark(ctx context.Context, userID, bookmarkID string) error {
+	args := m.Called(ctx, userID, bookmarkID)
 	return args.Error(0)
 }
 
@@ -212,17 +212,46 @@ func TestBookmarkAPI_CreateBookmark_Unauthorized(t *testing.T) {
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
 }
 
+func TestBookmarkAPI_GetBookmark_Unauthorized(t *testing.T) {
+	router := setupBookmarkTestRouter(new(MockBookmarkService), "")
+	req, _ := http.NewRequest("GET", "/api/v1/reader/bookmarks/"+primitive.NewObjectID().Hex(), nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+}
+
+func TestBookmarkAPI_UpdateBookmark_Unauthorized(t *testing.T) {
+	router := setupBookmarkTestRouter(new(MockBookmarkService), "")
+	req, _ := http.NewRequest("PUT", "/api/v1/reader/bookmarks/"+primitive.NewObjectID().Hex(), bytes.NewBufferString(`{"note":"更新"}`))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+}
+
+func TestBookmarkAPI_DeleteBookmark_Unauthorized(t *testing.T) {
+	router := setupBookmarkTestRouter(new(MockBookmarkService), "")
+	req, _ := http.NewRequest("DELETE", "/api/v1/reader/bookmarks/"+primitive.NewObjectID().Hex(), nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+}
+
 func TestBookmarkAPI_GetBookmarks_Success(t *testing.T) {
 	// Given
 	mockService := new(MockBookmarkService)
 	userID := primitive.NewObjectID().Hex()
+	userOID, _ := primitive.ObjectIDFromHex(userID)
 	router := setupBookmarkTestRouter(mockService, userID)
 
 	expectedBookmarks := &readerservice.BookmarkListResponse{
 		Bookmarks: []*readerModels.Bookmark{
 			{
 				ID:        primitive.NewObjectID(),
-				UserID:    primitive.NewObjectID(),
+				UserID:    userOID,
 				BookID:    primitive.NewObjectID(),
 				ChapterID: primitive.NewObjectID(),
 				Position:  100,
@@ -296,7 +325,7 @@ func TestBookmarkAPI_GetBookmark_Success(t *testing.T) {
 		UpdatedAt: time.Now(),
 	}
 
-	mockService.On("GetBookmark", mock.Anything, bookmarkID).Return(expectedBookmark, nil)
+	mockService.On("GetBookmark", mock.Anything, userID, bookmarkID).Return(expectedBookmark, nil)
 
 	// When
 	req, _ := http.NewRequest("GET", "/api/v1/reader/bookmarks/"+bookmarkID, nil)
@@ -315,7 +344,7 @@ func TestBookmarkAPI_GetBookmark_NotFound(t *testing.T) {
 	bookmarkID := primitive.NewObjectID().Hex()
 	router := setupBookmarkTestRouter(mockService, userID)
 
-	mockService.On("GetBookmark", mock.Anything, bookmarkID).
+	mockService.On("GetBookmark", mock.Anything, userID, bookmarkID).
 		Return(nil, readerservice.ErrBookmarkNotFound)
 
 	// When
@@ -341,7 +370,7 @@ func TestBookmarkAPI_UpdateBookmark_Success(t *testing.T) {
 		"tags":     []string{"更新"},
 	}
 
-	mockService.On("UpdateBookmark", mock.Anything, bookmarkID, mock.Anything).Return(nil)
+	mockService.On("UpdateBookmark", mock.Anything, userID, bookmarkID, mock.Anything).Return(nil)
 
 	// When
 	jsonBody, _ := json.Marshal(reqBody)
@@ -366,7 +395,7 @@ func TestBookmarkAPI_UpdateBookmark_NotFound(t *testing.T) {
 		"note": "更新后的笔记",
 	}
 
-	mockService.On("UpdateBookmark", mock.Anything, bookmarkID, mock.Anything).
+	mockService.On("UpdateBookmark", mock.Anything, userID, bookmarkID, mock.Anything).
 		Return(readerservice.ErrBookmarkNotFound)
 
 	// When
@@ -391,7 +420,7 @@ func TestBookmarkAPI_PatchBookmark_Success(t *testing.T) {
 		"note": "仅更新备注",
 	}
 
-	mockService.On("UpdateBookmark", mock.Anything, bookmarkID, mock.Anything).Return(nil)
+	mockService.On("UpdateBookmark", mock.Anything, userID, bookmarkID, mock.Anything).Return(nil)
 
 	// When
 	jsonBody, _ := json.Marshal(reqBody)
@@ -412,7 +441,7 @@ func TestBookmarkAPI_DeleteBookmark_Success(t *testing.T) {
 	bookmarkID := primitive.NewObjectID().Hex()
 	router := setupBookmarkTestRouter(mockService, userID)
 
-	mockService.On("DeleteBookmark", mock.Anything, bookmarkID).Return(nil)
+	mockService.On("DeleteBookmark", mock.Anything, userID, bookmarkID).Return(nil)
 
 	// When
 	req, _ := http.NewRequest("DELETE", "/api/v1/reader/bookmarks/"+bookmarkID, nil)
@@ -431,7 +460,7 @@ func TestBookmarkAPI_DeleteBookmark_NotFound(t *testing.T) {
 	bookmarkID := primitive.NewObjectID().Hex()
 	router := setupBookmarkTestRouter(mockService, userID)
 
-	mockService.On("DeleteBookmark", mock.Anything, bookmarkID).
+	mockService.On("DeleteBookmark", mock.Anything, userID, bookmarkID).
 		Return(readerservice.ErrBookmarkNotFound)
 
 	// When
