@@ -11,7 +11,6 @@ import (
 	"Qingyu_backend/models/notification"
 	"Qingyu_backend/pkg/response"
 	notifService "Qingyu_backend/service/notification"
-	"errors"
 )
 
 // NotificationAPI 通知API
@@ -24,6 +23,10 @@ func NewNotificationAPI(notificationService notifService.NotificationService) *N
 	return &NotificationAPI{
 		notificationService: notificationService,
 	}
+}
+
+func notificationUserID(c *gin.Context) (string, bool) {
+	return shared.GetUserIDWithMessage(c, "未授权访问")
 }
 
 // GetNotifications 获取通知列表
@@ -44,15 +47,8 @@ func NewNotificationAPI(notificationService notifService.NotificationService) *N
 // @Router /api/v1/notifications [get]
 func (api *NotificationAPI) GetNotifications(c *gin.Context) {
 	// 获取当前用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权访问")
-		return
-	}
-
-	userIDStr, ok := userID.(string)
+	userIDStr, ok := notificationUserID(c)
 	if !ok {
-		c.Error(errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
@@ -141,15 +137,8 @@ func (api *NotificationAPI) GetNotifications(c *gin.Context) {
 // @Router /api/v1/notifications/{id} [get]
 func (api *NotificationAPI) GetNotification(c *gin.Context) {
 	// 获取当前用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权访问")
-		return
-	}
-
-	userIDStr, ok := userID.(string)
+	userIDStr, ok := notificationUserID(c)
 	if !ok {
-		c.Error(errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
@@ -187,15 +176,8 @@ func (api *NotificationAPI) GetNotification(c *gin.Context) {
 // @Router /api/v1/notifications/{id}/read [post]
 func (api *NotificationAPI) MarkAsRead(c *gin.Context) {
 	// 获取当前用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权访问")
-		return
-	}
-
-	userIDStr, ok := userID.(string)
+	userIDStr, ok := notificationUserID(c)
 	if !ok {
-		c.Error(errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
@@ -226,15 +208,8 @@ func (api *NotificationAPI) MarkAsRead(c *gin.Context) {
 // @Router /api/v1/notifications/batch-read [post]
 func (api *NotificationAPI) MarkMultipleAsRead(c *gin.Context) {
 	// 获取当前用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权访问")
-		return
-	}
-
-	userIDStr, ok := userID.(string)
+	userIDStr, ok := notificationUserID(c)
 	if !ok {
-		c.Error(errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
@@ -284,15 +259,8 @@ func (api *NotificationAPI) MarkMultipleAsRead(c *gin.Context) {
 // @Router /api/v1/notifications/read-all [post]
 func (api *NotificationAPI) MarkAllAsRead(c *gin.Context) {
 	// 获取当前用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权访问")
-		return
-	}
-
-	userIDStr, ok := userID.(string)
+	userIDStr, ok := notificationUserID(c)
 	if !ok {
-		c.Error(errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
@@ -316,15 +284,8 @@ func (api *NotificationAPI) MarkAllAsRead(c *gin.Context) {
 // @Router /api/v1/notifications/{id} [delete]
 func (api *NotificationAPI) DeleteNotification(c *gin.Context) {
 	// 获取当前用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权访问")
-		return
-	}
-
-	userIDStr, ok := userID.(string)
+	userIDStr, ok := notificationUserID(c)
 	if !ok {
-		c.Error(errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
@@ -355,15 +316,8 @@ func (api *NotificationAPI) DeleteNotification(c *gin.Context) {
 // @Router /api/v1/notifications/batch-delete [post]
 func (api *NotificationAPI) BatchDeleteNotifications(c *gin.Context) {
 	// 获取当前用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权访问")
-		return
-	}
-
-	userIDStr, ok := userID.(string)
+	userIDStr, ok := notificationUserID(c)
 	if !ok {
-		c.Error(errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
@@ -413,15 +367,8 @@ func (api *NotificationAPI) BatchDeleteNotifications(c *gin.Context) {
 // @Router /api/v1/notifications/delete-all [delete]
 func (api *NotificationAPI) DeleteAllNotifications(c *gin.Context) {
 	// 获取当前用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权访问")
-		return
-	}
-
-	userIDStr, ok := userID.(string)
+	userIDStr, ok := notificationUserID(c)
 	if !ok {
-		c.Error(errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
@@ -444,15 +391,8 @@ func (api *NotificationAPI) DeleteAllNotifications(c *gin.Context) {
 // @Router /api/v1/notifications/unread-count [get]
 func (api *NotificationAPI) GetUnreadCount(c *gin.Context) {
 	// 获取当前用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权访问")
-		return
-	}
-
-	userIDStr, ok := userID.(string)
+	userIDStr, ok := notificationUserID(c)
 	if !ok {
-		c.Error(errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
@@ -476,15 +416,8 @@ func (api *NotificationAPI) GetUnreadCount(c *gin.Context) {
 // @Router /api/v1/notifications/stats [get]
 func (api *NotificationAPI) GetNotificationStats(c *gin.Context) {
 	// 获取当前用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权访问")
-		return
-	}
-
-	userIDStr, ok := userID.(string)
+	userIDStr, ok := notificationUserID(c)
 	if !ok {
-		c.Error(errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
@@ -508,15 +441,8 @@ func (api *NotificationAPI) GetNotificationStats(c *gin.Context) {
 // @Router /api/v1/notifications/preferences [get]
 func (api *NotificationAPI) GetNotificationPreference(c *gin.Context) {
 	// 获取当前用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权访问")
-		return
-	}
-
-	userIDStr, ok := userID.(string)
+	userIDStr, ok := notificationUserID(c)
 	if !ok {
-		c.Error(errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
@@ -542,15 +468,8 @@ func (api *NotificationAPI) GetNotificationPreference(c *gin.Context) {
 // @Router /api/v1/notifications/preferences [patch]
 func (api *NotificationAPI) UpdateNotificationPreference(c *gin.Context) {
 	// 获取当前用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权访问")
-		return
-	}
-
-	userIDStr, ok := userID.(string)
+	userIDStr, ok := notificationUserID(c)
 	if !ok {
-		c.Error(errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
@@ -586,15 +505,8 @@ func (api *NotificationAPI) UpdateNotificationPreference(c *gin.Context) {
 // @Router /api/v1/notifications/preferences/reset [post]
 func (api *NotificationAPI) ResetNotificationPreference(c *gin.Context) {
 	// 获取当前用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权访问")
-		return
-	}
-
-	userIDStr, ok := userID.(string)
+	userIDStr, ok := notificationUserID(c)
 	if !ok {
-		c.Error(errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
@@ -617,15 +529,8 @@ func (api *NotificationAPI) ResetNotificationPreference(c *gin.Context) {
 // @Router /api/v1/user-management/email-notifications [get]
 func (api *NotificationAPI) GetEmailNotificationSettings(c *gin.Context) {
 	// 获取当前用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权访问")
-		return
-	}
-
-	userIDStr, ok := userID.(string)
+	userIDStr, ok := notificationUserID(c)
 	if !ok {
-		c.Error(errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
@@ -650,15 +555,8 @@ func (api *NotificationAPI) GetEmailNotificationSettings(c *gin.Context) {
 // @Router /api/v1/user-management/email-notifications [put]
 func (api *NotificationAPI) UpdateEmailNotificationSettings(c *gin.Context) {
 	// 获取当前用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权访问")
-		return
-	}
-
-	userIDStr, ok := userID.(string)
+	userIDStr, ok := notificationUserID(c)
 	if !ok {
-		c.Error(errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
@@ -688,15 +586,8 @@ func (api *NotificationAPI) UpdateEmailNotificationSettings(c *gin.Context) {
 // @Router /api/v1/user-management/sms-notifications [get]
 func (api *NotificationAPI) GetSMSNotificationSettings(c *gin.Context) {
 	// 获取当前用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权访问")
-		return
-	}
-
-	userIDStr, ok := userID.(string)
+	userIDStr, ok := notificationUserID(c)
 	if !ok {
-		c.Error(errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
@@ -721,15 +612,8 @@ func (api *NotificationAPI) GetSMSNotificationSettings(c *gin.Context) {
 // @Router /api/v1/user-management/sms-notifications [put]
 func (api *NotificationAPI) UpdateSMSNotificationSettings(c *gin.Context) {
 	// 获取当前用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权访问")
-		return
-	}
-
-	userIDStr, ok := userID.(string)
+	userIDStr, ok := notificationUserID(c)
 	if !ok {
-		c.Error(errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
@@ -760,15 +644,8 @@ func (api *NotificationAPI) UpdateSMSNotificationSettings(c *gin.Context) {
 // @Router /api/v1/notifications/push/register [post]
 func (api *NotificationAPI) RegisterPushDevice(c *gin.Context) {
 	// 获取当前用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权访问")
-		return
-	}
-
-	userIDStr, ok := userID.(string)
+	userIDStr, ok := notificationUserID(c)
 	if !ok {
-		c.Error(errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
@@ -809,15 +686,8 @@ func (api *NotificationAPI) RegisterPushDevice(c *gin.Context) {
 // @Router /api/v1/notifications/push/unregister/{deviceId} [delete]
 func (api *NotificationAPI) UnregisterPushDevice(c *gin.Context) {
 	// 获取当前用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权访问")
-		return
-	}
-
-	userIDStr, ok := userID.(string)
+	userIDStr, ok := notificationUserID(c)
 	if !ok {
-		c.Error(errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
@@ -847,15 +717,8 @@ func (api *NotificationAPI) UnregisterPushDevice(c *gin.Context) {
 // @Router /api/v1/notifications/push/devices [get]
 func (api *NotificationAPI) GetPushDevices(c *gin.Context) {
 	// 获取当前用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权访问")
-		return
-	}
-
-	userIDStr, ok := userID.(string)
+	userIDStr, ok := notificationUserID(c)
 	if !ok {
-		c.Error(errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
@@ -880,15 +743,8 @@ func (api *NotificationAPI) GetPushDevices(c *gin.Context) {
 // @Router /api/v1/notifications/clear-read [post]
 func (api *NotificationAPI) ClearReadNotifications(c *gin.Context) {
 	// 获取当前用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权访问")
-		return
-	}
-
-	userIDStr, ok := userID.(string)
+	userIDStr, ok := notificationUserID(c)
 	if !ok {
-		c.Error(errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
@@ -922,15 +778,8 @@ func (api *NotificationAPI) ClearReadNotifications(c *gin.Context) {
 // @Router /api/v1/notifications/{id}/resend [post]
 func (api *NotificationAPI) ResendNotification(c *gin.Context) {
 	// 获取当前用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权访问")
-		return
-	}
-
-	userIDStr, ok := userID.(string)
+	userIDStr, ok := notificationUserID(c)
 	if !ok {
-		c.Error(errors.New("INVALID_USER_ID: 无效的用户ID"))
 		return
 	}
 
@@ -980,15 +829,7 @@ func (api *NotificationAPI) ResendNotification(c *gin.Context) {
 // @Router /api/v1/notifications/ws-endpoint [get]
 func (api *NotificationAPI) GetWSEndpoint(c *gin.Context) {
 	// 获取当前用户ID
-	userID, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权访问")
-		return
-	}
-
-	_, ok := userID.(string)
-	if !ok {
-		c.Error(errors.New("INVALID_USER_ID: 无效的用户ID"))
+	if _, ok := notificationUserID(c); !ok {
 		return
 	}
 
