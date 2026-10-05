@@ -213,7 +213,7 @@ func (api *StorageAPI) GetFileInfo(c *gin.Context) {
 func (api *StorageAPI) DeleteFile(c *gin.Context) {
 	// 1. 获取文件ID和用户ID
 	fileID := c.Param("id")
-	userID, ok := GetUserID(c)
+	userID, ok := GetUserIDWithMessage(c, "未授权")
 	if !ok {
 		return
 	}
@@ -257,7 +257,7 @@ func (api *StorageAPI) DeleteFile(c *gin.Context) {
 //	@Router			/api/v1/files [get]
 func (api *StorageAPI) ListFiles(c *gin.Context) {
 	// 1. 获取用户ID
-	userID, ok := GetUserID(c)
+	userID, ok := GetUserIDWithMessage(c, "未授权")
 	if !ok {
 		return
 	}
@@ -334,7 +334,7 @@ func (api *StorageAPI) GetDownloadURL(c *gin.Context) {
 //	@Router			/api/v1/files/multipart/init [post]
 func (api *StorageAPI) InitiateMultipartUpload(c *gin.Context) {
 	// 1. 获取用户ID
-	userID, ok := GetUserID(c)
+	userID, ok := GetUserIDWithMessage(c, "未授权")
 	if !ok {
 		return
 	}

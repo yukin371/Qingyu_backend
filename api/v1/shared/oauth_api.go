@@ -153,7 +153,7 @@ func (api *OAuthAPI) HandleCallback(c *gin.Context) {
 //	@Failure		500	{object}	APIResponse
 //	@Router			/api/v1/shared/oauth/accounts [get]
 func (api *OAuthAPI) GetLinkedAccounts(c *gin.Context) {
-	userID, ok := GetUserID(c)
+	userID, ok := GetUserIDWithMessage(c, "未授权")
 	if !ok {
 		return
 	}
@@ -182,7 +182,7 @@ func (api *OAuthAPI) GetLinkedAccounts(c *gin.Context) {
 //	@Failure		500			{object}	APIResponse
 //	@Router			/api/v1/shared/oauth/accounts/{accountID} [delete]
 func (api *OAuthAPI) UnlinkAccount(c *gin.Context) {
-	userID, ok := GetUserID(c)
+	userID, ok := GetUserIDWithMessage(c, "未授权")
 	if !ok {
 		return
 	}
@@ -217,7 +217,7 @@ func (api *OAuthAPI) UnlinkAccount(c *gin.Context) {
 //	@Failure		500			{object}	APIResponse
 //	@Router			/api/v1/shared/oauth/accounts/{accountID}/primary [put]
 func (api *OAuthAPI) SetPrimaryAccount(c *gin.Context) {
-	userID, ok := GetUserID(c)
+	userID, ok := GetUserIDWithMessage(c, "未授权")
 	if !ok {
 		return
 	}
