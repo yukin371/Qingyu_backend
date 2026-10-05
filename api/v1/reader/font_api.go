@@ -132,6 +132,7 @@ func (api *FontAPI) CreateCustomFont(c *gin.Context) {
 	})
 }
 
+// TODO(T3-018-security): 在确认字体归属规则并补 user-scope service 契约后，执行当前用户 owner 校验。
 // UpdateFont 更新自定义字体
 //
 //	@Summary	更新自定义字体
@@ -170,6 +171,7 @@ func (api *FontAPI) UpdateFont(c *gin.Context) {
 	})
 }
 
+// TODO(T3-018-security): 在确认字体归属规则并补 user-scope service 契约后，执行当前用户 owner 校验。
 // DeleteFont 删除自定义字体
 //
 //	@Summary	删除自定义字体
