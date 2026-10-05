@@ -160,6 +160,7 @@ func TestPublishApi_PublishProject_Success(t *testing.T) {
 		Type:        "project",
 		ResourceID:  projectID,
 		BookstoreID: "test_bookstore",
+		ExternalID:  "test_bookstore",
 		Status:      "published",
 	}
 
@@ -178,6 +179,7 @@ func TestPublishApi_PublishProject_Success(t *testing.T) {
 	assert.Equal(t, float64(0), response["code"]) // 0 = Success
 	assert.Equal(t, "操作成功", response["message"])
 	assert.NotNil(t, response["data"])
+	assert.Equal(t, "test_bookstore", response["data"].(map[string]interface{})["externalId"])
 
 	mockService.AssertExpectations(t)
 }
@@ -337,6 +339,7 @@ func TestPublishApi_PublishDocument_UsesOptionalProjectIDAndUserID(t *testing.T)
 		ID:         primitive.NewObjectID().Hex(),
 		Type:       "document",
 		ResourceID: documentID,
+		ExternalID: "chapter-bookstore-id",
 		Status:     "pending",
 	}
 	mockService.
@@ -349,6 +352,7 @@ func TestPublishApi_PublishDocument_UsesOptionalProjectIDAndUserID(t *testing.T)
 
 	assert.Equal(t, http.StatusOK, w.Code)
 	assert.Contains(t, w.Body.String(), documentID)
+	assert.Contains(t, w.Body.String(), `"externalId":"chapter-bookstore-id"`)
 	mockService.AssertExpectations(t)
 }
 
