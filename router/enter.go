@@ -490,7 +490,7 @@ func RegisterRoutes(r *gin.Engine) {
 
 	// 注册统一社交路由
 	if commentAPI != nil || likeAPI != nil || collectionAPI != nil || reviewAPI != nil || booklistAPI != nil {
-		socialRouter.RegisterSocialRoutes(v1, relationAPI, commentAPI, likeAPI, collectionAPI, followAPI, messageAPI, messageAPIV2, reviewAPI, booklistAPI)
+		socialRouter.RegisterSocialRoutesWithAuth(v1, relationAPI, commentAPI, likeAPI, collectionAPI, followAPI, messageAPI, messageAPIV2, reviewAPI, booklistAPI, newCanonicalJWTAuthMiddleware(logger))
 
 		logger.Info("✓ 社交路由已注册到: /api/v1/social/")
 		if commentAPI != nil {

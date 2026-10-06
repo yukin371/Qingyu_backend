@@ -19,10 +19,25 @@ func RegisterSocialRoutes(r *gin.RouterGroup,
 	messageAPIV2 *socialApi.MessageAPIV2,
 	reviewAPI *socialApi.ReviewAPI,
 	bookListAPI *socialApi.BookListAPI) {
+	RegisterSocialRoutesWithAuth(r, relationAPI, commentAPI, likeAPI, collectionAPI, followAPI, messageAPI, messageAPIV2, reviewAPI, bookListAPI, auth.JWTAuth())
+}
+
+// RegisterSocialRoutesWithAuth 注册所有社交相关路由，并由组合根注入认证中间件。
+func RegisterSocialRoutesWithAuth(r *gin.RouterGroup,
+	relationAPI *socialApi.UserRelationAPI,
+	commentAPI *socialApi.CommentAPI,
+	likeAPI *socialApi.LikeAPI,
+	collectionAPI *socialApi.CollectionAPI,
+	followAPI *socialApi.FollowAPI,
+	messageAPI *messagesApi.MessageAPI,
+	messageAPIV2 *socialApi.MessageAPIV2,
+	reviewAPI *socialApi.ReviewAPI,
+	bookListAPI *socialApi.BookListAPI,
+	authMiddleware gin.HandlerFunc) {
 
 	// 社交路由需要认证
 	socialGroup := r.Group("/social")
-	socialGroup.Use(auth.JWTAuth())
+	socialGroup.Use(authMiddleware)
 	{
 		// ========== 用户关注相关（原有） ==========
 		if relationAPI != nil {
