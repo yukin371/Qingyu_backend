@@ -191,6 +191,9 @@ func initBookstoreRouter(
 				public.GET("/books/:id/chapters", chapterApiHandler.GetChaptersByBookID)      // 获取章节列表（使用ChapterAPI）
 				public.GET("/books/:id/chapters/list", chapterApiHandler.GetChaptersByBookID) // 别名路由
 				public.GET("/books/:id/chapters/free", chapterApiHandler.GetFreeChapters)
+				public.GET("/books/:id/chapters/paid", chapterApiHandler.GetPaidChapters)
+				public.GET("/books/:id/chapters/first", chapterApiHandler.GetFirstChapter)
+				public.GET("/books/:id/chapters/last", chapterApiHandler.GetLastChapter)
 				public.GET("/books/:id/chapters/published", chapterApiHandler.GetPublishedChapters)
 				public.GET("/books/:id/chapters/:chapter_num", chapterApiHandler.GetChapterByBookIDAndNumber)
 				public.GET("/chapters/:id", chapterApiHandler.GetChapter)                // 获取章节详情

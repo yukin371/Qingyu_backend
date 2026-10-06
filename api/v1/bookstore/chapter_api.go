@@ -225,7 +225,7 @@ func (api *ChapterAPI) GetFreeChapters(c *gin.Context) {
 //	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/bookstore/books/{id}/chapters/paid [get]
 func (api *ChapterAPI) GetPaidChapters(c *gin.Context) {
-	bookIDStr := c.Param("book_id")
+	bookIDStr := c.Param("id")
 	if bookIDStr == "" {
 		response.BadRequest(c, "参数错误", "书籍ID不能为空")
 		return
@@ -400,7 +400,7 @@ func (api *ChapterAPI) GetNextChapter(c *gin.Context) {
 //	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/bookstore/books/{id}/chapters/first [get]
 func (api *ChapterAPI) GetFirstChapter(c *gin.Context) {
-	bookIDStr := c.Param("book_id")
+	bookIDStr := c.Param("id")
 	if bookIDStr == "" {
 		response.BadRequest(c, "参数错误", "书籍ID不能为空")
 		return
@@ -435,7 +435,7 @@ func (api *ChapterAPI) GetFirstChapter(c *gin.Context) {
 //	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/bookstore/books/{id}/chapters/last [get]
 func (api *ChapterAPI) GetLastChapter(c *gin.Context) {
-	bookIDStr := c.Param("book_id")
+	bookIDStr := c.Param("id")
 	if bookIDStr == "" {
 		response.BadRequest(c, "参数错误", "书籍ID不能为空")
 		return
