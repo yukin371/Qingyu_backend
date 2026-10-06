@@ -11,6 +11,16 @@ import (
 
 // InitAIRouter 初始化AI路由
 func InitAIRouter(r *gin.RouterGroup, aiService *ai.Service, chatService *ai.ChatService, quotaService *ai.QuotaService, phase3Client *ai.Phase3Client, storyWriteApi *aiApi.StoryWriteApi) {
+	InitAIRouterWithAuth(r, aiService, chatService, quotaService, phase3Client, storyWriteApi, auth.JWTAuth())
+}
+
+// InitAIRouterWithAuth 初始化 AI 路由并注入 canonical JWT handler。
+// InitAIRouter 保留为迁移期兼容入口；quota middleware 顺序保持不变。
+func InitAIRouterWithAuth(r *gin.RouterGroup, aiService *ai.Service, chatService *ai.ChatService, quotaService *ai.QuotaService, phase3Client *ai.Phase3Client, storyWriteApi *aiApi.StoryWriteApi, authMiddleware gin.HandlerFunc) {
+	if authMiddleware == nil {
+		authMiddleware = auth.JWTAuth()
+	}
+
 	textGenerator := ai.NewPhase3TextGenerator(phase3Client)
 
 	// 创建API实例
@@ -33,7 +43,7 @@ func InitAIRouter(r *gin.RouterGroup, aiService *ai.Service, chatService *ai.Cha
 
 	// AI主路由组
 	aiGroup := r.Group("/ai")
-	aiGroup.Use(auth.JWTAuth()) // 需要认证
+	aiGroup.Use(authMiddleware) // 需要认证
 	{
 		// 系统功能（不需要配额）
 		aiGroup.GET("/health", systemApiHandler.HealthCheck)
@@ -122,7 +132,7 @@ func InitAIRouter(r *gin.RouterGroup, aiService *ai.Service, chatService *ai.Cha
 
 	// ============ Phase3 创作路由 ============
 	if creativeApiHandler != nil {
-		InitCreativeRoutes(r, creativeApiHandler)
+		InitCreativeRoutesWithAuth(r, creativeApiHandler, authMiddleware)
 	}
 
 	// 注意：管理员配额管理路由已迁移到 /api/v1/admin/quota

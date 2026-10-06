@@ -758,7 +758,7 @@ func RegisterRoutes(r *gin.Engine) {
 			storyWriteApi = aiApi.NewStoryWriteApi(contextEngine, quotaService, docRepo)
 		}
 
-		aiRouter.InitAIRouter(v1, aiSvc, chatService, quotaService, phase3Client, storyWriteApi)
+		aiRouter.InitAIRouterWithAuth(v1, aiSvc, chatService, quotaService, phase3Client, storyWriteApi, newCanonicalJWTAuthMiddleware(logger))
 
 		logger.Info("✓ AI服务路由已注册到: /api/v1/ai/")
 		logger.Info("  - /api/v1/ai/writing/* (续写、改写)")

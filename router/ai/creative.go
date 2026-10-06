@@ -9,6 +9,15 @@ import (
 
 // InitCreativeRoutes 初始化Phase3创作相关路由
 func InitCreativeRoutes(router *gin.RouterGroup, creativeAPI *aiAPI.CreativeAPI) {
+	InitCreativeRoutesWithAuth(router, creativeAPI, auth.JWTAuth())
+}
+
+// InitCreativeRoutesWithAuth 初始化 Phase3 创作路由并注入 JWT handler。
+func InitCreativeRoutesWithAuth(router *gin.RouterGroup, creativeAPI *aiAPI.CreativeAPI, authMiddleware gin.HandlerFunc) {
+	if authMiddleware == nil {
+		authMiddleware = auth.JWTAuth()
+	}
+
 	// Phase3创作路由组
 	creative := router.Group("/creative")
 	{
@@ -16,7 +25,7 @@ func InitCreativeRoutes(router *gin.RouterGroup, creativeAPI *aiAPI.CreativeAPI)
 		creative.GET("/health", creativeAPI.HealthCheck)
 
 		// 需要认证的路由
-		authGroup := creative.Group("").Use(auth.JWTAuth())
+		authGroup := creative.Group("").Use(authMiddleware)
 		{
 			// 大纲生成
 			authGroup.POST("/outline", creativeAPI.GenerateOutline)
