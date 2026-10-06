@@ -1,18 +1,26 @@
 package reader
 
 import (
+	"net/http"
+
 	"Qingyu_backend/api/v1/shared"
 	readerModels "Qingyu_backend/models/reader"
 
 	"Qingyu_backend/pkg/response"
 
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // ThemeAPI 主题API
 type ThemeAPI struct {
-	// 可以注入ThemeService，暂时先使用内置数据
+	// 主题写操作在 service/repository 接入前保持显式未实现，避免返回未持久化的假成功。
+}
+
+func respondThemeNotImplemented(c *gin.Context, message string) {
+	response.JSON(c, http.StatusNotImplemented, response.APIResponse{
+		Code:    http.StatusNotImplemented,
+		Message: message,
+	})
 }
 
 // NewThemeAPI 创建主题API实例
@@ -84,12 +92,11 @@ func (api *ThemeAPI) GetThemeByName(c *gin.Context) {
 //	@Summary	创建自定义主题
 //	@Tags		阅读器-主题
 //	@Param		request	body object	true	"创建主题请求"
-//	@Success	200		{object} response.APIResponse
+//	@Failure	501		{object} response.APIResponse
 //	@Router		/api/v1/reader/themes [post]
 func (api *ThemeAPI) CreateCustomTheme(c *gin.Context) {
 	// 获取用户ID
-	userID, ok := shared.GetUserIDWithMessage(c, "未授权")
-	if !ok {
+	if _, ok := shared.GetUserIDWithMessage(c, "未授权"); !ok {
 		return
 	}
 
@@ -99,26 +106,8 @@ func (api *ThemeAPI) CreateCustomTheme(c *gin.Context) {
 		return
 	}
 
-	// 创建自定义主题
-	theme := &readerModels.ReaderTheme{
-		ID:          primitive.NewObjectID(),
-		Name:        req.Name,
-		DisplayName: req.DisplayName,
-		Description: req.Description,
-		IsBuiltIn:   false,
-		IsPublic:    req.IsPublic,
-		CreatorID:   userID,
-		Colors:      req.Colors,
-		IsActive:    true,
-		UseCount:    0,
-	}
-
-	// 实际应用中应该保存到数据库
-	// 这里暂时返回成功
-	response.Created(c, gin.H{
-		"theme":   theme,
-		"message": "自定义主题创建成功",
-	})
+	// 主题 service/repository 尚未接入，不能把内存对象伪装成持久化结果。
+	respondThemeNotImplemented(c, "自定义主题持久化功能开发中")
 }
 
 // UpdateTheme 更新自定义主题
@@ -127,11 +116,10 @@ func (api *ThemeAPI) CreateCustomTheme(c *gin.Context) {
 //	@Tags		阅读器-主题
 //	@Param		id		path	string						true	"主题ID"
 //	@Param		request	body object	true	"更新主题请求"
-//	@Success	200		{object} response.APIResponse
+//	@Failure	501		{object} response.APIResponse
 //	@Router		/api/v1/reader/themes/{id} [put]
 func (api *ThemeAPI) UpdateTheme(c *gin.Context) {
-	userID, ok := shared.GetUserIDWithMessage(c, "未授权")
-	if !ok {
+	if _, ok := shared.GetUserIDWithMessage(c, "未授权"); !ok {
 		return
 	}
 
@@ -147,17 +135,8 @@ func (api *ThemeAPI) UpdateTheme(c *gin.Context) {
 		return
 	}
 
-	// 实际应用中应该：
-	// 1. 从数据库获取主题
-	// 2. 验证用户是否为创建者
-	// 3. 更新主题
-	// 4. 保存到数据库
-
-	response.Success(c, gin.H{
-		"message": "主题更新成功",
-		"themeId": themeID,
-		"userId":  userID,
-	})
+	// 请求和认证校验保留，实际 owner 校验与持久化等待主题 service 接入。
+	respondThemeNotImplemented(c, "自定义主题持久化功能开发中")
 }
 
 // DeleteTheme 删除自定义主题
@@ -165,11 +144,10 @@ func (api *ThemeAPI) UpdateTheme(c *gin.Context) {
 //	@Summary	删除自定义主题
 //	@Tags		阅读器-主题
 //	@Param		id	path	string	true	"主题ID"
-//	@Success	200	{object} response.APIResponse
+//	@Failure	501	{object} response.APIResponse
 //	@Router		/api/v1/reader/themes/{id} [delete]
 func (api *ThemeAPI) DeleteTheme(c *gin.Context) {
-	userID, ok := shared.GetUserIDWithMessage(c, "未授权")
-	if !ok {
+	if _, ok := shared.GetUserIDWithMessage(c, "未授权"); !ok {
 		return
 	}
 
@@ -179,16 +157,8 @@ func (api *ThemeAPI) DeleteTheme(c *gin.Context) {
 		return
 	}
 
-	// 实际应用中应该：
-	// 1. 从数据库获取主题
-	// 2. 验证用户是否为创建者
-	// 3. 删除主题
-
-	response.Success(c, gin.H{
-		"message": "主题删除成功",
-		"themeId": themeID,
-		"userId":  userID,
-	})
+	// 实际 owner 校验与删除等待主题 service 接入。
+	respondThemeNotImplemented(c, "自定义主题持久化功能开发中")
 }
 
 // ActivateTheme 激活主题
@@ -196,11 +166,10 @@ func (api *ThemeAPI) DeleteTheme(c *gin.Context) {
 //	@Summary	激活主题（应用到阅读设置）
 //	@Tags		阅读器-主题
 //	@Param		name	path	string	true	"主题名称"
-//	@Success	200	{object} response.APIResponse
+//	@Failure	501	{object} response.APIResponse
 //	@Router		/api/v1/reader/themes/{name}/activate [post]
 func (api *ThemeAPI) ActivateTheme(c *gin.Context) {
-	userID, ok := shared.GetUserIDWithMessage(c, "未授权")
-	if !ok {
+	if _, ok := shared.GetUserIDWithMessage(c, "未授权"); !ok {
 		return
 	}
 
@@ -224,13 +193,6 @@ func (api *ThemeAPI) ActivateTheme(c *gin.Context) {
 		return
 	}
 
-	// 实际应用中应该：
-	// 1. 更新用户的阅读设置，将theme字段设置为themeName
-	// 2. 清除设置缓存
-
-	response.Success(c, gin.H{
-		"message":   "主题已激活",
-		"themeName": themeName,
-		"userId":    userID,
-	})
+	// 激活状态和用户阅读设置尚未接入持久化 service。
+	respondThemeNotImplemented(c, "主题激活持久化功能开发中")
 }
