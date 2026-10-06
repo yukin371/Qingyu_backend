@@ -57,6 +57,31 @@ func (s publishedChapterRouteService) GetLastChapter(context.Context, string) (*
 	return &bookstoreModel.Chapter{Title: "最后一章"}, nil
 }
 
+func (s publishedChapterRouteService) SearchChapters(
+	context.Context,
+	string,
+	int,
+	int,
+) ([]*bookstoreModel.Chapter, int64, error) {
+	return []*bookstoreModel.Chapter{{Title: "搜索章节"}}, 1, nil
+}
+
+func (s publishedChapterRouteService) GetChapterCountByBookID(context.Context, string) (int64, error) {
+	return 3, nil
+}
+
+func (s publishedChapterRouteService) GetFreeChapterCountByBookID(context.Context, string) (int64, error) {
+	return 1, nil
+}
+
+func (s publishedChapterRouteService) GetPaidChapterCountByBookID(context.Context, string) (int64, error) {
+	return 2, nil
+}
+
+func (s publishedChapterRouteService) GetTotalWordCountByBookID(context.Context, string) (int64, error) {
+	return 300, nil
+}
+
 func TestInitBookstoreRouterPublishedChaptersUsesBookIDParam(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	previousConfig := config.GlobalConfig
@@ -144,6 +169,42 @@ func TestInitBookstoreRouterAdditionalChapterRoutesUseBookIDParam(t *testing.T) 
 			require.Contains(t, recorder.Body.String(), `"title":"`+tt.value+`"`)
 		})
 	}
+}
+
+func TestInitBookstoreRouterChapterStatisticsUsesBookIDParam(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	previousConfig := config.GlobalConfig
+	config.GlobalConfig = &config.Config{JWT: &config.JWTConfig{Secret: "router-test-secret", ExpirationHours: 1}}
+	t.Cleanup(func() { config.GlobalConfig = previousConfig })
+	r := gin.New()
+	api := r.Group("/api/v1")
+	InitBookstoreRouter(api, nil, nil, nil, nil, publishedChapterRouteService{}, nil, nil, nil, nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/bookstore/books/507f1f77bcf86cd799439011/chapters/statistics", nil)
+	recorder := httptest.NewRecorder()
+	r.ServeHTTP(recorder, req)
+
+	require.Equal(t, http.StatusOK, recorder.Code)
+	require.Contains(t, recorder.Body.String(), `"total_chapters":3`)
+	require.Contains(t, recorder.Body.String(), `"total_word_count":300`)
+}
+
+func TestInitBookstoreRouterSearchChapters(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	previousConfig := config.GlobalConfig
+	config.GlobalConfig = &config.Config{JWT: &config.JWTConfig{Secret: "router-test-secret", ExpirationHours: 1}}
+	t.Cleanup(func() { config.GlobalConfig = previousConfig })
+	r := gin.New()
+	api := r.Group("/api/v1")
+	InitBookstoreRouter(api, nil, nil, nil, nil, publishedChapterRouteService{}, nil, nil, nil, nil)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/bookstore/chapters/search?keyword=第一", nil)
+	recorder := httptest.NewRecorder()
+	r.ServeHTTP(recorder, req)
+
+	require.Equal(t, http.StatusOK, recorder.Code)
+	require.Contains(t, recorder.Body.String(), `"title":"搜索章节"`)
+	require.Contains(t, recorder.Body.String(), `"total":1`)
 }
 
 func TestInitBookstoreRouterWithAuthUsesInjectedMiddleware(t *testing.T) {

@@ -195,7 +195,9 @@ func initBookstoreRouter(
 				public.GET("/books/:id/chapters/first", chapterApiHandler.GetFirstChapter)
 				public.GET("/books/:id/chapters/last", chapterApiHandler.GetLastChapter)
 				public.GET("/books/:id/chapters/published", chapterApiHandler.GetPublishedChapters)
+				public.GET("/books/:id/chapters/statistics", chapterApiHandler.GetChapterStatistics)
 				public.GET("/books/:id/chapters/:chapter_num", chapterApiHandler.GetChapterByBookIDAndNumber)
+				public.GET("/chapters/search", chapterApiHandler.SearchChapters)
 				public.GET("/chapters/:id", chapterApiHandler.GetChapter)                // 获取章节详情
 				public.GET("/chapters/:id/content", chapterApiHandler.GetChapterContent) // 获取章节内容（公开接口）
 			}
