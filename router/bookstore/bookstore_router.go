@@ -121,12 +121,16 @@ func initBookstoreRouter(
 		chapterCatalogApiHandler = bookstoreApi.NewChapterCatalogAPI(chapterService, purchaseService)
 	}
 
+	// TODO(T3-058-statistics-owner): 确认 /api/v1/reading/* 统计声明是否仍为产品契约，
+	// 再决定由 BookStatisticsAPI 或现有 BookDetail/reader statistics owner 装配。
 	// ℹ️ Statistics API已通过BookDetailAPI实现
 	// 如需单独的Statistics API处理器，可在这里初始化
 	// var statisticsApiHandler *bookstoreApi.BookStatisticsAPI
 	// if statisticsService != nil {
 	// 	statisticsApiHandler = bookstoreApi.NewBookStatisticsAPI(statisticsService)
 	// }
+	// TODO(T3-058-chapter-write-owner): ChapterAPI 的写操作尚无明确 writer/书城 owner，
+	// 先不要把未确认权限边界的 POST/PUT/DELETE 直接暴露到公开路由。
 	// chapterApiHandler := bookstoreApi.NewChapterAPI(...)
 
 	// 书店主路由组
