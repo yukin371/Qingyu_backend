@@ -341,7 +341,14 @@ func RegisterRoutes(r *gin.Engine) {
 			deviceRepo = mongoReaderRepo.NewMongoDeviceRepository(mongoDB)
 		}
 
-		readerRouter.InitReaderRouter(v1, readerSvc, chapterSvc, commentSvc, likeSvc, collectionSvc, readingHistorySvc, progressSyncSvc, bookmarkSvc, deviceRepo)
+		var themeSvc readerservice.ThemeService
+		if svc, themeErr := serviceContainer.GetThemeService(); themeErr == nil {
+			themeSvc = svc
+		} else {
+			logger.Warn("主题服务未配置，主题写入路由保持未实现", zap.Error(themeErr))
+		}
+
+		readerRouter.InitReaderRouter(v1, readerSvc, chapterSvc, commentSvc, likeSvc, collectionSvc, readingHistorySvc, progressSyncSvc, bookmarkSvc, deviceRepo, themeSvc)
 
 		logger.Info("✓ 阅读器路由已注册到: /api/v1/reader/")
 		logger.Info("  - /api/v1/reader/books/* (书架管理)")

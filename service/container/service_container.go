@@ -106,6 +106,7 @@ type ServiceContainer struct {
 	bookRatingService      bookstoreService.BookRatingService
 	bookStatisticsService  bookstoreService.BookStatisticsService
 	readerService          *readingService.ReaderService
+	themeService           readingService.ThemeService
 	readingStatsService    *readingStatsService.ReadingStatsService
 	commentService         *socialService.CommentService
 	likeService            *socialService.LikeService
@@ -352,6 +353,14 @@ func (c *ServiceContainer) GetReaderService() (*readingService.ReaderService, er
 		return nil, fmt.Errorf("ReaderService未初始化")
 	}
 	return c.readerService, nil
+}
+
+// GetThemeService 获取阅读主题服务
+func (c *ServiceContainer) GetThemeService() (readingService.ThemeService, error) {
+	if c.themeService == nil {
+		return nil, fmt.Errorf("ThemeService未初始化")
+	}
+	return c.themeService, nil
 }
 
 // GetCommentService 获取评论服务
@@ -899,6 +908,8 @@ func (c *ServiceContainer) SetupDefaultServices() error {
 	progressRepo := c.repositoryFactory.CreateReadingProgressRepository()
 	annotationRepo := c.repositoryFactory.CreateAnnotationRepository()
 	settingsRepo := c.repositoryFactory.CreateReadingSettingsRepository()
+	themeRepo := c.repositoryFactory.CreateReaderThemeRepository()
+	c.themeService = readingService.NewReaderThemeService(themeRepo, settingsRepo)
 	chapterService := c.getChapterService() // ← 获取 ChapterService
 
 	// 创建缓存服务和VIP服务

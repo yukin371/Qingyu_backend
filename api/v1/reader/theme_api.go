@@ -2,18 +2,20 @@ package reader
 
 import (
 	"net/http"
+	"strings"
 
 	"Qingyu_backend/api/v1/shared"
 	readerModels "Qingyu_backend/models/reader"
 
 	"Qingyu_backend/pkg/response"
+	readerService "Qingyu_backend/service/reader"
 
 	"github.com/gin-gonic/gin"
 )
 
 // ThemeAPI 主题API
 type ThemeAPI struct {
-	// 主题写操作在 service/repository 接入前保持显式未实现，避免返回未持久化的假成功。
+	themeService readerService.ThemeService
 }
 
 func respondThemeNotImplemented(c *gin.Context, message string) {
@@ -24,8 +26,12 @@ func respondThemeNotImplemented(c *gin.Context, message string) {
 }
 
 // NewThemeAPI 创建主题API实例
-func NewThemeAPI() *ThemeAPI {
-	return &ThemeAPI{}
+func NewThemeAPI(themeServices ...readerService.ThemeService) *ThemeAPI {
+	api := &ThemeAPI{}
+	if len(themeServices) > 0 {
+		api.themeService = themeServices[0]
+	}
+	return api
 }
 
 // GetThemes 获取可用主题列表
@@ -37,6 +43,15 @@ func NewThemeAPI() *ThemeAPI {
 //	@Success	200		{object} response.APIResponse
 //	@Router		/api/v1/reader/themes [get]
 func (api *ThemeAPI) GetThemes(c *gin.Context) {
+	if api.themeService != nil {
+		themes, err := api.themeService.GetThemes(c.Request.Context(), shared.GetUserIDOptional(c), c.Query("builtin") == "true", c.Query("public") == "true")
+		if err != nil {
+			respondThemeError(c, err)
+			return
+		}
+		response.Success(c, gin.H{"themes": themes, "total": len(themes)})
+		return
+	}
 	// 获取查询参数
 	builtinOnly := c.Query("builtin") == "true"
 	publicOnly := c.Query("public") == "true"
@@ -75,6 +90,15 @@ func (api *ThemeAPI) GetThemeByName(c *gin.Context) {
 		response.BadRequest(c, "参数错误", "主题名称不能为空")
 		return
 	}
+	if api.themeService != nil {
+		theme, err := api.themeService.GetThemeByName(c.Request.Context(), name)
+		if err != nil {
+			respondThemeError(c, err)
+			return
+		}
+		response.Success(c, theme)
+		return
+	}
 
 	// 从内置主题中查找
 	for _, theme := range readerModels.BuiltInThemes {
@@ -96,7 +120,8 @@ func (api *ThemeAPI) GetThemeByName(c *gin.Context) {
 //	@Router		/api/v1/reader/themes [post]
 func (api *ThemeAPI) CreateCustomTheme(c *gin.Context) {
 	// 获取用户ID
-	if _, ok := shared.GetUserIDWithMessage(c, "未授权"); !ok {
+	userID, ok := shared.GetUserIDWithMessage(c, "未授权")
+	if !ok {
 		return
 	}
 
@@ -106,8 +131,16 @@ func (api *ThemeAPI) CreateCustomTheme(c *gin.Context) {
 		return
 	}
 
-	// 主题 service/repository 尚未接入，不能把内存对象伪装成持久化结果。
-	respondThemeNotImplemented(c, "自定义主题持久化功能开发中")
+	if api.themeService == nil {
+		respondThemeNotImplemented(c, "自定义主题持久化功能开发中")
+		return
+	}
+	theme, err := api.themeService.CreateCustomTheme(c.Request.Context(), userID, &req)
+	if err != nil {
+		respondThemeError(c, err)
+		return
+	}
+	response.Created(c, theme)
 }
 
 // UpdateTheme 更新自定义主题
@@ -119,7 +152,8 @@ func (api *ThemeAPI) CreateCustomTheme(c *gin.Context) {
 //	@Failure	501		{object} response.APIResponse
 //	@Router		/api/v1/reader/themes/{id} [put]
 func (api *ThemeAPI) UpdateTheme(c *gin.Context) {
-	if _, ok := shared.GetUserIDWithMessage(c, "未授权"); !ok {
+	userID, ok := shared.GetUserIDWithMessage(c, "未授权")
+	if !ok {
 		return
 	}
 
@@ -135,8 +169,15 @@ func (api *ThemeAPI) UpdateTheme(c *gin.Context) {
 		return
 	}
 
-	// 请求和认证校验保留，实际 owner 校验与持久化等待主题 service 接入。
-	respondThemeNotImplemented(c, "自定义主题持久化功能开发中")
+	if api.themeService == nil {
+		respondThemeNotImplemented(c, "自定义主题持久化功能开发中")
+		return
+	}
+	if err := api.themeService.UpdateTheme(c.Request.Context(), userID, themeID, &req); err != nil {
+		respondThemeError(c, err)
+		return
+	}
+	response.Success(c, nil)
 }
 
 // DeleteTheme 删除自定义主题
@@ -147,7 +188,8 @@ func (api *ThemeAPI) UpdateTheme(c *gin.Context) {
 //	@Failure	501	{object} response.APIResponse
 //	@Router		/api/v1/reader/themes/{id} [delete]
 func (api *ThemeAPI) DeleteTheme(c *gin.Context) {
-	if _, ok := shared.GetUserIDWithMessage(c, "未授权"); !ok {
+	userID, ok := shared.GetUserIDWithMessage(c, "未授权")
+	if !ok {
 		return
 	}
 
@@ -157,8 +199,15 @@ func (api *ThemeAPI) DeleteTheme(c *gin.Context) {
 		return
 	}
 
-	// 实际 owner 校验与删除等待主题 service 接入。
-	respondThemeNotImplemented(c, "自定义主题持久化功能开发中")
+	if api.themeService == nil {
+		respondThemeNotImplemented(c, "自定义主题持久化功能开发中")
+		return
+	}
+	if err := api.themeService.DeleteTheme(c.Request.Context(), userID, themeID); err != nil {
+		respondThemeError(c, err)
+		return
+	}
+	response.Success(c, nil)
 }
 
 // ActivateTheme 激活主题
@@ -169,7 +218,8 @@ func (api *ThemeAPI) DeleteTheme(c *gin.Context) {
 //	@Failure	501	{object} response.APIResponse
 //	@Router		/api/v1/reader/themes/{name}/activate [post]
 func (api *ThemeAPI) ActivateTheme(c *gin.Context) {
-	if _, ok := shared.GetUserIDWithMessage(c, "未授权"); !ok {
+	userID, ok := shared.GetUserIDWithMessage(c, "未授权")
+	if !ok {
 		return
 	}
 
@@ -179,7 +229,16 @@ func (api *ThemeAPI) ActivateTheme(c *gin.Context) {
 		return
 	}
 
-	// 验证主题是否存在
+	if api.themeService != nil {
+		if err := api.themeService.ActivateTheme(c.Request.Context(), userID, themeName); err != nil {
+			respondThemeError(c, err)
+			return
+		}
+		response.Success(c, gin.H{"name": themeName, "active": true})
+		return
+	}
+
+	// 兼容未注入 service 的测试/旧装配路径：只验证内置主题名称，不伪装持久化成功。
 	themeExists := false
 	for _, theme := range readerModels.BuiltInThemes {
 		if theme.Name == themeName {
@@ -195,4 +254,18 @@ func (api *ThemeAPI) ActivateTheme(c *gin.Context) {
 
 	// 激活状态和用户阅读设置尚未接入持久化 service。
 	respondThemeNotImplemented(c, "主题激活持久化功能开发中")
+}
+
+func respondThemeError(c *gin.Context, err error) {
+	message := err.Error()
+	switch {
+	case strings.Contains(message, "不存在"):
+		response.NotFound(c, "主题不存在")
+	case strings.Contains(message, "已存在"):
+		response.Conflict(c, "主题名称已存在", message)
+	case strings.Contains(message, "不能为空") || strings.Contains(message, "无效"):
+		response.BadRequest(c, "参数错误", message)
+	default:
+		response.InternalError(c, err)
+	}
 }

@@ -25,13 +25,14 @@ func InitReaderRouter(
 	progressSyncService *syncService.ProgressSyncService,
 	bookmarkService readerservice.BookmarkService,
 	deviceRepo serviceInterfaces.ReaderDevicePort,
+	themeServices ...readerservice.ThemeService,
 ) {
 	// 创建API实例
 	progressApiHandler := readerApi.NewProgressAPI(readerService, deviceRepo)
 	annotationsApiHandler := readerApi.NewAnnotationsAPI(readerService)
 	settingApiHandler := readerApi.NewSettingAPI(readerService)
 	booksApiHandler := readerApi.NewBooksAPI(readerService)
-	themeApiHandler := readerApi.NewThemeAPI()
+	themeApiHandler := readerApi.NewThemeAPI(themeServices...)
 	fontApiHandler := readerApi.NewFontAPI()
 	chapterCommentApiHandler := readerApi.NewChapterCommentAPI()
 	chapterCommentApiHandler.BindServices(commentService, chapterService)
