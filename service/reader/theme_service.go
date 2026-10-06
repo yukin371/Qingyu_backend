@@ -94,6 +94,9 @@ func (s *ReaderThemeService) GetActiveTheme(ctx context.Context, userID string) 
 	if userID == "" {
 		return nil, fmt.Errorf("用户ID不能为空")
 	}
+	if s.themeRepo == nil {
+		return nil, fmt.Errorf("主题仓储未初始化")
+	}
 	return s.themeRepo.GetActiveTheme(ctx, userID)
 }
 

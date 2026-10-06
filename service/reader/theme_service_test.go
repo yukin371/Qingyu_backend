@@ -181,5 +181,13 @@ func TestReaderThemeService_GetThemeByNameHidesPrivateForeignTheme(t *testing.T)
 	require.Contains(t, err.Error(), "主题不存在")
 }
 
+func TestReaderThemeService_GetActiveThemeRejectsMissingRepository(t *testing.T) {
+	service := NewReaderThemeService(nil, &fakeSettingsRepository{})
+
+	_, err := service.GetActiveTheme(context.Background(), "user-a")
+
+	require.EqualError(t, err, "主题仓储未初始化")
+}
+
 var _ readerRepo.ReaderThemeRepository = (*fakeThemeRepository)(nil)
 var _ readerRepo.ReadingSettingsRepository = (*fakeSettingsRepository)(nil)

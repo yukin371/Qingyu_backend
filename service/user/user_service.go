@@ -776,10 +776,8 @@ func (s *UserServiceImpl) VerifyPassword(ctx context.Context, userID string, pas
 // DowngradeRole 角色降级
 // 将用户角色降级到指定角色（只能降级到reader或author）
 //
-// TECHDEBT(#2026-03-22): 职责边界问题
-// 角色管理应由 AuthService 统一处理，后续迭代应迁移。
-// 此方法涉及用户数据的修改（更新 roles 字段），可保留在 UserService，
-// 但应通过 AuthService 进行权限验证后再执行。
+// 角色字段的持久化修改由 UserService 负责；调用方负责认证上下文和操作权限校验。
+// AuthService 不再承担用户资料写入，避免认证服务反向依赖用户仓储。
 func (s *UserServiceImpl) DowngradeRole(ctx context.Context, req *user2.DowngradeRoleRequest) (*user2.DowngradeRoleResponse, error) {
 	// 1. 验证请求数据
 	if req.UserID == "" {
