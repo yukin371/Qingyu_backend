@@ -54,6 +54,7 @@
 18. search 只有灰度管理组需要鉴权，生产注册通过组合根注入 `RegisterSearchRoutesWithAuth`；公开搜索和健康路由不得引入 JWT，旧 `RegisterSearchRoutes` 仅作迁移期兼容入口。
 19. admin 主路由和 content export 路由通过组合根注入 `RegisterAdminRoutesWithAuth`/`RegisterContentExportRoutesWithAuth`；必须保持 JWT 认证先于 `RequireRole("admin")`，旧注册函数仅作迁移期兼容入口。
 20. AI 主路由和 creative 路由通过组合根注入 `InitAIRouterWithAuth`；认证必须保持在 quota middleware 之前，旧 `InitAIRouter`/`InitCreativeRoutes` 仅作迁移期兼容入口。
+21. user 只有 `/user` 个人管理组使用注入的 `RegisterUserRoutesWithAuth`；公开注册、登录、密码重置和公开资料不得误加 JWT，旧 `RegisterUserRoutes` 仅作迁移期兼容入口。
 
 ## 文档同步触发条件
 - 新增/调整 API 时同步更新 `docs/api`、`docs/architecture` 与 swagger 产物。

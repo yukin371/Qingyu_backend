@@ -29,6 +29,26 @@ func RegisterUserRoutes(
 	userStatsService userService.UserStatsService,
 	contentStatsService writerService.ContentStatsService,
 ) {
+	RegisterUserRoutesWithAuth(r, authSvc, userSvc, userRepo, bookstoreService, storageService, userStatsService, contentStatsService, auth.JWTAuth())
+}
+
+// RegisterUserRoutesWithAuth 注册用户路由并注入认证 handler。
+// RegisterUserRoutes 保留为迁移期兼容入口；公开认证和公开资料路径不使用该 handler。
+func RegisterUserRoutesWithAuth(
+	r *gin.RouterGroup,
+	authSvc authService.AuthService,
+	userSvc userServiceInterface.UserService,
+	userRepo repoInterfaces.UserRepository,
+	bookstoreService BookstoreService,
+	storageService sharedStorage.StorageService,
+	userStatsService userService.UserStatsService,
+	contentStatsService writerService.ContentStatsService,
+	authMiddleware gin.HandlerFunc,
+) {
+	if authMiddleware == nil {
+		authMiddleware = auth.JWTAuth()
+	}
+
 	// 创建验证服务
 	verificationService := userService.NewVerificationService(
 		userRepo,
@@ -103,7 +123,7 @@ func RegisterUserRoutes(
 	// 需要认证的路由
 	// ========================================
 	authenticated := r.Group("/user")
-	authenticated.Use(auth.JWTAuth())
+	authenticated.Use(authMiddleware)
 	{
 		// 个人信息管理
 		authenticated.GET("/profile", handlers.ProfileHandler.GetProfile)

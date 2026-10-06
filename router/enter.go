@@ -1007,7 +1007,7 @@ func RegisterRoutes(r *gin.Engine) {
 	}
 
 	// 注册新的 user 路由
-	userRouter.RegisterUserRoutes(v1, authSvc, userSvc, userRepoForUM, bookstoreSvcForUM, storageSvcForUM, userStatsSvc, contentStatsSvc)
+	userRouter.RegisterUserRoutesWithAuth(v1, authSvc, userSvc, userRepoForUM, bookstoreSvcForUM, storageSvcForUM, userStatsSvc, contentStatsSvc, newCanonicalJWTAuthMiddleware(logger))
 
 	logger.Info("✓ 用户路由已注册到: /api/v1/user/")
 	logger.Info("  - /api/v1/user/auth/register (用户注册)")
