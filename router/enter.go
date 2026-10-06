@@ -962,12 +962,12 @@ func RegisterRoutes(r *gin.Engine) {
 		}
 
 		// 注册管理员路由（包含用户管理和权限管理）
-		adminRouter.RegisterAdminRoutes(v1, userSvc, quotaService, auditSvc, adminSvc, configSvc, announcementSvc, userAdminSvc, permissionSvc, serviceContainer.GetPersistedEventBus(), categorySvc, publicationSvc, bannerSvc, quotaAdminSvc, quotaDashboardSvc, quotaPolicySvc, quotaAlertSvc)
+		adminRouter.RegisterAdminRoutesWithAuth(v1, userSvc, quotaService, auditSvc, adminSvc, configSvc, announcementSvc, userAdminSvc, permissionSvc, serviceContainer.GetPersistedEventBus(), categorySvc, publicationSvc, bannerSvc, quotaAdminSvc, quotaDashboardSvc, quotaPolicySvc, quotaAlertSvc, newCanonicalJWTAuthMiddleware(logger))
 	} else {
 		// 如果 MongoDB 不可用，不注册用户管理和权限管理路由
-		adminRouter.RegisterAdminRoutes(v1, userSvc, quotaService, auditSvc, adminSvc, configSvc, announcementSvc, nil, nil, serviceContainer.GetPersistedEventBus(), nil, publicationSvc, nil, quotaAdminSvc, quotaDashboardSvc, quotaPolicySvc, quotaAlertSvc)
+		adminRouter.RegisterAdminRoutesWithAuth(v1, userSvc, quotaService, auditSvc, adminSvc, configSvc, announcementSvc, nil, nil, serviceContainer.GetPersistedEventBus(), nil, publicationSvc, nil, quotaAdminSvc, quotaDashboardSvc, quotaPolicySvc, quotaAlertSvc, newCanonicalJWTAuthMiddleware(logger))
 	}
-	adminRouter.RegisterContentExportRoutes(v1, contentBookPort, contentChapterPort)
+	adminRouter.RegisterContentExportRoutesWithAuth(v1, contentBookPort, contentChapterPort, newCanonicalJWTAuthMiddleware(logger))
 
 	logger.Info("✓ 管理员路由已注册到: /api/v1/admin/")
 	logger.Info("  - /api/v1/admin/users/* (用户管理)")

@@ -17,13 +17,26 @@ func RegisterContentExportRoutes(
 	bookPort serviceinterfaces.AdminContentBookPort,
 	chapterPort serviceinterfaces.AdminContentChapterPort,
 ) {
+	RegisterContentExportRoutesWithAuth(r, bookPort, chapterPort, auth.JWTAuth())
+}
+
+// RegisterContentExportRoutesWithAuth 注册管理员内容导出路由并注入 JWT handler。
+func RegisterContentExportRoutesWithAuth(
+	r *gin.RouterGroup,
+	bookPort serviceinterfaces.AdminContentBookPort,
+	chapterPort serviceinterfaces.AdminContentChapterPort,
+	authMiddleware gin.HandlerFunc,
+) {
 	if r == nil || bookPort == nil || chapterPort == nil {
 		return
+	}
+	if authMiddleware == nil {
+		authMiddleware = auth.JWTAuth()
 	}
 
 	api := adminAPI.NewContentExportAPI(bookPort, chapterPort)
 	adminGroup := r.Group("/admin")
-	adminGroup.Use(auth.JWTAuth())
+	adminGroup.Use(authMiddleware)
 	adminGroup.Use(auth.RequireRole("admin"))
 
 	contentGroup := adminGroup.Group("/content")

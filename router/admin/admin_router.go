@@ -36,6 +36,35 @@ func RegisterAdminRoutes(
 	quotaPolicySvc *aiService.QuotaPolicyService,
 	quotaAlertSvc *aiService.QuotaAlertService,
 ) {
+	RegisterAdminRoutesWithAuth(r, userSvc, quotaSvc, auditSvc, adminSvc, configSvc, announcementSvc, userAdminSvc, permissionSvc, eventBus, categorySvc, publicationSvc, bannerSvc, quotaAdminSvc, quotaDashboardSvc, quotaPolicySvc, quotaAlertSvc, auth.JWTAuth())
+}
+
+// RegisterAdminRoutesWithAuth 注册管理员路由并注入 JWT 鉴权 handler。
+// RegisterAdminRoutes 保留为迁移期兼容入口；RequireRole 顺序保持在 JWT 之后。
+func RegisterAdminRoutesWithAuth(
+	r *gin.RouterGroup,
+	userSvc userService.UserService,
+	quotaSvc *aiService.QuotaService,
+	auditSvc auditService.ContentAuditService,
+	adminSvc adminservice.AdminService,
+	configSvc *sharedService.ConfigService,
+	announcementSvc messagingService.AnnouncementService,
+	userAdminSvc adminservice.UserAdminService,
+	permissionSvc sharedService.PermissionService,
+	eventBus eventservice.PersistedEventBusInterface,
+	categorySvc adminservice.CategoryAdminService,
+	publicationSvc publishService.PublishService,
+	bannerSvc bookstoreService.BannerService,
+	quotaAdminSvc *aiService.QuotaAdminService,
+	quotaDashboardSvc *aiService.QuotaDashboardService,
+	quotaPolicySvc *aiService.QuotaPolicyService,
+	quotaAlertSvc *aiService.QuotaAlertService,
+	authMiddleware gin.HandlerFunc,
+) {
+	if authMiddleware == nil {
+		authMiddleware = auth.JWTAuth()
+	}
+
 	// 创建admin API实例
 	auditAdminAPI := admin.NewAuditAdminAPI(auditSvc)
 	systemAdminAPI := admin.NewSystemAdminAPI(adminSvc)
@@ -74,7 +103,7 @@ func RegisterAdminRoutes(
 
 	// 管理员路由组 - 需要JWT认证 + 管理员权限
 	adminGroup := r.Group("/admin")
-	adminGroup.Use(auth.JWTAuth())            // JWT认证
+	adminGroup.Use(authMiddleware)            // JWT认证
 	adminGroup.Use(auth.RequireRole("admin")) // 管理员权限验证
 	{
 		// ===========================

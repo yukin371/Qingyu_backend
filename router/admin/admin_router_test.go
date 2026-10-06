@@ -1,6 +1,8 @@
 package admin
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"Qingyu_backend/config"
@@ -103,4 +105,37 @@ func TestRegisterAdminRoutes_DoesNotRegisterQuotaRoutesWhenServicesMissing(t *te
 	assert.False(t, paths["/api/v1/admin/quota/users"])
 	assert.False(t, paths["/api/v1/admin/quota/policies"])
 	assert.False(t, paths["/api/v1/admin/quota/alerts"])
+}
+
+func TestRegisterAdminRoutesWithAuthUsesInjectedMiddleware(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	engine := gin.New()
+	v1 := engine.Group("/api/v1")
+
+	RegisterAdminRoutesWithAuth(
+		v1,
+		nil,
+		&aiService.QuotaService{},
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		&aiService.QuotaAdminService{},
+		&aiService.QuotaDashboardService{},
+		&aiService.QuotaPolicyService{},
+		&aiService.QuotaAlertService{},
+		func(c *gin.Context) { c.AbortWithStatus(http.StatusTeapot) },
+	)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/admin/quota/dashboard", nil)
+	rec := httptest.NewRecorder()
+	engine.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusTeapot, rec.Code)
 }

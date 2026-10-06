@@ -2,6 +2,8 @@ package admin
 
 import (
 	"context"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -47,4 +49,20 @@ func TestRegisterContentExportRoutesSkipsWhenPortMissing(t *testing.T) {
 	paths := collectRoutePaths(engine)
 	assert.False(t, paths["/api/v1/admin/content/books/export"])
 	assert.False(t, paths["/api/v1/admin/content/chapters/export"])
+}
+
+func TestRegisterContentExportRoutesWithAuthUsesInjectedMiddleware(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	engine := gin.New()
+	v1 := engine.Group("/api/v1")
+
+	RegisterContentExportRoutesWithAuth(v1, contentBookPortStub{}, contentChapterPortStub{}, func(c *gin.Context) {
+		c.AbortWithStatus(http.StatusTeapot)
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/admin/content/books/export", nil)
+	rec := httptest.NewRecorder()
+	engine.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusTeapot, rec.Code)
 }

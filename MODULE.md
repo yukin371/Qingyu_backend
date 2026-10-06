@@ -52,6 +52,7 @@
 16. recommendation 路由的认证与管理员子组通过组合根注入 `RegisterRecommendationRoutesWithAuth`；公开推荐路径不应引入鉴权，旧 `RegisterRecommendationRoutes` 仅作迁移期兼容入口。
 17. community 路由的认证写操作通过组合根注入 `RegisterCommunityRoutesWithAuth`；公开动态读取路径不得误加鉴权，旧 `RegisterCommunityRoutes` 仅作迁移期兼容入口。
 18. search 只有灰度管理组需要鉴权，生产注册通过组合根注入 `RegisterSearchRoutesWithAuth`；公开搜索和健康路由不得引入 JWT，旧 `RegisterSearchRoutes` 仅作迁移期兼容入口。
+19. admin 主路由和 content export 路由通过组合根注入 `RegisterAdminRoutesWithAuth`/`RegisterContentExportRoutesWithAuth`；必须保持 JWT 认证先于 `RequireRole("admin")`，旧注册函数仅作迁移期兼容入口。
 
 ## 文档同步触发条件
 - 新增/调整 API 时同步更新 `docs/api`、`docs/architecture` 与 swagger 产物。
