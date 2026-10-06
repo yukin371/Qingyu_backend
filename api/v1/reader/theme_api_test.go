@@ -28,6 +28,7 @@ func setupThemeTestRouter(userID string) *gin.Engine {
 	api := NewThemeAPI()
 
 	r.GET("/api/v1/reader/themes", api.GetThemes)
+	r.GET("/api/v1/reader/themes/active", api.GetActiveTheme)
 	r.GET("/api/v1/reader/themes/:name", api.GetThemeByName)
 	r.POST("/api/v1/reader/themes", api.CreateCustomTheme)
 	r.PUT("/api/v1/reader/themes/:id", api.UpdateTheme)
@@ -87,6 +88,16 @@ func TestThemeAPI_GetThemeByName_Success(t *testing.T) {
 
 	// Then
 	assert.Equal(t, http.StatusOK, w.Code)
+}
+
+func TestThemeAPI_GetActiveTheme_Unauthorized(t *testing.T) {
+	router := setupThemeTestRouter("")
+
+	req, _ := http.NewRequest("GET", "/api/v1/reader/themes/active", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
 }
 
 func TestThemeAPI_GetThemeByName_NotFound(t *testing.T) {

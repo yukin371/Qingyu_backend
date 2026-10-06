@@ -85,6 +85,15 @@ func (f *fakeThemeRepository) SetActiveTheme(_ context.Context, userID, themeID 
 	return nil
 }
 
+func (f *fakeThemeRepository) GetActiveTheme(_ context.Context, userID string) (*readerModel.ReaderTheme, error) {
+	for _, theme := range f.themes {
+		if theme.CreatorID == userID && theme.IsActive {
+			return theme, nil
+		}
+	}
+	return readerModel.BuiltInThemes[0], nil
+}
+
 type fakeSettingsRepository struct {
 	readerRepo.ReadingSettingsRepository
 	settings *readerModel.ReadingSettings
@@ -139,6 +148,25 @@ func TestReaderThemeService_ActivateBuiltInPersistsSettings(t *testing.T) {
 	require.Equal(t, light.ID.Hex(), repo.activeTheme)
 	require.Equal(t, "light", settingsRepo.settings.Theme)
 	require.Equal(t, light.Colors.Background, settingsRepo.settings.Background)
+}
+
+func TestReaderThemeService_ActivateCustomThemeByID(t *testing.T) {
+	repo := newFakeThemeRepository()
+	custom := &readerModel.ReaderTheme{
+		ID:        primitive.NewObjectID(),
+		Name:      "custom-dark",
+		CreatorID: "user-a",
+		Colors:    readerModel.ThemeColors{Background: "#111111"},
+	}
+	repo.themes[custom.ID.Hex()] = custom
+	settingsRepo := &fakeSettingsRepository{settings: &readerModel.ReadingSettings{UserID: "user-a"}}
+	service := NewReaderThemeService(repo, settingsRepo)
+
+	err := service.ActivateTheme(context.Background(), "user-a", custom.ID.Hex())
+
+	require.NoError(t, err)
+	require.Equal(t, custom.ID.Hex(), repo.activeTheme)
+	require.Equal(t, custom.Name, settingsRepo.settings.Theme)
 }
 
 func TestReaderThemeService_GetThemeByNameHidesPrivateForeignTheme(t *testing.T) {

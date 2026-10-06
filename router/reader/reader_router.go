@@ -235,6 +235,7 @@ func InitReaderRouter(
 		themes := readerGroup.Group("/themes")
 		{
 			themes.GET("", themeApiHandler.GetThemes)                     // 获取主题列表
+			themes.GET("/active", themeApiHandler.GetActiveTheme)         // 获取当前激活主题
 			themes.GET("/:name", themeApiHandler.GetThemeByName)          // 获取单个主题
 			themes.POST("", themeApiHandler.CreateCustomTheme)            // 创建自定义主题
 			themes.PUT("/:id", themeApiHandler.UpdateTheme)               // 更新主题

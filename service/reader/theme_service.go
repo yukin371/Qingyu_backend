@@ -14,6 +14,7 @@ import (
 type ThemeService interface {
 	GetThemes(ctx context.Context, userID string, builtinOnly, publicOnly bool) ([]*readerModel.ReaderTheme, error)
 	GetThemeByName(ctx context.Context, userID, name string) (*readerModel.ReaderTheme, error)
+	GetActiveTheme(ctx context.Context, userID string) (*readerModel.ReaderTheme, error)
 	CreateCustomTheme(ctx context.Context, userID string, req *readerModel.CreateCustomThemeRequest) (*readerModel.ReaderTheme, error)
 	UpdateTheme(ctx context.Context, userID, themeID string, req *readerModel.UpdateThemeRequest) error
 	DeleteTheme(ctx context.Context, userID, themeID string) error
@@ -87,6 +88,13 @@ func (s *ReaderThemeService) GetThemeByName(ctx context.Context, userID, name st
 		return nil, err
 	}
 	return nil, fmt.Errorf("主题不存在: %s", name)
+}
+
+func (s *ReaderThemeService) GetActiveTheme(ctx context.Context, userID string) (*readerModel.ReaderTheme, error) {
+	if userID == "" {
+		return nil, fmt.Errorf("用户ID不能为空")
+	}
+	return s.themeRepo.GetActiveTheme(ctx, userID)
 }
 
 func (s *ReaderThemeService) CreateCustomTheme(ctx context.Context, userID string, req *readerModel.CreateCustomThemeRequest) (*readerModel.ReaderTheme, error) {
@@ -165,7 +173,12 @@ func (s *ReaderThemeService) ActivateTheme(ctx context.Context, userID, themeNam
 	}
 	theme, err := s.GetThemeByName(ctx, userID, themeName)
 	if err != nil {
-		return err
+		// The frontend uses the canonical name for built-ins and the stable ID
+		// for custom themes. Resolve both forms without weakening owner checks.
+		theme, err = s.themeRepo.GetTheme(ctx, themeName)
+		if err != nil {
+			return err
+		}
 	}
 	if !theme.IsBuiltIn && theme.CreatorID != userID {
 		return fmt.Errorf("主题不存在")

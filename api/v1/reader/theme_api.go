@@ -111,6 +111,31 @@ func (api *ThemeAPI) GetThemeByName(c *gin.Context) {
 	response.NotFound(c, "主题不存在")
 }
 
+// GetActiveTheme 获取当前用户激活的主题
+//
+//	@Summary	获取当前激活主题
+//	@Tags		阅读器-主题
+//	@Success	200	{object} response.APIResponse
+//	@Failure	401	{object} response.APIResponse
+//	@Failure	501	{object} response.APIResponse
+//	@Router		/api/v1/reader/themes/active [get]
+func (api *ThemeAPI) GetActiveTheme(c *gin.Context) {
+	userID, ok := shared.GetUserIDWithMessage(c, "未授权")
+	if !ok {
+		return
+	}
+	if api.themeService == nil {
+		respondThemeNotImplemented(c, "主题激活查询功能开发中")
+		return
+	}
+	theme, err := api.themeService.GetActiveTheme(c.Request.Context(), userID)
+	if err != nil {
+		respondThemeError(c, err)
+		return
+	}
+	response.Success(c, theme)
+}
+
 // CreateCustomTheme 创建自定义主题
 //
 //	@Summary	创建自定义主题

@@ -235,6 +235,14 @@ func (m *MockThemeService) GetThemeByName(name string) (*reader.ReaderTheme, err
 	return args.Get(0).(*reader.ReaderTheme), args.Error(1)
 }
 
+func (m *MockThemeService) GetActiveTheme(userID string) (*reader.ReaderTheme, error) {
+	args := m.Called(userID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*reader.ReaderTheme), args.Error(1)
+}
+
 func (m *MockThemeService) CreateCustomTheme(userID string, theme *reader.ReaderTheme) error {
 	args := m.Called(userID, theme)
 	return args.Error(0)
