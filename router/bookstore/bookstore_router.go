@@ -57,6 +57,42 @@ func InitBookstoreRouter(
 	streamSvc *bookstore.BookstoreStreamService,
 	zapLogger *zap.Logger,
 ) {
+	initBookstoreRouter(r, bookstoreService, bookDetailService, ratingService, statisticsService, chapterService, purchaseService, searchSvc, streamSvc, zapLogger, auth.JWTAuth())
+}
+
+// InitBookstoreRouterWithAuth 初始化书店路由，并由组合根注入认证中间件。
+func InitBookstoreRouterWithAuth(
+	r *gin.RouterGroup,
+	bookstoreService bookstore.BookstoreService,
+	bookDetailService bookstore.BookDetailService,
+	ratingService bookstore.BookRatingService,
+	statisticsService bookstore.BookStatisticsService,
+	chapterService bookstore.ChapterService,
+	purchaseService bookstore.ChapterPurchaseService,
+	searchSvc *searchService.SearchService,
+	streamSvc *bookstore.BookstoreStreamService,
+	zapLogger *zap.Logger,
+	authMiddleware gin.HandlerFunc,
+) {
+	if authMiddleware == nil {
+		authMiddleware = auth.JWTAuth()
+	}
+	initBookstoreRouter(r, bookstoreService, bookDetailService, ratingService, statisticsService, chapterService, purchaseService, searchSvc, streamSvc, zapLogger, authMiddleware)
+}
+
+func initBookstoreRouter(
+	r *gin.RouterGroup,
+	bookstoreService bookstore.BookstoreService,
+	bookDetailService bookstore.BookDetailService,
+	ratingService bookstore.BookRatingService,
+	statisticsService bookstore.BookStatisticsService,
+	chapterService bookstore.ChapterService,
+	purchaseService bookstore.ChapterPurchaseService,
+	searchSvc *searchService.SearchService,
+	streamSvc *bookstore.BookstoreStreamService,
+	zapLogger *zap.Logger,
+	authMiddleware gin.HandlerFunc,
+) {
 	// 创建API实例
 	bookstoreApiHandler := bookstoreApi.NewBookstoreAPI(bookstoreService, searchSvc, logger.Get())
 	bookstoreApiHandler.SetStreamService(streamSvc)
@@ -179,7 +215,7 @@ func InitBookstoreRouter(
 
 	// 需要认证的接口
 	authenticated := bookstoreGroup.Group("")
-	authenticated.Use(auth.JWTAuth())
+	authenticated.Use(authMiddleware)
 	{
 		// ✅ 评分API（当RatingAPI可用时）
 		if ratingApiHandler != nil {

@@ -261,7 +261,7 @@ func RegisterRoutes(r *gin.Engine) {
 		} else {
 			logger.Warn("书城流式服务未配置，流式搜索路由将返回不可用错误", zap.Error(streamErr))
 		}
-		bookstoreRouter.InitBookstoreRouter(v1, bookstoreSvc, bookDetailSvc, ratingSvc, statisticsSvc, chapterSvc, chapterPurchaseSvc, searchSvc, bookstoreStreamSvc, logger)
+		bookstoreRouter.InitBookstoreRouterWithAuth(v1, bookstoreSvc, bookDetailSvc, ratingSvc, statisticsSvc, chapterSvc, chapterPurchaseSvc, searchSvc, bookstoreStreamSvc, logger, newCanonicalJWTAuthMiddleware(logger))
 
 		logger.Info("✓ 书店路由已注册到: /api/v1/bookstore/")
 		logger.Info("  - /api/v1/bookstore/homepage (书城首页)")

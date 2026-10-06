@@ -54,3 +54,32 @@ func TestInitBookstoreRouterPublishedChaptersUsesBookIDParam(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, recorder.Code)
 }
+
+func TestInitBookstoreRouterWithAuthUsesInjectedMiddleware(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	api := r.Group("/api/v1")
+	var ratingService bookstoreService.BookRatingService = (*bookstoreService.BookRatingServiceImpl)(nil)
+
+	InitBookstoreRouterWithAuth(
+		api,
+		nil,
+		nil,
+		ratingService,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		func(c *gin.Context) {
+			c.AbortWithStatus(http.StatusTeapot)
+		},
+	)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/bookstore/books/507f1f77bcf86cd799439011/rating", nil)
+	recorder := httptest.NewRecorder()
+	r.ServeHTTP(recorder, req)
+
+	require.Equal(t, http.StatusTeapot, recorder.Code)
+}
