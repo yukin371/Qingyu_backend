@@ -117,7 +117,11 @@ func (api *ChapterCatalogAPI) GetChapterCatalog(c *gin.Context) {
 //	@Failure		400			{object}	APIResponse
 //	@Failure		404			{object}	APIResponse
 //	@Failure		500			{object}	APIResponse
-//	@Router			/api/v1/bookstore/books/{id}/chapters/{chapterId} [get]
+//
+// The bookstore router does not expose this compatibility handler. Chapter ID
+// reads use ChapterAPI.GetChapter at /bookstore/chapters/{id}; reader metadata
+// uses /reader/chapters/{chapterId}/info. Keep this method only for in-package
+// compatibility until its owner is explicitly retired.
 func (api *ChapterCatalogAPI) GetChapterInfo(c *gin.Context) {
 	chapterIdStr := c.Param("chapterId")
 	if chapterIdStr == "" {
