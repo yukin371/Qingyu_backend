@@ -58,9 +58,10 @@
 22. social 统一路由通过组合根注入 `RegisterSocialRoutesWithAuth`；评论、关注、点赞、收藏、私信、书评和书单子路由共享同一认证 handler，旧 `RegisterSocialRoutes` 仅作迁移期兼容入口。
 23. reader 认证阅读组通过组合根注入 `InitReaderRouterWithAuth`；`/reader/collections/public` 保持公开，旧 `InitReaderRouter` 仅作迁移期兼容入口。
 24. bookstore 评分认证组通过组合根注入 `InitBookstoreRouterWithAuth`；书城浏览、章节公开内容和 banner 保持公开，旧 `InitBookstoreRouter` 仅作迁移期兼容入口。
-25. writer 主路由通过组合根注入 `RegisterWriterRoutesWithAuth`，并向 `InitWriterRouterWithAuth`/`InitWriterRoutesWithAuth` 传递同一 handler；`InitAuditRouter` 尚无生产调用方，确认 owner 前不得自行删除或扩展其认证实现。
-26. shared 认证与存储生产路由通过组合根注入 `RegisterAuthRoutesWithAuth`/`RegisterStorageRoutesWithAuth`；公开登录/OAuth 路径不得误加 JWT，无生产调用的 `RegisterWalletRoutes` 与 `InitStorageRoutes` 保持独立兼容入口。
-27. realtime WebSocket 不使用 Gin `auth.JWTAuth()`；`WSHub`/`MessagingWSHub` 通过组合根注入 `service/auth.JWTService`，以保留子协议握手和 Redis 黑名单语义。conversation 成员校验与 typing 广播仍是独立 TODO。
+25. 书城章节购买兼容入口使用 `InitReaderPurchaseRouterWithAuth` 接收认证 handler；旧 `InitReaderPurchaseRouter` 仅作默认 JWT 包装，当前无生产调用方，恢复生产注册前必须先确认购买路由 owner 与契约。
+26. writer 主路由通过组合根注入 `RegisterWriterRoutesWithAuth`，并向 `InitWriterRouterWithAuth`/`InitWriterRoutesWithAuth` 传递同一 handler；`InitAuditRouter` 尚无生产调用方，确认 owner 前不得自行删除或扩展其认证实现。
+27. shared 认证与存储生产路由通过组合根注入 `RegisterAuthRoutesWithAuth`/`RegisterStorageRoutesWithAuth`；公开登录/OAuth 路径不得误加 JWT，无生产调用的 `RegisterWalletRoutes` 与 `InitStorageRoutes` 保持独立兼容入口。
+28. realtime WebSocket 不使用 Gin `auth.JWTAuth()`；`WSHub`/`MessagingWSHub` 通过组合根注入 `service/auth.JWTService`，以保留子协议握手和 Redis 黑名单语义。conversation 成员校验与 typing 广播仍是独立 TODO。
 
 ## 文档同步触发条件
 - 新增/调整 API 时同步更新 `docs/api`、`docs/architecture` 与 swagger 产物。
