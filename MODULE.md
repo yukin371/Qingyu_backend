@@ -46,6 +46,7 @@
 10. `internal/middleware/admin` 只依赖本包的 `PermissionChecker` 最小 port（`HasRole`、`CheckPermission`）；不要重新导入 `service/auth.PermissionService`，也不要把缓存/RBAC 装载方法泄漏到 HTTP 中间件边界。
 11. JWT 签名、解析、验证、刷新和 wire-level claims 的唯一 owner 是 `internal/security/jwt`；`internal/middleware/auth` 只保留迁移期兼容 façade，`service/auth` 新代码直接依赖 `security/jwt.Manager`。
 12. `internal/middleware/setup.RegisterAuthFactory` 直接消费 `internal/security/jwt.Manager`；不得把 JWT 类型重新从 `internal/middleware/auth` façade 暴露给组合根。
+13. finance 路由的生产注册通过组合根注入 `RegisterFinanceRoutesWithAuth`；`RegisterFinanceRoutes` 与 `auth.JWTAuth` 仅作迁移期兼容入口。后续路由迁移应复用 `internal/security/jwt.Manager`，不得新增直接构造 middleware façade 的生产调用。
 
 ## 文档同步触发条件
 - 新增/调整 API 时同步更新 `docs/api`、`docs/architecture` 与 swagger 产物。

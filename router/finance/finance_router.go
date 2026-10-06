@@ -10,9 +10,18 @@ import (
 
 // RegisterFinanceRoutes 注册所有财务相关路由
 func RegisterFinanceRoutes(r *gin.RouterGroup, walletAPI *financeApi.WalletAPI, membershipAPI *financeApi.MembershipAPI, authorRevenueAPI *financeApi.AuthorRevenueAPI) {
+	RegisterFinanceRoutesWithAuth(r, walletAPI, membershipAPI, authorRevenueAPI, auth.JWTAuth())
+}
+
+// RegisterFinanceRoutesWithAuth 注册财务路由并注入鉴权 handler。
+// RegisterFinanceRoutes 保留为迁移期兼容入口；组合根应使用此函数传入 canonical handler。
+func RegisterFinanceRoutesWithAuth(r *gin.RouterGroup, walletAPI *financeApi.WalletAPI, membershipAPI *financeApi.MembershipAPI, authorRevenueAPI *financeApi.AuthorRevenueAPI, authMiddleware gin.HandlerFunc) {
 	// 财务路由需要认证
 	financeGroup := r.Group("/finance")
-	financeGroup.Use(auth.JWTAuth())
+	if authMiddleware == nil {
+		authMiddleware = auth.JWTAuth()
+	}
+	financeGroup.Use(authMiddleware)
 	financeGroup.Use(ratelimit.RateLimitMiddlewareSimple(50, 60))
 	{
 		// ========== 钱包相关 ==========

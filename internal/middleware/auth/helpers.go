@@ -46,6 +46,17 @@ func JWTAuth() gin.HandlerFunc {
 	return middleware.Handler()
 }
 
+// JWTAuthWithManager 使用组合根提供的 canonical JWT manager。
+// 迁移期间保留 JWTAuth 作为兼容入口，新的路由注册应优先注入 manager。
+func JWTAuthWithManager(jwtManager securityjwt.Manager) gin.HandlerFunc {
+	logger, _ := zap.NewDevelopment()
+	if jwtManager == nil {
+		return JWTAuth()
+	}
+
+	return NewJWTAuthMiddleware(jwtManager, getSharedBlacklist(), logger).Handler()
+}
+
 // OptionalJWTAuth 提供可选的 JWT 认证中间件。
 // 携带有效 token 时注入用户信息；未携带或 token 无效时直接放行。
 func OptionalJWTAuth() gin.HandlerFunc {

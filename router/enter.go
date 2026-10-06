@@ -186,7 +186,7 @@ func RegisterRoutes(r *gin.Engine) {
 		}
 
 		// 注册财务路由
-		financeRouter.RegisterFinanceRoutes(v1, walletAPI, membershipAPI, authorRevenueAPI)
+		financeRouter.RegisterFinanceRoutesWithAuth(v1, walletAPI, membershipAPI, authorRevenueAPI, newCanonicalJWTAuthMiddleware(logger))
 		logger.Info("✓ 财务路由已注册到: /api/v1/finance/")
 		logger.Info("  - /api/v1/finance/wallet/* (钱包管理)")
 		if membershipAPI != nil {
