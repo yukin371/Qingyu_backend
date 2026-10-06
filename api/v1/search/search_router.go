@@ -9,6 +9,16 @@ import (
 
 // RegisterSearchRoutes 注册搜索路由
 func RegisterSearchRoutes(router *gin.RouterGroup, searchSvc *searchService.SearchService) {
+	RegisterSearchRoutesWithAuth(router, searchSvc, auth.JWTAuth())
+}
+
+// RegisterSearchRoutesWithAuth 注册搜索路由并注入灰度管理鉴权 handler。
+// RegisterSearchRoutes 保留为迁移期兼容入口。
+func RegisterSearchRoutesWithAuth(router *gin.RouterGroup, searchSvc *searchService.SearchService, authMiddleware gin.HandlerFunc) {
+	if authMiddleware == nil {
+		authMiddleware = auth.JWTAuth()
+	}
+
 	searchAPI := NewSearchAPI(searchSvc)
 	grayscaleAPI := NewGrayscaleAPI(searchSvc)
 
@@ -27,7 +37,7 @@ func RegisterSearchRoutes(router *gin.RouterGroup, searchSvc *searchService.Sear
 
 	// 灰度配置管理路由组（需要认证）
 	grayscaleGroup := router.Group("/search/grayscale")
-	grayscaleGroup.Use(auth.JWTAuth())
+	grayscaleGroup.Use(authMiddleware)
 	{
 		// 获取灰度状态
 		grayscaleGroup.GET("/status", grayscaleAPI.GetGrayscaleStatus)

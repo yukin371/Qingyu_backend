@@ -814,7 +814,7 @@ func RegisterRoutes(r *gin.Engine) {
 	// ============ 注册统一搜索路由 ============
 	if searchSvc != nil {
 		// 注册搜索路由
-		searchRouter.RegisterSearchRoutes(v1, searchSvc)
+		searchRouter.RegisterSearchRoutesWithAuth(v1, searchSvc, newCanonicalJWTAuthMiddleware(logger))
 		logger.Info("✓ 统一搜索路由已注册到: /api/v1/search/")
 		logger.Info("  - /api/v1/search/search (统一搜索)")
 		logger.Info("  - /api/v1/search/batch (批量搜索)")
