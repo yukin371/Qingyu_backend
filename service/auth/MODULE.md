@@ -25,3 +25,4 @@ API Handler → AuthServiceImpl → UserRepository → MongoDB
 - **Refresh Token 类型**：`JWTServiceImpl.RefreshToken` 必须在签名、过期和黑名单校验后确认 `token_type=refresh`，不能把 access token 当作刷新凭证；新 access token 由 `internal/security/jwt.Manager.RefreshToken` 生成
 - **Token 刷新窗口**：RefreshToken 有独立的过期时间，与 Access Token 过期时间不同
 - **JWT owner**：`internal/security/jwt` 是签名、解析、验证和 wire-level claims 的唯一实现 owner；本模块只依赖其 `Manager` 并映射为业务 `TokenClaims`。不得重新导入 `internal/middleware/auth` 的 JWT 实现。
+- **RBAC checker port**：权限服务只消费 `AssignRole` 与 `BatchGrantPermissions` 两个最小方法，不得把 `internal/middleware/auth.RBACChecker` 具体类型重新放回 service 层。
