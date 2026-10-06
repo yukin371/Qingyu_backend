@@ -98,6 +98,7 @@ type rankingEligibility func(book *bookstore2.Book, now time.Time) bool
 var errBookstoreBookRepositoryUnavailable = errors.New("bookstore book repository unavailable")
 var errBookstoreCategoryRepositoryUnavailable = errors.New("bookstore category repository unavailable")
 var errBookstoreBannerRepositoryUnavailable = errors.New("bookstore banner repository unavailable")
+var errBookstoreRankingRepositoryUnavailable = errors.New("bookstore ranking repository unavailable")
 
 // NewBookstoreService 创建书城服务实例
 func NewBookstoreService(
@@ -138,6 +139,13 @@ func (s *BookstoreServiceImpl) requireCategoryRepository() error {
 func (s *BookstoreServiceImpl) requireBannerRepository() error {
 	if s.bannerRepo == nil {
 		return errBookstoreBannerRepositoryUnavailable
+	}
+	return nil
+}
+
+func (s *BookstoreServiceImpl) requireRankingRepository() error {
+	if s.rankingRepo == nil {
+		return errBookstoreRankingRepositoryUnavailable
 	}
 	return nil
 }
@@ -949,6 +957,12 @@ func (s *BookstoreServiceImpl) UpdateRankings(ctx context.Context, rankingType b
 	default:
 		return fmt.Errorf("unsupported ranking type: %s", rankingType)
 	}
+	if err := s.requireRankingRepository(); err != nil {
+		return err
+	}
+	if err := s.requireBookRepository(); err != nil {
+		return err
+	}
 
 	if period == "" {
 		period = bookstore2.GetPeriodString(rankingType, time.Now())
@@ -971,6 +985,9 @@ func (s *BookstoreServiceImpl) UpdateRankings(ctx context.Context, rankingType b
 }
 
 func (s *BookstoreServiceImpl) calculateRankingItems(ctx context.Context, rankingType bookstore2.RankingType, period string) ([]*bookstore2.RankingItem, error) {
+	if err := s.requireBookRepository(); err != nil {
+		return nil, err
+	}
 	now := time.Now()
 	books, err := s.bookRepo.List(ctx, nil)
 	if err != nil {
@@ -1049,6 +1066,9 @@ func rankingStrategy(rankingType bookstore2.RankingType) (rankingScoreCalculator
 
 // GetYears 获取所有书籍的发布年份列表（去重，倒序）
 func (s *BookstoreServiceImpl) GetYears(ctx context.Context) ([]int, error) {
+	if err := s.requireBookRepository(); err != nil {
+		return nil, err
+	}
 	years, err := s.bookRepo.GetYears(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get years: %w", err)
@@ -1059,6 +1079,9 @@ func (s *BookstoreServiceImpl) GetYears(ctx context.Context) ([]int, error) {
 // GetTags 获取所有标签列表（去重，排序）
 // 如果提供了 categoryID，则只返回该分类下的书籍标签
 func (s *BookstoreServiceImpl) GetTags(ctx context.Context, categoryID *string) ([]string, error) {
+	if err := s.requireBookRepository(); err != nil {
+		return nil, err
+	}
 	tags, err := s.bookRepo.GetTags(ctx, categoryID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get tags: %w", err)

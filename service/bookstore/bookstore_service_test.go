@@ -753,6 +753,17 @@ func TestBookstoreService_BookRepositoryUnavailable(t *testing.T) {
 		err = service.IncrementBannerClick(ctx, primitive.NewObjectID().Hex())
 		require.ErrorIs(t, err, errBookstoreBannerRepositoryUnavailable)
 	})
+
+	t.Run("metadata and ranking capabilities return explicit errors", func(t *testing.T) {
+		_, err := service.GetYears(ctx)
+		require.ErrorIs(t, err, errBookstoreBookRepositoryUnavailable)
+
+		_, err = service.GetTags(ctx, nil)
+		require.ErrorIs(t, err, errBookstoreBookRepositoryUnavailable)
+
+		err = service.UpdateRankings(ctx, bookstoreModel.RankingTypeWeekly, "")
+		require.ErrorIs(t, err, errBookstoreRankingRepositoryUnavailable)
+	})
 }
 
 // TestBookstoreService_GetAllBooks 测试获取所有书籍
