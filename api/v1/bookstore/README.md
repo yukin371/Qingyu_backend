@@ -208,6 +208,7 @@ type BookRating struct {
 
 - 已注册 `GET /api/v1/bookstore/books/{id}/chapters/statistics` 和 `GET /api/v1/bookstore/chapters/search`，统计 handler 使用路由实际提供的 `id` 参数。
 - `/api/v1/bookstore/books/{id}/chapters/{chapter_num}` 按章节号读取；Swagger 中另有同形的 `{chapterId}` ObjectID 语义声明。Gin 无法同时注册两条同形路径，canonical 形状待书城 API owner 盘点客户端后通过 ADR 确认。
+- ChapterAPI 的章节写操作和 `BookStatisticsAPI` 的 `/api/v1/reading/...` 统计声明目前没有生产 router owner；不要直接补成公开路由。见父仓 Phase 3/T3 的 `T3-058`，待权限、客户端和 canonical owner 确认后再决定注册或归档。
 
 ## 📚 相关文档
 
