@@ -8,6 +8,7 @@ import (
 	"time"
 
 	BookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
+	repoInfra "Qingyu_backend/repository/interfaces/infrastructure"
 )
 
 // ChapterService 章节服务接口
@@ -815,10 +816,20 @@ func (s *ChapterServiceImpl) SearchChapters(ctx context.Context, keyword string,
 		return nil, 0, fmt.Errorf("failed to search chapters: %w", err)
 	}
 
-	// TODO: 这里简化处理，实际应该有专门的搜索计数方法
-	total := int64(len(chapters))
-	if len(chapters) == pageSize {
-		total = int64((page + 1) * pageSize)
+	searchPattern := map[string]interface{}{
+		"$regex":   keyword,
+		"$options": "i",
+	}
+	total, err := s.chapterRepo.Count(ctx, &repoInfra.BaseFilter{
+		Conditions: map[string]interface{}{
+			"$or": []interface{}{
+				map[string]interface{}{"title": searchPattern},
+				map[string]interface{}{"content": searchPattern},
+			},
+		},
+	})
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count searched chapters: %w", err)
 	}
 
 	return chapters, total, nil
