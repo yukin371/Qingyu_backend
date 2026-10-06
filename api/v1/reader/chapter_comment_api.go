@@ -252,7 +252,7 @@ func (api *ChapterCommentAPI) GetChapterComments(c *gin.Context) {
 		"rating":     true,
 	}
 	if !validSortFields[sortBy] {
-		sortBy = "created_at" //nolint:ineffassign // TODO: 实现排序功能
+		sortBy = "created_at"
 	}
 	if sortOrder != "asc" {
 		sortOrder = "desc"
