@@ -39,6 +39,18 @@ func requiredUserObjectID(c *gin.Context) (primitive.ObjectID, bool) {
 	return parsed, true
 }
 
+func optionalUserObjectID(c *gin.Context) primitive.ObjectID {
+	userID := shared.GetUserIDOptional(c)
+	if userID == "" {
+		return primitive.NilObjectID
+	}
+	parsed, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return primitive.NilObjectID
+	}
+	return parsed
+}
+
 // NewChapterCatalogAPI 创建章节目录API实例
 func NewChapterCatalogAPI(
 	chapterService bookstore.ChapterService,
@@ -76,13 +88,8 @@ func (api *ChapterCatalogAPI) GetChapterCatalog(c *gin.Context) {
 		return
 	}
 
-	// 获取用户ID（从中间件设置的上下文中）
-	var userID primitive.ObjectID
-	if userIDValue, exists := c.Get("user_id"); exists {
-		if uid, ok := userIDValue.(string); ok {
-			userID, _ = primitive.ObjectIDFromHex(uid)
-		}
-	}
+	// 获取可选用户ID；匿名请求和 malformed 可选身份均按未购买处理。
+	userID := optionalUserObjectID(c)
 
 	catalog, err := api.purchaseService.GetChapterCatalog(c.Request.Context(), userID.Hex(), bookID.Hex())
 	if err != nil {
@@ -476,13 +483,8 @@ func (api *ChapterCatalogAPI) CheckChapterAccess(c *gin.Context) {
 		return
 	}
 
-	// 获取用户ID（可选）
-	var userID primitive.ObjectID
-	if userIDValue, exists := c.Get("user_id"); exists {
-		if uid, ok := userIDValue.(string); ok {
-			userID, _ = primitive.ObjectIDFromHex(uid)
-		}
-	}
+	// 获取可选用户ID；匿名请求和 malformed 可选身份均按未购买处理。
+	userID := optionalUserObjectID(c)
 
 	accessInfo, err := api.purchaseService.CheckChapterAccess(c.Request.Context(), userID.Hex(), chapterID.Hex())
 	if err != nil {

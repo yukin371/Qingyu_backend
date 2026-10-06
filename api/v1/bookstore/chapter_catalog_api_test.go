@@ -53,3 +53,30 @@ func TestRequiredUserObjectIDReturnsParsedID(t *testing.T) {
 	require.True(t, ok)
 	require.Equal(t, expected, actual)
 }
+
+func TestOptionalUserObjectIDTreatsMissingAndMalformedValuesAsAnonymous(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	for name, value := range map[string]interface{}{
+		"missing":    nil,
+		"wrong type": 123,
+		"malformed":  "not-an-object-id",
+	} {
+		t.Run(name, func(t *testing.T) {
+			c, _ := gin.CreateTestContext(httptest.NewRecorder())
+			if value != nil {
+				c.Set("user_id", value)
+			}
+
+			require.Equal(t, primitive.NilObjectID, optionalUserObjectID(c))
+		})
+	}
+}
+
+func TestOptionalUserObjectIDReturnsParsedID(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	c, _ := gin.CreateTestContext(httptest.NewRecorder())
+	expected := primitive.NewObjectID()
+	c.Set("user_id", expected.Hex())
+
+	require.Equal(t, expected, optionalUserObjectID(c))
+}
