@@ -108,6 +108,33 @@ func TestJWTService_ValidateTokenRejectsRevokedToken(t *testing.T) {
 	assert.Contains(t, err.Error(), "token已被吊销")
 }
 
+func TestJWTService_RefreshTokenRejectsAccessToken(t *testing.T) {
+	ctx := context.Background()
+	service := NewJWTService(testJWTConfig(), newStubRedisClient())
+
+	accessToken, err := service.GenerateToken(ctx, "user-refresh", []string{"reader"})
+	require.NoError(t, err)
+
+	_, err = service.RefreshToken(ctx, accessToken)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "token不是刷新Token")
+}
+
+func TestJWTService_RefreshTokenAcceptsRefreshToken(t *testing.T) {
+	ctx := context.Background()
+	service := NewJWTService(testJWTConfig(), newStubRedisClient()).(*JWTServiceImpl)
+
+	_, refreshToken, err := service.GenerateTokenPair(ctx, "user-refresh", []string{"reader"})
+	require.NoError(t, err)
+
+	newAccessToken, err := service.RefreshToken(ctx, refreshToken)
+	require.NoError(t, err)
+
+	claims, err := service.ValidateToken(ctx, newAccessToken)
+	require.NoError(t, err)
+	assert.Equal(t, "user-refresh", claims.UserID)
+}
+
 func TestInMemoryTokenBlacklistBasicFlow(t *testing.T) {
 	ctx := context.Background()
 	blacklist := NewInMemoryTokenBlacklist()

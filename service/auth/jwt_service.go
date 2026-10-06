@@ -170,16 +170,34 @@ func (s *JWTServiceImpl) ValidateToken(ctx context.Context, tokenString string) 
 
 // RefreshToken 使用刷新Token获取新的Token（匹配interfaces.go中的定义）
 func (s *JWTServiceImpl) RefreshToken(ctx context.Context, token string) (string, error) {
-	claims, err := s.ValidateToken(ctx, token)
+	token = strings.TrimPrefix(token, "Bearer ")
+	token = strings.TrimSpace(token)
+	if token == "" {
+		return "", errors.New("刷新Token验证失败: token为空")
+	}
+
+	// 先复用 service 层的签名、过期时间和黑名单校验。
+	_, err := s.ValidateToken(ctx, token)
 	if err != nil {
 		return "", fmt.Errorf("刷新Token验证失败: %w", err)
 	}
 
-	newToken, err := s.GenerateToken(ctx, claims.UserID, claims.Roles)
+	manager, err := s.newJWTManager()
+	if err != nil {
+		return "", fmt.Errorf("刷新Token验证失败: %w", err)
+	}
+	rawClaims, err := manager.ParseToken(token)
+	if err != nil {
+		return "", fmt.Errorf("刷新Token验证失败: %w", err)
+	}
+	if rawClaims.TokenType != "refresh" {
+		return "", errors.New("刷新Token验证失败: token不是刷新Token")
+	}
+
+	newToken, err := manager.RefreshToken(token)
 	if err != nil {
 		return "", fmt.Errorf("生成新Token失败: %w", err)
 	}
-
 	return newToken, nil
 }
 
