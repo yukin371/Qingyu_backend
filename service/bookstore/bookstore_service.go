@@ -95,6 +95,8 @@ type HomepageData struct {
 type rankingScoreCalculator func(book *bookstore2.Book) float64
 type rankingEligibility func(book *bookstore2.Book, now time.Time) bool
 
+var errBookstoreBookRepositoryUnavailable = errors.New("bookstore book repository unavailable")
+
 // NewBookstoreService 创建书城服务实例
 func NewBookstoreService(
 	bookRepo BookstoreRepo.BookRepository,
@@ -117,8 +119,18 @@ func (s *BookstoreServiceImpl) SetSearchService(searchService interface{}) {
 	s.searchService = searchService
 }
 
+func (s *BookstoreServiceImpl) requireBookRepository() error {
+	if s.bookRepo == nil {
+		return errBookstoreBookRepositoryUnavailable
+	}
+	return nil
+}
+
 // GetAllBooks 获取所有书籍列表（分页）
 func (s *BookstoreServiceImpl) GetAllBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, int64, error) {
+	if err := s.requireBookRepository(); err != nil {
+		return nil, 0, err
+	}
 	offset := (page - 1) * pageSize
 
 	// 获取所有已发布的书籍
@@ -138,6 +150,9 @@ func (s *BookstoreServiceImpl) GetAllBooks(ctx context.Context, page, pageSize i
 
 // GetBookByID 根据ID获取书籍详情
 func (s *BookstoreServiceImpl) GetBookByID(ctx context.Context, id string) (*bookstore2.Book, error) {
+	if err := s.requireBookRepository(); err != nil {
+		return nil, err
+	}
 	// Repository 层现在接受 string 类型的 ID
 	book, err := s.bookRepo.GetByID(ctx, id)
 	if err != nil {
@@ -169,6 +184,9 @@ func (s *BookstoreServiceImpl) GetBookByID(ctx context.Context, id string) (*boo
 
 // GetBooksByCategory 根据分类获取书籍列表
 func (s *BookstoreServiceImpl) GetBooksByCategory(ctx context.Context, categoryID string, page, pageSize int) ([]*bookstore2.Book, int64, error) {
+	if err := s.requireBookRepository(); err != nil {
+		return nil, 0, err
+	}
 	// 计算偏移量
 	offset := (page - 1) * pageSize
 
@@ -197,6 +215,9 @@ func (s *BookstoreServiceImpl) GetBooksByCategory(ctx context.Context, categoryI
 
 // GetBooksByAuthorID 根据作者ID获取书籍列表
 func (s *BookstoreServiceImpl) GetBooksByAuthorID(ctx context.Context, authorID string, page, pageSize int) ([]*bookstore2.Book, int64, error) {
+	if err := s.requireBookRepository(); err != nil {
+		return nil, 0, err
+	}
 	// 计算偏移量
 	offset := (page - 1) * pageSize
 
@@ -226,6 +247,9 @@ func (s *BookstoreServiceImpl) GetBooksByAuthorID(ctx context.Context, authorID 
 // GetRecommendedBooks 获取所有书籍（书库列表）
 // 修改：返回所有书籍，按创建时间倒序排序
 func (s *BookstoreServiceImpl) GetRecommendedBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, int64, error) {
+	if err := s.requireBookRepository(); err != nil {
+		return nil, 0, err
+	}
 	offset := (page - 1) * pageSize
 
 	// 直接调用 repository 的 GetRecommended 方法
@@ -246,9 +270,8 @@ func (s *BookstoreServiceImpl) GetRecommendedBooks(ctx context.Context, page, pa
 
 // GetFeaturedBooks 获取精选书籍
 func (s *BookstoreServiceImpl) GetFeaturedBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, int64, error) {
-	// 检查repository是否为nil
-	if s.bookRepo == nil {
-		return []*bookstore2.Book{}, 0, nil
+	if err := s.requireBookRepository(); err != nil {
+		return nil, 0, err
 	}
 
 	offset := (page - 1) * pageSize
@@ -272,6 +295,9 @@ func (s *BookstoreServiceImpl) GetFeaturedBooks(ctx context.Context, page, pageS
 
 // GetHotBooks 获取热门书籍
 func (s *BookstoreServiceImpl) GetHotBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, int64, error) {
+	if err := s.requireBookRepository(); err != nil {
+		return nil, 0, err
+	}
 	offset := (page - 1) * pageSize
 
 	books, err := s.bookRepo.GetHotBooks(ctx, pageSize, offset)
@@ -290,6 +316,9 @@ func (s *BookstoreServiceImpl) GetHotBooks(ctx context.Context, page, pageSize i
 
 // GetNewReleases 获取新书列表
 func (s *BookstoreServiceImpl) GetNewReleases(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, int64, error) {
+	if err := s.requireBookRepository(); err != nil {
+		return nil, 0, err
+	}
 	offset := (page - 1) * pageSize
 
 	books, err := s.bookRepo.GetNewReleases(ctx, pageSize, offset)
@@ -308,6 +337,9 @@ func (s *BookstoreServiceImpl) GetNewReleases(ctx context.Context, page, pageSiz
 
 // GetFreeBooks 获取免费书籍列表
 func (s *BookstoreServiceImpl) GetFreeBooks(ctx context.Context, page, pageSize int) ([]*bookstore2.Book, int64, error) {
+	if err := s.requireBookRepository(); err != nil {
+		return nil, 0, err
+	}
 	offset := (page - 1) * pageSize
 
 	books, err := s.bookRepo.GetFreeBooks(ctx, pageSize, offset)
@@ -329,6 +361,9 @@ func (s *BookstoreServiceImpl) GetFreeBooks(ctx context.Context, page, pageSize 
 
 // SearchBooks 搜索书籍 - 简单搜索
 func (s *BookstoreServiceImpl) SearchBooks(ctx context.Context, keyword string, page, pageSize int) ([]*bookstore2.Book, int64, error) {
+	if err := s.requireBookRepository(); err != nil {
+		return nil, 0, err
+	}
 	if keyword == "" {
 		return nil, 0, errors.New("keyword is required")
 	}
@@ -358,6 +393,9 @@ func (s *BookstoreServiceImpl) SearchBooks(ctx context.Context, keyword string, 
 
 // SearchBooksWithFilter 搜索书籍 - 高级搜索
 func (s *BookstoreServiceImpl) SearchBooksWithFilter(ctx context.Context, filter *bookstore2.BookFilter) ([]*bookstore2.Book, int64, error) {
+	if err := s.requireBookRepository(); err != nil {
+		return nil, 0, err
+	}
 	if filter == nil {
 		return nil, 0, errors.New("filter is required")
 	}
@@ -524,6 +562,9 @@ func (s *BookstoreServiceImpl) GetBookStats(ctx context.Context) (*bookstore2.Bo
 
 // IncrementBookView 增加书籍浏览量
 func (s *BookstoreServiceImpl) IncrementBookView(ctx context.Context, bookID string) error {
+	if err := s.requireBookRepository(); err != nil {
+		return err
+	}
 	// 先检查书籍是否存在且已发布
 	book, err := s.bookRepo.GetByID(ctx, bookID)
 	if err != nil {

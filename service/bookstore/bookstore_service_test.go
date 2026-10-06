@@ -714,6 +714,30 @@ func setupBookstoreServiceForTest() (*BookstoreServiceImpl, *MockBookRepositoryF
 // 书籍相关方法测试
 // =========================
 
+func TestBookstoreService_BookRepositoryUnavailable(t *testing.T) {
+	service := NewBookstoreService(nil, nil, nil, nil, nil)
+	ctx := context.Background()
+
+	t.Run("list and detail queries return an explicit error", func(t *testing.T) {
+		_, _, err := service.GetAllBooks(ctx, 1, 20)
+		require.ErrorIs(t, err, errBookstoreBookRepositoryUnavailable)
+
+		_, err = service.GetBookByID(ctx, primitive.NewObjectID().Hex())
+		require.ErrorIs(t, err, errBookstoreBookRepositoryUnavailable)
+
+		_, _, err = service.GetBooksByCategory(ctx, primitive.NewObjectID().Hex(), 1, 20)
+		require.ErrorIs(t, err, errBookstoreBookRepositoryUnavailable)
+
+		_, _, err = service.GetBooksByAuthorID(ctx, primitive.NewObjectID().Hex(), 1, 20)
+		require.ErrorIs(t, err, errBookstoreBookRepositoryUnavailable)
+	})
+
+	t.Run("write side effect returns an explicit error", func(t *testing.T) {
+		err := service.IncrementBookView(ctx, primitive.NewObjectID().Hex())
+		require.ErrorIs(t, err, errBookstoreBookRepositoryUnavailable)
+	})
+}
+
 // TestBookstoreService_GetAllBooks 测试获取所有书籍
 func TestBookstoreService_GetAllBooks(t *testing.T) {
 	tests := []struct {
