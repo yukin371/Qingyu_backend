@@ -6,6 +6,7 @@ import (
 
 	"Qingyu_backend/models/writer"
 	"Qingyu_backend/pkg/errors"
+	"Qingyu_backend/repository"
 	writerRepo "Qingyu_backend/repository/interfaces/writer"
 	"Qingyu_backend/service/base"
 	serviceInterfaces "Qingyu_backend/service/interfaces"
@@ -38,10 +39,13 @@ func (s *CharacterService) Create(
 ) (*writer.Character, error) {
 	// 验证关系类型（如果有）
 	// TODO: 验证项目权限
+	projectOID, err := repository.ParseID(projectID)
+	if err != nil {
+		return nil, errors.NewServiceError("CharacterService", errors.ServiceErrorValidation, "invalid project ID", "", err)
+	}
 
 	// 构建角色对象（使用base mixins）
 	character := &writer.Character{}
-	projectOID, _ := primitive.ObjectIDFromHex(projectID)
 	character.ProjectID = projectOID
 	character.Name = req.Name
 	character.Alias = req.Alias
@@ -82,13 +86,16 @@ func (s *CharacterService) GetByID(
 	ctx context.Context,
 	characterID, projectID string,
 ) (*writer.Character, error) {
+	projectOID, err := repository.ParseID(projectID)
+	if err != nil {
+		return nil, errors.NewServiceError("CharacterService", errors.ServiceErrorValidation, "invalid project ID", "", err)
+	}
 	character, err := s.characterRepo.FindByID(ctx, characterID)
 	if err != nil {
 		return nil, err
 	}
 
 	// 验证项目权限
-	projectOID, _ := primitive.ObjectIDFromHex(projectID)
 	if character.ProjectID != projectOID {
 		return nil, errors.NewServiceError("CharacterService", errors.ServiceErrorForbidden, "no permission to access this character", "", nil)
 	}
@@ -211,6 +218,10 @@ func (s *CharacterService) CreateRelation(
 	req *serviceInterfaces.CreateRelationRequest,
 ) (*writer.CharacterRelation, error) {
 	// 验证两个角色是否存在且属于同一项目
+	projectOID, err := repository.ParseID(projectID)
+	if err != nil {
+		return nil, errors.NewServiceError("CharacterService", errors.ServiceErrorValidation, "invalid project ID", "", err)
+	}
 	fromChar, err := s.GetByID(ctx, req.FromID, projectID)
 	if err != nil {
 		return nil, errors.NewServiceError("CharacterService", errors.ServiceErrorNotFound, "source character not found", "", err)
@@ -228,7 +239,6 @@ func (s *CharacterService) CreateRelation(
 
 	// 创建关系（使用base mixins）
 	relation := &writer.CharacterRelation{}
-	projectOID, _ := primitive.ObjectIDFromHex(projectID)
 	relation.ProjectID = projectOID
 	relation.FromID = req.FromID
 	relation.ToID = req.ToID
@@ -260,13 +270,16 @@ func (s *CharacterService) DeleteRelation(
 	ctx context.Context,
 	relationID, projectID string,
 ) error {
+	projectOID, err := repository.ParseID(projectID)
+	if err != nil {
+		return errors.NewServiceError("CharacterService", errors.ServiceErrorValidation, "invalid project ID", "", err)
+	}
 	// 验证关系是否属于该项目
 	relation, err := s.characterRepo.FindRelationByID(ctx, relationID)
 	if err != nil {
 		return err
 	}
 
-	projectOID, _ := primitive.ObjectIDFromHex(projectID)
 	if relation.ProjectID != projectOID {
 		return errors.NewServiceError("CharacterService", errors.ServiceErrorForbidden, "no permission to delete this relation", "", nil)
 	}

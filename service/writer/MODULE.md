@@ -35,3 +35,4 @@ Phase 5 当前口径：writer 主线已完成 factory / compat / port adapter、
 - **发布是异步流程**：创建发布记录(pending) → 审核(approved/rejected) → 同步到书城(published)，通过 EventBus 解耦
 - **历史 compat 已退场**：`service/writer/factory.go`、`service/writer/_migration/compat.go`、`service/writer/impl/` 与 `service/interfaces/writer/` 已在 2026-04-30 删除。删除前备份点为 git tag `backup/writer-compat-predelete-20260430`，如需恢复旧适配器可从该 tag 查找。
 - **stdout/debug 风险**：树构建与文档链路中的已知临时 stdout 输出已在 2026-05-05 清理；后续新增排障输出必须使用 logger，不能直接写 stdout 或 dump 请求/文档结构。
+- **项目 ID 完整性**：角色、地点、大纲及关系资产的服务入口在查询、权限比较或写入模型前必须严格解析 `projectID`；禁止把解析失败的全零 `ObjectID` 用于权限判断、持久化或事件发布。当前角色服务已完成该边界收口，其他资产服务按 Phase 3/T3 逐模块迁移。
