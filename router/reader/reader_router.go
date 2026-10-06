@@ -32,7 +32,11 @@ func InitReaderRouter(
 	annotationsApiHandler := readerApi.NewAnnotationsAPI(readerService)
 	settingApiHandler := readerApi.NewSettingAPI(readerService)
 	booksApiHandler := readerApi.NewBooksAPI(readerService)
-	themeApiHandler := readerApi.NewThemeAPI(themeServices...)
+	var themeService readerservice.ThemeService
+	if len(themeServices) > 0 {
+		themeService = themeServices[0]
+	}
+	themeApiHandler := readerApi.NewThemeAPI(themeService)
 	fontApiHandler := readerApi.NewFontAPI()
 	chapterCommentApiHandler := readerApi.NewChapterCommentAPI()
 	chapterCommentApiHandler.BindServices(commentService, chapterService)

@@ -25,13 +25,10 @@ func respondThemeNotImplemented(c *gin.Context, message string) {
 	})
 }
 
-// NewThemeAPI 创建主题API实例
-func NewThemeAPI(themeServices ...readerService.ThemeService) *ThemeAPI {
-	api := &ThemeAPI{}
-	if len(themeServices) > 0 {
-		api.themeService = themeServices[0]
-	}
-	return api
+// NewThemeAPI 创建主题API实例。
+// themeService 为空时保留只读内置主题和写入口 501 的兼容降级语义。
+func NewThemeAPI(themeService readerService.ThemeService) *ThemeAPI {
+	return &ThemeAPI{themeService: themeService}
 }
 
 // GetThemes 获取可用主题列表

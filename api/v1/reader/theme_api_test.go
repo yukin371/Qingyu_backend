@@ -2,7 +2,9 @@ package reader
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -12,9 +14,14 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
 	readerModels "Qingyu_backend/models/reader"
+	readerService "Qingyu_backend/service/reader"
 )
 
 func setupThemeTestRouter(userID string) *gin.Engine {
+	return setupThemeTestRouterWithService(userID, nil)
+}
+
+func setupThemeTestRouterWithService(userID string, themeService readerService.ThemeService) *gin.Engine {
 	gin.SetMode(gin.TestMode)
 	r := gin.New()
 
@@ -25,7 +32,7 @@ func setupThemeTestRouter(userID string) *gin.Engine {
 		c.Next()
 	})
 
-	api := NewThemeAPI()
+	api := NewThemeAPI(themeService)
 
 	r.GET("/api/v1/reader/themes", api.GetThemes)
 	r.GET("/api/v1/reader/themes/active", api.GetActiveTheme)
@@ -36,6 +43,56 @@ func setupThemeTestRouter(userID string) *gin.Engine {
 	r.POST("/api/v1/reader/themes/:name/activate", api.ActivateTheme)
 
 	return r
+}
+
+type themeServiceStub struct {
+	activeTheme *readerModels.ReaderTheme
+	activeUser  string
+}
+
+func (s *themeServiceStub) GetThemes(context.Context, string, bool, bool) ([]*readerModels.ReaderTheme, error) {
+	return nil, errors.New("stub: GetThemes not configured")
+}
+
+func (s *themeServiceStub) GetThemeByName(context.Context, string, string) (*readerModels.ReaderTheme, error) {
+	return nil, errors.New("stub: GetThemeByName not configured")
+}
+
+func (s *themeServiceStub) GetActiveTheme(_ context.Context, userID string) (*readerModels.ReaderTheme, error) {
+	s.activeUser = userID
+	return s.activeTheme, nil
+}
+
+func (s *themeServiceStub) CreateCustomTheme(context.Context, string, *readerModels.CreateCustomThemeRequest) (*readerModels.ReaderTheme, error) {
+	return nil, errors.New("stub: CreateCustomTheme not configured")
+}
+
+func (s *themeServiceStub) UpdateTheme(context.Context, string, string, *readerModels.UpdateThemeRequest) error {
+	return errors.New("stub: UpdateTheme not configured")
+}
+
+func (s *themeServiceStub) DeleteTheme(context.Context, string, string) error {
+	return errors.New("stub: DeleteTheme not configured")
+}
+
+func (s *themeServiceStub) ActivateTheme(context.Context, string, string) error {
+	return errors.New("stub: ActivateTheme not configured")
+}
+
+var _ readerService.ThemeService = (*themeServiceStub)(nil)
+
+func TestThemeAPI_GetActiveTheme_UsesInjectedService(t *testing.T) {
+	userID := primitive.NewObjectID().Hex()
+	service := &themeServiceStub{activeTheme: &readerModels.ReaderTheme{Name: "dark"}}
+	router := setupThemeTestRouterWithService(userID, service)
+
+	req, _ := http.NewRequest("GET", "/api/v1/reader/themes/active", nil)
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Equal(t, userID, service.activeUser)
+	assert.Contains(t, w.Body.String(), "dark")
 }
 
 func TestThemeAPI_GetThemes_Success(t *testing.T) {
