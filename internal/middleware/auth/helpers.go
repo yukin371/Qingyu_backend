@@ -58,7 +58,7 @@ func OptionalJWTAuth() gin.HandlerFunc {
 		}
 	}
 
-	jwtManager, err := NewJWTManager(jwtConfig.SecretKey, jwtConfig.Expiration, jwtConfig.RefreshDuration)
+	jwtManager, err := securityjwt.NewManager(jwtConfig.SecretKey, jwtConfig.Expiration, jwtConfig.RefreshDuration)
 	if err != nil {
 		logger.Warn("Failed to create optional JWT manager, fallback to passthrough", zap.Error(err))
 		return func(c *gin.Context) {
