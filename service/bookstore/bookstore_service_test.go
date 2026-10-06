@@ -1606,6 +1606,15 @@ func TestBookstoreService_GetRankingByType(t *testing.T) {
 	mockRankingRepo.AssertExpectations(t)
 }
 
+func TestBookstoreService_GetRankingByTypeWithoutRepository(t *testing.T) {
+	service := &BookstoreServiceImpl{}
+
+	result, err := service.GetRankingByType(context.Background(), bookstoreModel.RankingTypeWeekly, "", 10)
+
+	require.NoError(t, err)
+	assert.Empty(t, result)
+}
+
 // TestBookstoreService_UpdateRankings 测试更新榜单
 func TestBookstoreService_UpdateRankings(t *testing.T) {
 	// Arrange

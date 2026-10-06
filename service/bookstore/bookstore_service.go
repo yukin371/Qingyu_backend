@@ -864,6 +864,10 @@ func (s *BookstoreServiceImpl) GetNewbieRanking(ctx context.Context, period stri
 
 // GetRankingByType 根据类型获取榜单
 func (s *BookstoreServiceImpl) GetRankingByType(ctx context.Context, rankingType bookstore2.RankingType, period string, limit int) ([]*bookstore2.RankingItem, error) {
+	if s.rankingRepo == nil {
+		return []*bookstore2.RankingItem{}, nil
+	}
+
 	if period == "" {
 		period = bookstore2.GetPeriodString(rankingType, time.Now())
 	}
