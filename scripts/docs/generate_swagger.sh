@@ -11,7 +11,7 @@ echo "Generating Swagger artifacts..."
 swag init \
   -g swagger.go \
   -d "$SWAGGER_DIRS" \
-  --parseDependency=false \
+  --parseDependency \
   -o docs
 
 echo

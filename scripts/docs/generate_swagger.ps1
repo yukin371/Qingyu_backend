@@ -17,7 +17,7 @@ Write-Host "Generating Swagger artifacts..."
 swag init `
     -g swagger.go `
     -d $swaggerDirs `
-    --parseDependency=false `
+    --parseDependency `
     -o docs
 
 Write-Host ""

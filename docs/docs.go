@@ -3441,7 +3441,886 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/quota/{userId}": {
+        "/api/v1/admin/quota/alerts": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "管理员获取配额告警列表（支持筛选和分页）",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "管理员-配额告警"
+                ],
+                "summary": "获取配额告警列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "告警类型(threshold/anomaly/abuse/consistency)",
+                        "name": "type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "告警级别(info/warning/critical)",
+                        "name": "level",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "告警状态(open/all/pending/acknowledged/resolved/ignored)",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页数量",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/quota/alerts/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "管理员获取指定配额告警详情",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "管理员-配额告警"
+                ],
+                "summary": "获取配额告警详情",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "告警ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/quota/alerts/{id}/acknowledge": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "管理员确认指定配额告警",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "管理员-配额告警"
+                ],
+                "summary": "确认告警",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "告警ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "操作信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/admin.AlertActionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/quota/alerts/{id}/ignore": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "管理员忽略指定配额告警",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "管理员-配额告警"
+                ],
+                "summary": "忽略告警",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "告警ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "操作信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/admin.AlertActionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/quota/alerts/{id}/resolve": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "管理员解决指定配额告警",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "管理员-配额告警"
+                ],
+                "summary": "解决告警",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "告警ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "操作信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/admin.AlertActionRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/quota/batch-activate": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "管理员批量激活多个用户的AI配额",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "管理员-AI配额管理"
+                ],
+                "summary": "批量激活配额",
+                "parameters": [
+                    {
+                        "description": "批量激活信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/admin.BatchQuotaRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/quota/batch-recharge": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "管理员为多个用户批量充值AI配额",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "管理员-AI配额管理"
+                ],
+                "summary": "批量充值配额",
+                "parameters": [
+                    {
+                        "description": "批量充值信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/admin.BatchQuotaRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/quota/batch-suspend": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "管理员批量暂停多个用户的AI配额",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "管理员-AI配额管理"
+                ],
+                "summary": "批量暂停配额",
+                "parameters": [
+                    {
+                        "description": "批量暂停信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/admin.BatchQuotaRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/quota/batch-update": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "管理员为多个用户批量更新AI配额",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "管理员-AI配额管理"
+                ],
+                "summary": "批量更新配额",
+                "parameters": [
+                    {
+                        "description": "批量更新信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/admin.BatchQuotaRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/quota/dashboard": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "管理员获取配额仪表盘完整数据",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "管理员-配额仪表盘"
+                ],
+                "summary": "获取配额仪表盘",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/quota/dashboard/refresh": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "管理员强制刷新配额仪表盘缓存",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "管理员-配额仪表盘"
+                ],
+                "summary": "刷新仪表盘缓存",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/quota/policies": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "管理员获取配额策略列表（支持筛选和分页）",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "管理员-配额策略"
+                ],
+                "summary": "获取配额策略列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "角色筛选",
+                        "name": "role",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "状态筛选",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页数量",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "管理员创建新的配额策略",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "管理员-配额策略"
+                ],
+                "summary": "创建配额策略",
+                "parameters": [
+                    {
+                        "description": "策略信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/admin.PolicyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/quota/policies/initialize": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "管理员初始化系统默认配额策略",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "管理员-配额策略"
+                ],
+                "summary": "初始化默认策略",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/quota/policies/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "管理员获取指定配额策略详情",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "管理员-配额策略"
+                ],
+                "summary": "获取配额策略详情",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "策略ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "管理员更新指定配额策略",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "管理员-配额策略"
+                ],
+                "summary": "更新配额策略",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "策略ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "策略信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/admin.PolicyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "管理员删除指定配额策略（软删除）",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "管理员-配额策略"
+                ],
+                "summary": "删除配额策略",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "策略ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/quota/statistics/global": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "管理员获取配额全局统计数据",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "管理员-配额仪表盘"
+                ],
+                "summary": "获取全局配额统计",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/quota/statistics/reconciliation": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "管理员获取 backend 与 AI service 的聚合配额消费对账结果",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "管理员-配额仪表盘"
+                ],
+                "summary": "获取跨服务聚合对账摘要",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "时间范围(day/week/month/all，默认day)",
+                        "name": "timeRange",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "工作流过滤",
+                        "name": "workflowType",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "聚合维度(user/workflow，默认user)",
+                        "name": "groupBy",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页数量",
+                        "name": "pageSize",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/quota/statistics/reconciliation/check": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "管理员手动触发一次 backend 与 AI service 的配额对账检查",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "管理员-配额仪表盘"
+                ],
+                "summary": "执行跨服务一致性检查",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/quota/statistics/trend": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "管理员获取配额消耗趋势数据",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "管理员-配额仪表盘"
+                ],
+                "summary": "获取消耗趋势",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "天数(默认7天)",
+                        "name": "days",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/quota/users": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "管理员获取用户配额列表（支持筛选和分页）",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "管理员-AI配额管理"
+                ],
+                "summary": "获取用户配额列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "角色筛选(reader/writer/admin)",
+                        "name": "role",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "状态筛选(active/exhausted/suspended)",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "搜索用户ID",
+                        "name": "search",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "每页数量",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/quota/users/{userId}": {
             "get": {
                 "security": [
                     {
@@ -3449,9 +4328,6 @@ const docTemplate = `{
                     }
                 ],
                 "description": "管理员获取指定用户的配额详情",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -3471,30 +4347,6 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/response.APIResponse"
                         }
@@ -3542,35 +4394,11 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/response.APIResponse"
                         }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
                     }
                 }
             }
         },
-        "/api/v1/admin/quota/{userId}/activate": {
+        "/api/v1/admin/quota/users/{userId}/activate": {
             "post": {
                 "security": [
                     {
@@ -3578,9 +4406,6 @@ const docTemplate = `{
                     }
                 ],
                 "description": "管理员激活指定用户的AI配额",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -3603,27 +4428,49 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/response.APIResponse"
                         }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/quota/users/{userId}/recharge": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "管理员为指定用户充值AI配额",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "管理员-AI配额管理"
+                ],
+                "summary": "充值用户配额",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "用户ID",
+                        "name": "userId",
+                        "in": "path",
+                        "required": true
                     },
-                    "400": {
-                        "description": "Bad Request",
+                    {
+                        "description": "充值信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
                         "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
+                            "$ref": "#/definitions/admin.AdminRechargeRequest"
                         }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/response.APIResponse"
                         }
@@ -3631,7 +4478,53 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/admin/quota/{userId}/suspend": {
+        "/api/v1/admin/quota/users/{userId}/reconciliation": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "管理员查看指定用户在 backend 与 AI service 之间的配额消费差异",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "管理员-AI配额管理"
+                ],
+                "summary": "获取单用户配额对账结果",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "用户ID",
+                        "name": "userId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "时间范围(day/week/month/all，默认day)",
+                        "name": "timeRange",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "工作流类型过滤",
+                        "name": "workflowType",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/admin/quota/users/{userId}/suspend": {
             "post": {
                 "security": [
                     {
@@ -3639,9 +4532,6 @@ const docTemplate = `{
                     }
                 ],
                 "description": "管理员暂停指定用户的AI配额",
-                "consumes": [
-                    "application/json"
-                ],
                 "produces": [
                     "application/json"
                 ],
@@ -3661,30 +4551,6 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/response.APIResponse"
                         }
@@ -8005,7 +8871,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "description": "书籍ID",
-                        "name": "book_id",
+                        "name": "id",
                         "in": "path",
                         "required": true
                     },
@@ -9667,6 +10533,305 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/community/posts": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "社区-动态"
+                ],
+                "summary": "获取动态列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "话题筛选",
+                        "name": "topic",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "latest",
+                        "description": "排序方式(latest/hottest)",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "每页数量",
+                        "name": "size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "社区-动态"
+                ],
+                "summary": "创建动态",
+                "parameters": [
+                    {
+                        "description": "动态信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/community.CreatePostRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/community/posts/{id}": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "社区-动态"
+                ],
+                "summary": "获取动态详情",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "动态ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "社区-动态"
+                ],
+                "summary": "更新动态",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "动态ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "更新信息",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/community.UpdatePostRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "社区-动态"
+                ],
+                "summary": "删除动态",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "动态ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/community/posts/{id}/like": {
+            "post": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "社区-动态"
+                ],
+                "summary": "点赞动态",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "动态ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "社区-动态"
+                ],
+                "summary": "取消点赞动态",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "动态ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ],
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "社区-动态"
+                ],
+                "summary": "切换点赞状态",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "动态ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/response.APIResponse"
                         }
@@ -16140,7 +17305,7 @@ const docTemplate = `{
                         "type": "integer",
                         "description": "段落索引",
                         "name": "paragraphIndex",
-                        "in": "query",
+                        "in": "path",
                         "required": true
                     }
                 ],
@@ -17479,8 +18644,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "501": {
+                        "description": "Not Implemented",
                         "schema": {
                             "$ref": "#/definitions/response.APIResponse"
                         }
@@ -17513,8 +18678,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "501": {
+                        "description": "Not Implemented",
                         "schema": {
                             "$ref": "#/definitions/response.APIResponse"
                         }
@@ -17536,8 +18701,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "501": {
+                        "description": "Not Implemented",
                         "schema": {
                             "$ref": "#/definitions/response.APIResponse"
                         }
@@ -18089,7 +19254,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/reader/purchases/{bookId}": {
+        "/api/v1/reader/purchases/{id}": {
             "get": {
                 "description": "获取用户对指定书籍的购买记录",
                 "consumes": [
@@ -18778,8 +19943,36 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
+                    "501": {
+                        "description": "Not Implemented",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/reader/themes/active": {
+            "get": {
+                "tags": [
+                    "阅读器-主题"
+                ],
+                "summary": "获取当前激活主题",
+                "responses": {
                     "200": {
                         "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
                         "schema": {
                             "$ref": "#/definitions/response.APIResponse"
                         }
@@ -18812,8 +20005,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "501": {
+                        "description": "Not Implemented",
                         "schema": {
                             "$ref": "#/definitions/response.APIResponse"
                         }
@@ -18835,8 +20028,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "501": {
+                        "description": "Not Implemented",
                         "schema": {
                             "$ref": "#/definitions/response.APIResponse"
                         }
@@ -18885,8 +20078,8 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "501": {
+                        "description": "Not Implemented",
                         "schema": {
                             "$ref": "#/definitions/response.APIResponse"
                         }
@@ -23891,7 +25084,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/stats.UserStats"
+                                            "$ref": "#/definitions/user.UserStats"
                                         }
                                     }
                                 }
@@ -23935,24 +25128,6 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.APIResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/stats.ActivityStats"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
@@ -23961,6 +25136,12 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
                         "schema": {
                             "$ref": "#/definitions/response.APIResponse"
                         }
@@ -23993,7 +25174,7 @@ const docTemplate = `{
                                     "type": "object",
                                     "properties": {
                                         "data": {
-                                            "$ref": "#/definitions/stats.ContentStats"
+                                            "$ref": "#/definitions/writer.ContentStats"
                                         }
                                     }
                                 }
@@ -24043,24 +25224,6 @@ const docTemplate = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/response.APIResponse"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/stats.RevenueStats"
-                                        }
-                                    }
-                                }
-                            ]
-                        }
-                    },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
@@ -24069,6 +25232,12 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "501": {
+                        "description": "Not Implemented",
                         "schema": {
                             "$ref": "#/definitions/response.APIResponse"
                         }
@@ -24983,6 +26152,57 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/writer/books": {
+            "get": {
+                "description": "获取当前登录作者的书籍列表，用于统计与收入页筛选",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Stats"
+                ],
+                "summary": "获取当前作者作品列表",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 1,
+                        "description": "页码",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "每页数量",
+                        "name": "pageSize",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/writer/books/{book_id}/daily-stats": {
             "get": {
                 "description": "获取作品最近N天的每日统计数据",
@@ -25310,6 +26530,79 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/writer/change-requests/{requestId}": {
+            "get": {
+                "description": "根据ID获取变更建议详情",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "变更建议"
+                ],
+                "summary": "获取建议详情",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "建议ID",
+                        "name": "requestId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/writer/change-requests/{requestId}/status": {
+            "put": {
+                "description": "接受/忽略/延后一条变更建议",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "变更建议"
+                ],
+                "summary": "处理建议",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "建议ID",
+                        "name": "requestId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "处理请求",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/response.APIResponse"
                         }
@@ -26653,7 +27946,19 @@ const docTemplate = `{
                     "202": {
                         "description": "Accepted",
                         "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/interfaces.PublicationRecord"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -26796,6 +28101,62 @@ const docTemplate = `{
                 "responses": {
                     "200": {
                         "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/writer/entities/{entityId}/state-fields": {
+            "put": {
+                "description": "更新指定实体的状态字段（如生命值、心情等）",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "实体管理"
+                ],
+                "summary": "更新实体状态字段",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "实体ID",
+                        "name": "entityId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "状态字段",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "$ref": "#/definitions/writer.StateValue"
+                            }
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/response.APIResponse"
                         }
@@ -27155,6 +28516,186 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/writer/projects/{id}/chapters/{chapterId}/change-requests": {
+            "get": {
+                "description": "获取指定章节的变更建议列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "变更建议"
+                ],
+                "summary": "获取章节建议列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "项目ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "章节ID",
+                        "name": "chapterId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "状态筛选 (pending/accepted/ignored/deferred)",
+                        "name": "status",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/writer/projects/{id}/chapters/{chapterId}/context": {
+            "get": {
+                "description": "获取当前章节的角色快照、关系、作用域等 Context Lens 数据",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Story Harness"
+                ],
+                "summary": "获取章节上下文",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "项目ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "章节ID",
+                        "name": "chapterId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/writer/projects/{id}/chapters/{chapterId}/rebuild-projection": {
+            "post": {
+                "description": "基于当前章节已 accepted 的建议重新构建 projection，用于修复或回放",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Story Harness"
+                ],
+                "summary": "重建章节投影",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "项目ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "章节ID",
+                        "name": "chapterId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/writer/projects/{id}/chapters/{chapterId}/trigger-index": {
+            "post": {
+                "description": "对当前章节运行最小规则引擎，生成变更建议批次",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Story Harness"
+                ],
+                "summary": "触发章节索引",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "项目ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "章节ID",
+                        "name": "chapterId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/writer/projects/{id}/concepts": {
             "get": {
                 "description": "获取项目下的所有概念",
@@ -27332,7 +28873,19 @@ const docTemplate = `{
                     "202": {
                         "description": "Accepted",
                         "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/interfaces.BatchPublishResult"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -27520,7 +29073,7 @@ const docTemplate = `{
                     {
                         "type": "integer",
                         "default": 20,
-                        "description": "每页数量",
+                        "description": "每页数量（兼容 size、page_size）",
                         "name": "pageSize",
                         "in": "query"
                     }
@@ -27529,7 +29082,22 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.PaginatedResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/definitions/interfaces.PublicationRecord"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -27576,7 +29144,19 @@ const docTemplate = `{
                     "202": {
                         "description": "Accepted",
                         "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/interfaces.PublicationRecord"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "400": {
@@ -27631,6 +29211,88 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/writer/projects/{projectId}/entities": {
+            "get": {
+                "description": "查询项目下所有实体，支持按类型筛选",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "实体管理"
+                ],
+                "summary": "获取项目实体列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "项目ID",
+                        "name": "projectId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "实体类型筛选（character/item/location/organization/foreshadowing）",
+                        "name": "type",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/writer/projects/{projectId}/entities/graph": {
+            "get": {
+                "description": "获取项目下所有实体及其关系，以图谱形式返回",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "实体管理"
+                ],
+                "summary": "获取项目实体图谱",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "项目ID",
+                        "name": "projectId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/response.APIResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/response.APIResponse"
                         }
@@ -27869,7 +29531,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/response.APIResponse"
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/response.APIResponse"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/interfaces.PublicationRecord"
+                                        }
+                                    }
+                                }
+                            ]
                         }
                     },
                     "404": {
@@ -28991,6 +30665,34 @@ const docTemplate = `{
                 }
             }
         },
+        "admin.AdminRechargeRequest": {
+            "type": "object",
+            "required": [
+                "amount",
+                "quotaType",
+                "reason"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "integer",
+                    "minimum": 1
+                },
+                "quotaType": {
+                    "type": "string"
+                },
+                "reason": {
+                    "type": "string"
+                }
+            }
+        },
+        "admin.AlertActionRequest": {
+            "type": "object",
+            "properties": {
+                "operatorId": {
+                    "type": "string"
+                }
+            }
+        },
         "admin.ApplyTemplateRequest": {
             "type": "object",
             "required": [
@@ -29064,6 +30766,30 @@ const docTemplate = `{
             "properties": {
                 "userIds": {
                     "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "admin.BatchQuotaRequest": {
+            "type": "object",
+            "required": [
+                "userIds"
+            ],
+            "properties": {
+                "amount": {
+                    "type": "integer"
+                },
+                "quotaType": {
+                    "type": "string"
+                },
+                "reason": {
+                    "type": "string"
+                },
+                "userIds": {
+                    "type": "array",
+                    "minItems": 1,
                     "items": {
                         "type": "string"
                     }
@@ -29331,6 +31057,37 @@ const docTemplate = `{
                 "resource": {
                     "type": "string",
                     "example": "user"
+                }
+            }
+        },
+        "admin.PolicyRequest": {
+            "type": "object",
+            "required": [
+                "membershipLevel",
+                "name",
+                "userRole"
+            ],
+            "properties": {
+                "dailyQuota": {
+                    "type": "integer"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "membershipLevel": {
+                    "type": "string"
+                },
+                "monthlyQuota": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "totalQuota": {
+                    "type": "integer"
+                },
+                "userRole": {
+                    "type": "string"
                 }
             }
         },
@@ -30317,85 +32074,6 @@ const docTemplate = `{
                 }
             }
         },
-        "auth.LoginRequest": {
-            "type": "object",
-            "required": [
-                "password",
-                "username"
-            ],
-            "properties": {
-                "password": {
-                    "type": "string",
-                    "example": "password123"
-                },
-                "username": {
-                    "type": "string",
-                    "example": "testuser"
-                }
-            }
-        },
-        "auth.OAuthAuthorizeRequest": {
-            "type": "object",
-            "required": [
-                "redirect_uri"
-            ],
-            "properties": {
-                "redirect_uri": {
-                    "description": "回调地址",
-                    "type": "string"
-                },
-                "state": {
-                    "description": "状态参数，用于防止CSRF攻击",
-                    "type": "string"
-                }
-            }
-        },
-        "auth.OAuthCallbackRequest": {
-            "type": "object",
-            "required": [
-                "code",
-                "state"
-            ],
-            "properties": {
-                "code": {
-                    "description": "授权码",
-                    "type": "string"
-                },
-                "state": {
-                    "description": "状态参数",
-                    "type": "string"
-                }
-            }
-        },
-        "auth.RegisterRequest": {
-            "type": "object",
-            "required": [
-                "email",
-                "password",
-                "username"
-            ],
-            "properties": {
-                "email": {
-                    "type": "string",
-                    "example": "test@example.com"
-                },
-                "password": {
-                    "type": "string",
-                    "minLength": 6,
-                    "example": "password123"
-                },
-                "username": {
-                    "type": "string",
-                    "maxLength": 50,
-                    "minLength": 3,
-                    "example": "testuser"
-                },
-                "verification_code": {
-                    "type": "string",
-                    "example": "123456"
-                }
-            }
-        },
         "bookstore.APIResponse": {
             "type": "object",
             "properties": {
@@ -30628,6 +32306,73 @@ const docTemplate = `{
                 }
             }
         },
+        "community.CreatePostRequest": {
+            "type": "object",
+            "required": [
+                "content",
+                "type"
+            ],
+            "properties": {
+                "bookAuthor": {
+                    "type": "string"
+                },
+                "bookCover": {
+                    "type": "string"
+                },
+                "bookId": {
+                    "type": "string"
+                },
+                "bookTitle": {
+                    "type": "string"
+                },
+                "chapterId": {
+                    "type": "string"
+                },
+                "chapterTitle": {
+                    "type": "string"
+                },
+                "content": {
+                    "type": "string",
+                    "maxLength": 5000
+                },
+                "images": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "progress": {
+                    "type": "integer"
+                },
+                "topics": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "type": {
+                    "$ref": "#/definitions/social.PostType"
+                }
+            }
+        },
+        "community.UpdatePostRequest": {
+            "type": "object",
+            "required": [
+                "content"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string",
+                    "maxLength": 5000
+                },
+                "topics": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "dto.BatchDeleteRequest": {
             "type": "object",
             "required": [
@@ -30682,6 +32427,23 @@ const docTemplate = `{
                 },
                 "total": {
                     "type": "integer"
+                }
+            }
+        },
+        "dto.BatchPublishItem": {
+            "type": "object",
+            "properties": {
+                "documentId": {
+                    "type": "string"
+                },
+                "error": {
+                    "type": "string"
+                },
+                "recordId": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "boolean"
                 }
             }
         },
@@ -30940,6 +32702,55 @@ const docTemplate = `{
                 },
                 "username": {
                     "type": "string"
+                }
+            }
+        },
+        "dto.PublicationMetadata": {
+            "type": "object",
+            "properties": {
+                "authorNote": {
+                    "type": "string"
+                },
+                "categoryId": {
+                    "description": "项目发布元数据",
+                    "type": "string"
+                },
+                "chapterNumber": {
+                    "type": "integer"
+                },
+                "chapterTitle": {
+                    "description": "文档发布元数据",
+                    "type": "string"
+                },
+                "coverImage": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "enableComment": {
+                    "type": "boolean"
+                },
+                "enableShare": {
+                    "type": "boolean"
+                },
+                "freeChapters": {
+                    "type": "integer"
+                },
+                "isFree": {
+                    "type": "boolean"
+                },
+                "price": {
+                    "type": "number"
+                },
+                "publishType": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -31501,6 +33312,23 @@ const docTemplate = `{
                 }
             }
         },
+        "interfaces.BatchPublishResult": {
+            "type": "object",
+            "properties": {
+                "failCount": {
+                    "type": "integer"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dto.BatchPublishItem"
+                    }
+                },
+                "successCount": {
+                    "type": "integer"
+                }
+            }
+        },
         "interfaces.CreateOutlineRequest": {
             "type": "object",
             "required": [
@@ -31531,6 +33359,10 @@ const docTemplate = `{
                 "parentId": {
                     "type": "string"
                 },
+                "status": {
+                    "type": "string",
+                    "maxLength": 20
+                },
                 "summary": {
                     "type": "string",
                     "maxLength": 1000
@@ -31553,6 +33385,69 @@ const docTemplate = `{
                         "chapter",
                         "scene"
                     ]
+                }
+            }
+        },
+        "interfaces.PublicationRecord": {
+            "type": "object",
+            "properties": {
+                "bookstoreId": {
+                    "type": "string"
+                },
+                "bookstoreName": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string"
+                },
+                "createdBy": {
+                    "type": "string"
+                },
+                "externalId": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "metadata": {
+                    "$ref": "#/definitions/dto.PublicationMetadata"
+                },
+                "publishTime": {
+                    "type": "string"
+                },
+                "resourceId": {
+                    "type": "string"
+                },
+                "resourceTitle": {
+                    "type": "string"
+                },
+                "reviewNote": {
+                    "type": "string"
+                },
+                "reviewedAt": {
+                    "type": "string"
+                },
+                "reviewedBy": {
+                    "type": "string"
+                },
+                "scheduledTime": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "type": {
+                    "description": "project, document",
+                    "type": "string"
+                },
+                "unpublishReason": {
+                    "type": "string"
+                },
+                "unpublishTime": {
+                    "type": "string"
+                },
+                "updatedAt": {
+                    "type": "string"
                 }
             }
         },
@@ -31582,6 +33477,10 @@ const docTemplate = `{
                 },
                 "parentId": {
                     "type": "string"
+                },
+                "status": {
+                    "type": "string",
+                    "maxLength": 20
                 },
                 "summary": {
                     "type": "string",
@@ -32101,6 +34000,9 @@ const docTemplate = `{
                 "autoSave": {
                     "type": "boolean"
                 },
+                "autoScroll": {
+                    "type": "boolean"
+                },
                 "backgroundColor": {
                     "type": "string"
                 },
@@ -32117,10 +34019,16 @@ const docTemplate = `{
                     "description": "scroll, paginate",
                     "type": "string"
                 },
+                "scrollSpeed": {
+                    "type": "integer"
+                },
                 "showProgress": {
                     "type": "boolean"
                 },
                 "textColor": {
+                    "type": "string"
+                },
+                "theme": {
                     "type": "string"
                 }
             }
@@ -32690,6 +34598,37 @@ const docTemplate = `{
                 }
             }
         },
+        "social.PostType": {
+            "type": "string",
+            "enum": [
+                "text",
+                "image",
+                "book_recommendation",
+                "reading_progress",
+                "poll"
+            ],
+            "x-enum-comments": {
+                "PostTypeBookRecommendation": "书籍推荐",
+                "PostTypeImage": "图片",
+                "PostTypePoll": "投票",
+                "PostTypeReadingProgress": "阅读进度",
+                "PostTypeText": "纯文本"
+            },
+            "x-enum-descriptions": [
+                "纯文本",
+                "图片",
+                "书籍推荐",
+                "阅读进度",
+                "投票"
+            ],
+            "x-enum-varnames": [
+                "PostTypeText",
+                "PostTypeImage",
+                "PostTypeBookRecommendation",
+                "PostTypeReadingProgress",
+                "PostTypePoll"
+            ]
+        },
         "social.ReplyCommentRequest": {
             "type": "object",
             "required": [
@@ -32806,209 +34745,6 @@ const docTemplate = `{
                 }
             }
         },
-        "stats.ActivityStats": {
-            "type": "object",
-            "properties": {
-                "action_types": {
-                    "description": "操作类型分布",
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "integer",
-                        "format": "int64"
-                    }
-                },
-                "active_hours": {
-                    "description": "活跃时段",
-                    "type": "array",
-                    "items": {
-                        "type": "integer"
-                    }
-                },
-                "daily_actions": {
-                    "description": "每日操作",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/stats.DailyAction"
-                    }
-                },
-                "days": {
-                    "description": "统计天数",
-                    "type": "integer"
-                },
-                "total_actions": {
-                    "description": "总操作数",
-                    "type": "integer"
-                },
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "stats.ContentStats": {
-            "type": "object",
-            "properties": {
-                "average_rating": {
-                    "description": "平均评分",
-                    "type": "number"
-                },
-                "average_words_per_day": {
-                    "description": "日均字数",
-                    "type": "number"
-                },
-                "draft_books": {
-                    "description": "草稿书籍",
-                    "type": "integer"
-                },
-                "published_books": {
-                    "description": "已发布书籍",
-                    "type": "integer"
-                },
-                "total_chapters": {
-                    "description": "总章节数",
-                    "type": "integer"
-                },
-                "total_collections": {
-                    "description": "总收藏数",
-                    "type": "integer"
-                },
-                "total_projects": {
-                    "description": "总项目数",
-                    "type": "integer"
-                },
-                "total_views": {
-                    "description": "总浏览量",
-                    "type": "integer"
-                },
-                "total_words": {
-                    "description": "总字数",
-                    "type": "integer"
-                },
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "stats.DailyAction": {
-            "type": "object",
-            "properties": {
-                "actions": {
-                    "description": "操作数",
-                    "type": "integer"
-                },
-                "date": {
-                    "description": "日期",
-                    "type": "string"
-                },
-                "words": {
-                    "description": "字数",
-                    "type": "integer"
-                }
-            }
-        },
-        "stats.DailyRevenue": {
-            "type": "object",
-            "properties": {
-                "date": {
-                    "description": "日期",
-                    "type": "string"
-                },
-                "revenue": {
-                    "description": "收益",
-                    "type": "number"
-                }
-            }
-        },
-        "stats.RevenueStats": {
-            "type": "object",
-            "properties": {
-                "daily_revenue": {
-                    "description": "每日收益",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/stats.DailyRevenue"
-                    }
-                },
-                "period_revenue": {
-                    "description": "期间收益",
-                    "type": "number"
-                },
-                "revenue_by_book": {
-                    "description": "按书籍收益",
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "number",
-                        "format": "float64"
-                    }
-                },
-                "revenue_by_type": {
-                    "description": "按类型收益",
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "number",
-                        "format": "float64"
-                    }
-                },
-                "total_revenue": {
-                    "description": "总收益",
-                    "type": "number"
-                },
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "stats.UserStats": {
-            "type": "object",
-            "properties": {
-                "active_days": {
-                    "description": "活跃天数",
-                    "type": "integer"
-                },
-                "last_active_at": {
-                    "description": "最后活跃时间",
-                    "type": "string"
-                },
-                "member_level": {
-                    "description": "会员等级",
-                    "type": "string"
-                },
-                "registered_at": {
-                    "description": "注册时间",
-                    "type": "string"
-                },
-                "total_books": {
-                    "description": "总书籍数",
-                    "type": "integer"
-                },
-                "total_comments": {
-                    "description": "总评论数",
-                    "type": "integer"
-                },
-                "total_likes": {
-                    "description": "总点赞数",
-                    "type": "integer"
-                },
-                "total_projects": {
-                    "description": "总项目数",
-                    "type": "integer"
-                },
-                "total_reading": {
-                    "description": "总阅读数",
-                    "type": "integer"
-                },
-                "total_revenue": {
-                    "description": "总收益",
-                    "type": "number"
-                },
-                "total_words": {
-                    "description": "总字数",
-                    "type": "integer"
-                },
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
         "storage.CompleteMultipartUploadRequest": {
             "type": "object",
             "required": [
@@ -33111,6 +34847,47 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/system.clientErrorReport"
                     }
+                }
+            }
+        },
+        "user.UserStats": {
+            "type": "object",
+            "properties": {
+                "active_days": {
+                    "type": "integer"
+                },
+                "last_active_at": {
+                    "type": "string"
+                },
+                "member_level": {
+                    "type": "string"
+                },
+                "registered_at": {
+                    "type": "string"
+                },
+                "total_books": {
+                    "type": "integer"
+                },
+                "total_comments": {
+                    "type": "integer"
+                },
+                "total_likes": {
+                    "type": "integer"
+                },
+                "total_projects": {
+                    "type": "integer"
+                },
+                "total_reading": {
+                    "type": "integer"
+                },
+                "total_revenue": {
+                    "type": "number"
+                },
+                "total_words": {
+                    "type": "integer"
+                },
+                "user_id": {
+                    "type": "string"
                 }
             }
         },
@@ -33296,6 +35073,41 @@ const docTemplate = `{
                 "ConflictPolicyAbort"
             ]
         },
+        "writer.ContentStats": {
+            "type": "object",
+            "properties": {
+                "average_rating": {
+                    "type": "number"
+                },
+                "average_words_per_day": {
+                    "type": "number"
+                },
+                "draft_books": {
+                    "type": "integer"
+                },
+                "published_books": {
+                    "type": "integer"
+                },
+                "total_chapters": {
+                    "type": "integer"
+                },
+                "total_collections": {
+                    "type": "integer"
+                },
+                "total_projects": {
+                    "type": "integer"
+                },
+                "total_views": {
+                    "type": "integer"
+                },
+                "total_words": {
+                    "type": "integer"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
         "writer.CreateCommentRequest": {
             "type": "object",
             "required": [
@@ -33443,6 +35255,24 @@ const docTemplate = `{
                 },
                 "key": {
                     "description": "按键组合 (e.g., \"Ctrl+S\")",
+                    "type": "string"
+                }
+            }
+        },
+        "writer.StateValue": {
+            "type": "object",
+            "properties": {
+                "current": {},
+                "description": {
+                    "type": "string"
+                },
+                "max": {
+                    "type": "number"
+                },
+                "min": {
+                    "type": "number"
+                },
+                "unit": {
                     "type": "string"
                 }
             }
