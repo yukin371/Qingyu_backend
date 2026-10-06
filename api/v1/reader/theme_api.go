@@ -91,7 +91,7 @@ func (api *ThemeAPI) GetThemeByName(c *gin.Context) {
 		return
 	}
 	if api.themeService != nil {
-		theme, err := api.themeService.GetThemeByName(c.Request.Context(), name)
+		theme, err := api.themeService.GetThemeByName(c.Request.Context(), shared.GetUserIDOptional(c), name)
 		if err != nil {
 			respondThemeError(c, err)
 			return

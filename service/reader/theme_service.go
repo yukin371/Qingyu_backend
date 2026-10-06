@@ -13,7 +13,7 @@ import (
 // ThemeService 是阅读主题的业务 owner，负责主题可见性、owner 校验和激活同步。
 type ThemeService interface {
 	GetThemes(ctx context.Context, userID string, builtinOnly, publicOnly bool) ([]*readerModel.ReaderTheme, error)
-	GetThemeByName(ctx context.Context, name string) (*readerModel.ReaderTheme, error)
+	GetThemeByName(ctx context.Context, userID, name string) (*readerModel.ReaderTheme, error)
 	CreateCustomTheme(ctx context.Context, userID string, req *readerModel.CreateCustomThemeRequest) (*readerModel.ReaderTheme, error)
 	UpdateTheme(ctx context.Context, userID, themeID string, req *readerModel.UpdateThemeRequest) error
 	DeleteTheme(ctx context.Context, userID, themeID string) error
@@ -67,13 +67,16 @@ func (s *ReaderThemeService) GetThemes(ctx context.Context, userID string, built
 	return themes, nil
 }
 
-func (s *ReaderThemeService) GetThemeByName(ctx context.Context, name string) (*readerModel.ReaderTheme, error) {
+func (s *ReaderThemeService) GetThemeByName(ctx context.Context, userID, name string) (*readerModel.ReaderTheme, error) {
 	if strings.TrimSpace(name) == "" {
 		return nil, fmt.Errorf("主题名称不能为空")
 	}
 	theme, err := s.themeRepo.GetThemeByName(ctx, name)
 	if err == nil && theme != nil {
-		return theme, nil
+		if theme.IsBuiltIn || theme.IsPublic || (userID != "" && theme.CreatorID == userID) {
+			return theme, nil
+		}
+		return nil, fmt.Errorf("主题不存在: %s", name)
 	}
 	for _, builtin := range readerModel.BuiltInThemes {
 		if builtin.Name == name {
@@ -93,7 +96,7 @@ func (s *ReaderThemeService) CreateCustomTheme(ctx context.Context, userID strin
 	if req == nil || strings.TrimSpace(req.Name) == "" || strings.TrimSpace(req.DisplayName) == "" {
 		return nil, fmt.Errorf("主题名称和显示名称不能为空")
 	}
-	if _, err := s.GetThemeByName(ctx, req.Name); err == nil {
+	if _, err := s.themeRepo.GetThemeByName(ctx, req.Name); err == nil {
 		return nil, fmt.Errorf("主题名称已存在: %s", req.Name)
 	} else if !strings.Contains(err.Error(), "不存在") {
 		return nil, err
@@ -160,7 +163,7 @@ func (s *ReaderThemeService) ActivateTheme(ctx context.Context, userID, themeNam
 	if userID == "" {
 		return fmt.Errorf("用户ID不能为空")
 	}
-	theme, err := s.GetThemeByName(ctx, themeName)
+	theme, err := s.GetThemeByName(ctx, userID, themeName)
 	if err != nil {
 		return err
 	}

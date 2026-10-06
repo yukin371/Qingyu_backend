@@ -141,5 +141,17 @@ func TestReaderThemeService_ActivateBuiltInPersistsSettings(t *testing.T) {
 	require.Equal(t, light.Colors.Background, settingsRepo.settings.Background)
 }
 
+func TestReaderThemeService_GetThemeByNameHidesPrivateForeignTheme(t *testing.T) {
+	repo := newFakeThemeRepository()
+	privateTheme := &readerModel.ReaderTheme{ID: primitive.NewObjectID(), Name: "private", CreatorID: "user-a", IsPublic: false}
+	repo.themes[privateTheme.ID.Hex()] = privateTheme
+	service := NewReaderThemeService(repo, &fakeSettingsRepository{})
+
+	_, err := service.GetThemeByName(context.Background(), "user-b", privateTheme.Name)
+
+	require.Error(t, err)
+	require.Contains(t, err.Error(), "主题不存在")
+}
+
 var _ readerRepo.ReaderThemeRepository = (*fakeThemeRepository)(nil)
 var _ readerRepo.ReadingSettingsRepository = (*fakeSettingsRepository)(nil)
