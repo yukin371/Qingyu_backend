@@ -11,8 +11,6 @@ import (
 	"sort"
 	"time"
 
-	"go.mongodb.org/mongo-driver/bson/primitive"
-
 	BookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
 	financeService "Qingyu_backend/service/finance"
 	"Qingyu_backend/service/finance/wallet"
@@ -190,6 +188,10 @@ func (s *ChapterPurchaseServiceImpl) GetChapterCatalog(ctx context.Context, user
 	if bookID == "" {
 		return nil, errors.New("book ID cannot be empty")
 	}
+	bookOID, err := repository.ParseID(bookID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid book ID: %w", err)
+	}
 
 	// 获取书籍信息
 	book, err := s.bookRepo.GetByID(ctx, bookID)
@@ -266,7 +268,6 @@ func (s *ChapterPurchaseServiceImpl) GetChapterCatalog(ctx context.Context, user
 	}
 
 	// 构建目录
-	bookOID, _ := repository.ParseID(bookID)
 	catalog := &bookstore.ChapterCatalog{
 		BookID:         bookOID,
 		BookTitle:      book.Title,
@@ -341,6 +342,14 @@ func (s *ChapterPurchaseServiceImpl) PurchaseChapter(ctx context.Context, userID
 	if chapterID == "" {
 		return nil, errors.New("chapter ID cannot be empty")
 	}
+	userOID, err := repository.ParseID(userID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid user ID: %w", err)
+	}
+	chapterOID, err := repository.ParseID(chapterID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid chapter ID: %w", err)
+	}
 
 	// 检查章节是否已购买
 	existingPurchase, err := s.purchaseRepo.GetByUserAndChapter(ctx, userID, chapterID)
@@ -355,6 +364,10 @@ func (s *ChapterPurchaseServiceImpl) PurchaseChapter(ctx context.Context, userID
 	}
 	if chapter == nil {
 		return nil, errors.New("chapter not found")
+	}
+	bookOID, err := repository.ParseID(chapter.BookID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid book ID: %w", err)
 	}
 
 	// 检查是否为免费章节
@@ -390,9 +403,6 @@ func (s *ChapterPurchaseServiceImpl) PurchaseChapter(ctx context.Context, userID
 		}
 
 		// 创建购买记录 - 需要将 string 转换为 primitive.ObjectID
-		userOID, _ := repository.ParseID(userID)
-		chapterOID, _ := repository.ParseID(chapterID)
-		bookOID, _ := repository.ParseID(chapter.BookID)
 		purchase = &bookstore.ChapterPurchase{
 			UserID:       userOID,
 			ChapterID:    chapterOID,
@@ -438,6 +448,14 @@ func (s *ChapterPurchaseServiceImpl) PurchaseChapters(ctx context.Context, userI
 	if len(chapterIDs) == 0 {
 		return nil, errors.New("chapter IDs cannot be empty")
 	}
+	userOID, err := repository.ParseID(userID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid user ID: %w", err)
+	}
+	requestedChapterOIDs, err := repository.ParseIDs(chapterIDs)
+	if err != nil {
+		return nil, fmt.Errorf("invalid chapter IDs: %w", err)
+	}
 
 	// 获取所有章节信息
 	chapters := make([]*bookstore.Chapter, 0, len(chapterIDs))
@@ -465,6 +483,10 @@ func (s *ChapterPurchaseServiceImpl) PurchaseChapters(ctx context.Context, userI
 		if chapter.IsFree {
 			continue // 跳过免费章节
 		}
+		_, err = repository.ParseID(chapter.BookID)
+		if err != nil {
+			return nil, fmt.Errorf("invalid book ID for chapter %s: %w", chapterID, err)
+		}
 
 		chapters = append(chapters, chapter)
 		totalPrice += chapter.Price
@@ -476,6 +498,10 @@ func (s *ChapterPurchaseServiceImpl) PurchaseChapters(ctx context.Context, userI
 
 	if len(chapters) == 0 {
 		return nil, errors.New("no chapters to purchase")
+	}
+	bookOID, err := repository.ParseID(bookID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid book ID: %w", err)
 	}
 
 	// 检查用户余额
@@ -504,18 +530,10 @@ func (s *ChapterPurchaseServiceImpl) PurchaseChapters(ctx context.Context, userI
 			return fmt.Errorf("failed to deduct balance: %w", err)
 		}
 
-		// 创建批量购买记录 - 需要转换类型
-		userOID, _ := repository.ParseID(userID)
-		bookOID, _ := repository.ParseID(bookID)
-		chapterOIDs := make([]primitive.ObjectID, len(chapterIDs))
-		for i, id := range chapterIDs {
-			chapterOIDs[i], _ = repository.ParseID(id)
-		}
-
 		batch = &bookstore.ChapterPurchaseBatch{
 			UserID:        userOID,
 			BookID:        bookOID,
-			ChapterIDs:    chapterOIDs,
+			ChapterIDs:    requestedChapterOIDs,
 			TotalPrice:    totalPrice,
 			ChaptersCount: len(chapters),
 			BookTitle:     book.Title,
@@ -530,7 +548,6 @@ func (s *ChapterPurchaseServiceImpl) PurchaseChapters(ctx context.Context, userI
 		// 为每个章节创建单独的购买记录
 		for _, chapter := range chapters {
 			chapterOID := chapter.ID
-			bookOID, _ := repository.ParseID(chapter.BookID)
 			purchase := &bookstore.ChapterPurchase{
 				UserID:       userOID,
 				ChapterID:    chapterOID,
@@ -575,6 +592,14 @@ func (s *ChapterPurchaseServiceImpl) PurchaseBook(ctx context.Context, userID, b
 	}
 	if bookID == "" {
 		return nil, errors.New("book ID cannot be empty")
+	}
+	userOID, err := repository.ParseID(userID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid user ID: %w", err)
+	}
+	bookOID, err := repository.ParseID(bookID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid book ID: %w", err)
 	}
 
 	// 检查是否已购买全书
@@ -625,9 +650,6 @@ func (s *ChapterPurchaseServiceImpl) PurchaseBook(ctx context.Context, userID, b
 			return fmt.Errorf("failed to deduct balance: %w", err)
 		}
 
-		// 创建全书购买记录 - 需要转换类型
-		userOID, _ := repository.ParseID(userID)
-		bookOID, _ := repository.ParseID(bookID)
 		purchase = &bookstore.BookPurchase{
 			UserID:        userOID,
 			BookID:        bookOID,

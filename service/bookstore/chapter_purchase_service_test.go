@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	bookstoreModel "Qingyu_backend/models/bookstore"
+	"Qingyu_backend/repository"
 	BookstoreRepo "Qingyu_backend/repository/interfaces/bookstore"
 
 	"github.com/stretchr/testify/require"
@@ -64,7 +65,7 @@ type batchChapterRepositoryStub struct {
 }
 
 func (r *batchChapterRepositoryStub) GetByID(context.Context, string) (*bookstoreModel.Chapter, error) {
-	return &bookstoreModel.Chapter{BookID: "book-1", Price: 10}, nil
+	return &bookstoreModel.Chapter{BookID: "507f1f77bcf86cd799439013", Price: 10}, nil
 }
 
 func (r *trialChapterRepositoryStub) GetFreeChapters(context.Context, string, int, int) ([]*bookstoreModel.Chapter, error) {
@@ -99,7 +100,7 @@ func TestChapterPurchaseService_GetChapterCatalogReturnsCountError(t *testing.T)
 		purchaseRepo: &catalogPurchaseRepositoryStub{},
 	}
 
-	catalog, err := service.GetChapterCatalog(context.Background(), "", "book-1")
+	catalog, err := service.GetChapterCatalog(context.Background(), "", "507f1f77bcf86cd799439011")
 
 	require.Error(t, err)
 	require.ErrorIs(t, err, countErr)
@@ -113,9 +114,39 @@ func TestChapterPurchaseService_PurchaseChaptersReturnsExistingPurchaseCheckErro
 		purchaseRepo: &batchPurchaseRepositoryStub{checkErr: checkErr},
 	}
 
-	batch, err := service.PurchaseChapters(context.Background(), "user-1", []string{"chapter-1"})
+	batch, err := service.PurchaseChapters(context.Background(), "507f1f77bcf86cd799439011", []string{"507f1f77bcf86cd799439012"})
 
 	require.Error(t, err)
 	require.ErrorIs(t, err, checkErr)
 	require.Nil(t, batch)
+}
+
+func TestChapterPurchaseService_PurchaseChapterRejectsInvalidUserID(t *testing.T) {
+	service := &ChapterPurchaseServiceImpl{}
+
+	purchase, err := service.PurchaseChapter(context.Background(), "invalid-user", "507f1f77bcf86cd799439012")
+
+	require.Error(t, err)
+	require.ErrorIs(t, err, repository.ErrInvalidIDFormat)
+	require.Nil(t, purchase)
+}
+
+func TestChapterPurchaseService_PurchaseChaptersRejectsInvalidChapterID(t *testing.T) {
+	service := &ChapterPurchaseServiceImpl{}
+
+	batch, err := service.PurchaseChapters(context.Background(), "507f1f77bcf86cd799439011", []string{"invalid-chapter"})
+
+	require.Error(t, err)
+	require.ErrorIs(t, err, repository.ErrInvalidIDFormat)
+	require.Nil(t, batch)
+}
+
+func TestChapterPurchaseService_PurchaseBookRejectsInvalidBookID(t *testing.T) {
+	service := &ChapterPurchaseServiceImpl{}
+
+	purchase, err := service.PurchaseBook(context.Background(), "507f1f77bcf86cd799439011", "invalid-book")
+
+	require.Error(t, err)
+	require.ErrorIs(t, err, repository.ErrInvalidIDFormat)
+	require.Nil(t, purchase)
 }
