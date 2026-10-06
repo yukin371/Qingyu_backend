@@ -61,7 +61,10 @@ func (s *ProjectService) CreateProject(ctx context.Context, req *dto.CreateProje
 
 	// 3. 创建项目对象（使用base mixins）
 	project := &writer.Project{}
-	objectID, _ := primitive.ObjectIDFromHex(userID)
+	objectID, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return nil, pkgErrors.NewServiceError(s.serviceName, pkgErrors.ServiceErrorValidation, "用户ID无效", userID, err)
+	}
 	project.AuthorID = objectID
 	project.Title = req.Title
 	project.Summary = req.Summary

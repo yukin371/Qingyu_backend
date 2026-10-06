@@ -282,6 +282,21 @@ func TestProjectService_CreateProject_NoUserID_ReturnError(t *testing.T) {
 	t.Log("✅ 未登录创建项目测试通过")
 }
 
+func TestProjectService_CreateProject_InvalidUserID_ReturnError(t *testing.T) {
+	ctx := contextWithUserID(context.Background(), "not-an-object-id")
+	mockRepo := new(MockProjectRepository)
+	mockEventBus := new(MockEventBus)
+	projectService := NewProjectService(mockRepo, mockEventBus)
+
+	resp, err := projectService.CreateProject(ctx, &dto.CreateProjectRequest{Title: "测试项目"})
+
+	assert.Error(t, err)
+	assert.Nil(t, resp)
+	assert.Contains(t, err.Error(), "用户ID无效")
+	mockRepo.AssertNotCalled(t, "Create", mock.Anything, mock.Anything)
+	mockEventBus.AssertNotCalled(t, "PublishAsync", mock.Anything, mock.Anything)
+}
+
 // TestProjectService_GetProject_Success 测试获取项目成功
 func TestProjectService_GetProject_Success(t *testing.T) {
 	// Arrange
