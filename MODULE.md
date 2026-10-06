@@ -63,6 +63,7 @@
 27. writer 主路由通过组合根注入 `RegisterWriterRoutesWithAuth`，并向 `InitWriterRouterWithAuth`/`InitWriterRoutesWithAuth` 传递同一 handler；审核兼容入口使用 `InitAuditRouterWithAuth`，普通审核接口的认证边界仍待 owner 确认。
 28. shared 认证与存储生产路由通过组合根注入 `RegisterAuthRoutesWithAuth`/`RegisterStorageRoutesWithAuth`；公开登录/OAuth 路径不得误加 JWT，无生产调用的兼容入口不得恢复为新的生产 owner。
 29. realtime WebSocket 不使用 Gin `auth.JWTAuth()`；`WSHub`/`MessagingWSHub` 通过组合根注入 `service/auth.JWTService`，以保留子协议握手和 Redis 黑名单语义。conversation 成员校验与 typing 广播仍是独立 TODO。
+30. 阅读进度入口的异步设备追踪只接受合法 Mongo ObjectID；解析失败必须 fail-closed，禁止向设备仓储写入全零 `UserID`。设备仓储写入仍是 best-effort，不改变保存进度主响应。
 
 ## 文档同步触发条件
 - 新增/调整 API 时同步更新 `docs/api`、`docs/architecture` 与 swagger 产物。

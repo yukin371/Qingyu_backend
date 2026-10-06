@@ -384,15 +384,17 @@ func (api *ProgressAPI) trackDevice(c *gin.Context, userID string) {
 	name, deviceType := detectDevice(ua)
 	ip := c.ClientIP()
 
+	uid, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		return
+	}
+
 	device := &models.Device{
-		UserID:    primitive.ObjectID{},
+		UserID:    uid,
 		Name:      name,
 		Type:      deviceType,
 		UserAgent: ua,
 		IP:        ip,
-	}
-	if uid, err := primitive.ObjectIDFromHex(userID); err == nil {
-		device.UserID = uid
 	}
 
 	_ = api.deviceRepo.UpsertDevice(context.Background(), device)
