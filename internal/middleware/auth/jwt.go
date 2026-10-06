@@ -11,6 +11,7 @@ import (
 	"go.uber.org/zap"
 
 	"Qingyu_backend/internal/middleware/core"
+	securityjwt "Qingyu_backend/internal/security/jwt"
 	appErrors "Qingyu_backend/pkg/errors"
 )
 
@@ -29,7 +30,7 @@ const (
 // 用途: 验证JWT Token，提取用户信息
 type JWTAuthMiddleware struct {
 	config     *JWTConfig
-	jwtManager JWTManager
+	jwtManager securityjwt.Manager
 	blacklist  Blacklist
 	logger     *zap.Logger
 }
@@ -90,7 +91,7 @@ func DefaultJWTConfig() *JWTConfig {
 }
 
 // NewJWTAuthMiddleware 创建JWT认证中间件
-func NewJWTAuthMiddleware(jwtManager JWTManager, blacklist Blacklist, logger *zap.Logger) *JWTAuthMiddleware {
+func NewJWTAuthMiddleware(jwtManager securityjwt.Manager, blacklist Blacklist, logger *zap.Logger) *JWTAuthMiddleware {
 	config := DefaultJWTConfig()
 
 	if logger == nil {
@@ -188,7 +189,7 @@ func (m *JWTAuthMiddleware) refreshJWTManagerFromConfig() {
 		return
 	}
 
-	manager, err := NewJWTManager(jwtConfig.SecretKey, jwtConfig.Expiration, jwtConfig.RefreshDuration)
+	manager, err := securityjwt.NewManager(jwtConfig.SecretKey, jwtConfig.Expiration, jwtConfig.RefreshDuration)
 	if err != nil {
 		m.logger.Warn("Failed to refresh JWT manager from config", zap.Error(err))
 		return
@@ -223,7 +224,7 @@ func (m *JWTAuthMiddleware) extractToken(c *gin.Context) (string, error) {
 }
 
 // validateToken 验证Token
-func (m *JWTAuthMiddleware) validateToken(token string) (*Claims, error) {
+func (m *JWTAuthMiddleware) validateToken(token string) (*securityjwt.Claims, error) {
 	claims, err := m.jwtManager.ValidateToken(token)
 	if err != nil {
 		// 判断错误类型
@@ -304,7 +305,7 @@ func (m *JWTAuthMiddleware) LoadConfig(config map[string]interface{}) error {
 		m.config.Secret = secret
 		// 重新创建JWT管理器
 		if m.jwtManager != nil && m.config.Secret != "" {
-			jwtManager, err := NewJWTManager(
+			jwtManager, err := securityjwt.NewManager(
 				m.config.Secret,
 				m.config.AccessExpiration,
 				m.config.RefreshExpiration,
@@ -389,7 +390,7 @@ func (m *JWTAuthMiddleware) GetConfig() *JWTConfig {
 }
 
 // GetJWTManager 获取JWT管理器
-func (m *JWTAuthMiddleware) GetJWTManager() JWTManager {
+func (m *JWTAuthMiddleware) GetJWTManager() securityjwt.Manager {
 	return m.jwtManager
 }
 
