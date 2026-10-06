@@ -6,11 +6,10 @@ import (
 
 	"Qingyu_backend/models/writer"
 	"Qingyu_backend/pkg/errors"
+	"Qingyu_backend/repository"
 	writerRepo "Qingyu_backend/repository/interfaces/writer"
 	"Qingyu_backend/service/base"
 	serviceInterfaces "Qingyu_backend/service/interfaces"
-
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // OutlineService 大纲服务实现
@@ -42,6 +41,10 @@ func (s *OutlineService) Create(
 	projectID, userID string,
 	req *serviceInterfaces.CreateOutlineRequest,
 ) (*writer.OutlineNode, error) {
+	projectOID, err := repository.ParseID(projectID)
+	if err != nil {
+		return nil, errors.NewServiceError("OutlineService", errors.ServiceErrorValidation, "invalid project ID", "", err)
+	}
 	// 如果指定了父节点，验证父节点是否存在且属于同一项目
 	if req.ParentID != "" {
 		parent, err := s.outlineRepo.FindByID(ctx, req.ParentID)
@@ -63,7 +66,6 @@ func (s *OutlineService) Create(
 
 	// 构建大纲节点
 	outline := &writer.OutlineNode{}
-	projectOID, _ := primitive.ObjectIDFromHex(projectID)
 	outline.ProjectID = projectOID
 	outline.Title = req.Title
 	outline.ParentID = req.ParentID
@@ -126,13 +128,17 @@ func (s *OutlineService) GetByID(
 	ctx context.Context,
 	outlineID, projectID string,
 ) (*writer.OutlineNode, error) {
+	projectOID, err := repository.ParseID(projectID)
+	if err != nil {
+		return nil, errors.NewServiceError("OutlineService", errors.ServiceErrorValidation, "invalid project ID", "", err)
+	}
 	outline, err := s.outlineRepo.FindByID(ctx, outlineID)
 	if err != nil {
 		return nil, err
 	}
 
 	// 验证项目权限
-	if outline.ProjectID.Hex() != projectID {
+	if outline.ProjectID != projectOID {
 		return nil, errors.NewServiceError("OutlineService", errors.ServiceErrorForbidden, "no permission to access this outline", "", nil)
 	}
 

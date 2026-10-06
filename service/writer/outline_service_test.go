@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	writerModels "Qingyu_backend/models/writer"
+	serviceErrors "Qingyu_backend/pkg/errors"
 	writerRepoInterfaces "Qingyu_backend/repository/interfaces/writer"
 	"Qingyu_backend/service/base"
 	serviceInterfaces "Qingyu_backend/service/interfaces"
@@ -107,6 +108,32 @@ func (m *MockOutlineRepository) FindByGlobalOutline(ctx context.Context, project
 
 // Ensure MockOutlineRepository implements the interface
 var _ writerRepoInterfaces.OutlineRepository = (*MockOutlineRepository)(nil)
+
+func requireOutlineProjectIDValidation(t *testing.T, err error) {
+	t.Helper()
+	var serviceErr *serviceErrors.ServiceError
+	require.ErrorAs(t, err, &serviceErr)
+	require.Equal(t, serviceErrors.ServiceErrorValidation, serviceErr.Type)
+	require.Contains(t, serviceErr.Error(), "invalid project ID")
+}
+
+func TestOutlineService_CreateRejectsInvalidProjectID(t *testing.T) {
+	service := &OutlineService{}
+
+	outline, err := service.Create(context.Background(), "invalid-project", "user-1", &serviceInterfaces.CreateOutlineRequest{Title: "测试大纲"})
+
+	requireOutlineProjectIDValidation(t, err)
+	require.Nil(t, outline)
+}
+
+func TestOutlineService_GetByIDRejectsInvalidProjectID(t *testing.T) {
+	service := &OutlineService{}
+
+	outline, err := service.GetByID(context.Background(), "outline-1", "invalid-project")
+
+	requireOutlineProjectIDValidation(t, err)
+	require.Nil(t, outline)
+}
 
 // MockEventBus Mock事件总线
 type MockEventBus struct {
