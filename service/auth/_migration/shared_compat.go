@@ -7,5 +7,5 @@
 // - 旧路径 Qingyu_backend/service/shared/auth 已删除；
 // - 运行时代码必须使用 Qingyu_backend/service/auth；
 // - 密码验证器归属 service/user；
-// - 鉴权/权限中间件归属 internal/middleware/auth。
+// - JWT 签名/解析/验证归属 internal/security/jwt；HTTP 鉴权中间件归属 internal/middleware/auth。
 package auth

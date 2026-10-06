@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"Qingyu_backend/config"
-	internalAuth "Qingyu_backend/internal/middleware/auth"
+	internalAuth "Qingyu_backend/internal/security/jwt"
 )
 
 // JWTService接口已在interfaces.go中定义，这里直接实现
@@ -39,7 +39,7 @@ func NewJWTService(cfg *config.JWTConfigEnhanced, redisClient RedisClient) JWTSe
 	}
 }
 
-func (s *JWTServiceImpl) newJWTManager() (internalAuth.JWTManager, error) {
+func (s *JWTServiceImpl) newJWTManager() (internalAuth.Manager, error) {
 	cfg := s.config
 	if config.GlobalConfig != nil && config.GlobalConfig.JWT != nil && config.GlobalConfig.JWT.Secret != "" {
 		liveCfg := config.GetJWTConfigEnhanced()
@@ -49,7 +49,7 @@ func (s *JWTServiceImpl) newJWTManager() (internalAuth.JWTManager, error) {
 		}
 	}
 
-	return internalAuth.NewJWTManager(cfg.SecretKey, cfg.Expiration, cfg.RefreshDuration)
+	return internalAuth.NewManager(cfg.SecretKey, cfg.Expiration, cfg.RefreshDuration)
 }
 
 func (s *JWTServiceImpl) buildExtraClaims(roles []string) map[string]interface{} {
