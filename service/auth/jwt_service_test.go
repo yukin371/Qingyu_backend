@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"Qingyu_backend/config"
+	internalAuth "Qingyu_backend/internal/middleware/auth"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -50,6 +51,25 @@ func testJWTConfig() *config.JWTConfigEnhanced {
 		Expiration:      time.Hour,
 		RefreshDuration: 24 * time.Hour,
 	}
+}
+
+func TestJWTService_TokenClaimsCompatibleWithMiddlewareManager(t *testing.T) {
+	ctx := context.Background()
+	cfg := testJWTConfig()
+	service := NewJWTService(cfg, newStubRedisClient())
+
+	token, err := service.GenerateToken(ctx, "user-claims", []string{"reader", "author"})
+	require.NoError(t, err)
+
+	manager, err := internalAuth.NewJWTManager(cfg.SecretKey, cfg.Expiration, cfg.RefreshDuration)
+	require.NoError(t, err)
+	claims, err := manager.ValidateToken(token)
+	require.NoError(t, err)
+
+	assert.Equal(t, "user-claims", claims.UserID)
+	assert.Equal(t, []string{"reader", "author"}, claims.Roles)
+	assert.Equal(t, "access", claims.TokenType)
+	assert.Equal(t, "user-claims", claims.Subject)
 }
 
 func TestJWTService_RevokeTokenMarksTokenAsRevoked(t *testing.T) {
