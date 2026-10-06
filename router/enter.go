@@ -558,7 +558,7 @@ func RegisterRoutes(r *gin.Engine) {
 		postAPI := communityApi.NewPostAPI(postSvc)
 
 		// 注册社区路由
-		communityRouter.RegisterCommunityRoutes(v1, postAPI)
+		communityRouter.RegisterCommunityRoutesWithAuth(v1, postAPI, newCanonicalJWTAuthMiddleware(logger))
 
 		logger.Info("✓ 社区动态路由已注册到: /api/v1/community/")
 		logger.Info("  - GET /api/v1/community/posts (获取动态列表-公开)")

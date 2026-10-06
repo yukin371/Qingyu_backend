@@ -50,6 +50,7 @@
 14. notifications 路由的生产注册通过组合根注入 `RegisterRoutesWithAuth` 与 `RegisterUserManagementRoutesWithAuth`；旧注册函数仅作迁移期兼容入口。通知路由迁移不得重新直接构造 `auth.JWTAuth()`。
 15. reading-stats 路由的生产注册通过组合根注入 `RegisterReadingStatsRoutesWithAuth`；旧 `RegisterReadingStatsRoutes` 仅作迁移期兼容入口，统计 API 不得重新直接构造 JWT façade。
 16. recommendation 路由的认证与管理员子组通过组合根注入 `RegisterRecommendationRoutesWithAuth`；公开推荐路径不应引入鉴权，旧 `RegisterRecommendationRoutes` 仅作迁移期兼容入口。
+17. community 路由的认证写操作通过组合根注入 `RegisterCommunityRoutesWithAuth`；公开动态读取路径不得误加鉴权，旧 `RegisterCommunityRoutes` 仅作迁移期兼容入口。
 
 ## 文档同步触发条件
 - 新增/调整 API 时同步更新 `docs/api`、`docs/architecture` 与 swagger 产物。

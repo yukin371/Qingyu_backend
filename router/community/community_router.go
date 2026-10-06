@@ -9,6 +9,16 @@ import (
 
 // RegisterCommunityRoutes 注册社区动态相关路由
 func RegisterCommunityRoutes(r *gin.RouterGroup, postAPI *communityApi.PostAPI) {
+	RegisterCommunityRoutesWithAuth(r, postAPI, auth.JWTAuth())
+}
+
+// RegisterCommunityRoutesWithAuth 注册社区动态路由并注入鉴权 handler。
+// RegisterCommunityRoutes 保留为迁移期兼容入口。
+func RegisterCommunityRoutesWithAuth(r *gin.RouterGroup, postAPI *communityApi.PostAPI, authMiddleware gin.HandlerFunc) {
+	if authMiddleware == nil {
+		authMiddleware = auth.JWTAuth()
+	}
+
 	// 社区路由组
 	communityGroup := r.Group("/community")
 	{
@@ -20,7 +30,7 @@ func RegisterCommunityRoutes(r *gin.RouterGroup, postAPI *communityApi.PostAPI) 
 
 		// 以下接口需要认证
 		authGroup := communityGroup.Group("")
-		authGroup.Use(auth.JWTAuth())
+		authGroup.Use(authMiddleware)
 		{
 			// 创建动态
 			authGroup.POST("/posts", postAPI.CreatePost)
