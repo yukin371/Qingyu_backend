@@ -587,6 +587,8 @@ func (s *ReaderService) UpdateReadingSettings(ctx context.Context, userID string
 		return fmt.Errorf("阅读设置不存在")
 	}
 
+	// TODO(T3-044-contract): 统一 SettingAPI 请求字段与 ReadingSettings 持久化字段后，
+	// 将 map 更新改为显式 DTO 校验；在契约冻结前不得继续增加强制类型断言。
 	// 应用更新
 	if fontSize, ok := updates["font_size"]; ok {
 		settings.FontSize = fontSize.(int)
