@@ -124,7 +124,7 @@ func RegisterRoutes(r *gin.Engine) {
 	// 1. 注册认证服务路由
 	if authErr == nil && authSvc != nil {
 		// OAuthService是可选的，如果没有配置，传入nil
-		sharedRouter.RegisterAuthRoutes(sharedGroup, authSvc, oauthSvc, logger)
+		sharedRouter.RegisterAuthRoutesWithAuth(sharedGroup, authSvc, oauthSvc, logger, newCanonicalJWTAuthMiddleware(logger))
 		logger.Info("✓ 认证服务路由已注册: /api/v1/shared/auth/*")
 		if oauthErr != nil {
 			logger.Warn("⚠ OAuthService未配置，OAuth登录功能将不可用", zap.Error(oauthErr))
@@ -136,7 +136,7 @@ func RegisterRoutes(r *gin.Engine) {
 
 	// 2. 注册存储服务路由
 	if sharedStorageErr == nil && sharedStorageSvc != nil && multipartUploadErr == nil && multipartUploadSvc != nil && imageProcessorErr == nil && imageProcessorSvc != nil {
-		sharedRouter.RegisterStorageRoutes(sharedGroup, sharedStorageSvc, multipartUploadSvc, imageProcessorSvc)
+		sharedRouter.RegisterStorageRoutesWithAuth(sharedGroup, sharedStorageSvc, multipartUploadSvc, imageProcessorSvc, newCanonicalJWTAuthMiddleware(logger))
 		logger.Info("✓ 存储服务路由已注册: /api/v1/shared/storage/*")
 		registeredCount++
 	} else {

@@ -14,6 +14,14 @@ import (
 
 // RegisterAuthRoutes 注册认证服务路由
 func RegisterAuthRoutes(r *gin.RouterGroup, authService sharedAuth.AuthService, oauthService *sharedAuth.OAuthService, logger *zap.Logger) {
+	RegisterAuthRoutesWithAuth(r, authService, oauthService, logger, auth.JWTAuth())
+}
+
+// RegisterAuthRoutesWithAuth 注册认证服务路由，并由组合根注入认证中间件。
+func RegisterAuthRoutesWithAuth(r *gin.RouterGroup, authService sharedAuth.AuthService, oauthService *sharedAuth.OAuthService, logger *zap.Logger, authMiddleware gin.HandlerFunc) {
+	if authMiddleware == nil {
+		authMiddleware = auth.JWTAuth()
+	}
 	// 创建API处理器
 	authAPI := shared.NewAuthAPI(authService)
 	oauthAPI := shared.NewOAuthAPI(oauthService, authService, logger)
@@ -32,7 +40,7 @@ func RegisterAuthRoutes(r *gin.RouterGroup, authService sharedAuth.AuthService, 
 
 		// 需要认证的路由
 		authProtected := authGroup.Group("")
-		authProtected.Use(auth.JWTAuth())
+		authProtected.Use(authMiddleware)
 		authProtected.Use(ratelimit.RateLimitMiddlewareSimple(200, 60)) // 200次/分钟（测试环境放宽）
 		{
 			authProtected.POST("/logout", authAPI.Logout)
@@ -57,7 +65,7 @@ func RegisterAuthRoutes(r *gin.RouterGroup, authService sharedAuth.AuthService, 
 
 		// 需要认证的路由
 		oauthProtected := oauthGroup.Group("")
-		oauthProtected.Use(auth.JWTAuth())
+		oauthProtected.Use(authMiddleware)
 		oauthProtected.Use(ratelimit.RateLimitMiddlewareSimple(200, 60)) // 200次/分钟（测试环境放宽）
 		{
 			// 获取绑定的账号列表
@@ -101,12 +109,26 @@ func RegisterStorageRoutes(
 	multipartService storage.MultipartUploadManager,
 	imageProcessor storage.ImageProcessorService,
 ) {
+	RegisterStorageRoutesWithAuth(r, storageService, multipartService, imageProcessor, auth.JWTAuth())
+}
+
+// RegisterStorageRoutesWithAuth 注册存储服务路由，并由组合根注入认证中间件。
+func RegisterStorageRoutesWithAuth(
+	r *gin.RouterGroup,
+	storageService storage.StorageService,
+	multipartService storage.MultipartUploadManager,
+	imageProcessor storage.ImageProcessorService,
+	authMiddleware gin.HandlerFunc,
+) {
+	if authMiddleware == nil {
+		authMiddleware = auth.JWTAuth()
+	}
 	// 创建API处理器
 	storageAPI := shared.NewStorageAPI(storageService, multipartService, imageProcessor)
 
 	// ============ 存储服务路由 ============
 	storageGroup := r.Group("/storage")
-	storageGroup.Use(auth.JWTAuth())                              // 所有存储接口都需要认证
+	storageGroup.Use(authMiddleware)                              // 所有存储接口都需要认证
 	storageGroup.Use(ratelimit.RateLimitMiddlewareSimple(20, 60)) // 20次/分钟（文件操作限制更严格）
 	{
 		// 文件操作
