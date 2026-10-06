@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/response"
 	readerservice "Qingyu_backend/service/reader"
 	socialservice "Qingyu_backend/service/social"
@@ -97,15 +98,11 @@ func NewReaderStatisticsAPI(
 }
 
 func (api *ReaderStatisticsAPI) getUserID(c *gin.Context) (string, bool) {
-	userIDValue, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未登录")
-		return "", false
-	}
-
-	userID, ok := userIDValue.(string)
+	userID, ok := shared.GetUserIDWithMessage(c, "未登录")
 	if !ok || userID == "" {
-		response.Unauthorized(c, "未登录")
+		if ok {
+			response.Unauthorized(c, "未登录")
+		}
 		return "", false
 	}
 
