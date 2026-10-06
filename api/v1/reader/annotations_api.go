@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	"Qingyu_backend/api/v1/shared"
 	readerModels "Qingyu_backend/models/reader"
 	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/interfaces"
@@ -42,23 +43,7 @@ type UpdateAnnotationRequest struct {
 
 // getUserID 从gin.Context中获取并验证用户ID
 func (api *AnnotationsAPI) getUserID(c *gin.Context) (string, bool) {
-	// 兼容两种 key 格式: "user_id" 和 "userId"
-	userID, exists := c.Get("user_id")
-	if !exists {
-		userID, exists = c.Get("userId")
-		if !exists {
-			response.Unauthorized(c, "请先登录")
-			return "", false
-		}
-	}
-
-	userIDStr, ok := userID.(string)
-	if !ok {
-		response.Unauthorized(c, "用户信息格式错误")
-		return "", false
-	}
-
-	return userIDStr, true
+	return shared.GetUserIDWithMessage(c, "请先登录")
 }
 
 // requireQueryParam 验证查询参数是否存在
