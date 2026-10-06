@@ -248,13 +248,25 @@ func InitReaderPurchaseRouter(
 	r *gin.RouterGroup,
 	purchaseService bookstore.ChapterPurchaseService,
 ) {
+	InitReaderPurchaseRouterWithAuth(r, purchaseService, auth.JWTAuth())
+}
+
+// InitReaderPurchaseRouterWithAuth 初始化读者购买路由，并由组合根注入认证中间件。
+func InitReaderPurchaseRouterWithAuth(
+	r *gin.RouterGroup,
+	purchaseService bookstore.ChapterPurchaseService,
+	authMiddleware gin.HandlerFunc,
+) {
 	// 如果没有提供购买服务，直接返回
 	if purchaseService == nil {
 		return
 	}
+	if authMiddleware == nil {
+		authMiddleware = auth.JWTAuth()
+	}
 
 	readerGroup := r.Group("/reader")
-	readerGroup.Use(auth.JWTAuth())
+	readerGroup.Use(authMiddleware)
 	{
 		// 创建章节目录API处理器
 		chapterCatalogApiHandler := bookstoreApi.NewChapterCatalogAPI(nil, purchaseService)

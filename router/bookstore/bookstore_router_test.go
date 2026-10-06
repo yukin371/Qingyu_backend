@@ -235,3 +235,20 @@ func TestInitBookstoreRouterWithAuthUsesInjectedMiddleware(t *testing.T) {
 
 	require.Equal(t, http.StatusTeapot, recorder.Code)
 }
+
+func TestInitReaderPurchaseRouterWithAuthUsesInjectedMiddleware(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	r := gin.New()
+	api := r.Group("/api/v1")
+	purchaseService := (*bookstoreService.ChapterPurchaseServiceImpl)(nil)
+
+	InitReaderPurchaseRouterWithAuth(api, purchaseService, func(c *gin.Context) {
+		c.AbortWithStatus(http.StatusTeapot)
+	})
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/reader/chapters/507f1f77bcf86cd799439011/purchase", nil)
+	recorder := httptest.NewRecorder()
+	r.ServeHTTP(recorder, req)
+
+	require.Equal(t, http.StatusTeapot, recorder.Code)
+}
