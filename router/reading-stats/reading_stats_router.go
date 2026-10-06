@@ -14,8 +14,21 @@ func RegisterReadingStatsRoutes(
 	r *gin.RouterGroup,
 	statsService *readingStatsService.ReadingStatsService,
 ) {
+	RegisterReadingStatsRoutesWithAuth(r, statsService, auth.JWTAuth())
+}
+
+// RegisterReadingStatsRoutesWithAuth 注册阅读统计路由并注入鉴权 handler。
+// RegisterReadingStatsRoutes 保留为迁移期兼容入口。
+func RegisterReadingStatsRoutesWithAuth(
+	r *gin.RouterGroup,
+	statsService *readingStatsService.ReadingStatsService,
+	authMiddleware gin.HandlerFunc,
+) {
 	if statsService == nil {
 		return
+	}
+	if authMiddleware == nil {
+		authMiddleware = auth.JWTAuth()
 	}
 
 	// 创建API处理器
@@ -29,7 +42,7 @@ func RegisterReadingStatsRoutes(
 
 	// ============ 我的统计路由（需要认证） ============
 	myStats := statsGroup.Group("/my")
-	myStats.Use(auth.JWTAuth())
+	myStats.Use(authMiddleware)
 	{
 		// 获取我的统计
 		myStats.GET("/stats", readingStatsAPI.GetMyStats)
@@ -49,7 +62,7 @@ func RegisterReadingStatsRoutes(
 
 	// ============ 推荐路由（需要认证） ============
 	recommendations := statsGroup.Group("/recommendations")
-	recommendations.Use(auth.JWTAuth())
+	recommendations.Use(authMiddleware)
 	{
 		recommendations.GET("", readingStatsAPI.GetRecommendations)
 	}

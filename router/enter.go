@@ -372,7 +372,7 @@ func RegisterRoutes(r *gin.Engine) {
 			logger.Warn("获取阅读统计服务失败", zap.Error(readingStatsErr))
 			logger.Info("跳过阅读统计路由注册")
 		} else {
-			readingstatsRouter.RegisterReadingStatsRoutes(v1, readingStatsSvc)
+			readingstatsRouter.RegisterReadingStatsRoutesWithAuth(v1, readingStatsSvc, newCanonicalJWTAuthMiddleware(logger))
 			logger.Info("✓ 阅读统计路由已注册到: /api/v1/reading-stats/")
 		}
 	}

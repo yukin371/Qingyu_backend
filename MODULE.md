@@ -48,6 +48,7 @@
 12. `internal/middleware/setup.RegisterAuthFactory` 直接消费 `internal/security/jwt.Manager`；不得把 JWT 类型重新从 `internal/middleware/auth` façade 暴露给组合根。
 13. finance 路由的生产注册通过组合根注入 `RegisterFinanceRoutesWithAuth`；`RegisterFinanceRoutes` 与 `auth.JWTAuth` 仅作迁移期兼容入口。后续路由迁移应复用 `internal/security/jwt.Manager`，不得新增直接构造 middleware façade 的生产调用。
 14. notifications 路由的生产注册通过组合根注入 `RegisterRoutesWithAuth` 与 `RegisterUserManagementRoutesWithAuth`；旧注册函数仅作迁移期兼容入口。通知路由迁移不得重新直接构造 `auth.JWTAuth()`。
+15. reading-stats 路由的生产注册通过组合根注入 `RegisterReadingStatsRoutesWithAuth`；旧 `RegisterReadingStatsRoutes` 仅作迁移期兼容入口，统计 API 不得重新直接构造 JWT façade。
 
 ## 文档同步触发条件
 - 新增/调整 API 时同步更新 `docs/api`、`docs/architecture` 与 swagger 产物。
