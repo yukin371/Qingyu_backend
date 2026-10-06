@@ -10,8 +10,6 @@ import (
 	writerRepo "Qingyu_backend/repository/interfaces/writer"
 	"Qingyu_backend/service/base"
 	serviceInterfaces "Qingyu_backend/service/interfaces"
-
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // CharacterService 角色服务实现
@@ -328,13 +326,16 @@ func (s *CharacterService) CreateRelationTimelineEvent(
 	projectID string,
 	req *serviceInterfaces.CreateRelationTimelineEventRequest,
 ) (*writer.RelationTimelineEvent, error) {
+	projectOID, err := repository.ParseID(projectID)
+	if err != nil {
+		return nil, errors.NewServiceError("CharacterService", errors.ServiceErrorValidation, "invalid project ID", "", err)
+	}
 	// 验证关系是否存在且属于该项目
 	relation, err := s.characterRepo.FindRelationByID(ctx, req.RelationID)
 	if err != nil {
 		return nil, errors.NewServiceError("CharacterService", errors.ServiceErrorNotFound, "relation not found", "", err)
 	}
 
-	projectOID, _ := primitive.ObjectIDFromHex(projectID)
 	if relation.ProjectID != projectOID {
 		return nil, errors.NewServiceError("CharacterService", errors.ServiceErrorForbidden, "no permission to access this relation", "", nil)
 	}
@@ -357,12 +358,8 @@ func (s *CharacterService) CreateRelationTimelineEvent(
 		return nil, errors.NewServiceError("CharacterService", errors.ServiceErrorInternal, "create timeline event failed", "", err)
 	}
 
-	// 更新关系类型为新类型
-	relation.Type = writer.RelationType(req.NewType)
-	relation.Strength = req.NewStrength
-	if err := s.characterRepo.Update(ctx, (*writer.Character)(nil)); err != nil {
-		// 如果是空指针错误，使用 UpdateRelation 直接更新
-	}
+	// TODO(T3-072-character-relation-state-owner): repository 当前没有关系状态更新 port，
+	// 不能用 CharacterRepository.Update(nil) 伪造更新；待补齐关系更新契约后同步 Type/Strength。
 
 	return event, nil
 }
@@ -372,13 +369,16 @@ func (s *CharacterService) GetRelationTimeline(
 	ctx context.Context,
 	relationID, projectID string,
 ) ([]*writer.RelationTimelineEvent, error) {
+	projectOID, err := repository.ParseID(projectID)
+	if err != nil {
+		return nil, errors.NewServiceError("CharacterService", errors.ServiceErrorValidation, "invalid project ID", "", err)
+	}
 	// 验证关系是否存在且属于该项目
 	relation, err := s.characterRepo.FindRelationByID(ctx, relationID)
 	if err != nil {
 		return nil, errors.NewServiceError("CharacterService", errors.ServiceErrorNotFound, "relation not found", "", err)
 	}
 
-	projectOID, _ := primitive.ObjectIDFromHex(projectID)
 	if relation.ProjectID != projectOID {
 		return nil, errors.NewServiceError("CharacterService", errors.ServiceErrorForbidden, "no permission to access this relation", "", nil)
 	}
@@ -403,12 +403,14 @@ func (s *CharacterService) UpdateRelationTimelineEvent(
 	eventID, projectID string,
 	req *serviceInterfaces.UpdateRelationTimelineEventRequest,
 ) (*writer.RelationTimelineEvent, error) {
+	if _, err := repository.ParseID(projectID); err != nil {
+		return nil, errors.NewServiceError("CharacterService", errors.ServiceErrorValidation, "invalid project ID", "", err)
+	}
 	// 遍历所有关系找到包含此事件的关系
 	// 由于事件ID不在关系中，我们需要通过事件索引来更新
 	// 这里简化处理，实际应该通过更复杂的查询找到对应关系和事件
 
 	_ = eventID // 事件ID在此实现中对应数组索引
-	_ = projectID
 
 	// 构建更新后的事件
 	event := &writer.RelationTimelineEvent{}
@@ -430,11 +432,12 @@ func (s *CharacterService) DeleteRelationTimelineEvent(
 	ctx context.Context,
 	eventID, projectID string,
 ) error {
+	if _, err := repository.ParseID(projectID); err != nil {
+		return errors.NewServiceError("CharacterService", errors.ServiceErrorValidation, "invalid project ID", "", err)
+	}
 	// 注意：这里的 eventID 实际上是数组索引
 	// 实际实现中需要先找到关系，再通过索引删除事件
 
 	_ = eventID
-	_ = projectID
-
 	return nil
 }

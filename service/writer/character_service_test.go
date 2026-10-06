@@ -51,3 +51,38 @@ func TestCharacterService_DeleteRelationRejectsInvalidProjectID(t *testing.T) {
 
 	requireCharacterProjectIDValidation(t, err)
 }
+
+func TestCharacterService_CreateRelationTimelineEventRejectsInvalidProjectID(t *testing.T) {
+	service := &CharacterService{}
+
+	event, err := service.CreateRelationTimelineEvent(context.Background(), "invalid-project", &interfaces.CreateRelationTimelineEventRequest{RelationID: "relation-1"})
+
+	requireCharacterProjectIDValidation(t, err)
+	require.Nil(t, event)
+}
+
+func TestCharacterService_GetRelationTimelineRejectsInvalidProjectID(t *testing.T) {
+	service := &CharacterService{}
+
+	events, err := service.GetRelationTimeline(context.Background(), "relation-1", "invalid-project")
+
+	requireCharacterProjectIDValidation(t, err)
+	require.Nil(t, events)
+}
+
+func TestCharacterService_UpdateRelationTimelineEventRejectsInvalidProjectID(t *testing.T) {
+	service := &CharacterService{}
+
+	event, err := service.UpdateRelationTimelineEvent(context.Background(), "event-1", "invalid-project", &interfaces.UpdateRelationTimelineEventRequest{})
+
+	requireCharacterProjectIDValidation(t, err)
+	require.Nil(t, event)
+}
+
+func TestCharacterService_DeleteRelationTimelineEventRejectsInvalidProjectID(t *testing.T) {
+	service := &CharacterService{}
+
+	err := service.DeleteRelationTimelineEvent(context.Background(), "event-1", "invalid-project")
+
+	requireCharacterProjectIDValidation(t, err)
+}
