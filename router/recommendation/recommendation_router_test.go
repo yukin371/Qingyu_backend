@@ -9,6 +9,7 @@ import (
 	"Qingyu_backend/config"
 
 	"github.com/gin-gonic/gin"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestRegisterRecommendationRoutes_TableRoutesReachable(t *testing.T) {
@@ -53,4 +54,20 @@ func TestRegisterRecommendationRoutes_TableRoutesReachable(t *testing.T) {
 	if w.Code == http.StatusNotFound {
 		t.Fatalf("expected admin manual route to be registered, got 404")
 	}
+}
+
+func TestRegisterRecommendationRoutesWithAuthUsesInjectedMiddleware(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	engine := gin.New()
+	v1 := engine.Group("/api/v1")
+
+	RegisterRecommendationRoutesWithAuth(v1, recoAPI.NewRecommendationAPI(nil), func(c *gin.Context) {
+		c.AbortWithStatus(http.StatusTeapot)
+	})
+
+	req := httptest.NewRequest(http.MethodPut, "/api/v1/recommendation/admin/tables/manual/65f000000000000000000001", nil)
+	rec := httptest.NewRecorder()
+	engine.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusTeapot, rec.Code)
 }

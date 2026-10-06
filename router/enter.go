@@ -639,7 +639,7 @@ func RegisterRoutes(r *gin.Engine) {
 				recommendationApi.WithBookCatalog(bookRepo)
 			}
 		}
-		recommendationRouter.RegisterRecommendationRoutes(v1, recommendationApi)
+		recommendationRouter.RegisterRecommendationRoutesWithAuth(v1, recommendationApi, newCanonicalJWTAuthMiddleware(logger))
 
 		logger.Info("✓ 推荐系统路由已注册到: /api/v1/recommendation/")
 		logger.Info("  - /api/v1/recommendation/personalized (个性化推荐 - 需认证)")

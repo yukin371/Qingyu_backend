@@ -9,11 +9,21 @@ import (
 
 // RegisterRecommendationRoutes 注册推荐系统路由
 func RegisterRecommendationRoutes(router *gin.RouterGroup, api *recoAPI.RecommendationAPI) {
+	RegisterRecommendationRoutesWithAuth(router, api, auth.JWTAuth())
+}
+
+// RegisterRecommendationRoutesWithAuth 注册推荐路由并注入鉴权 handler。
+// RegisterRecommendationRoutes 保留为迁移期兼容入口。
+func RegisterRecommendationRoutesWithAuth(router *gin.RouterGroup, api *recoAPI.RecommendationAPI, authMiddleware gin.HandlerFunc) {
+	if authMiddleware == nil {
+		authMiddleware = auth.JWTAuth()
+	}
+
 	reco := router.Group("/recommendation")
 	{
 		// 需要认证的路由
 		authenticated := reco.Group("")
-		authenticated.Use(auth.JWTAuth())
+		authenticated.Use(authMiddleware)
 		{
 			// 个性化推荐
 			authenticated.GET("/personalized", api.GetPersonalizedRecommendations)
@@ -41,7 +51,7 @@ func RegisterRecommendationRoutes(router *gin.RouterGroup, api *recoAPI.Recommen
 
 		// 推荐榜管理（管理员，当前使用JWT认证）
 		admin := reco.Group("/admin")
-		admin.Use(auth.JWTAuth())
+		admin.Use(authMiddleware)
 		{
 			admin.PUT("/tables/auto/:tableType/:period", api.UpsertAutoTable)
 			admin.POST("/tables/manual", api.CreateManualTable)
