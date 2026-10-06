@@ -31,6 +31,15 @@ func (s publishedChapterRouteService) GetPublishedChaptersByBookID(
 	}}, 1, nil
 }
 
+func (s publishedChapterRouteService) GetFreeChaptersByBookID(
+	context.Context,
+	string,
+	int,
+	int,
+) ([]*bookstoreModel.Chapter, int64, error) {
+	return []*bookstoreModel.Chapter{{Title: "免费章节"}}, 1, nil
+}
+
 func TestInitBookstoreRouterPublishedChaptersUsesBookIDParam(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	previousConfig := config.GlobalConfig
@@ -58,6 +67,36 @@ func TestInitBookstoreRouterPublishedChaptersUsesBookIDParam(t *testing.T) {
 
 	require.Equal(t, http.StatusOK, recorder.Code)
 	require.Contains(t, recorder.Body.String(), `"projectChapterId":"writer-document-1"`)
+	require.Contains(t, recorder.Body.String(), `"total":1`)
+}
+
+func TestInitBookstoreRouterFreeChaptersUsesBookIDParam(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	previousConfig := config.GlobalConfig
+	config.GlobalConfig = &config.Config{JWT: &config.JWTConfig{Secret: "router-test-secret", ExpirationHours: 1}}
+	t.Cleanup(func() { config.GlobalConfig = previousConfig })
+	r := gin.New()
+	api := r.Group("/api/v1")
+
+	InitBookstoreRouter(
+		api,
+		nil,
+		nil,
+		nil,
+		nil,
+		publishedChapterRouteService{},
+		nil,
+		nil,
+		nil,
+		nil,
+	)
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/bookstore/books/507f1f77bcf86cd799439011/chapters/free", nil)
+	recorder := httptest.NewRecorder()
+	r.ServeHTTP(recorder, req)
+
+	require.Equal(t, http.StatusOK, recorder.Code)
+	require.Contains(t, recorder.Body.String(), `"title":"免费章节"`)
 	require.Contains(t, recorder.Body.String(), `"total":1`)
 }
 
