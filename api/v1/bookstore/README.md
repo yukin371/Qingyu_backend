@@ -204,6 +204,11 @@ type BookRating struct {
 - 📋 社区互动
 - 📋 付费购买
 
+### 章节路由契约复审（2026-10-07）
+
+- 已注册 `GET /api/v1/bookstore/books/{id}/chapters/statistics` 和 `GET /api/v1/bookstore/chapters/search`，统计 handler 使用路由实际提供的 `id` 参数。
+- `/api/v1/bookstore/books/{id}/chapters/{chapter_num}` 按章节号读取；Swagger 中另有同形的 `{chapterId}` ObjectID 语义声明。Gin 无法同时注册两条同形路径，canonical 形状待书城 API owner 盘点客户端后通过 ADR 确认。
+
 ## 📚 相关文档
 
 - [Reader API 模块](../reader/README.md)
