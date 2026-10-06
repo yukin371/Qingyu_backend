@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/models/ai"
 	aiService "Qingyu_backend/service/ai"
 
@@ -326,12 +327,8 @@ func (api *WritingApi) consumeQuotaAsync(c *gin.Context, tokensUsed int, service
 	if api.quotaService == nil || tokensUsed <= 0 {
 		return
 	}
-	userIDValue, ok := c.Get("user_id")
-	if !ok {
-		return
-	}
-	userID, ok := userIDValue.(string)
-	if !ok || userID == "" {
+	userID := shared.GetUserIDOptional(c)
+	if userID == "" {
 		return
 	}
 
