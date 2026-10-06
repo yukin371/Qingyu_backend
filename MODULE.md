@@ -43,6 +43,7 @@
 7. 邮箱验证码管理器已归入 `service/channels`，认证 API 只消费 `channels.Manager`；不得恢复 `pkg/emailcode` 兼容入口。本次迁移存档为 `migration/phase3-t2-emailcode-predelete-20261005`。
 8. writer Mongo 仓储直接使用 `models/dto` 的 `ExportTask`、`PublicationRecord`；`service/interfaces` 只保留导出任务兼容别名，仓储不得重新导入 service 包。本次迁移存档为 `migration/phase3-t2-writer-repository-dto-20261005`。
 9. admin 内容导出 handler 只依赖 `service/interfaces.AdminContentBookPort` 与 `AdminContentChapterPort`；repository 的 `infrastructure.Filter` 只能在组合根 adapter 中映射，不能重新泄漏到 `api/v1/admin` 或 service port。生产路由由 `router/admin.RegisterContentExportRoutes` 独立注册，并沿用 JWT + `admin` 角色边界；Mongo 或读取端口不可用时跳过该组路由。
+10. `internal/middleware/admin` 只依赖本包的 `PermissionChecker` 最小 port（`HasRole`、`CheckPermission`）；不要重新导入 `service/auth.PermissionService`，也不要把缓存/RBAC 装载方法泄漏到 HTTP 中间件边界。
 
 ## 文档同步触发条件
 - 新增/调整 API 时同步更新 `docs/api`、`docs/architecture` 与 swagger 产物。

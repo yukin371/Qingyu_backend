@@ -1,25 +1,33 @@
 package admin
 
 import (
+	"context"
 	"net/http"
 	"strings"
 
 	"github.com/gin-gonic/gin"
-
-	authService "Qingyu_backend/service/auth"
 )
+
+// PermissionChecker 是管理员中间件所需的最小权限端口。
+//
+// 权限服务还包含角色维护、缓存和 RBAC 装载等管理能力，HTTP 中间件
+// 只需要检查角色和单项权限，因此不直接依赖 service/auth 的完整接口。
+type PermissionChecker interface {
+	HasRole(ctx context.Context, userID, role string) (bool, error)
+	CheckPermission(ctx context.Context, userID, permission string) (bool, error)
+}
 
 // AdminPermissionConfig 管理员权限中间件配置
 type AdminPermissionConfig struct {
-	PermissionService authService.PermissionService
-	SuperAdminRole     string // 超级管理员角色名称，默认为 "super_admin"
+	PermissionService PermissionChecker
+	SuperAdminRole    string // 超级管理员角色名称，默认为 "super_admin"
 }
 
 // AdminPermissionOption 配置选项函数
 type AdminPermissionOption func(*AdminPermissionConfig)
 
 // WithPermissionService 设置权限服务
-func WithPermissionService(service authService.PermissionService) AdminPermissionOption {
+func WithPermissionService(service PermissionChecker) AdminPermissionOption {
 	return func(c *AdminPermissionConfig) {
 		c.PermissionService = service
 	}
@@ -273,7 +281,7 @@ func RequireResourceOwnerPermission(resourceType, resourceIDParam string, opts .
 			"code":    "FORBIDDEN",
 			"message": "权限不足",
 			"details": gin.H{
-				"reason":       "not_resource_owner",
+				"reason":        "not_resource_owner",
 				"resource_type": resourceType,
 			},
 		})

@@ -21,4 +21,5 @@ API Handler → AuthServiceImpl → UserRepository → MongoDB
 - **OAuth 用户名生成**：第三方登录首次注册时 `generateUsernameFromProvider` 自动生成用户名，可能需要用户后续修改
 - **Session 与 JWT 双轨**：系统同时维护 JWT Token 和 Redis Session，Token 刷新时必须同步更新 Session
 - **权限检查链**：`CheckPermission` → `GetUserPermissions` → 角色权限合并，权限变更需要等待 Session 过期或主动刷新
+- **中间件端口**：`service/auth.PermissionService` 是权限实现 owner；`internal/middleware/admin` 通过自身的 `PermissionChecker` 最小 port 消费 `HasRole`/`CheckPermission`，不得反向依赖完整服务接口
 - **Token 刷新窗口**：RefreshToken 有独立的过期时间，与 Access Token 过期时间不同
