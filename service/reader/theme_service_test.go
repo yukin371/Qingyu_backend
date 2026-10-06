@@ -189,5 +189,28 @@ func TestReaderThemeService_GetActiveThemeRejectsMissingRepository(t *testing.T)
 	require.EqualError(t, err, "主题仓储未初始化")
 }
 
+func TestReaderThemeService_WritesAndLookupRejectMissingRepository(t *testing.T) {
+	service := NewReaderThemeService(nil, &fakeSettingsRepository{})
+	ctx := context.Background()
+
+	_, err := service.GetThemeByName(ctx, "user-a", "light")
+	require.EqualError(t, err, "主题仓储未初始化")
+
+	_, err = service.CreateCustomTheme(ctx, "user-a", &readerModel.CreateCustomThemeRequest{
+		Name:        "custom",
+		DisplayName: "Custom",
+	})
+	require.EqualError(t, err, "主题仓储未初始化")
+
+	err = service.UpdateTheme(ctx, "user-a", "theme-id", &readerModel.UpdateThemeRequest{})
+	require.EqualError(t, err, "主题仓储未初始化")
+
+	err = service.DeleteTheme(ctx, "user-a", "theme-id")
+	require.EqualError(t, err, "主题仓储未初始化")
+
+	err = service.ActivateTheme(ctx, "user-a", "light")
+	require.EqualError(t, err, "主题仓储未初始化")
+}
+
 var _ readerRepo.ReaderThemeRepository = (*fakeThemeRepository)(nil)
 var _ readerRepo.ReadingSettingsRepository = (*fakeSettingsRepository)(nil)

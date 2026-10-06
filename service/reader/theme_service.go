@@ -72,6 +72,9 @@ func (s *ReaderThemeService) GetThemeByName(ctx context.Context, userID, name st
 	if strings.TrimSpace(name) == "" {
 		return nil, fmt.Errorf("主题名称不能为空")
 	}
+	if s.themeRepo == nil {
+		return nil, fmt.Errorf("主题仓储未初始化")
+	}
 	theme, err := s.themeRepo.GetThemeByName(ctx, name)
 	if err == nil && theme != nil {
 		if theme.IsBuiltIn || theme.IsPublic || (userID != "" && theme.CreatorID == userID) {
@@ -107,6 +110,9 @@ func (s *ReaderThemeService) CreateCustomTheme(ctx context.Context, userID strin
 	if req == nil || strings.TrimSpace(req.Name) == "" || strings.TrimSpace(req.DisplayName) == "" {
 		return nil, fmt.Errorf("主题名称和显示名称不能为空")
 	}
+	if s.themeRepo == nil {
+		return nil, fmt.Errorf("主题仓储未初始化")
+	}
 	if _, err := s.themeRepo.GetThemeByName(ctx, req.Name); err == nil {
 		return nil, fmt.Errorf("主题名称已存在: %s", req.Name)
 	} else if !strings.Contains(err.Error(), "不存在") {
@@ -130,6 +136,9 @@ func (s *ReaderThemeService) CreateCustomTheme(ctx context.Context, userID strin
 }
 
 func (s *ReaderThemeService) UpdateTheme(ctx context.Context, userID, themeID string, req *readerModel.UpdateThemeRequest) error {
+	if s.themeRepo == nil {
+		return fmt.Errorf("主题仓储未初始化")
+	}
 	theme, err := s.themeRepo.GetTheme(ctx, themeID)
 	if err != nil {
 		return err
@@ -160,6 +169,9 @@ func (s *ReaderThemeService) UpdateTheme(ctx context.Context, userID, themeID st
 }
 
 func (s *ReaderThemeService) DeleteTheme(ctx context.Context, userID, themeID string) error {
+	if s.themeRepo == nil {
+		return fmt.Errorf("主题仓储未初始化")
+	}
 	theme, err := s.themeRepo.GetTheme(ctx, themeID)
 	if err != nil {
 		return err
@@ -173,6 +185,9 @@ func (s *ReaderThemeService) DeleteTheme(ctx context.Context, userID, themeID st
 func (s *ReaderThemeService) ActivateTheme(ctx context.Context, userID, themeName string) error {
 	if userID == "" {
 		return fmt.Errorf("用户ID不能为空")
+	}
+	if s.themeRepo == nil {
+		return fmt.Errorf("主题仓储未初始化")
 	}
 	theme, err := s.GetThemeByName(ctx, userID, themeName)
 	if err != nil {

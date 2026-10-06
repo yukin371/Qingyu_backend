@@ -21,3 +21,4 @@ API Handler → ReaderService → Repository → MongoDB
 - **阅读时长统计**：`GetReadingTimeByPeriod` 按天/周/月聚合，依赖 `UpdateReadingTime` 的准确上报
 - **书籍状态管理**：`UpdateBookStatus`/`BatchUpdateBookStatus` 管理"在读/已读/想读"状态，变更会触发事件
 - **批注可见性**：`GetPublicAnnotations` 返回公开批注，私有批注只能通过 `GetAnnotationsByChapter` 获取
+- **主题仓储边界**：`ReaderThemeService` 的主题查询、创建、更新、删除和激活都必须先检查 `themeRepo`；缺失仓储返回“主题仓储未初始化”，不得在 service 层触发 nil 指针
