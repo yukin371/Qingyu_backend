@@ -27,6 +27,44 @@ func InitReaderRouter(
 	deviceRepo serviceInterfaces.ReaderDevicePort,
 	themeServices ...readerservice.ThemeService,
 ) {
+	initReaderRouter(r, readerService, chapterService, commentService, likeService, collectionService, readingHistoryService, progressSyncService, bookmarkService, deviceRepo, themeServices, auth.JWTAuth())
+}
+
+// InitReaderRouterWithAuth 初始化阅读器路由，并由组合根注入认证中间件。
+func InitReaderRouterWithAuth(
+	r *gin.RouterGroup,
+	readerService *readerservice.ReaderService,
+	chapterService bookstore.ChapterService,
+	commentService *socialService.CommentService,
+	likeService *socialService.LikeService,
+	collectionService *socialService.CollectionService,
+	readingHistoryService *readerservice.ReadingHistoryService,
+	progressSyncService *syncService.ProgressSyncService,
+	bookmarkService readerservice.BookmarkService,
+	deviceRepo serviceInterfaces.ReaderDevicePort,
+	authMiddleware gin.HandlerFunc,
+	themeServices ...readerservice.ThemeService,
+) {
+	if authMiddleware == nil {
+		authMiddleware = auth.JWTAuth()
+	}
+	initReaderRouter(r, readerService, chapterService, commentService, likeService, collectionService, readingHistoryService, progressSyncService, bookmarkService, deviceRepo, themeServices, authMiddleware)
+}
+
+func initReaderRouter(
+	r *gin.RouterGroup,
+	readerService *readerservice.ReaderService,
+	chapterService bookstore.ChapterService,
+	commentService *socialService.CommentService,
+	likeService *socialService.LikeService,
+	collectionService *socialService.CollectionService,
+	readingHistoryService *readerservice.ReadingHistoryService,
+	progressSyncService *syncService.ProgressSyncService,
+	bookmarkService readerservice.BookmarkService,
+	deviceRepo serviceInterfaces.ReaderDevicePort,
+	themeServices []readerservice.ThemeService,
+	authMiddleware gin.HandlerFunc,
+) {
 	// 创建API实例
 	progressApiHandler := readerApi.NewProgressAPI(readerService, deviceRepo)
 	annotationsApiHandler := readerApi.NewAnnotationsAPI(readerService)
@@ -106,7 +144,7 @@ func InitReaderRouter(
 	// 需要认证的路由
 	// ========================================
 	readerGroup := r.Group("/reader")
-	readerGroup.Use(auth.JWTAuth())
+	readerGroup.Use(authMiddleware)
 	{
 		// 书架管理
 		books := readerGroup.Group("/books")

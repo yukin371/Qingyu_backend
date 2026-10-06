@@ -56,6 +56,7 @@
 20. AI 主路由和 creative 路由通过组合根注入 `InitAIRouterWithAuth`；认证必须保持在 quota middleware 之前，旧 `InitAIRouter`/`InitCreativeRoutes` 仅作迁移期兼容入口。
 21. user 只有 `/user` 个人管理组使用注入的 `RegisterUserRoutesWithAuth`；公开注册、登录、密码重置和公开资料不得误加 JWT，旧 `RegisterUserRoutes` 仅作迁移期兼容入口。
 22. social 统一路由通过组合根注入 `RegisterSocialRoutesWithAuth`；评论、关注、点赞、收藏、私信、书评和书单子路由共享同一认证 handler，旧 `RegisterSocialRoutes` 仅作迁移期兼容入口。
+23. reader 认证阅读组通过组合根注入 `InitReaderRouterWithAuth`；`/reader/collections/public` 保持公开，旧 `InitReaderRouter` 仅作迁移期兼容入口。
 
 ## 文档同步触发条件
 - 新增/调整 API 时同步更新 `docs/api`、`docs/architecture` 与 swagger 产物。
