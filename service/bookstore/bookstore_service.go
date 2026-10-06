@@ -96,6 +96,8 @@ type rankingScoreCalculator func(book *bookstore2.Book) float64
 type rankingEligibility func(book *bookstore2.Book, now time.Time) bool
 
 var errBookstoreBookRepositoryUnavailable = errors.New("bookstore book repository unavailable")
+var errBookstoreCategoryRepositoryUnavailable = errors.New("bookstore category repository unavailable")
+var errBookstoreBannerRepositoryUnavailable = errors.New("bookstore banner repository unavailable")
 
 // NewBookstoreService 创建书城服务实例
 func NewBookstoreService(
@@ -122,6 +124,20 @@ func (s *BookstoreServiceImpl) SetSearchService(searchService interface{}) {
 func (s *BookstoreServiceImpl) requireBookRepository() error {
 	if s.bookRepo == nil {
 		return errBookstoreBookRepositoryUnavailable
+	}
+	return nil
+}
+
+func (s *BookstoreServiceImpl) requireCategoryRepository() error {
+	if s.categoryRepo == nil {
+		return errBookstoreCategoryRepositoryUnavailable
+	}
+	return nil
+}
+
+func (s *BookstoreServiceImpl) requireBannerRepository() error {
+	if s.bannerRepo == nil {
+		return errBookstoreBannerRepositoryUnavailable
 	}
 	return nil
 }
@@ -590,6 +606,9 @@ func (s *BookstoreServiceImpl) IncrementBookView(ctx context.Context, bookID str
 
 // GetCategoryTree 获取分类树
 func (s *BookstoreServiceImpl) GetCategoryTree(ctx context.Context) ([]*bookstore2.CategoryTree, error) {
+	if err := s.requireCategoryRepository(); err != nil {
+		return nil, err
+	}
 	tree, err := s.categoryRepo.GetCategoryTree(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get category tree: %w", err)
@@ -600,6 +619,9 @@ func (s *BookstoreServiceImpl) GetCategoryTree(ctx context.Context) ([]*bookstor
 
 // GetCategoryByID 根据ID获取分类
 func (s *BookstoreServiceImpl) GetCategoryByID(ctx context.Context, id string) (*bookstore2.Category, error) {
+	if err := s.requireCategoryRepository(); err != nil {
+		return nil, err
+	}
 	// 直接使用 string ID，无需转换
 	category, err := s.categoryRepo.GetByID(ctx, id)
 	if err != nil {
@@ -619,6 +641,9 @@ func (s *BookstoreServiceImpl) GetCategoryByID(ctx context.Context, id string) (
 
 // GetRootCategories 获取根分类列表
 func (s *BookstoreServiceImpl) GetRootCategories(ctx context.Context) ([]*bookstore2.Category, error) {
+	if err := s.requireCategoryRepository(); err != nil {
+		return nil, err
+	}
 	categories, err := s.categoryRepo.GetRootCategories(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get root categories: %w", err)
@@ -629,9 +654,8 @@ func (s *BookstoreServiceImpl) GetRootCategories(ctx context.Context) ([]*bookst
 
 // GetActiveBanners 获取激活的Banner列表
 func (s *BookstoreServiceImpl) GetActiveBanners(ctx context.Context, limit int) ([]*bookstore2.Banner, error) {
-	// 检查repository是否为nil
-	if s.bannerRepo == nil {
-		return []*bookstore2.Banner{}, nil
+	if err := s.requireBannerRepository(); err != nil {
+		return nil, err
 	}
 
 	banners, err := s.bannerRepo.GetActive(ctx, limit, 0)
@@ -644,6 +668,9 @@ func (s *BookstoreServiceImpl) GetActiveBanners(ctx context.Context, limit int) 
 
 // IncrementBannerClick 增加Banner点击次数
 func (s *BookstoreServiceImpl) IncrementBannerClick(ctx context.Context, bannerID string) error {
+	if err := s.requireBannerRepository(); err != nil {
+		return err
+	}
 	// 先检查Banner是否存在且激活
 	banner, err := s.bannerRepo.GetByID(ctx, bannerID)
 	if err != nil {

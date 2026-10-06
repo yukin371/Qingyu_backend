@@ -736,6 +736,23 @@ func TestBookstoreService_BookRepositoryUnavailable(t *testing.T) {
 		err := service.IncrementBookView(ctx, primitive.NewObjectID().Hex())
 		require.ErrorIs(t, err, errBookstoreBookRepositoryUnavailable)
 	})
+
+	t.Run("category and banner capabilities return explicit errors", func(t *testing.T) {
+		_, err := service.GetCategoryTree(ctx)
+		require.ErrorIs(t, err, errBookstoreCategoryRepositoryUnavailable)
+
+		_, err = service.GetCategoryByID(ctx, primitive.NewObjectID().Hex())
+		require.ErrorIs(t, err, errBookstoreCategoryRepositoryUnavailable)
+
+		_, err = service.GetRootCategories(ctx)
+		require.ErrorIs(t, err, errBookstoreCategoryRepositoryUnavailable)
+
+		_, err = service.GetActiveBanners(ctx, 10)
+		require.ErrorIs(t, err, errBookstoreBannerRepositoryUnavailable)
+
+		err = service.IncrementBannerClick(ctx, primitive.NewObjectID().Hex())
+		require.ErrorIs(t, err, errBookstoreBannerRepositoryUnavailable)
+	})
 }
 
 // TestBookstoreService_GetAllBooks 测试获取所有书籍
