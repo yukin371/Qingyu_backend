@@ -256,8 +256,14 @@ func (s *ChapterPurchaseServiceImpl) GetChapterCatalog(ctx context.Context, user
 	}
 
 	// 获取统计信息
-	totalChapters, _ := s.chapterRepo.CountByBookID(ctx, bookID)
-	totalWordCount, _ := s.chapterRepo.GetTotalWordCount(ctx, bookID)
+	totalChapters, err := s.chapterRepo.CountByBookID(ctx, bookID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to count chapters: %w", err)
+	}
+	totalWordCount, err := s.chapterRepo.GetTotalWordCount(ctx, bookID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to count chapter words: %w", err)
+	}
 
 	// 构建目录
 	bookOID, _ := repository.ParseID(bookID)
@@ -448,7 +454,10 @@ func (s *ChapterPurchaseServiceImpl) PurchaseChapters(ctx context.Context, userI
 		}
 
 		// 检查是否已购买
-		existingPurchase, _ := s.purchaseRepo.GetByUserAndChapter(ctx, userID, chapterID)
+		existingPurchase, err := s.purchaseRepo.GetByUserAndChapter(ctx, userID, chapterID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to check existing purchase for chapter %s: %w", chapterID, err)
+		}
 		if existingPurchase != nil {
 			continue // 跳过已购买的章节
 		}

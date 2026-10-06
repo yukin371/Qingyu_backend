@@ -23,4 +23,4 @@ API Handler → BookstoreServiceImpl → Repository → MongoDB
 - **首页数据聚合**：`GetHomepageData` 一次调用聚合 Banner + 推荐 + 热门 + 新书，注意并发控制和超时
 - **书籍状态过滤**：所有列表查询默认只返回 `published` 状态的书籍，未发布书不会出现在书城
 - **仓储装配边界**：书籍、分类、Banner 和榜单查询/写入入口必须先通过对应的 `require*Repository`；组合根未装配仓储时返回明确错误，不得返回伪成功或触发 nil panic。新增书城入口需补同类未装配回归测试。
-- **试读章节补足**：`GetTrialChapters` 的免费章节查询和付费章节补足查询都必须传播仓储错误；补足结果允许跳过 nil 章节，但不得把数据库故障当作试读数量不足。
+- **购买查询错误**：`GetTrialChapters` 的免费/补足查询、章节目录统计和批量购买的已购检查都必须传播仓储错误；补足结果允许跳过 nil 章节，但不得把数据库故障当作试读数量不足或继续扣款。
