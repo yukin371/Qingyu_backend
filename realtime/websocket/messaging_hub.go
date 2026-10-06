@@ -114,7 +114,9 @@ func (h *MessagingWSHub) broadcastToConversation(broadcast *MessageBroadcast) {
 			continue
 		}
 
-		// TODO: 检查用户是否在conversation中
+		// TODO(owner: realtime messaging owner; confirm: 注入只读 conversation membership port，明确
+		// participant 查询失败时的 fail-closed 语义; acceptance: 广播只发送给会话参与者，并补充
+		// 非参与者、查询失败和多参与者场景的单测) 检查用户是否在 conversation 中。
 
 		select {
 		case client.Send <- data:
@@ -239,7 +241,9 @@ func (c *MessagingWSClient) readPump() {
 		switch wsMsg.Type {
 		case "typing":
 			// 广播typing状态给会话其他参与者
-			// TODO: 实现typing广播
+			// TODO(owner: realtime messaging owner; confirm: 固化 typing 事件 payload、过期时间和广播范围;
+			// acceptance: typing 事件只在同一 conversation 的在线参与者之间转发，并覆盖断线/过期清理测试)
+			// 实现 typing 广播。
 		}
 	}
 }
