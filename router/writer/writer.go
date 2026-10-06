@@ -34,6 +34,33 @@ func InitWriterRouter(
 	dashboardService *writerservice.DashboardService,
 	conceptRepo interfaces.ConceptCatalogPort,
 ) {
+	InitWriterRouterWithAuth(r, projectService, documentService, batchOperationService, versionService, searchSvc, exportService, publishService, lockService, commentService, templateService, statsService, bookRepo, characterService, locationService, dashboardService, conceptRepo, auth.JWTAuth())
+}
+
+// InitWriterRouterWithAuth 初始化写作端路由，并由组合根注入认证中间件。
+func InitWriterRouterWithAuth(
+	r *gin.RouterGroup,
+	projectService *projectService.ProjectService,
+	documentService *document.DocumentService,
+	batchOperationService *document.BatchOperationService,
+	versionService *projectService.VersionService,
+	searchSvc *searchservice.SearchService,
+	exportService interfaces.ExportService,
+	publishService interfaces.PublishService,
+	lockService lock.DocumentLockService,
+	commentService writerservice.CommentService,
+	templateService *document.TemplateService,
+	statsService *readingStatsService.ReadingStatsService,
+	bookRepo interfaces.WriterStatsBookPort,
+	characterService interfaces.CharacterService,
+	locationService interfaces.LocationService,
+	dashboardService *writerservice.DashboardService,
+	conceptRepo interfaces.ConceptCatalogPort,
+	authMiddleware gin.HandlerFunc,
+) {
+	if authMiddleware == nil {
+		authMiddleware = auth.JWTAuth()
+	}
 	// 创建API实例
 	projectApi := writer.NewProjectApi(projectService)
 	documentApi := writer.NewDocumentApi(documentService)
@@ -71,7 +98,7 @@ func InitWriterRouter(
 
 	// 写作端路由组
 	writerGroup := r.Group("/writer")
-	writerGroup.Use(auth.JWTAuth())
+	writerGroup.Use(authMiddleware)
 	{
 		// 项目管理路由
 		InitProjectRouter(writerGroup, projectApi)

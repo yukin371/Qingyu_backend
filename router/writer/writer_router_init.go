@@ -35,6 +35,14 @@ func newWriterVersionService(db *mongo.Database) *projectService.VersionService 
 
 // RegisterWriterRoutes 注册所有写作相关路由到 /api/v1/writer
 func RegisterWriterRoutes(r *gin.RouterGroup, searchSvc *searchservice.SearchService) {
+	RegisterWriterRoutesWithAuth(r, searchSvc, auth.JWTAuth())
+}
+
+// RegisterWriterRoutesWithAuth 注册写作模块路由，并由组合根注入认证中间件。
+func RegisterWriterRoutesWithAuth(r *gin.RouterGroup, searchSvc *searchservice.SearchService, authMiddleware gin.HandlerFunc) {
+	if authMiddleware == nil {
+		authMiddleware = auth.JWTAuth()
+	}
 	// 从服务容器获取依赖
 	serviceContainer := service.GetServiceContainer()
 	if serviceContainer == nil {
@@ -232,7 +240,7 @@ func RegisterWriterRoutes(r *gin.RouterGroup, searchSvc *searchservice.SearchSer
 	}
 
 	// 调用InitWriterRouter初始化文档编辑相关路由
-	InitWriterRouter(r, projectSvc, documentSvc, batchOpSvc, versionSvc, searchSvc, exportSvc, publishSvc, lockSvc, commentSvc, templateSvc, statsSvc, bookRepo, characterSvc, locationSvc, dashboardSvc, conceptRepo)
+	InitWriterRouterWithAuth(r, projectSvc, documentSvc, batchOpSvc, versionSvc, searchSvc, exportSvc, publishSvc, lockSvc, commentSvc, templateSvc, statsSvc, bookRepo, characterSvc, locationSvc, dashboardSvc, conceptRepo, authMiddleware)
 
 	// 创建 Story Harness 服务
 	var contextSvc *storyharness.ContextService
@@ -260,7 +268,7 @@ func RegisterWriterRoutes(r *gin.RouterGroup, searchSvc *searchservice.SearchSer
 		// Story Harness 属于 writer 模块能力，路由必须挂在 /api/v1/writer/* 下，
 		// 否则会与前端约定路径和 swagger 注释不一致。
 		writerGroup := r.Group("/writer")
-		writerGroup.Use(auth.JWTAuth())
+		writerGroup.Use(authMiddleware)
 		InitStoryHarnessRoutes(writerGroup, contextSvc, indexerSvc, crSvc)
 		zap.L().Info("RegisterWriterRoutes: Story Harness 路由注册完成")
 	}
@@ -279,7 +287,7 @@ func RegisterWriterRoutes(r *gin.RouterGroup, searchSvc *searchservice.SearchSer
 		zap.Bool("timelineSvc", timelineSvc != nil),
 		zap.Bool("outlineSvc", outlineSvc != nil),
 	)
-	InitWriterRoutes(r, characterSvc, locationSvc, timelineSvc, outlineSvc, entitySvc)
+	InitWriterRoutesWithAuth(r, characterSvc, locationSvc, timelineSvc, outlineSvc, entitySvc, authMiddleware)
 	zap.L().Info("RegisterWriterRoutes: 设定百科路由注册完成")
 }
 

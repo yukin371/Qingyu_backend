@@ -58,6 +58,7 @@
 22. social 统一路由通过组合根注入 `RegisterSocialRoutesWithAuth`；评论、关注、点赞、收藏、私信、书评和书单子路由共享同一认证 handler，旧 `RegisterSocialRoutes` 仅作迁移期兼容入口。
 23. reader 认证阅读组通过组合根注入 `InitReaderRouterWithAuth`；`/reader/collections/public` 保持公开，旧 `InitReaderRouter` 仅作迁移期兼容入口。
 24. bookstore 评分认证组通过组合根注入 `InitBookstoreRouterWithAuth`；书城浏览、章节公开内容和 banner 保持公开，旧 `InitBookstoreRouter` 仅作迁移期兼容入口。
+25. writer 主路由通过组合根注入 `RegisterWriterRoutesWithAuth`，并向 `InitWriterRouterWithAuth`/`InitWriterRoutesWithAuth` 传递同一 handler；`InitAuditRouter` 尚无生产调用方，确认 owner 前不得自行删除或扩展其认证实现。
 
 ## 文档同步触发条件
 - 新增/调整 API 时同步更新 `docs/api`、`docs/architecture` 与 swagger 产物。

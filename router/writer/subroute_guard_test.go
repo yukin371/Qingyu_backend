@@ -136,3 +136,34 @@ func TestInitWriterRouter_BatchOperationRouteRegistered(t *testing.T) {
 	versionResponse := performWriterRequest(engine, http.MethodGet, "/api/v1/writer/document/doc-1/versions", "")
 	assert.Equal(t, http.StatusNotFound, versionResponse.Code)
 }
+
+func TestInitWriterRouterWithAuthUsesInjectedMiddleware(t *testing.T) {
+	engine := newWriterRouteEngine()
+	v1 := engine.Group("/api/v1")
+
+	InitWriterRouterWithAuth(
+		v1,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		nil,
+		func(c *gin.Context) {
+			c.AbortWithStatus(http.StatusTeapot)
+		},
+	)
+
+	response := performWriterRequest(engine, http.MethodGet, "/api/v1/writer/projects", "")
+	assert.Equal(t, http.StatusTeapot, response.Code)
+}

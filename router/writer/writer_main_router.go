@@ -17,11 +17,27 @@ func InitWriterRoutes(
 	outlineService interfaces.OutlineService,
 	entityService interfaces.EntityService,
 ) {
+	InitWriterRoutesWithAuth(router, characterService, locationService, timelineService, outlineService, entityService, auth.JWTAuth())
+}
+
+// InitWriterRoutesWithAuth 初始化设定百科路由，并由组合根注入认证中间件。
+func InitWriterRoutesWithAuth(
+	router *gin.RouterGroup,
+	characterService interfaces.CharacterService,
+	locationService interfaces.LocationService,
+	timelineService interfaces.TimelineService,
+	outlineService interfaces.OutlineService,
+	entityService interfaces.EntityService,
+	authMiddleware gin.HandlerFunc,
+) {
+	if authMiddleware == nil {
+		authMiddleware = auth.JWTAuth()
+	}
 	zap.L().Info("InitWriterRoutes: 开始注册设定百科路由")
 
 	// 创建 /writer 子组，与 InitWriterRouter 保持一致
 	writerGroup := router.Group("/writer")
-	writerGroup.Use(auth.JWTAuth())
+	writerGroup.Use(authMiddleware)
 	{
 		// 角色管理路由
 		if characterService != nil {
