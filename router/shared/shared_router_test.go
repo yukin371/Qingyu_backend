@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	sharedAPI "Qingyu_backend/api/v1/shared"
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
@@ -38,6 +39,36 @@ func TestRegisterStorageRoutesWithAuthUsesInjectedMiddleware(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/api/v1/shared/storage/files", nil)
 	rec := httptest.NewRecorder()
 	storageEngine.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusTeapot, rec.Code)
+}
+
+func TestRegisterWalletRoutesWithAuthUsesInjectedMiddleware(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	engine := gin.New()
+	v1 := engine.Group("/api/v1/shared")
+	RegisterWalletRoutesWithAuth(v1, nil, func(c *gin.Context) {
+		c.AbortWithStatus(http.StatusTeapot)
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/api/v1/shared/wallet/balance", nil)
+	rec := httptest.NewRecorder()
+	engine.ServeHTTP(rec, req)
+
+	assert.Equal(t, http.StatusTeapot, rec.Code)
+}
+
+func TestInitStorageRoutesWithAuthUsesInjectedMiddleware(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	engine := gin.New()
+	v1 := engine.Group("/api/v1/shared")
+	InitStorageRoutesWithAuth(v1, sharedAPI.NewStorageAPI(nil, nil, nil), func(c *gin.Context) {
+		c.AbortWithStatus(http.StatusTeapot)
+	})
+
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/shared/files/upload", nil)
+	rec := httptest.NewRecorder()
+	engine.ServeHTTP(rec, req)
 
 	assert.Equal(t, http.StatusTeapot, rec.Code)
 }

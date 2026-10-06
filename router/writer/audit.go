@@ -11,6 +11,14 @@ import (
 
 // InitAuditRouter 初始化审核路由
 func InitAuditRouter(r *gin.RouterGroup, auditService audit.ContentAuditService) {
+	InitAuditRouterWithAuth(r, auditService, auth.JWTAuth())
+}
+
+// InitAuditRouterWithAuth 初始化审核路由，并由组合根注入管理员认证中间件。
+func InitAuditRouterWithAuth(r *gin.RouterGroup, auditService audit.ContentAuditService, authMiddleware gin.HandlerFunc) {
+	if authMiddleware == nil {
+		authMiddleware = auth.JWTAuth()
+	}
 	auditApi := writer.NewAuditApi(auditService)
 
 	// 公开的审核接口（需要认证）
@@ -42,7 +50,7 @@ func InitAuditRouter(r *gin.RouterGroup, auditService audit.ContentAuditService)
 
 	// 管理员审核接口（需要管理员权限）
 	adminGroup := r.Group("/admin/audit")
-	adminGroup.Use(auth.JWTAuth())
+	adminGroup.Use(authMiddleware)
 	adminGroup.Use(auth.RequireRole("admin"))
 	{
 		// 待复核列表

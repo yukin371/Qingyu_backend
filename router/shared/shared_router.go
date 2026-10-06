@@ -80,12 +80,20 @@ func RegisterAuthRoutesWithAuth(r *gin.RouterGroup, authService sharedAuth.AuthS
 
 // RegisterWalletRoutes 注册钱包服务路由
 func RegisterWalletRoutes(r *gin.RouterGroup, walletService walletService.WalletService) {
+	RegisterWalletRoutesWithAuth(r, walletService, auth.JWTAuth())
+}
+
+// RegisterWalletRoutesWithAuth 注册钱包服务路由，并由组合根注入认证中间件。
+func RegisterWalletRoutesWithAuth(r *gin.RouterGroup, walletService walletService.WalletService, authMiddleware gin.HandlerFunc) {
+	if authMiddleware == nil {
+		authMiddleware = auth.JWTAuth()
+	}
 	// 创建API处理器
 	walletAPI := shared.NewWalletAPI(walletService)
 
 	// ============ 钱包服务路由 ============
 	walletGroup := r.Group("/wallet")
-	walletGroup.Use(auth.JWTAuth())                              // 所有钱包接口都需要认证
+	walletGroup.Use(authMiddleware)                              // 所有钱包接口都需要认证
 	walletGroup.Use(ratelimit.RateLimitMiddlewareSimple(50, 60)) // 50次/分钟
 	{
 		// 查询接口

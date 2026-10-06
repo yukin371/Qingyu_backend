@@ -575,7 +575,7 @@ func (api *StorageAPI) GenerateThumbnail(c *gin.Context) {
 //	@Failure		500		{object} response.APIResponse
 //	@Router			/api/v1/files/{file_id}/access [post]
 func (api *StorageAPI) GrantAccess(c *gin.Context) {
-	fileID := c.Param("file_id")
+	fileID := c.Param("id")
 
 	var req struct {
 		UserID string `json:"user_id" binding:"required"`
@@ -609,7 +609,7 @@ func (api *StorageAPI) GrantAccess(c *gin.Context) {
 //	@Failure		500		{object} response.APIResponse
 //	@Router			/api/v1/files/{file_id}/access [delete]
 func (api *StorageAPI) RevokeAccess(c *gin.Context) {
-	fileID := c.Param("file_id")
+	fileID := c.Param("id")
 	userIDToRevoke := c.Query("user_id")
 
 	if userIDToRevoke == "" {

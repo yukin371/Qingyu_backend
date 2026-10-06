@@ -9,6 +9,14 @@ import (
 
 // InitStorageRoutes 初始化存储路由
 func InitStorageRoutes(router *gin.RouterGroup, api *sharedApi.StorageAPI) {
+	InitStorageRoutesWithAuth(router, api, auth.JWTAuth())
+}
+
+// InitStorageRoutesWithAuth 初始化历史文件路由，并由组合根注入认证中间件。
+func InitStorageRoutesWithAuth(router *gin.RouterGroup, api *sharedApi.StorageAPI, authMiddleware gin.HandlerFunc) {
+	if authMiddleware == nil {
+		authMiddleware = auth.JWTAuth()
+	}
 	storage := router.Group("/files")
 	{
 		// ============ 公开路由（可选认证） ============
@@ -18,7 +26,7 @@ func InitStorageRoutes(router *gin.RouterGroup, api *sharedApi.StorageAPI) {
 
 		// ============ 需要认证的路由 ============
 		authenticated := storage.Group("")
-		authenticated.Use(auth.JWTAuth())
+		authenticated.Use(authMiddleware)
 		{
 			// 基础文件操作
 			authenticated.POST("/upload", api.UploadFile)     // 上传文件
@@ -38,8 +46,8 @@ func InitStorageRoutes(router *gin.RouterGroup, api *sharedApi.StorageAPI) {
 			authenticated.POST("/thumbnail", api.GenerateThumbnail) // 生成缩略图
 
 			// 权限管理
-			authenticated.POST("/:file_id/access", api.GrantAccess)    // 授予访问权限
-			authenticated.DELETE("/:file_id/access", api.RevokeAccess) // 撤销访问权限
+			authenticated.POST("/:id/access", api.GrantAccess)    // 授予访问权限
+			authenticated.DELETE("/:id/access", api.RevokeAccess) // 撤销访问权限
 		}
 	}
 }
