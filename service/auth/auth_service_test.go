@@ -9,6 +9,7 @@ import (
 	usersModel "Qingyu_backend/models/users"
 	authRepo "Qingyu_backend/repository/interfaces/auth"
 	userRepo "Qingyu_backend/repository/interfaces/user"
+	authmocks "Qingyu_backend/service/auth/mocks"
 	usermocks "Qingyu_backend/service/user/mocks"
 
 	"github.com/stretchr/testify/assert"
@@ -273,7 +274,7 @@ func TestAuthService_Login_SessionFailuresDoNotBlockLogin(t *testing.T) {
 	require.NoError(t, user.SetPassword("Password123!"))
 
 	mockUserRepo := &usermocks.MockUserRepository{}
-	mockAuthRepo := usermocks.NewMockAuthRepository()
+	mockAuthRepo := authmocks.NewMockAuthRepository()
 	mockUserRepo.On("GetByUsername", mock.Anything, "reader-login").Return(user, nil).Once()
 	mockUserRepo.On("UpdateLastLogin", mock.Anything, userID.Hex(), "unknown").Return(nil).Once()
 	mockAuthRepo.On("GetUserRoles", mock.Anything, userID.Hex()).Return([]*authModel.Role{
@@ -329,7 +330,7 @@ func TestAuthService_OAuthLogin_ExistingAccountUsesResolvedRoles(t *testing.T) {
 	accountID := primitive.NewObjectID()
 
 	mockUserRepo := &usermocks.MockUserRepository{}
-	mockAuthRepo := usermocks.NewMockAuthRepository()
+	mockAuthRepo := authmocks.NewMockAuthRepository()
 	oauthRepo := &oauthRepositoryStub{
 		findByProviderAndProviderIDFunc: func(ctx context.Context, provider authModel.OAuthProvider, providerUserID string) (*authModel.OAuthAccount, error) {
 			assert.Equal(t, authModel.OAuthProviderGoogle, provider)
@@ -394,7 +395,7 @@ func TestAuthService_OAuthLogin_NewAccountCreatesReaderUser(t *testing.T) {
 	newUserID := primitive.NewObjectID()
 
 	mockUserRepo := &usermocks.MockUserRepository{}
-	mockAuthRepo := usermocks.NewMockAuthRepository()
+	mockAuthRepo := authmocks.NewMockAuthRepository()
 	oauthRepo := &oauthRepositoryStub{
 		findByProviderAndProviderIDFunc: func(ctx context.Context, provider authModel.OAuthProvider, providerUserID string) (*authModel.OAuthAccount, error) {
 			return nil, nil
@@ -465,7 +466,7 @@ func TestAuthService_OAuthLogin_ExistingAccountGenerateTokenFailureReturnsWrappe
 	accountID := primitive.NewObjectID()
 
 	mockUserRepo := &usermocks.MockUserRepository{}
-	mockAuthRepo := usermocks.NewMockAuthRepository()
+	mockAuthRepo := authmocks.NewMockAuthRepository()
 	oauthRepo := &oauthRepositoryStub{
 		findByProviderAndProviderIDFunc: func(ctx context.Context, provider authModel.OAuthProvider, providerUserID string) (*authModel.OAuthAccount, error) {
 			return &authModel.OAuthAccount{
@@ -527,7 +528,7 @@ func TestAuthService_OAuthLogin_NewAccountCreateOAuthRecordFailureReturnsWrapped
 	newUserID := primitive.NewObjectID()
 
 	mockUserRepo := &usermocks.MockUserRepository{}
-	mockAuthRepo := usermocks.NewMockAuthRepository()
+	mockAuthRepo := authmocks.NewMockAuthRepository()
 	oauthRepo := &oauthRepositoryStub{
 		findByProviderAndProviderIDFunc: func(ctx context.Context, provider authModel.OAuthProvider, providerUserID string) (*authModel.OAuthAccount, error) {
 			return nil, nil
@@ -592,7 +593,7 @@ func TestAuthService_OAuthLogin_ExistingAccountResolveRolesFailureReturnsWrapped
 	accountID := primitive.NewObjectID()
 
 	mockUserRepo := &usermocks.MockUserRepository{}
-	mockAuthRepo := usermocks.NewMockAuthRepository()
+	mockAuthRepo := authmocks.NewMockAuthRepository()
 	oauthRepo := &oauthRepositoryStub{
 		findByProviderAndProviderIDFunc: func(ctx context.Context, provider authModel.OAuthProvider, providerUserID string) (*authModel.OAuthAccount, error) {
 			return &authModel.OAuthAccount{
@@ -671,10 +672,10 @@ func TestAuthService_OAuthLogin_ExistingAccountGetUserFailureReturnsWrappedError
 	mockUserRepo.On("GetByID", mock.Anything, userID.Hex()).Return(nil, errors.New("user repo offline")).Once()
 
 	service := &AuthServiceImpl{
-		jwtService:      &jwtServiceStub{},
-		oauthRepo:       oauthRepo,
-		userRepo:        mockUserRepo,
-		sessionService:  &sessionServiceStub{},
+		jwtService:     &jwtServiceStub{},
+		oauthRepo:      oauthRepo,
+		userRepo:       mockUserRepo,
+		sessionService: &sessionServiceStub{},
 	}
 
 	resp, err := service.OAuthLogin(ctx, &OAuthLoginRequest{

@@ -43,13 +43,8 @@ func indexOf(s, substr string) int {
 
 // UserServiceImpl 用户服务实现
 //
-// TECHDEBT(#2026-03-22): 分层违规问题
-// 当前 UserServiceImpl 直接依赖 AuthRepository，违反了分层原则。
-// 理想设计：UserService → AuthService → AuthRepository
-// 当前设计：UserService → AuthRepository (❌ 跨层访问)
-// todo: 重构为 UserService → AuthService → AuthRepository
-// 解决方案：引入事件驱动或接口隔离，在后续迭代中重构。
-// 详见：docs/reports/2026-03-22-user-auth-boundary-analysis.md
+// 认证边界已收口：UserServiceImpl 只依赖 UserRepository；认证、角色和权限能力
+// 由 service/auth、service/shared 及对应 API owner 提供。
 type UserServiceImpl struct {
 	userRepo repoInterfaces.UserRepository
 	logger   *zap.Logger

@@ -6,7 +6,7 @@ type: module
 
 # User Service
 
-> 最后更新：2026-05-21
+> 最后更新：2026-10-06
 
 ## 职责
 
@@ -31,7 +31,7 @@ UserStatsServiceImpl → UserStatsUserRepository + UserStatsProjectRepository (�
 ## 约定 & 陷阱
 
 - **认证边界**：公开注册、登录、登出和 JWT 签发已迁移到 `service/auth`，user 模块不再负责 token 生命周期
-- **分层违规 TECHDEBT(#2026-03-22)**：`UserServiceImpl` 直接依赖 `AuthRepository`，理想链路应为 UserService → AuthService → AuthRepository，待后续迭代重构
+- **认证边界**：`UserServiceImpl` 当前只依赖 `UserRepository`；角色/权限查询与变更由 `service/auth`、`service/shared` 或 admin permission owner 负责，不在 user service 测试包中放置认证仓储替身
 - **角色降级边界**：`DowngradeRole` 涉及权限验证应由 AuthService 统管，当前暂时保留在 UserService，后续应通过 AuthService 鉴权后再执行
 - **验证码/Token 存储为内存单例**：`EmailVerificationTokenManager` 和 `PasswordResetTokenManager` 均为内存 map + sync.RWMutex，重启即丢失；生产环境需迁移到 Redis
 - **5位错误码体系**：40xxx 客户端 / 50xxx 服务端，`UserError` 支持字段级定位和 `IsRetryable` 判断
