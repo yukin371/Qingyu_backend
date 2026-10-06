@@ -5,6 +5,7 @@ import (
 	"Qingyu_backend/internal/middleware/builtin"
 	"Qingyu_backend/internal/middleware/core"
 	"Qingyu_backend/internal/middleware/ratelimit"
+	securityjwt "Qingyu_backend/internal/security/jwt"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -73,7 +74,7 @@ func RegisterBuiltinMiddlewareFactories(logger *zap.Logger) {
 }
 
 // RegisterAuthFactory 注册带真实依赖的 Auth 中间件工厂
-func RegisterAuthFactory(jwtMgr auth.JWTManager, blacklist auth.Blacklist, logger *zap.Logger) {
+func RegisterAuthFactory(jwtMgr securityjwt.Manager, blacklist auth.Blacklist, logger *zap.Logger) {
 	core.RegisterMiddlewareFactory("auth", func() gin.HandlerFunc {
 		impl := auth.NewJWTAuthMiddleware(jwtMgr, blacklist, logger)
 		return impl.Handler()

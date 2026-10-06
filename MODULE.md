@@ -45,6 +45,7 @@
 9. admin 内容导出 handler 只依赖 `service/interfaces.AdminContentBookPort` 与 `AdminContentChapterPort`；repository 的 `infrastructure.Filter` 只能在组合根 adapter 中映射，不能重新泄漏到 `api/v1/admin` 或 service port。生产路由由 `router/admin.RegisterContentExportRoutes` 独立注册，并沿用 JWT + `admin` 角色边界；Mongo 或读取端口不可用时跳过该组路由。
 10. `internal/middleware/admin` 只依赖本包的 `PermissionChecker` 最小 port（`HasRole`、`CheckPermission`）；不要重新导入 `service/auth.PermissionService`，也不要把缓存/RBAC 装载方法泄漏到 HTTP 中间件边界。
 11. JWT 签名、解析、验证、刷新和 wire-level claims 的唯一 owner 是 `internal/security/jwt`；`internal/middleware/auth` 只保留迁移期兼容 façade，`service/auth` 新代码直接依赖 `security/jwt.Manager`。
+12. `internal/middleware/setup.RegisterAuthFactory` 直接消费 `internal/security/jwt.Manager`；不得把 JWT 类型重新从 `internal/middleware/auth` façade 暴露给组合根。
 
 ## 文档同步触发条件
 - 新增/调整 API 时同步更新 `docs/api`、`docs/architecture` 与 swagger 产物。
