@@ -587,32 +587,8 @@ func (s *ReaderService) UpdateReadingSettings(ctx context.Context, userID string
 		return fmt.Errorf("阅读设置不存在")
 	}
 
-	// TODO(T3-044-contract): 统一 SettingAPI 请求字段与 ReadingSettings 持久化字段后，
-	// 将 map 更新改为显式 DTO 校验；在契约冻结前不得继续增加强制类型断言。
-	// 应用更新
-	if fontSize, ok := updates["font_size"]; ok {
-		settings.FontSize = fontSize.(int)
-	}
-	if fontFamily, ok := updates["font_family"]; ok {
-		settings.FontFamily = fontFamily.(string)
-	}
-	if lineHeight, ok := updates["line_height"]; ok {
-		settings.LineHeight = lineHeight.(float64)
-	}
-	if theme, ok := updates["theme"]; ok {
-		settings.Theme = theme.(string)
-	}
-	if background, ok := updates["background"]; ok {
-		settings.Background = background.(string)
-	}
-	if pageMode, ok := updates["page_mode"]; ok {
-		settings.PageMode = pageMode.(int)
-	}
-	if autoScroll, ok := updates["auto_scroll"]; ok {
-		settings.AutoScroll = autoScroll.(bool)
-	}
-	if scrollSpeed, ok := updates["scroll_speed"]; ok {
-		settings.ScrollSpeed = scrollSpeed.(int)
+	if err := applyReadingSettingsUpdates(settings, updates); err != nil {
+		return err
 	}
 
 	settings.UpdatedAt = time.Now()
@@ -628,6 +604,111 @@ func (s *ReaderService) UpdateReadingSettings(ctx context.Context, userID string
 	}
 
 	return nil
+}
+
+func applyReadingSettingsUpdates(settings *reader2.ReadingSettings, updates map[string]interface{}) error {
+	for field, value := range updates {
+		switch field {
+		case "font_size":
+			parsed, ok := readingSettingsInt(value)
+			if !ok {
+				return fmt.Errorf("阅读设置字段 %s 必须是整数", field)
+			}
+			settings.FontSize = parsed
+		case "font_family":
+			parsed, ok := value.(string)
+			if !ok {
+				return fmt.Errorf("阅读设置字段 %s 必须是字符串", field)
+			}
+			settings.FontFamily = parsed
+		case "line_height":
+			parsed, ok := readingSettingsFloat(value)
+			if !ok {
+				return fmt.Errorf("阅读设置字段 %s 必须是数字", field)
+			}
+			settings.LineHeight = parsed
+		case "theme":
+			parsed, ok := value.(string)
+			if !ok {
+				return fmt.Errorf("阅读设置字段 %s 必须是字符串", field)
+			}
+			settings.Theme = parsed
+		case "background":
+			parsed, ok := value.(string)
+			if !ok {
+				return fmt.Errorf("阅读设置字段 %s 必须是字符串", field)
+			}
+			settings.Background = parsed
+		case "page_mode":
+			parsed, ok := readingSettingsPageMode(value)
+			if !ok {
+				return fmt.Errorf("阅读设置字段 %s 必须是 1/2 或 scroll/paginate", field)
+			}
+			settings.PageMode = parsed
+		case "auto_scroll":
+			parsed, ok := value.(bool)
+			if !ok {
+				return fmt.Errorf("阅读设置字段 %s 必须是布尔值", field)
+			}
+			settings.AutoScroll = parsed
+		case "scroll_speed":
+			parsed, ok := readingSettingsInt(value)
+			if !ok {
+				return fmt.Errorf("阅读设置字段 %s 必须是整数", field)
+			}
+			settings.ScrollSpeed = parsed
+		default:
+			return fmt.Errorf("不支持的阅读设置字段: %s", field)
+		}
+	}
+	return nil
+}
+
+func readingSettingsInt(value interface{}) (int, bool) {
+	switch parsed := value.(type) {
+	case int:
+		return parsed, true
+	case int32:
+		return int(parsed), true
+	case int64:
+		return int(parsed), true
+	case float64:
+		if parsed == float64(int(parsed)) {
+			return int(parsed), true
+		}
+	}
+	return 0, false
+}
+
+func readingSettingsFloat(value interface{}) (float64, bool) {
+	switch parsed := value.(type) {
+	case float64:
+		return parsed, true
+	case float32:
+		return float64(parsed), true
+	case int:
+		return float64(parsed), true
+	case int32:
+		return float64(parsed), true
+	case int64:
+		return float64(parsed), true
+	}
+	return 0, false
+}
+
+func readingSettingsPageMode(value interface{}) (int, bool) {
+	if parsed, ok := readingSettingsInt(value); ok && (parsed == 1 || parsed == 2) {
+		return parsed, true
+	}
+	if parsed, ok := value.(string); ok {
+		switch parsed {
+		case "scroll", "1":
+			return 1, true
+		case "paginate", "2":
+			return 2, true
+		}
+	}
+	return 0, false
 }
 
 // =========================

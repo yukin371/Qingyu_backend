@@ -2,6 +2,8 @@ package reader
 
 import (
 	readerModels "Qingyu_backend/models/reader"
+	"fmt"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -28,11 +30,57 @@ type UpdateSettingsRequest struct {
 	FontSize        *int     `json:"fontSize"`
 	FontFamily      *string  `json:"fontFamily"`
 	LineHeight      *float64 `json:"lineHeight"`
+	Theme           *string  `json:"theme"`
 	BackgroundColor *string  `json:"backgroundColor"`
 	TextColor       *string  `json:"textColor"`
 	PageMode        *string  `json:"pageMode"` // scroll, paginate
+	AutoScroll      *bool    `json:"autoScroll"`
+	ScrollSpeed     *int     `json:"scrollSpeed"`
 	AutoSave        *bool    `json:"autoSave"`
 	ShowProgress    *bool    `json:"showProgress"`
+}
+
+// buildReadingSettingsUpdates converts the HTTP request contract into the
+// persistence-owned field names used by ReaderService.
+func buildReadingSettingsUpdates(req UpdateSettingsRequest) (map[string]interface{}, error) {
+	if req.TextColor != nil || req.AutoSave != nil || req.ShowProgress != nil {
+		return nil, fmt.Errorf("textColor、autoSave、showProgress 尚未由阅读设置后端持久化，请仅在本地保存")
+	}
+
+	updates := make(map[string]interface{})
+	if req.FontSize != nil {
+		updates["font_size"] = *req.FontSize
+	}
+	if req.FontFamily != nil {
+		updates["font_family"] = *req.FontFamily
+	}
+	if req.LineHeight != nil {
+		updates["line_height"] = *req.LineHeight
+	}
+	if req.Theme != nil {
+		updates["theme"] = *req.Theme
+	}
+	if req.BackgroundColor != nil {
+		updates["background"] = *req.BackgroundColor
+	}
+	if req.AutoScroll != nil {
+		updates["auto_scroll"] = *req.AutoScroll
+	}
+	if req.ScrollSpeed != nil {
+		updates["scroll_speed"] = *req.ScrollSpeed
+	}
+	if req.PageMode != nil {
+		switch strings.ToLower(strings.TrimSpace(*req.PageMode)) {
+		case "scroll", "1":
+			updates["page_mode"] = 1
+		case "paginate", "2":
+			updates["page_mode"] = 2
+		default:
+			return nil, fmt.Errorf("pageMode 必须是 scroll 或 paginate")
+		}
+	}
+
+	return updates, nil
 }
 
 // GetReadingSettings 获取阅读设置
@@ -127,33 +175,13 @@ func (api *SettingAPI) UpdateReadingSettings(c *gin.Context) {
 		return
 	}
 
-	updates := make(map[string]interface{})
-	if req.FontSize != nil {
-		updates["font_size"] = *req.FontSize
-	}
-	if req.FontFamily != nil {
-		updates["font_family"] = *req.FontFamily
-	}
-	if req.LineHeight != nil {
-		updates["line_height"] = *req.LineHeight
-	}
-	if req.BackgroundColor != nil {
-		updates["background_color"] = *req.BackgroundColor
-	}
-	if req.TextColor != nil {
-		updates["text_color"] = *req.TextColor
-	}
-	if req.PageMode != nil {
-		updates["page_mode"] = *req.PageMode
-	}
-	if req.AutoSave != nil {
-		updates["auto_save"] = *req.AutoSave
-	}
-	if req.ShowProgress != nil {
-		updates["show_progress"] = *req.ShowProgress
+	updates, err := buildReadingSettingsUpdates(req)
+	if err != nil {
+		response.BadRequest(c, "阅读设置字段不受支持", err.Error())
+		return
 	}
 
-	err := api.readerService.UpdateReadingSettings(c.Request.Context(), userIDStr, updates)
+	err = api.readerService.UpdateReadingSettings(c.Request.Context(), userIDStr, updates)
 	if err != nil {
 		c.Error(err)
 		return

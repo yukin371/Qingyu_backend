@@ -432,3 +432,51 @@ func TestSettingAPI_PatchReadingSettings_Success(t *testing.T) {
 	assert.Equal(t, http.StatusOK, w.Code)
 	mockService.AssertExpectations(t)
 }
+
+func TestSettingAPI_UpdateReadingSettings_MapsCanonicalFields(t *testing.T) {
+	mockService := new(MockReaderServiceForSettings)
+	userID := primitive.NewObjectID().Hex()
+	router := setupSettingTestRouter(mockService, userID)
+
+	mockService.On("UpdateReadingSettings", mock.Anything, userID, mock.MatchedBy(func(updates map[string]interface{}) bool {
+		return updates["font_size"] == 20 &&
+			updates["theme"] == "dark" &&
+			updates["background"] == "#111111" &&
+			updates["page_mode"] == 2 &&
+			updates["auto_scroll"] == true &&
+			updates["scroll_speed"] == 3
+	})).Return(nil)
+
+	body := map[string]interface{}{
+		"fontSize":        20,
+		"theme":           "dark",
+		"backgroundColor": "#111111",
+		"pageMode":        "paginate",
+		"autoScroll":      true,
+		"scrollSpeed":     3,
+	}
+	jsonBody, _ := json.Marshal(body)
+	req, _ := http.NewRequest("PUT", "/api/v1/reader/settings", bytes.NewBuffer(jsonBody))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	mockService.AssertExpectations(t)
+}
+
+func TestSettingAPI_UpdateReadingSettings_RejectsLocalOnlyFields(t *testing.T) {
+	mockService := new(MockReaderServiceForSettings)
+	userID := primitive.NewObjectID().Hex()
+	router := setupSettingTestRouter(mockService, userID)
+
+	body := map[string]interface{}{"autoSave": false}
+	jsonBody, _ := json.Marshal(body)
+	req, _ := http.NewRequest("PUT", "/api/v1/reader/settings", bytes.NewBuffer(jsonBody))
+	req.Header.Set("Content-Type", "application/json")
+	w := httptest.NewRecorder()
+	router.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusBadRequest, w.Code)
+	mockService.AssertNotCalled(t, "UpdateReadingSettings")
+}

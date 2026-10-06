@@ -1732,6 +1732,23 @@ func TestReaderService_UpdateReadingSettings_NotFound(t *testing.T) {
 	mockSettingsRepo.AssertExpectations(t)
 }
 
+func TestReaderService_UpdateReadingSettings_InvalidType(t *testing.T) {
+	service, _, _, mockSettingsRepo, _, _, _ := setupReaderService()
+	ctx := context.Background()
+	userID := "user123"
+	existingSettings := &reader.ReadingSettings{UserID: userID, FontSize: 16}
+
+	mockSettingsRepo.On("GetByUserID", ctx, userID).Return(existingSettings, nil)
+
+	err := service.UpdateReadingSettings(ctx, userID, map[string]interface{}{
+		"page_mode": "invalid",
+	})
+
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "page_mode")
+	mockSettingsRepo.AssertNotCalled(t, "UpdateByUserID")
+}
+
 // =========================
 // 批量操作测试
 // =========================
