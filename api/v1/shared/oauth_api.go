@@ -48,12 +48,9 @@ func (api *OAuthAPI) GetAuthorizeURL(c *gin.Context) {
 
 	// 检查是否为绑定模式（已登录用户绑定OAuth账号）
 	linkMode := false
-	userID := ""
-	if userIDVal, exists := c.Get("user_id"); exists {
-		if uid, ok := userIDVal.(string); ok && uid != "" {
-			linkMode = true
-			userID = uid
-		}
+	userID := GetUserIDOptional(c)
+	if userID != "" {
+		linkMode = true
 	}
 
 	authURL, err := api.oauthService.GetAuthURL(c.Request.Context(), provider, req.RedirectURI, req.State, linkMode, userID)
