@@ -266,7 +266,7 @@ func (api *ChapterAPI) GetPaidChapters(c *gin.Context) {
 //	@Param			id	path		string	true	"书籍ID"
 //	@Param			page	query		int		false	"页码"	default(1)
 //	@Param			size	query		int		false	"每页数量"	default(20)
-//	@Success 200 {object} response.APIResponse
+//	@Success 200 {object} response.PaginatedResponse{data=[]bookstore.Chapter}
 //	@Failure		400		{object}	response.APIResponse
 //	@Failure		500		{object}	response.APIResponse
 //	@Router			/api/v1/bookstore/books/{id}/chapters/published [get]

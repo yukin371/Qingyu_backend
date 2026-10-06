@@ -24,7 +24,11 @@ func (s publishedChapterRouteService) GetPublishedChaptersByBookID(
 	int,
 	int,
 ) ([]*bookstoreModel.Chapter, int64, error) {
-	return []*bookstoreModel.Chapter{}, 0, nil
+	projectChapterID := "writer-document-1"
+	return []*bookstoreModel.Chapter{{
+		ProjectChapterID: &projectChapterID,
+		Title:            "第一章",
+	}}, 1, nil
 }
 
 func TestInitBookstoreRouterPublishedChaptersUsesBookIDParam(t *testing.T) {
@@ -53,6 +57,8 @@ func TestInitBookstoreRouterPublishedChaptersUsesBookIDParam(t *testing.T) {
 	r.ServeHTTP(recorder, req)
 
 	require.Equal(t, http.StatusOK, recorder.Code)
+	require.Contains(t, recorder.Body.String(), `"projectChapterId":"writer-document-1"`)
+	require.Contains(t, recorder.Body.String(), `"total":1`)
 }
 
 func TestInitBookstoreRouterWithAuthUsesInjectedMiddleware(t *testing.T) {
