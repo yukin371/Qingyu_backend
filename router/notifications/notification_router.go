@@ -9,9 +9,18 @@ import (
 
 // RegisterRoutes 注册通知路由
 func RegisterRoutes(r *gin.RouterGroup, notificationAPI *notificationsAPI.NotificationAPI) {
+	RegisterRoutesWithAuth(r, notificationAPI, auth.JWTAuth())
+}
+
+// RegisterRoutesWithAuth 注册通知路由并注入鉴权 handler。
+// RegisterRoutes 保留为迁移期兼容入口；组合根应使用此函数传入 canonical handler。
+func RegisterRoutesWithAuth(r *gin.RouterGroup, notificationAPI *notificationsAPI.NotificationAPI, authMiddleware gin.HandlerFunc) {
 	// 通知路由组（需要认证）
 	notificationGroup := r.Group("/notifications")
-	notificationGroup.Use(auth.JWTAuth())
+	if authMiddleware == nil {
+		authMiddleware = auth.JWTAuth()
+	}
+	notificationGroup.Use(authMiddleware)
 
 	// 通知基础操作
 	notificationGroup.GET("", notificationAPI.GetNotifications)
@@ -60,9 +69,17 @@ func RegisterRoutes(r *gin.RouterGroup, notificationAPI *notificationsAPI.Notifi
 
 // RegisterUserManagementRoutes 注册用户管理路由（包含邮件和短信通知设置）
 func RegisterUserManagementRoutes(r *gin.RouterGroup, notificationAPI *notificationsAPI.NotificationAPI) {
+	RegisterUserManagementRoutesWithAuth(r, notificationAPI, auth.JWTAuth())
+}
+
+// RegisterUserManagementRoutesWithAuth 注册用户通知设置路由并注入鉴权 handler。
+func RegisterUserManagementRoutesWithAuth(r *gin.RouterGroup, notificationAPI *notificationsAPI.NotificationAPI, authMiddleware gin.HandlerFunc) {
 	// 用户管理路由组（需要认证）
 	userManagementGroup := r.Group("/user-management")
-	userManagementGroup.Use(auth.JWTAuth())
+	if authMiddleware == nil {
+		authMiddleware = auth.JWTAuth()
+	}
+	userManagementGroup.Use(authMiddleware)
 
 	// 邮件通知设置
 	userManagementGroup.GET("/email-notifications", notificationAPI.GetEmailNotificationSettings)

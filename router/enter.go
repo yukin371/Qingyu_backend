@@ -691,8 +691,8 @@ func RegisterRoutes(r *gin.Engine) {
 		logger.Info("跳过通知路由注册")
 	} else {
 		notificationAPI := notificationsAPI.NewNotificationAPI(notificationSvc)
-		notificationsRouter.RegisterRoutes(v1, notificationAPI)
-		notificationsRouter.RegisterUserManagementRoutes(v1, notificationAPI)
+		notificationsRouter.RegisterRoutesWithAuth(v1, notificationAPI, newCanonicalJWTAuthMiddleware(logger))
+		notificationsRouter.RegisterUserManagementRoutesWithAuth(v1, notificationAPI, newCanonicalJWTAuthMiddleware(logger))
 		logger.Info("✓ 通知路由已注册到: /api/v1/notifications/")
 		logger.Info("  - GET /api/v1/notifications (获取通知列表)")
 		logger.Info("  - GET /api/v1/notifications/:id (获取通知详情)")
