@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/models/bookstore"
 	"Qingyu_backend/pkg/response"
 	bookstoreService "Qingyu_backend/service/bookstore"
@@ -481,13 +482,8 @@ func (api *ChapterAPI) GetChapterContent(c *gin.Context) {
 		return
 	}
 
-	// 获取用户ID（从中间件设置的上下文中）
-	userID := ""
-	if userIDValue, exists := c.Get("user_id"); exists {
-		if uid, ok := userIDValue.(string); ok {
-			userID = uid
-		}
-	}
+	// 获取可选用户ID；匿名请求继续由 service 按公开章节规则处理。
+	userID := shared.GetUserIDOptional(c)
 
 	content, err := api.service.GetChapterContent(c.Request.Context(), id.Hex(), userID)
 	if err != nil {
