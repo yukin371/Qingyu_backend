@@ -89,7 +89,7 @@ type PermissionService interface {
 
 	// RBAC集成方法
 	InvalidateUserPermissionsCache(ctx context.Context, userID string) error
-	SetChecker(checker interface{}) // 使用interface{}避免循环依赖
+	SetChecker(checker interface{}) // 通过最小 port 注入 RBAC checker，避免依赖 middleware 具体类型
 	LoadPermissionsToChecker(ctx context.Context) error
 	LoadUserRolesToChecker(ctx context.Context, userID string) error
 	ReloadAllFromDatabase(ctx context.Context) error

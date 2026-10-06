@@ -10,7 +10,6 @@ import (
 	"go.uber.org/zap"
 	"golang.org/x/sync/singleflight"
 
-	middlewareAuth "Qingyu_backend/internal/middleware/auth"
 	authModel "Qingyu_backend/models/auth"
 	authRepo "Qingyu_backend/repository/interfaces/auth"
 )
@@ -23,7 +22,7 @@ type PermissionServiceImpl struct {
 	logger      *zap.Logger
 
 	// RBAC集成
-	checker *middlewareAuth.RBACChecker
+	checker permissionChecker
 
 	// 内存缓存
 	roleCache       map[string]*authModel.Role
@@ -32,6 +31,13 @@ type PermissionServiceImpl struct {
 
 	// singleflight防止缓存击穿
 	cacheGroup singleflight.Group
+}
+
+// permissionChecker is the smallest RBAC port needed by the auth service.
+// The concrete checker remains an infrastructure concern of middleware.
+type permissionChecker interface {
+	AssignRole(userID string, role string)
+	BatchGrantPermissions(role string, perms []string)
 }
 
 // CacheClient 缓存客户端接口
@@ -179,8 +185,8 @@ func (s *PermissionServiceImpl) getPermissionCacheKey(userID string) string {
 
 // SetChecker 设置RBAC检查器，用于动态权限更新
 func (s *PermissionServiceImpl) SetChecker(checker interface{}) {
-	if rbacChecker, ok := checker.(*middlewareAuth.RBACChecker); ok {
-		s.checker = rbacChecker
+	if checker, ok := checker.(permissionChecker); ok {
+		s.checker = checker
 		if s.logger != nil {
 			s.logger.Info("RBACChecker已设置到PermissionService")
 		}
