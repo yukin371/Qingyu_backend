@@ -6,11 +6,10 @@ import (
 
 	"Qingyu_backend/models/writer"
 	"Qingyu_backend/pkg/errors"
+	"Qingyu_backend/repository"
 	writerRepo "Qingyu_backend/repository/interfaces/writer"
 	"Qingyu_backend/service/base"
 	serviceInterfaces "Qingyu_backend/service/interfaces"
-
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // LocationService 地点服务实现
@@ -37,8 +36,11 @@ func (s *LocationService) Create(
 	req *serviceInterfaces.CreateLocationRequest,
 ) (*writer.Location, error) {
 	// 构建地点对象（使用base mixins）
+	projectOID, err := repository.ParseID(projectID)
+	if err != nil {
+		return nil, errors.NewServiceError("LocationService", errors.ServiceErrorValidation, "invalid project ID", "", err)
+	}
 	location := &writer.Location{}
-	projectOID, _ := primitive.ObjectIDFromHex(projectID)
 	location.ProjectID = projectOID
 	location.Name = req.Name
 	location.Description = req.Description
@@ -76,12 +78,16 @@ func (s *LocationService) GetByID(
 	ctx context.Context,
 	locationID, projectID string,
 ) (*writer.Location, error) {
+	projectOID, err := repository.ParseID(projectID)
+	if err != nil {
+		return nil, errors.NewServiceError("LocationService", errors.ServiceErrorValidation, "invalid project ID", "", err)
+	}
 	location, err := s.locationRepo.FindByID(ctx, locationID)
 	if err != nil {
 		return nil, err
 	}
 
-	if location.ProjectID.Hex() != projectID {
+	if location.ProjectID != projectOID {
 		return nil, errors.NewServiceError("LocationService", errors.ServiceErrorForbidden, "no permission to access this location", "", nil)
 	}
 
@@ -222,6 +228,10 @@ func (s *LocationService) CreateRelation(
 	projectID string,
 	req *serviceInterfaces.CreateLocationRelationRequest,
 ) (*writer.LocationRelation, error) {
+	projectOID, err := repository.ParseID(projectID)
+	if err != nil {
+		return nil, errors.NewServiceError("LocationService", errors.ServiceErrorValidation, "invalid project ID", "", err)
+	}
 	// 验证地点存在
 	if _, err := s.GetByID(ctx, req.FromID, projectID); err != nil {
 		return nil, errors.NewServiceError("LocationService", errors.ServiceErrorNotFound, "source location not found", "", err)
@@ -236,7 +246,6 @@ func (s *LocationService) CreateRelation(
 	}
 
 	// 创建关系（使用base mixins）
-	projectOID, _ := primitive.ObjectIDFromHex(projectID)
 	relation := &writer.LocationRelation{}
 	relation.ProjectID = projectOID
 	relation.FromID = req.FromID
@@ -266,6 +275,9 @@ func (s *LocationService) DeleteRelation(
 	ctx context.Context,
 	relationID, projectID string,
 ) error {
+	if _, err := repository.ParseID(projectID); err != nil {
+		return errors.NewServiceError("LocationService", errors.ServiceErrorValidation, "invalid project ID", "", err)
+	}
 	relations, err := s.locationRepo.FindRelations(ctx, projectID, nil)
 	if err != nil {
 		return err
