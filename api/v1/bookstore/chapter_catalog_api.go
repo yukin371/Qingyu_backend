@@ -7,6 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/bookstore"
 )
@@ -22,6 +23,20 @@ func readChapterRouteID(c *gin.Context) string {
 		return chapterID
 	}
 	return c.Param("id")
+}
+
+func requiredUserObjectID(c *gin.Context) (primitive.ObjectID, bool) {
+	userID, ok := shared.GetUserIDWithMessage(c, "未授权访问")
+	if !ok {
+		return primitive.NilObjectID, false
+	}
+
+	parsed, err := primitive.ObjectIDFromHex(userID)
+	if err != nil {
+		response.BadRequest(c, "参数错误", "无效的用户ID格式")
+		return primitive.NilObjectID, false
+	}
+	return parsed, true
 }
 
 // NewChapterCatalogAPI 创建章节目录API实例
@@ -272,22 +287,8 @@ func (api *ChapterCatalogAPI) PurchaseChapter(c *gin.Context) {
 		return
 	}
 
-	// 获取用户ID
-	userIDValue, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权访问")
-		return
-	}
-
-	userIDStr, ok := userIDValue.(string)
+	userID, ok := requiredUserObjectID(c)
 	if !ok {
-		response.Unauthorized(c, "无效的用户信息")
-		return
-	}
-
-	userID, err := primitive.ObjectIDFromHex(userIDStr)
-	if err != nil {
-		response.BadRequest(c, "参数错误", "无效的用户ID格式")
 		return
 	}
 
@@ -338,22 +339,8 @@ func (api *ChapterCatalogAPI) PurchaseBook(c *gin.Context) {
 		return
 	}
 
-	// 获取用户ID
-	userIDValue, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权访问")
-		return
-	}
-
-	userIDStr, ok := userIDValue.(string)
+	userID, ok := requiredUserObjectID(c)
 	if !ok {
-		response.Unauthorized(c, "无效的用户信息")
-		return
-	}
-
-	userID, err := primitive.ObjectIDFromHex(userIDStr)
-	if err != nil {
-		response.BadRequest(c, "参数错误", "无效的用户ID格式")
 		return
 	}
 
@@ -388,22 +375,8 @@ func (api *ChapterCatalogAPI) PurchaseBook(c *gin.Context) {
 //	@Failure		500	{object}	APIResponse
 //	@Router			/api/v1/reader/purchases [get]
 func (api *ChapterCatalogAPI) GetPurchases(c *gin.Context) {
-	// 获取用户ID
-	userIDValue, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权访问")
-		return
-	}
-
-	userIDStr, ok := userIDValue.(string)
+	userID, ok := requiredUserObjectID(c)
 	if !ok {
-		response.Unauthorized(c, "无效的用户信息")
-		return
-	}
-
-	userID, err := primitive.ObjectIDFromHex(userIDStr)
-	if err != nil {
-		response.BadRequest(c, "参数错误", "无效的用户ID格式")
 		return
 	}
 
@@ -453,22 +426,8 @@ func (api *ChapterCatalogAPI) GetBookPurchases(c *gin.Context) {
 		return
 	}
 
-	// 获取用户ID
-	userIDValue, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "未授权访问")
-		return
-	}
-
-	userIDStr, ok := userIDValue.(string)
+	userID, ok := requiredUserObjectID(c)
 	if !ok {
-		response.Unauthorized(c, "无效的用户信息")
-		return
-	}
-
-	userID, err := primitive.ObjectIDFromHex(userIDStr)
-	if err != nil {
-		response.BadRequest(c, "参数错误", "无效的用户ID格式")
 		return
 	}
 
