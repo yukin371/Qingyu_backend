@@ -565,5 +565,5 @@ func TestMessageAPI_RejectsMalformedUserIDContext(t *testing.T) {
 	router.ServeHTTP(w, httptest.NewRequest(http.MethodGet, "/conversations", nil))
 
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
-	assert.Contains(t, w.Body.String(), "请先登录")
+	assert.Contains(t, w.Body.String(), "用户信息格式错误")
 }

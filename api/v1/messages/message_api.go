@@ -1,11 +1,13 @@
 package messages
 
 import (
+	"fmt"
+
 	"github.com/gin-gonic/gin"
 
+	"Qingyu_backend/api/v1/shared"
 	"Qingyu_backend/pkg/response"
 	"Qingyu_backend/service/interfaces"
-	"fmt"
 )
 
 // MessageAPI 私信API处理器
@@ -21,12 +23,7 @@ func NewMessageAPI(messageService interfaces.MessageService) *MessageAPI {
 }
 
 func messageUserID(c *gin.Context) (string, bool) {
-	value, exists := c.Get("user_id")
-	if !exists {
-		return "", false
-	}
-	userID, ok := value.(string)
-	return userID, ok && userID != ""
+	return shared.GetUserIDWithMessage(c, "请先登录")
 }
 
 // =========================
@@ -46,7 +43,6 @@ func messageUserID(c *gin.Context) (string, bool) {
 func (api *MessageAPI) GetConversations(c *gin.Context) {
 	userID, ok := messageUserID(c)
 	if !ok {
-		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -102,7 +98,6 @@ func (api *MessageAPI) GetConversationMessages(c *gin.Context) {
 
 	userID, ok := messageUserID(c)
 	if !ok {
-		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -168,7 +163,6 @@ func (api *MessageAPI) SendMessage(c *gin.Context) {
 
 	senderID, ok := messageUserID(c)
 	if !ok {
-		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -211,7 +205,6 @@ func (api *MessageAPI) MarkMessageAsRead(c *gin.Context) {
 
 	userID, ok := messageUserID(c)
 	if !ok {
-		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -247,7 +240,6 @@ func (api *MessageAPI) DeleteMessage(c *gin.Context) {
 
 	userID, ok := messageUserID(c)
 	if !ok {
-		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -295,7 +287,6 @@ func (api *MessageAPI) CreateMention(c *gin.Context) {
 
 	senderID, ok := messageUserID(c)
 	if !ok {
-		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -329,7 +320,6 @@ func (api *MessageAPI) CreateMention(c *gin.Context) {
 func (api *MessageAPI) GetMentions(c *gin.Context) {
 	userID, ok := messageUserID(c)
 	if !ok {
-		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -383,7 +373,6 @@ func (api *MessageAPI) MarkMentionAsRead(c *gin.Context) {
 
 	userID, ok := messageUserID(c)
 	if !ok {
-		response.Unauthorized(c, "请先登录")
 		return
 	}
 
