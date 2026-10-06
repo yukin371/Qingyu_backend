@@ -295,9 +295,12 @@ func (s *ChapterPurchaseServiceImpl) GetTrialChapters(ctx context.Context, bookI
 	// 如果免费章节数量不足，补充付费章节（前N章）
 	if len(chapters) < trialCount {
 		needed := trialCount - len(chapters)
-		allChapters, _ := s.chapterRepo.GetByBookID(ctx, bookID, needed, len(chapters))
+		allChapters, err := s.chapterRepo.GetByBookID(ctx, bookID, needed, len(chapters))
+		if err != nil {
+			return nil, fmt.Errorf("failed to supplement trial chapters: %w", err)
+		}
 		for _, ch := range allChapters {
-			if !ch.IsFree {
+			if ch != nil && !ch.IsFree {
 				chapters = append(chapters, ch)
 			}
 		}
