@@ -385,6 +385,19 @@ func TestChapterCommentAPI_GetChapterComments_Success(t *testing.T) {
 	assert.Contains(t, w.Body.String(), `"total":1`)
 }
 
+func TestChapterCommentAPI_RejectsMalformedUserIDContext(t *testing.T) {
+	gin.SetMode(gin.TestMode)
+	c, _ := gin.CreateTestContext(httptest.NewRecorder())
+	c.Set("user_id", 123)
+
+	userID, username, ok := (&ChapterCommentAPI{}).getUserIdentity(c)
+
+	assert.False(t, ok)
+	assert.Empty(t, userID)
+	assert.Empty(t, username)
+	assert.Equal(t, http.StatusUnauthorized, c.Writer.Status())
+}
+
 func TestChapterCommentAPI_GetChapterComments_Unauthorized(t *testing.T) {
 	chapterID := primitive.NewObjectID().Hex()
 	bookID := primitive.NewObjectID().Hex()

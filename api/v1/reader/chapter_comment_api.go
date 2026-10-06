@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"Qingyu_backend/api/v1/shared"
 	bookstoreService "Qingyu_backend/service/bookstore"
 	socialService "Qingyu_backend/service/social"
 
@@ -50,15 +51,11 @@ func (api *ChapterCommentAPI) requireCommentService(c *gin.Context) bool {
 }
 
 func (api *ChapterCommentAPI) getUserIdentity(c *gin.Context) (string, string, bool) {
-	userIDValue, exists := c.Get("user_id")
-	if !exists {
-		response.Unauthorized(c, "请先登录")
-		return "", "", false
-	}
-
-	userID, ok := userIDValue.(string)
+	userID, ok := shared.GetUserIDWithMessage(c, "请先登录")
 	if !ok || userID == "" {
-		response.Unauthorized(c, "请先登录")
+		if ok {
+			response.Unauthorized(c, "请先登录")
+		}
 		return "", "", false
 	}
 
