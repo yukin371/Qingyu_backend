@@ -1127,15 +1127,9 @@ func (s *BookStatisticsServiceImpl) SearchStatistics(ctx context.Context, keywor
 	offset := (page - 1) * pageSize
 
 	// 搜索统计数据
-	stats, _, err := s.statsRepo.Search(ctx, keyword, pageSize, offset)
+	stats, totalCount, err := s.statsRepo.Search(ctx, keyword, pageSize, offset)
 	if err != nil {
 		return nil, 0, fmt.Errorf("failed to search statistics: %w", err)
-	}
-
-	// TODO: 这里简化处理，实际应该有专门的搜索计数方法
-	totalCount := int64(len(stats))
-	if len(stats) == pageSize {
-		totalCount = int64((page + 1) * pageSize)
 	}
 
 	return stats, totalCount, nil
