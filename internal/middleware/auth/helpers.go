@@ -8,6 +8,7 @@ import (
 	"go.uber.org/zap"
 
 	"Qingyu_backend/config"
+	securityjwt "Qingyu_backend/internal/security/jwt"
 )
 
 var (
@@ -115,7 +116,7 @@ func OptionalJWTAuth() gin.HandlerFunc {
 func GenerateToken(userID, username string, roles []string) (string, error) {
 	// 从配置获取JWT secret，确保与登录服务使用相同的secret
 	jwtConfig := config.GetJWTConfigEnhanced()
-	jwtManager, err := NewJWTManager(jwtConfig.SecretKey, jwtConfig.Expiration, jwtConfig.RefreshDuration)
+	jwtManager, err := securityjwt.NewManager(jwtConfig.SecretKey, jwtConfig.Expiration, jwtConfig.RefreshDuration)
 	if err != nil {
 		return "", err
 	}
