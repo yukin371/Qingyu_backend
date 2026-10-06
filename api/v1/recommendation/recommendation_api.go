@@ -44,12 +44,7 @@ func (api *RecommendationAPI) WithBookRepository(bookCatalog recommendation.Book
 }
 
 func authenticatedUserID(c *gin.Context) (string, bool) {
-	value, exists := c.Get("user_id")
-	if !exists {
-		return "", false
-	}
-	userID, ok := value.(string)
-	return userID, ok && userID != ""
+	return shared.GetUserIDWithMessage(c, "请先登录")
 }
 
 // GetPersonalizedRecommendations 获取个性化推荐
@@ -63,7 +58,6 @@ func (api *RecommendationAPI) GetPersonalizedRecommendations(c *gin.Context) {
 	// 获取用户ID
 	userID, ok := authenticatedUserID(c)
 	if !ok {
-		response.Unauthorized(c, "请先登录")
 		return
 	}
 
@@ -135,7 +129,6 @@ func (api *RecommendationAPI) RecordBehavior(c *gin.Context) {
 	// 获取用户ID
 	userID, ok := authenticatedUserID(c)
 	if !ok {
-		response.Unauthorized(c, "请先登录")
 		return
 	}
 
