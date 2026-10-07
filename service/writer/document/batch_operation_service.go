@@ -612,6 +612,7 @@ func (s *BatchOperationService) runPreflight(ctx context.Context, batchOp *write
 
 // executeDelete 执行批量删除
 func (s *BatchOperationService) executeDelete(ctx context.Context, batchOp *writer.BatchOperation) error {
+	// TODO(T3-085-batch-item-write-error-owner): 批量状态写回失败目前被 best-effort 忽略；由 writer/document owner 定义 atomic/non-atomic 下的重试、补偿和可见性契约后，再将 UpdateItemStatus 错误纳入执行结果。
 	// 转换RetryConfig，如果为nil则使用默认配置
 	retryConfig := s.convertMapToRetryConfig(batchOp.RetryConfig)
 	if retryConfig == nil {
