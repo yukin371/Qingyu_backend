@@ -2,6 +2,7 @@ package writer
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -266,11 +267,17 @@ func (r *MongoCommentRepository) GetStats(ctx context.Context, documentID primit
 	filter := bson.M{"document_id": documentID, "deleted_at": nil}
 
 	// 总数
-	totalCount, _ := r.GetCollection().CountDocuments(ctx, filter)
+	totalCount, err := r.GetCollection().CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, fmt.Errorf("count comments: %w", err)
+	}
 
 	// 已解决数
 	resolvedFilter := bson.M{"document_id": documentID, "resolved": true, "deleted_at": nil}
-	resolvedCount, _ := r.GetCollection().CountDocuments(ctx, resolvedFilter)
+	resolvedCount, err := r.GetCollection().CountDocuments(ctx, resolvedFilter)
+	if err != nil {
+		return nil, fmt.Errorf("count resolved comments: %w", err)
+	}
 
 	// 未解决数
 	unresolvedCount := totalCount - resolvedCount
@@ -284,16 +291,27 @@ func (r *MongoCommentRepository) GetStats(ctx context.Context, documentID primit
 		}},
 	}
 
-	cursor, _ := r.GetCollection().Aggregate(ctx, pipeline)
-	defer cursor.Close(ctx)
+	cursor, err := r.GetCollection().Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, fmt.Errorf("aggregate comment types: %w", err)
+	}
+	defer func() { _ = cursor.Close(ctx) }()
 
 	byType := make(map[string]int)
 	var results []bson.M
-	cursor.All(ctx, &results)
+	if err := cursor.All(ctx, &results); err != nil {
+		return nil, fmt.Errorf("decode comment type stats: %w", err)
+	}
 	for _, result := range results {
-		typeStr := result["_id"].(string)
-		count := result["count"].(int32)
-		byType[typeStr] = int(count)
+		typeStr, ok := result["_id"].(string)
+		if !ok {
+			return nil, fmt.Errorf("decode comment type stats: invalid type %T", result["_id"])
+		}
+		count, err := commentStatsCount(result["count"])
+		if err != nil {
+			return nil, fmt.Errorf("decode comment type stats: %w", err)
+		}
+		byType[typeStr] = count
 	}
 
 	// 按用户统计
@@ -305,16 +323,27 @@ func (r *MongoCommentRepository) GetStats(ctx context.Context, documentID primit
 		}},
 	}
 
-	cursor, _ = r.GetCollection().Aggregate(ctx, pipeline)
-	defer cursor.Close(ctx)
+	cursor, err = r.GetCollection().Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, fmt.Errorf("aggregate comment users: %w", err)
+	}
+	defer func() { _ = cursor.Close(ctx) }()
 
 	byUser := make(map[string]int)
 	results = nil
-	cursor.All(ctx, &results)
+	if err := cursor.All(ctx, &results); err != nil {
+		return nil, fmt.Errorf("decode comment user stats: %w", err)
+	}
 	for _, result := range results {
-		userID := r.IDToHex(result["_id"].(primitive.ObjectID))
-		count := result["count"].(int32)
-		byUser[userID] = int(count)
+		userOID, ok := result["_id"].(primitive.ObjectID)
+		if !ok {
+			return nil, fmt.Errorf("decode comment user stats: invalid user ID %T", result["_id"])
+		}
+		count, err := commentStatsCount(result["count"])
+		if err != nil {
+			return nil, fmt.Errorf("decode comment user stats: %w", err)
+		}
+		byUser[r.IDToHex(userOID)] = count
 	}
 
 	stats := &writer.CommentStats{
@@ -326,6 +355,21 @@ func (r *MongoCommentRepository) GetStats(ctx context.Context, documentID primit
 	}
 
 	return stats, nil
+}
+
+func commentStatsCount(value interface{}) (int, error) {
+	switch count := value.(type) {
+	case int:
+		return count, nil
+	case int32:
+		return int(count), nil
+	case int64:
+		return int(count), nil
+	case float64:
+		return int(count), nil
+	default:
+		return 0, fmt.Errorf("invalid count %T", value)
+	}
 }
 
 // GetUserComments 获取用户的批注
