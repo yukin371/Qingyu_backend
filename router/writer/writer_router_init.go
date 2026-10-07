@@ -166,7 +166,7 @@ func RegisterWriterRoutesWithAuth(r *gin.RouterGroup, searchSvc *searchservice.S
 	characterRepo := repositoryFactory.CreateCharacterRepository()
 	var characterSvc interfaces.CharacterService
 	if characterRepo != nil {
-		characterSvc = writerservice.NewCharacterService(characterRepo, eventBus)
+		characterSvc = writerservice.NewCharacterService(characterRepo, projectRepo, eventBus)
 		zap.L().Info("RegisterWriterRoutes: CharacterService创建成功")
 	} else {
 		zap.L().Warn("RegisterWriterRoutes: CharacterRepository为nil，跳过CharacterService创建")

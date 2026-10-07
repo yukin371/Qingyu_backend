@@ -4,10 +4,22 @@ import (
 	"context"
 	"testing"
 
+	"Qingyu_backend/models/writer"
+	"Qingyu_backend/models/writer/base"
 	serviceErrors "Qingyu_backend/pkg/errors"
 	"Qingyu_backend/service/interfaces"
 	"github.com/stretchr/testify/require"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
+
+type characterProjectReaderStub struct {
+	project *writer.Project
+	err     error
+}
+
+func (s characterProjectReaderStub) GetByID(context.Context, string) (*writer.Project, error) {
+	return s.project, s.err
+}
 
 func requireCharacterProjectIDValidation(t *testing.T, err error) {
 	t.Helper()
@@ -23,6 +35,23 @@ func TestCharacterService_CreateRejectsInvalidProjectID(t *testing.T) {
 	character, err := service.Create(context.Background(), "invalid-project", "user-1", &interfaces.CreateCharacterRequest{Name: "测试角色"})
 
 	requireCharacterProjectIDValidation(t, err)
+	require.Nil(t, character)
+}
+
+func TestCharacterService_CreateRejectsUserWithoutProjectEditPermission(t *testing.T) {
+	projectID := primitive.NewObjectID()
+	authorID := primitive.NewObjectID()
+	service := &CharacterService{
+		projectRepo: characterProjectReaderStub{
+			project: &writer.Project{OwnedEntity: base.OwnedEntity{AuthorID: authorID}},
+		},
+	}
+
+	character, err := service.Create(context.Background(), projectID.Hex(), primitive.NewObjectID().Hex(), &interfaces.CreateCharacterRequest{Name: "测试角色"})
+
+	var serviceErr *serviceErrors.ServiceError
+	require.ErrorAs(t, err, &serviceErr)
+	require.Equal(t, serviceErrors.ServiceErrorForbidden, serviceErr.Type)
 	require.Nil(t, character)
 }
 

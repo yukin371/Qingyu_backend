@@ -50,3 +50,4 @@ Phase 5 当前口径：writer 主线已完成 factory / compat / port adapter、
 - **本地导出路径边界**：`LocalFileStorage` 生成 URL 使用正斜杠；`Download`/`Delete` 必须通过 `resolveFilePath` 校验 URL 前缀和规范化路径，禁止 `..` 越出 `baseDir`。
 - **导出任务异步写回**：`updateTaskProgress`/`failTask` 当前仍是后台 best-effort 写回，受 `TODO(T3-084-export-task-write-error-owner)` 约束；未定义重试、补偿、告警和最终状态可见性前，不得把忽略仓储错误误认为已完成。
 - **批量操作状态写回**：`BatchOperationService.executeDelete` 在 processing/succeeded/failed/cancelled 分支的 item 状态更新仍受 `TODO(T3-085-batch-item-write-error-owner)` 约束；未定义 atomic/non-atomic 的补偿和可见性前，不得把 `UpdateItemStatus` 错误当作无害。
+- **角色创建权限**：`CharacterService.Create` 必须通过组合根注入的只读项目 port 获取项目，并复用 `Project.CanEdit(userID)`；不能只校验项目 ID 后直接写入角色。项目仓储不可用或用户无编辑权时不得写入或发布事件。

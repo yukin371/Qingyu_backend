@@ -15,16 +15,23 @@ import (
 // CharacterService 角色服务实现
 type CharacterService struct {
 	characterRepo writerRepo.CharacterRepository
+	projectRepo   characterProjectReader
 	eventBus      base.EventBus
+}
+
+type characterProjectReader interface {
+	GetByID(ctx context.Context, id string) (*writer.Project, error)
 }
 
 // NewCharacterService 创建CharacterService实例
 func NewCharacterService(
 	characterRepo writerRepo.CharacterRepository,
+	projectRepo characterProjectReader,
 	eventBus base.EventBus,
 ) serviceInterfaces.CharacterService {
 	return &CharacterService{
 		characterRepo: characterRepo,
+		projectRepo:   projectRepo,
 		eventBus:      eventBus,
 	}
 }
@@ -35,11 +42,19 @@ func (s *CharacterService) Create(
 	projectID, userID string,
 	req *serviceInterfaces.CreateCharacterRequest,
 ) (*writer.Character, error) {
-	// 验证关系类型（如果有）
-	// TODO: 验证项目权限
 	projectOID, err := repository.ParseID(projectID)
 	if err != nil {
 		return nil, errors.NewServiceError("CharacterService", errors.ServiceErrorValidation, "invalid project ID", "", err)
+	}
+	if s.projectRepo == nil {
+		return nil, errors.NewServiceError("CharacterService", errors.ServiceErrorInternal, "project repository unavailable", "", nil)
+	}
+	project, err := s.projectRepo.GetByID(ctx, projectID)
+	if err != nil {
+		return nil, errors.NewServiceError("CharacterService", errors.ServiceErrorNotFound, "project not found", "", err)
+	}
+	if project == nil || !project.CanEdit(userID) {
+		return nil, errors.NewServiceError("CharacterService", errors.ServiceErrorForbidden, "no permission to create character in this project", "", nil)
 	}
 
 	// 构建角色对象（使用base mixins）
