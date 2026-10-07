@@ -613,6 +613,7 @@ func (s *ExportService) updateTaskProgress(
 	task.Status = status
 	task.Progress = progress
 	task.UpdatedAt = time.Now()
+	// TODO(T3-084-export-task-write-error-owner): 后台进度写回失败目前无法反馈给调用方；由 writer/export owner 定义重试、状态可见性和最终一致性契约后，将错误纳入任务状态机并补存储错误注入测试。
 	_ = s.exportTaskRepo.Update(ctx, task)
 }
 
@@ -620,6 +621,7 @@ func (s *ExportService) failTask(ctx context.Context, task *serviceInterfaces.Ex
 	task.Status = serviceInterfaces.ExportStatusFailed
 	task.ErrorMsg = errorMsg
 	task.UpdatedAt = time.Now()
+	// TODO(T3-084-export-task-write-error-owner): 失败状态写回错误会让任务继续停留在 processing；由 writer/export owner 定义补偿或告警路径后再改变后台方法签名。
 	_ = s.exportTaskRepo.Update(ctx, task)
 }
 
