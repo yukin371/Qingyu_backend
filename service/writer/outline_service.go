@@ -20,6 +20,23 @@ type OutlineService struct {
 	syncService *OutlineDocumentSyncService // 大纲-文档双向同步服务
 }
 
+func (s *OutlineService) ensureProjectEditor(ctx context.Context, projectID, userID string) error {
+	if _, err := repository.ParseID(projectID); err != nil {
+		return errors.NewServiceError("OutlineService", errors.ServiceErrorValidation, "invalid project ID", "", err)
+	}
+	if s.projectRepo == nil {
+		return errors.NewServiceError("OutlineService", errors.ServiceErrorInternal, "project repository unavailable", "", nil)
+	}
+	project, err := s.projectRepo.GetByID(ctx, projectID)
+	if err != nil {
+		return errors.NewServiceError("OutlineService", errors.ServiceErrorNotFound, "project not found", "", err)
+	}
+	if project == nil || !project.CanEdit(userID) {
+		return errors.NewServiceError("OutlineService", errors.ServiceErrorForbidden, "no permission to edit outline in this project", "", nil)
+	}
+	return nil
+}
+
 // NewOutlineService 创建OutlineService实例
 func NewOutlineService(
 	outlineRepo writerRepo.OutlineRepository,
@@ -176,9 +193,12 @@ func (s *OutlineService) List(
 // Update 更新大纲节点
 func (s *OutlineService) Update(
 	ctx context.Context,
-	outlineID, projectID string,
+	outlineID, projectID, userID string,
 	req *serviceInterfaces.UpdateOutlineRequest,
 ) (*writer.OutlineNode, error) {
+	if err := s.ensureProjectEditor(ctx, projectID, userID); err != nil {
+		return nil, err
+	}
 	// 获取现有大纲
 	outline, err := s.GetByID(ctx, outlineID, projectID)
 	if err != nil {
@@ -280,8 +300,11 @@ func (s *OutlineService) Update(
 // Delete 删除大纲节点
 func (s *OutlineService) Delete(
 	ctx context.Context,
-	outlineID, projectID string,
+	outlineID, projectID, userID string,
 ) error {
+	if err := s.ensureProjectEditor(ctx, projectID, userID); err != nil {
+		return err
+	}
 	// 验证权限
 	outline, err := s.GetByID(ctx, outlineID, projectID)
 	if err != nil {

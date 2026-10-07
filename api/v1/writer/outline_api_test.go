@@ -57,16 +57,16 @@ func (m *MockOutlineService) List(ctx context.Context, projectID string) ([]*wri
 	return args.Get(0).([]*writer.OutlineNode), args.Error(1)
 }
 
-func (m *MockOutlineService) Update(ctx context.Context, outlineID, projectID string, req *serviceInterfaces.UpdateOutlineRequest) (*writer.OutlineNode, error) {
-	args := m.Called(ctx, outlineID, projectID, req)
+func (m *MockOutlineService) Update(ctx context.Context, outlineID, projectID, userID string, req *serviceInterfaces.UpdateOutlineRequest) (*writer.OutlineNode, error) {
+	args := m.Called(ctx, outlineID, projectID, userID, req)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*writer.OutlineNode), args.Error(1)
 }
 
-func (m *MockOutlineService) Delete(ctx context.Context, outlineID, projectID string) error {
-	args := m.Called(ctx, outlineID, projectID)
+func (m *MockOutlineService) Delete(ctx context.Context, outlineID, projectID, userID string) error {
+	args := m.Called(ctx, outlineID, projectID, userID)
 	return args.Error(0)
 }
 

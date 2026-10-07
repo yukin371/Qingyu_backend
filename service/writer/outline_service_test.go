@@ -123,6 +123,13 @@ func newOutlineCreateService(repo *MockOutlineRepository, eventBus base.EventBus
 	return NewOutlineService(repo, eventBus, projectReaderStub{project: &writerModels.Project{OwnedEntity: writerBase.OwnedEntity{AuthorID: ownerID}}})
 }
 
+const outlineMutationUserID = "000000000000000000000001"
+
+func newOutlineMutationService(repo *MockOutlineRepository, eventBus base.EventBus) serviceInterfaces.OutlineService {
+	ownerID, _ := primitive.ObjectIDFromHex(outlineMutationUserID)
+	return NewOutlineService(repo, eventBus, projectReaderStub{project: &writerModels.Project{OwnedEntity: writerBase.OwnedEntity{AuthorID: ownerID}}})
+}
+
 func TestOutlineService_CreateRejectsInvalidProjectID(t *testing.T) {
 	service := &OutlineService{}
 
@@ -389,7 +396,7 @@ func TestOutlineService_GetByID_Success(t *testing.T) {
 	mockRepo := new(MockOutlineRepository)
 	mockEventBus := new(MockEventBus)
 
-	service := NewOutlineService(mockRepo, mockEventBus)
+	service := newOutlineMutationService(mockRepo, mockEventBus)
 
 	projectID := primitive.NewObjectID().Hex()
 	outlineID := primitive.NewObjectID().Hex()
@@ -417,7 +424,7 @@ func TestOutlineService_GetByID_NotFound(t *testing.T) {
 	mockRepo := new(MockOutlineRepository)
 	mockEventBus := new(MockEventBus)
 
-	service := NewOutlineService(mockRepo, mockEventBus)
+	service := newOutlineMutationService(mockRepo, mockEventBus)
 
 	projectID := primitive.NewObjectID().Hex()
 	outlineID := primitive.NewObjectID().Hex()
@@ -499,7 +506,7 @@ func TestOutlineService_Update_Success(t *testing.T) {
 	mockRepo := new(MockOutlineRepository)
 	mockEventBus := new(MockEventBus)
 
-	service := NewOutlineService(mockRepo, mockEventBus)
+	service := newOutlineMutationService(mockRepo, mockEventBus)
 
 	projectID := primitive.NewObjectID().Hex()
 	outlineID := primitive.NewObjectID().Hex()
@@ -521,7 +528,7 @@ func TestOutlineService_Update_Success(t *testing.T) {
 	mockEventBus.On("PublishAsync", ctx, mock.Anything).Return(nil).Once()
 
 	// Act
-	outline, err := service.Update(ctx, outlineID, projectID, req)
+	outline, err := service.Update(ctx, outlineID, projectID, outlineMutationUserID, req)
 
 	// Assert
 	require.NoError(t, err)
@@ -534,6 +541,22 @@ func TestOutlineService_Update_Success(t *testing.T) {
 	mockEventBus.AssertExpectations(t)
 }
 
+func TestOutlineService_UpdateRejectsUserWithoutProjectEditPermission(t *testing.T) {
+	projectID := primitive.NewObjectID().Hex()
+	service := NewOutlineService(
+		new(MockOutlineRepository),
+		nil,
+		projectReaderStub{project: &writerModels.Project{OwnedEntity: writerBase.OwnedEntity{AuthorID: primitive.NewObjectID()}}},
+	)
+
+	outline, err := service.Update(context.Background(), primitive.NewObjectID().Hex(), projectID, primitive.NewObjectID().Hex(), &serviceInterfaces.UpdateOutlineRequest{})
+
+	var serviceErr *serviceErrors.ServiceError
+	require.ErrorAs(t, err, &serviceErr)
+	require.Equal(t, serviceErrors.ServiceErrorForbidden, serviceErr.Type)
+	require.Nil(t, outline)
+}
+
 // TestOutlineService_Update_ParentNode 测试更新父节点
 func TestOutlineService_Update_ParentNode(t *testing.T) {
 	// Arrange
@@ -541,7 +564,7 @@ func TestOutlineService_Update_ParentNode(t *testing.T) {
 	mockRepo := new(MockOutlineRepository)
 	mockEventBus := new(MockEventBus)
 
-	service := NewOutlineService(mockRepo, mockEventBus)
+	service := newOutlineMutationService(mockRepo, mockEventBus)
 
 	projectID := primitive.NewObjectID().Hex()
 	outlineID := primitive.NewObjectID().Hex()
@@ -560,7 +583,7 @@ func TestOutlineService_Update_ParentNode(t *testing.T) {
 	mockEventBus.On("PublishAsync", ctx, mock.Anything).Return(nil).Once()
 
 	// Act
-	outline, err := service.Update(ctx, outlineID, projectID, req)
+	outline, err := service.Update(ctx, outlineID, projectID, outlineMutationUserID, req)
 
 	// Assert
 	require.NoError(t, err)
@@ -578,7 +601,7 @@ func TestOutlineService_Update_CrossProjectParent(t *testing.T) {
 	mockRepo := new(MockOutlineRepository)
 	mockEventBus := new(MockEventBus)
 
-	service := NewOutlineService(mockRepo, mockEventBus)
+	service := newOutlineMutationService(mockRepo, mockEventBus)
 
 	projectID := primitive.NewObjectID().Hex()
 	outlineID := primitive.NewObjectID().Hex()
@@ -596,7 +619,7 @@ func TestOutlineService_Update_CrossProjectParent(t *testing.T) {
 	mockRepo.On("FindByID", ctx, newParentID).Return(newParent, nil).Once()
 
 	// Act
-	outline, err := service.Update(ctx, outlineID, projectID, req)
+	outline, err := service.Update(ctx, outlineID, projectID, outlineMutationUserID, req)
 
 	// Assert
 	assert.Error(t, err)
@@ -613,7 +636,7 @@ func TestOutlineService_Delete_Success(t *testing.T) {
 	mockRepo := new(MockOutlineRepository)
 	mockEventBus := new(MockEventBus)
 
-	service := NewOutlineService(mockRepo, mockEventBus)
+	service := newOutlineMutationService(mockRepo, mockEventBus)
 
 	projectID := primitive.NewObjectID().Hex()
 	outlineID := primitive.NewObjectID().Hex()
@@ -626,13 +649,28 @@ func TestOutlineService_Delete_Success(t *testing.T) {
 	mockEventBus.On("PublishAsync", ctx, mock.Anything).Return(nil).Once()
 
 	// Act
-	err := service.Delete(ctx, outlineID, projectID)
+	err := service.Delete(ctx, outlineID, projectID, outlineMutationUserID)
 
 	// Assert
 	require.NoError(t, err)
 
 	mockRepo.AssertExpectations(t)
 	mockEventBus.AssertExpectations(t)
+}
+
+func TestOutlineService_DeleteRejectsUserWithoutProjectEditPermission(t *testing.T) {
+	projectID := primitive.NewObjectID().Hex()
+	service := NewOutlineService(
+		new(MockOutlineRepository),
+		nil,
+		projectReaderStub{project: &writerModels.Project{OwnedEntity: writerBase.OwnedEntity{AuthorID: primitive.NewObjectID()}}},
+	)
+
+	err := service.Delete(context.Background(), primitive.NewObjectID().Hex(), projectID, primitive.NewObjectID().Hex())
+
+	var serviceErr *serviceErrors.ServiceError
+	require.ErrorAs(t, err, &serviceErr)
+	require.Equal(t, serviceErrors.ServiceErrorForbidden, serviceErr.Type)
 }
 
 // TestOutlineService_Delete_WithChildren 测试删除有子节点的节点失败
@@ -642,7 +680,7 @@ func TestOutlineService_Delete_WithChildren(t *testing.T) {
 	mockRepo := new(MockOutlineRepository)
 	mockEventBus := new(MockEventBus)
 
-	service := NewOutlineService(mockRepo, mockEventBus)
+	service := newOutlineMutationService(mockRepo, mockEventBus)
 
 	projectID := primitive.NewObjectID().Hex()
 	outlineID := primitive.NewObjectID().Hex()
@@ -653,7 +691,7 @@ func TestOutlineService_Delete_WithChildren(t *testing.T) {
 	mockRepo.On("CountByParentID", ctx, projectID, outlineID).Return(int64(2), nil).Once()
 
 	// Act
-	err := service.Delete(ctx, outlineID, projectID)
+	err := service.Delete(ctx, outlineID, projectID, outlineMutationUserID)
 
 	// Assert
 	assert.Error(t, err)
@@ -669,7 +707,7 @@ func TestOutlineService_Delete_NotFound(t *testing.T) {
 	mockRepo := new(MockOutlineRepository)
 	mockEventBus := new(MockEventBus)
 
-	service := NewOutlineService(mockRepo, mockEventBus)
+	service := newOutlineMutationService(mockRepo, mockEventBus)
 
 	projectID := primitive.NewObjectID().Hex()
 	outlineID := primitive.NewObjectID().Hex()
@@ -677,7 +715,7 @@ func TestOutlineService_Delete_NotFound(t *testing.T) {
 	mockRepo.On("FindByID", ctx, outlineID).Return(nil, errors.New("not found")).Once()
 
 	// Act
-	err := service.Delete(ctx, outlineID, projectID)
+	err := service.Delete(ctx, outlineID, projectID, outlineMutationUserID)
 
 	// Assert
 	assert.Error(t, err)

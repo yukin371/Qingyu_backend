@@ -169,7 +169,8 @@ func (api *OutlineApi) UpdateOutline(c *gin.Context) {
 		return
 	}
 
-	outline, err := api.outlineService.Update(c.Request.Context(), outlineID, projectID, &req)
+	userID := shared.GetUserIDOptional(c)
+	outline, err := api.outlineService.Update(c.Request.Context(), outlineID, projectID, userID, &req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -199,7 +200,8 @@ func (api *OutlineApi) DeleteOutline(c *gin.Context) {
 		return
 	}
 
-	err := api.outlineService.Delete(c.Request.Context(), outlineID, projectID)
+	userID := shared.GetUserIDOptional(c)
+	err := api.outlineService.Delete(c.Request.Context(), outlineID, projectID, userID)
 	if err != nil {
 		c.Error(err)
 		return

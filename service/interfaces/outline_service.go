@@ -12,9 +12,8 @@ type OutlineService interface {
 	Create(ctx context.Context, projectID, userID string, req *CreateOutlineRequest) (*writer.OutlineNode, error)
 	GetByID(ctx context.Context, outlineID, projectID string) (*writer.OutlineNode, error)
 	List(ctx context.Context, projectID string) ([]*writer.OutlineNode, error)
-	// TODO(T3-090-writer-asset-write-actor-owner): 更新/删除必须补显式 userID 或统一 actor port，不能只依赖项目 ID。
-	Update(ctx context.Context, outlineID, projectID string, req *UpdateOutlineRequest) (*writer.OutlineNode, error)
-	Delete(ctx context.Context, outlineID, projectID string) error
+	Update(ctx context.Context, outlineID, projectID, userID string, req *UpdateOutlineRequest) (*writer.OutlineNode, error)
+	Delete(ctx context.Context, outlineID, projectID, userID string) error
 
 	// 树形结构操作
 	GetTree(ctx context.Context, projectID string) ([]*OutlineTreeNode, error)
