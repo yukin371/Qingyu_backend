@@ -37,3 +37,4 @@ Phase 5 当前口径：writer 主线已完成 factory / compat / port adapter、
 - **stdout/debug 风险**：树构建与文档链路中的已知临时 stdout 输出已在 2026-05-05 清理；后续新增排障输出必须使用 logger，不能直接写 stdout 或 dump 请求/文档结构。
 - **项目 ID 完整性**：角色、地点、大纲及关系资产的服务入口在查询、权限比较或写入模型前必须严格解析 `projectID`；禁止把解析失败的全零 `ObjectID` 用于权限判断、持久化或事件发布。当前角色、地点和大纲核心读写入口已完成该边界收口，其他资产服务按 Phase 3/T3 逐模块迁移。
 - **关系时序兼容边界**：关系时序创建/读取已校验项目 ID；更新/删除的事件索引与关系状态持久化仍受 `TODO(T3-072-character-relation-state-owner)` 约束，未形成唯一 repository port 前不得把兼容 stub 当作真实写入能力。
+- **大纲-文档同步错误**：全局大纲查找、文档创建同步和双向引用回写必须传播项目 ID 解析及 repository 更新错误；禁止用全零 `ProjectID` 继续同步，也禁止把引用回写失败当作成功。

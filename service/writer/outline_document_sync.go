@@ -7,9 +7,8 @@ import (
 
 	"Qingyu_backend/models/writer"
 	"Qingyu_backend/pkg/distlock"
+	"Qingyu_backend/repository"
 	writerRepo "Qingyu_backend/repository/interfaces/writer"
-
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // OutlineDocumentSyncService 大纲-文档双向同步服务
@@ -86,7 +85,10 @@ func (s *OutlineDocumentSyncService) findOrCreateGlobalOutline(ctx context.Conte
 	}()
 
 	// 临界区内使用原子性 upsert
-	projectOID, _ := primitive.ObjectIDFromHex(projectID)
+	projectOID, err := repository.ParseID(projectID)
+	if err != nil {
+		return "", fmt.Errorf("invalid project ID: %w", err)
+	}
 	existing, err := s.outlineRepo.FindByGlobalOutline(ctx, projectOID)
 	if err != nil {
 		return "", err
@@ -101,7 +103,10 @@ func (s *OutlineDocumentSyncService) findOrCreateGlobalOutline(ctx context.Conte
 
 // findOrCreateGlobalOutlineWithUpsert 使用数据库 upsert 原子操作查找或创建全局总纲（无锁降级方案）
 func (s *OutlineDocumentSyncService) findOrCreateGlobalOutlineWithUpsert(ctx context.Context, projectID string) (string, error) {
-	projectOID, _ := primitive.ObjectIDFromHex(projectID)
+	projectOID, err := repository.ParseID(projectID)
+	if err != nil {
+		return "", fmt.Errorf("invalid project ID: %w", err)
+	}
 
 	existing, err := s.outlineRepo.FindByGlobalOutline(ctx, projectOID)
 	if err != nil {
@@ -184,7 +189,9 @@ func (s *OutlineDocumentSyncService) SyncFromOutlineCreation(
 
 	// 回写大纲节点的 document_id 引用
 	outlineNode.DocumentID = doc.ID.Hex()
-	_ = s.outlineRepo.Update(ctx, outlineNode)
+	if err := s.outlineRepo.Update(ctx, outlineNode); err != nil {
+		return nil, err
+	}
 	return doc, nil
 }
 
@@ -194,6 +201,10 @@ func (s *OutlineDocumentSyncService) SyncFromDocumentCreation(
 	projectID string,
 	doc *writer.Document,
 ) (*writer.OutlineNode, error) {
+	projectOID, err := repository.ParseID(projectID)
+	if err != nil {
+		return nil, fmt.Errorf("invalid project ID: %w", err)
+	}
 	// 如果已经关联了大纲，跳过
 	if doc.OutlineNodeID != "" {
 		return nil, nil
@@ -229,7 +240,6 @@ func (s *OutlineDocumentSyncService) SyncFromDocumentCreation(
 
 	// 构建大纲节点
 	outlineNode := &writer.OutlineNode{}
-	projectOID, _ := primitive.ObjectIDFromHex(projectID)
 	outlineNode.ProjectID = projectOID
 	outlineNode.Title = doc.Title
 	outlineNode.ParentID = outlineParentID
@@ -247,7 +257,9 @@ func (s *OutlineDocumentSyncService) SyncFromDocumentCreation(
 	updates := map[string]interface{}{
 		"outline_node_id": outlineNode.ID.Hex(),
 	}
-	_ = s.documentRepo.Update(ctx, doc.ID.Hex(), updates)
+	if err := s.documentRepo.Update(ctx, doc.ID.Hex(), updates); err != nil {
+		return nil, err
+	}
 	return outlineNode, nil
 }
 
