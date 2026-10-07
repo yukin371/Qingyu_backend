@@ -385,13 +385,19 @@ func (s *PublishService) PublishDocument(
 	}
 
 	// 检查是否已发布
-	existingRecord, _ := s.publicationRepo.FindByResourceID(ctx, documentID)
+	existingRecord, err := s.publicationRepo.FindByResourceID(ctx, documentID)
+	if err != nil {
+		return nil, errors.NewServiceError("PublishService", errors.ServiceErrorInternal, "检查文档发布状态失败", "", err)
+	}
 	if existingRecord != nil && existingRecord.Status == serviceInterfaces.PublicationStatusPublished {
 		return nil, errors.NewServiceError("PublishService", errors.ServiceErrorValidation, "文档已发布", "", nil)
 	}
 
 	// 获取发布记录
-	projectRecord, _ := s.publicationRepo.FindPublishedByProjectID(ctx, projectID)
+	projectRecord, err := s.publicationRepo.FindPublishedByProjectID(ctx, projectID)
+	if err != nil {
+		return nil, errors.NewServiceError("PublishService", errors.ServiceErrorInternal, "获取项目发布记录失败", "", err)
+	}
 	bookstoreID := ""
 	bookstoreName := ""
 	if projectRecord != nil {
