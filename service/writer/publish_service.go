@@ -308,7 +308,10 @@ func (s *PublishService) GetProjectPublicationStatus(ctx context.Context, projec
 
 	// 查找最近发布记录，优先展示待审核/已发布状态
 	var record *serviceInterfaces.PublicationRecord
-	records, _, _ := s.publicationRepo.FindByProjectID(ctx, projectID, 1, 1)
+	records, _, err := s.publicationRepo.FindByProjectID(ctx, projectID, 1, 1)
+	if err != nil {
+		return nil, errors.NewServiceError("PublishService", errors.ServiceErrorInternal, "获取项目发布记录失败", "", err)
+	}
 	if len(records) > 0 {
 		record = records[0]
 	}
@@ -327,14 +330,20 @@ func (s *PublishService) GetProjectPublicationStatus(ctx context.Context, projec
 
 	// 获取项目统计
 	if record != nil && record.Status == serviceInterfaces.PublicationStatusPublished {
-		stats, _ := s.bookstoreClient.GetStatistics(ctx, projectID, record.BookstoreID)
+		stats, err := s.bookstoreClient.GetStatistics(ctx, projectID, record.BookstoreID)
+		if err != nil {
+			return nil, errors.NewServiceError("PublishService", errors.ServiceErrorInternal, "获取书城统计失败", "", err)
+		}
 		if stats != nil {
 			status.Statistics = *stats
 		}
 	}
 
 	// 获取文档统计
-	documents, _ := s.documentRepo.FindByProjectID(ctx, projectID)
+	documents, err := s.documentRepo.FindByProjectID(ctx, projectID)
+	if err != nil {
+		return nil, errors.NewServiceError("PublishService", errors.ServiceErrorInternal, "获取项目文档统计失败", "", err)
+	}
 	status.TotalChapters = len(documents)
 	status.PublishedChapters = len(documents) // 这里应该从实际发布记录统计
 

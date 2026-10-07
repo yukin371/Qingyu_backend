@@ -553,3 +553,27 @@ func TestGetPublicationRecordsNormalizesInvalidPagination(t *testing.T) {
 	assert.Equal(t, 1, capturedPage)
 	assert.Equal(t, 20, capturedPageSize)
 }
+
+func TestGetProjectPublicationStatusPropagatesPublicationLookupError(t *testing.T) {
+	projectID := primitive.NewObjectID().Hex()
+	projectRepo := &stubProjectRepository{
+		findByIDFn: func(ctx context.Context, id string) (*writerModel.Project, error) {
+			project := &writerModel.Project{}
+			project.ID = primitive.NilObjectID
+			project.Title = "测试项目"
+			return project, nil
+		},
+	}
+	publicationRepo := &stubPublicationRepository{
+		findByProjectIDFn: func(ctx context.Context, id string, page, pageSize int) ([]*serviceInterfaces.PublicationRecord, int64, error) {
+			return nil, 0, errors.New("publication lookup failed")
+		},
+	}
+	service := NewPublishService(projectRepo, &stubDocumentRepository{}, publicationRepo, nil, nil).(*PublishService)
+
+	status, err := service.GetProjectPublicationStatus(context.Background(), projectID)
+
+	assert.Error(t, err)
+	assert.Nil(t, status)
+	assert.Contains(t, err.Error(), "获取项目发布记录失败")
+}
