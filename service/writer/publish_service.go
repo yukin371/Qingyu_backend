@@ -143,7 +143,10 @@ func (s *PublishService) PublishProject(
 	}
 
 	// 检查是否已发布
-	existingRecord, _ := s.publicationRepo.FindPublishedByProjectID(ctx, projectID)
+	existingRecord, err := s.publicationRepo.FindPublishedByProjectID(ctx, projectID)
+	if err != nil {
+		return nil, errors.NewServiceError("PublishService", errors.ServiceErrorInternal, "检查项目发布状态失败", "", err)
+	}
 	if existingRecord != nil {
 		return nil, errors.NewServiceError("PublishService", errors.ServiceErrorValidation, "项目已发布，请先取消发布", "", nil)
 	}

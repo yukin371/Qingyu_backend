@@ -467,6 +467,28 @@ func TestPublishProjectRejectsAlreadyPublishedProject(t *testing.T) {
 	assert.Contains(t, err.Error(), "项目已发布")
 }
 
+func TestPublishProjectPropagatesExistingPublicationLookupError(t *testing.T) {
+	authorID := primitive.NewObjectID().Hex()
+	project := createTestProject(authorID, "测试项目")
+	publicationRepo := &stubPublicationRepository{
+		findPublishedByProjectIDFn: func(ctx context.Context, projectID string) (*serviceInterfaces.PublicationRecord, error) {
+			return nil, errors.New("publication lookup failed")
+		},
+	}
+	projectRepo := &stubProjectRepository{
+		findByIDFn: func(ctx context.Context, id string) (*writerModel.Project, error) {
+			return project, nil
+		},
+	}
+	service := NewPublishService(projectRepo, nil, publicationRepo, nil, nil).(*PublishService)
+
+	record, err := service.PublishProject(context.Background(), project.ID.Hex(), authorID, &serviceInterfaces.PublishProjectRequest{})
+
+	assert.Error(t, err)
+	assert.Nil(t, record)
+	assert.Contains(t, err.Error(), "检查项目发布状态失败")
+}
+
 func TestBatchPublishDocumentsCollectsPartialFailures(t *testing.T) {
 	authorID := primitive.NewObjectID().Hex()
 	project := createTestProject(authorID, "测试项目")
