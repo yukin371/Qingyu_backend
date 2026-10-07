@@ -559,6 +559,9 @@ func TestBatchPublishDocumentsCollectsPartialFailures(t *testing.T) {
 			}
 			return nil, nil
 		},
+		findPublishedByProjectIDFn: func(ctx context.Context, projectID string) (*serviceInterfaces.PublicationRecord, error) {
+			return nil, nil
+		},
 		createFn: func(ctx context.Context, record *serviceInterfaces.PublicationRecord) error {
 			return nil
 		},
