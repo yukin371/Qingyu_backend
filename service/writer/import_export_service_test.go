@@ -277,6 +277,16 @@ func TestExportService_ImportProject_Success(t *testing.T) {
 	assert.GreaterOrEqual(t, result.DocumentCount, 2)
 }
 
+func TestExportService_ImportProjectRejectsInvalidUserID(t *testing.T) {
+	service := NewExportService(nil, nil, nil, nil, nil)
+
+	result, err := service.ImportProject(context.Background(), "invalid-user", []byte("not-a-zip"))
+
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "用户 ID 无效")
+	assert.Nil(t, result)
+}
+
 func TestExportService_DownloadExportFile_ReturnsFileContent(t *testing.T) {
 	mockDocRepo := new(MockDocumentRepositoryForExport)
 	mockContentRepo := new(MockDocumentContentRepositoryForExport)

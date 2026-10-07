@@ -39,3 +39,4 @@ Phase 5 当前口径：writer 主线已完成 factory / compat / port adapter、
 - **关系时序兼容边界**：关系时序创建/读取已校验项目 ID；更新/删除的事件索引与关系状态持久化仍受 `TODO(T3-072-character-relation-state-owner)` 约束，未形成唯一 repository port 前不得把兼容 stub 当作真实写入能力。
 - **大纲-文档同步错误**：全局大纲查找、文档创建同步和双向引用回写必须传播项目 ID 解析及 repository 更新错误；禁止用全零 `ProjectID` 继续同步，也禁止把引用回写失败当作成功。
 - **Story Harness 上下文完整性**：章节上下文入口必须先解析项目 ID，再查询投影、角色和关系；待处理变更计数失败必须向上返回，snapshot 转换只能使用已验证的项目 ObjectID，不能静默生成全零归属。
+- **导入/导出身份完整性**：项目导入路由 `POST /api/v1/writer/projects/import` 传入的用户 ID 必须在 ZIP 解析和项目构造前通过 `repository.ParseID` 校验；解析失败返回校验错误，禁止把全零 `AuthorID` 写入项目。导出任务及导入服务的用户、项目和任务 ID 均不得忽略解析错误。

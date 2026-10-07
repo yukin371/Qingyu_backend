@@ -14,6 +14,7 @@ import (
 
 	"Qingyu_backend/models/writer"
 	"Qingyu_backend/pkg/errors"
+	"Qingyu_backend/repository"
 	serviceInterfaces "Qingyu_backend/service/interfaces"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -434,6 +435,10 @@ func (s *ExportService) buildProjectArchive(
 
 // ImportProject 从 ZIP 数据导入项目
 func (s *ExportService) ImportProject(ctx context.Context, userID string, zipData []byte) (*serviceInterfaces.ImportResult, error) {
+	authorID, err := repository.ParseID(userID)
+	if err != nil {
+		return nil, errors.NewServiceError("ExportService", errors.ServiceErrorValidation, "用户 ID 无效", "", err)
+	}
 	reader, err := zip.NewReader(bytes.NewReader(zipData), int64(len(zipData)))
 	if err != nil {
 		return nil, errors.NewServiceError("ExportService", errors.ServiceErrorValidation, "无效的 ZIP 文件", "", err)
@@ -452,7 +457,7 @@ func (s *ExportService) ImportProject(ctx context.Context, userID string, zipDat
 		Summary:     fmt.Sprintf("从文件导入于 %s", time.Now().Format("2006-01-02 15:04:05")),
 	}
 	project.Title = projectTitle
-	project.AuthorID, _ = primitive.ObjectIDFromHex(userID)
+	project.AuthorID = authorID
 	project.CreatedAt = time.Now()
 	project.UpdatedAt = time.Now()
 	project.ID = primitive.NewObjectID()
