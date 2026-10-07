@@ -2,6 +2,7 @@ package storyharness
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	"Qingyu_backend/models/writer"
@@ -174,6 +175,22 @@ func TestContextServiceGetChapterContextPrefersProjection(t *testing.T) {
 	}
 	if got := result.Relations[0].Notes; got != "关系改善" {
 		t.Fatalf("expected projection relation notes, got %q", got)
+	}
+}
+
+func TestContextServiceGetChapterContextRejectsInvalidProjectID(t *testing.T) {
+	svc := NewContextService(nil, nil, nil)
+
+	result, err := svc.GetChapterContext(context.Background(), "invalid-project", primitive.NewObjectID().Hex())
+
+	if err == nil {
+		t.Fatal("expected invalid project ID error")
+	}
+	if result != nil {
+		t.Fatal("expected no context result")
+	}
+	if !strings.Contains(err.Error(), "项目 ID 无效") {
+		t.Fatalf("expected validation error, got %v", err)
 	}
 }
 

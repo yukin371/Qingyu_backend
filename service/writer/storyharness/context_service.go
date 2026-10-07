@@ -6,6 +6,7 @@ import (
 	"Qingyu_backend/models/writer"
 	writerBase "Qingyu_backend/models/writer/base"
 	"Qingyu_backend/pkg/errors"
+	"Qingyu_backend/repository"
 	writerRepo "Qingyu_backend/repository/interfaces/writer"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -42,7 +43,17 @@ type ChapterContextData struct {
 // GetChapterContext 获取章节上下文
 // 第一版使用现有角色/关系数据作为基线
 func (s *ContextService) GetChapterContext(ctx context.Context, projectID, chapterID string) (*ChapterContextData, error) {
-	pendingCount, _ := s.changeRequestRepo.CountPendingByChapter(ctx, projectID, chapterID)
+	projectOID, err := repository.ParseID(projectID)
+	if err != nil {
+		return nil, errors.NewServiceError("ContextService", errors.ServiceErrorValidation,
+			"项目 ID 无效", projectID, err)
+	}
+
+	pendingCount, err := s.changeRequestRepo.CountPendingByChapter(ctx, projectID, chapterID)
+	if err != nil {
+		return nil, errors.NewServiceError("ContextService", errors.ServiceErrorInternal,
+			"获取待处理变更数量失败", chapterID, err)
+	}
 
 	if s.projectionRepo != nil {
 		projection, err := s.projectionRepo.GetByChapter(ctx, projectID, chapterID)
@@ -52,8 +63,8 @@ func (s *ContextService) GetChapterContext(ctx context.Context, projectID, chapt
 		}
 		if projection != nil {
 			return &ChapterContextData{
-				Characters: snapshotCharactersToModels(projection.Characters, projectID),
-				Relations:  snapshotRelationsToModels(projection.Relations, projectID),
+				Characters: snapshotCharactersToModels(projection.Characters, projectOID),
+				Relations:  snapshotRelationsToModels(projection.Relations, projectOID),
 				PendingCRs: pendingCount,
 			}, nil
 		}
@@ -80,8 +91,7 @@ func (s *ContextService) GetChapterContext(ctx context.Context, projectID, chapt
 	}, nil
 }
 
-func snapshotCharactersToModels(items []writer.CharacterSnapshot, projectID string) []*writer.Character {
-	projectOID, _ := primitive.ObjectIDFromHex(projectID)
+func snapshotCharactersToModels(items []writer.CharacterSnapshot, projectOID primitive.ObjectID) []*writer.Character {
 	results := make([]*writer.Character, 0, len(items))
 	for _, item := range items {
 		character := &writer.Character{
@@ -101,8 +111,7 @@ func snapshotCharactersToModels(items []writer.CharacterSnapshot, projectID stri
 	return results
 }
 
-func snapshotRelationsToModels(items []writer.RelationSnapshot, projectID string) []*writer.CharacterRelation {
-	projectOID, _ := primitive.ObjectIDFromHex(projectID)
+func snapshotRelationsToModels(items []writer.RelationSnapshot, projectOID primitive.ObjectID) []*writer.CharacterRelation {
 	results := make([]*writer.CharacterRelation, 0, len(items))
 	for _, item := range items {
 		results = append(results, &writer.CharacterRelation{
