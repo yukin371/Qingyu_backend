@@ -111,7 +111,8 @@ func (api *LocationApi) UpdateLocation(c *gin.Context) {
 		return
 	}
 
-	location, err := api.locationService.Update(c.Request.Context(), locationID, projectID, &req)
+	userID := shared.GetUserIDOptional(c)
+	location, err := api.locationService.Update(c.Request.Context(), locationID, projectID, userID, &req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -131,7 +132,8 @@ func (api *LocationApi) DeleteLocation(c *gin.Context) {
 		return
 	}
 
-	err := api.locationService.Delete(c.Request.Context(), locationID, projectID)
+	userID := shared.GetUserIDOptional(c)
+	err := api.locationService.Delete(c.Request.Context(), locationID, projectID, userID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -152,7 +154,8 @@ func (api *LocationApi) CreateLocationRelation(c *gin.Context) {
 		return
 	}
 
-	relation, err := api.locationService.CreateRelation(c.Request.Context(), projectID, &req)
+	userID := shared.GetUserIDOptional(c)
+	relation, err := api.locationService.CreateRelation(c.Request.Context(), projectID, userID, &req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -194,7 +197,8 @@ func (api *LocationApi) DeleteLocationRelation(c *gin.Context) {
 		return
 	}
 
-	err := api.locationService.DeleteRelation(c.Request.Context(), relationID, projectID)
+	userID := shared.GetUserIDOptional(c)
+	err := api.locationService.DeleteRelation(c.Request.Context(), relationID, projectID, userID)
 	if err != nil {
 		c.Error(err)
 		return

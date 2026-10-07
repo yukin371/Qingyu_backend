@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"Qingyu_backend/models/writer"
+	"Qingyu_backend/models/writer/base"
 	serviceErrors "Qingyu_backend/pkg/errors"
 	"Qingyu_backend/service/interfaces"
 	"github.com/stretchr/testify/require"
@@ -41,6 +42,33 @@ func TestLocationService_CreateRejectsUserWithoutProjectEditPermission(t *testin
 	require.Nil(t, location)
 }
 
+func TestLocationService_UpdateRejectsUserWithoutProjectEditPermission(t *testing.T) {
+	projectID := primitive.NewObjectID()
+	service := &LocationService{
+		projectRepo: projectReaderStub{project: &writer.Project{OwnedEntity: base.OwnedEntity{AuthorID: primitive.NewObjectID()}}},
+	}
+
+	location, err := service.Update(context.Background(), primitive.NewObjectID().Hex(), projectID.Hex(), primitive.NewObjectID().Hex(), &interfaces.UpdateLocationRequest{})
+
+	var serviceErr *serviceErrors.ServiceError
+	require.ErrorAs(t, err, &serviceErr)
+	require.Equal(t, serviceErrors.ServiceErrorForbidden, serviceErr.Type)
+	require.Nil(t, location)
+}
+
+func TestLocationService_DeleteRejectsUserWithoutProjectEditPermission(t *testing.T) {
+	projectID := primitive.NewObjectID()
+	service := &LocationService{
+		projectRepo: projectReaderStub{project: &writer.Project{OwnedEntity: base.OwnedEntity{AuthorID: primitive.NewObjectID()}}},
+	}
+
+	err := service.Delete(context.Background(), primitive.NewObjectID().Hex(), projectID.Hex(), primitive.NewObjectID().Hex())
+
+	var serviceErr *serviceErrors.ServiceError
+	require.ErrorAs(t, err, &serviceErr)
+	require.Equal(t, serviceErrors.ServiceErrorForbidden, serviceErr.Type)
+}
+
 func TestLocationService_GetByIDRejectsInvalidProjectID(t *testing.T) {
 	service := &LocationService{}
 
@@ -53,7 +81,7 @@ func TestLocationService_GetByIDRejectsInvalidProjectID(t *testing.T) {
 func TestLocationService_CreateRelationRejectsInvalidProjectID(t *testing.T) {
 	service := &LocationService{}
 
-	relation, err := service.CreateRelation(context.Background(), "invalid-project", &interfaces.CreateLocationRelationRequest{FromID: "location-1", ToID: "location-2", Type: "adjacent"})
+	relation, err := service.CreateRelation(context.Background(), "invalid-project", "user-1", &interfaces.CreateLocationRelationRequest{FromID: "location-1", ToID: "location-2", Type: "adjacent"})
 
 	requireLocationProjectIDValidation(t, err)
 	require.Nil(t, relation)
@@ -62,7 +90,7 @@ func TestLocationService_CreateRelationRejectsInvalidProjectID(t *testing.T) {
 func TestLocationService_DeleteRelationRejectsInvalidProjectID(t *testing.T) {
 	service := &LocationService{}
 
-	err := service.DeleteRelation(context.Background(), "relation-1", "invalid-project")
+	err := service.DeleteRelation(context.Background(), "relation-1", "invalid-project", "user-1")
 
 	requireLocationProjectIDValidation(t, err)
 }

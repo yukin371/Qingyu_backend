@@ -19,6 +19,23 @@ type LocationService struct {
 	eventBus     base.EventBus
 }
 
+func (s *LocationService) ensureProjectEditor(ctx context.Context, projectID, userID string) error {
+	if _, err := repository.ParseID(projectID); err != nil {
+		return errors.NewServiceError("LocationService", errors.ServiceErrorValidation, "invalid project ID", "", err)
+	}
+	if s.projectRepo == nil {
+		return errors.NewServiceError("LocationService", errors.ServiceErrorInternal, "project repository unavailable", "", nil)
+	}
+	project, err := s.projectRepo.GetByID(ctx, projectID)
+	if err != nil {
+		return errors.NewServiceError("LocationService", errors.ServiceErrorNotFound, "project not found", "", err)
+	}
+	if project == nil || !project.CanEdit(userID) {
+		return errors.NewServiceError("LocationService", errors.ServiceErrorForbidden, "no permission to edit locations in this project", "", nil)
+	}
+	return nil
+}
+
 // NewLocationService 创建LocationService实例
 func NewLocationService(
 	locationRepo writerRepo.LocationRepository,
@@ -43,15 +60,8 @@ func (s *LocationService) Create(
 	if err != nil {
 		return nil, errors.NewServiceError("LocationService", errors.ServiceErrorValidation, "invalid project ID", "", err)
 	}
-	if s.projectRepo == nil {
-		return nil, errors.NewServiceError("LocationService", errors.ServiceErrorInternal, "project repository unavailable", "", nil)
-	}
-	project, err := s.projectRepo.GetByID(ctx, projectID)
-	if err != nil {
-		return nil, errors.NewServiceError("LocationService", errors.ServiceErrorNotFound, "project not found", "", err)
-	}
-	if project == nil || !project.CanEdit(userID) {
-		return nil, errors.NewServiceError("LocationService", errors.ServiceErrorForbidden, "no permission to create location in this project", "", nil)
+	if err := s.ensureProjectEditor(ctx, projectID, userID); err != nil {
+		return nil, err
 	}
 	location := &writer.Location{}
 	location.ProjectID = projectOID
@@ -118,9 +128,12 @@ func (s *LocationService) List(
 // Update 更新地点
 func (s *LocationService) Update(
 	ctx context.Context,
-	locationID, projectID string,
+	locationID, projectID, userID string,
 	req *serviceInterfaces.UpdateLocationRequest,
 ) (*writer.Location, error) {
+	if err := s.ensureProjectEditor(ctx, projectID, userID); err != nil {
+		return nil, err
+	}
 	location, err := s.GetByID(ctx, locationID, projectID)
 	if err != nil {
 		return nil, err
@@ -175,8 +188,11 @@ func (s *LocationService) Update(
 // Delete 删除地点
 func (s *LocationService) Delete(
 	ctx context.Context,
-	locationID, projectID string,
+	locationID, projectID, userID string,
 ) error {
+	if err := s.ensureProjectEditor(ctx, projectID, userID); err != nil {
+		return err
+	}
 	if _, err := s.GetByID(ctx, locationID, projectID); err != nil {
 		return err
 	}
@@ -238,9 +254,12 @@ func (s *LocationService) GetLocationPath(
 // CreateRelation 创建地点关系
 func (s *LocationService) CreateRelation(
 	ctx context.Context,
-	projectID string,
+	projectID, userID string,
 	req *serviceInterfaces.CreateLocationRelationRequest,
 ) (*writer.LocationRelation, error) {
+	if err := s.ensureProjectEditor(ctx, projectID, userID); err != nil {
+		return nil, err
+	}
 	projectOID, err := repository.ParseID(projectID)
 	if err != nil {
 		return nil, errors.NewServiceError("LocationService", errors.ServiceErrorValidation, "invalid project ID", "", err)
@@ -286,8 +305,11 @@ func (s *LocationService) ListRelations(
 // DeleteRelation 删除地点关系
 func (s *LocationService) DeleteRelation(
 	ctx context.Context,
-	relationID, projectID string,
+	relationID, projectID, userID string,
 ) error {
+	if err := s.ensureProjectEditor(ctx, projectID, userID); err != nil {
+		return err
+	}
 	if _, err := repository.ParseID(projectID); err != nil {
 		return errors.NewServiceError("LocationService", errors.ServiceErrorValidation, "invalid project ID", "", err)
 	}

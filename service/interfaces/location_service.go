@@ -11,19 +11,17 @@ type LocationService interface {
 	Create(ctx context.Context, projectID, userID string, req *CreateLocationRequest) (*writer.Location, error)
 	GetByID(ctx context.Context, locationID, projectID string) (*writer.Location, error)
 	List(ctx context.Context, projectID string) ([]*writer.Location, error)
-	// TODO(T3-090-writer-asset-write-actor-owner): 更新/删除必须补显式 userID 或统一 actor port，不能只依赖项目 ID。
-	Update(ctx context.Context, locationID, projectID string, req *UpdateLocationRequest) (*writer.Location, error)
-	Delete(ctx context.Context, locationID, projectID string) error
+	Update(ctx context.Context, locationID, projectID, userID string, req *UpdateLocationRequest) (*writer.Location, error)
+	Delete(ctx context.Context, locationID, projectID, userID string) error
 
 	// 层级管理
 	GetLocationTree(ctx context.Context, projectID string) ([]*LocationNode, error)
 	GetLocationPath(ctx context.Context, locationID string) ([]string, error)
 
 	// 关系管理
-	// TODO(T3-090-writer-asset-write-actor-owner): 关系写入/删除需要传递调用者并复用 Project.CanEdit。
-	CreateRelation(ctx context.Context, projectID string, req *CreateLocationRelationRequest) (*writer.LocationRelation, error)
+	CreateRelation(ctx context.Context, projectID, userID string, req *CreateLocationRelationRequest) (*writer.LocationRelation, error)
 	ListRelations(ctx context.Context, projectID string, locationID *string) ([]*writer.LocationRelation, error)
-	DeleteRelation(ctx context.Context, relationID, projectID string) error
+	DeleteRelation(ctx context.Context, relationID, projectID, userID string) error
 }
 
 // CreateLocationRequest 创建地点请求

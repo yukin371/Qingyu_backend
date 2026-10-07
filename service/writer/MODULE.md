@@ -54,4 +54,5 @@ Phase 5 当前口径：writer 主线已完成 factory / compat / port adapter、
 - **地点创建权限**：`LocationService.Create` 与角色创建共享 `projectReader` 最小 port 和 `Project.CanEdit(userID)` 规则；未通过项目编辑权检查时不得写入地点或发布事件。
 - **大纲创建权限**：`OutlineService.Create` 生产组合根必须显式注入 `projectReader`，并复用 `Project.CanEdit(userID)`；旧构造器未注入 port 时只允许非创建兼容测试，创建必须返回依赖未配置错误，不得绕过权限。
 - **角色资产写入 actor**：角色更新、删除及关系创建/删除接口必须显式接收 API 认证上下文传入的 `userID`，并通过 `projectReader` 复用 `Project.CanEdit(userID)`；未通过项目编辑权检查时不得访问角色/关系写入仓储或发布事件。
-- **剩余资产写入 actor**：地点和大纲的更新、删除及地点关系写入仍受 `TODO(T3-090-writer-asset-write-actor-owner)` 约束；完成前不得把项目 ID 归属检查当作编辑授权。
+- **地点资产写入 actor**：地点更新、删除及关系创建/删除接口必须显式接收 API 认证上下文传入的 `userID`，并通过 `projectReader` 复用 `Project.CanEdit(userID)`；未通过项目编辑权检查时不得访问地点/关系写入仓储或发布事件。
+- **剩余资产写入 actor**：大纲的更新、删除仍受 `TODO(T3-090-writer-asset-write-actor-owner)` 约束；完成前不得把项目 ID 归属检查当作编辑授权。
