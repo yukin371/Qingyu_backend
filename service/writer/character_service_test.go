@@ -12,12 +12,12 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type characterProjectReaderStub struct {
+type projectReaderStub struct {
 	project *writer.Project
 	err     error
 }
 
-func (s characterProjectReaderStub) GetByID(context.Context, string) (*writer.Project, error) {
+func (s projectReaderStub) GetByID(context.Context, string) (*writer.Project, error) {
 	return s.project, s.err
 }
 
@@ -42,7 +42,7 @@ func TestCharacterService_CreateRejectsUserWithoutProjectEditPermission(t *testi
 	projectID := primitive.NewObjectID()
 	authorID := primitive.NewObjectID()
 	service := &CharacterService{
-		projectRepo: characterProjectReaderStub{
+		projectRepo: projectReaderStub{
 			project: &writer.Project{OwnedEntity: base.OwnedEntity{AuthorID: authorID}},
 		},
 	}

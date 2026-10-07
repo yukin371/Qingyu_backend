@@ -15,16 +15,19 @@ import (
 // LocationService 地点服务实现
 type LocationService struct {
 	locationRepo writerRepo.LocationRepository
+	projectRepo  projectReader
 	eventBus     base.EventBus
 }
 
 // NewLocationService 创建LocationService实例
 func NewLocationService(
 	locationRepo writerRepo.LocationRepository,
+	projectRepo projectReader,
 	eventBus base.EventBus,
 ) serviceInterfaces.LocationService {
 	return &LocationService{
 		locationRepo: locationRepo,
+		projectRepo:  projectRepo,
 		eventBus:     eventBus,
 	}
 }
@@ -39,6 +42,16 @@ func (s *LocationService) Create(
 	projectOID, err := repository.ParseID(projectID)
 	if err != nil {
 		return nil, errors.NewServiceError("LocationService", errors.ServiceErrorValidation, "invalid project ID", "", err)
+	}
+	if s.projectRepo == nil {
+		return nil, errors.NewServiceError("LocationService", errors.ServiceErrorInternal, "project repository unavailable", "", nil)
+	}
+	project, err := s.projectRepo.GetByID(ctx, projectID)
+	if err != nil {
+		return nil, errors.NewServiceError("LocationService", errors.ServiceErrorNotFound, "project not found", "", err)
+	}
+	if project == nil || !project.CanEdit(userID) {
+		return nil, errors.NewServiceError("LocationService", errors.ServiceErrorForbidden, "no permission to create location in this project", "", nil)
 	}
 	location := &writer.Location{}
 	location.ProjectID = projectOID

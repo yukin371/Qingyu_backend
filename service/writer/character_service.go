@@ -15,18 +15,14 @@ import (
 // CharacterService 角色服务实现
 type CharacterService struct {
 	characterRepo writerRepo.CharacterRepository
-	projectRepo   characterProjectReader
+	projectRepo   projectReader
 	eventBus      base.EventBus
-}
-
-type characterProjectReader interface {
-	GetByID(ctx context.Context, id string) (*writer.Project, error)
 }
 
 // NewCharacterService 创建CharacterService实例
 func NewCharacterService(
 	characterRepo writerRepo.CharacterRepository,
-	projectRepo characterProjectReader,
+	projectRepo projectReader,
 	eventBus base.EventBus,
 ) serviceInterfaces.CharacterService {
 	return &CharacterService{

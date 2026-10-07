@@ -176,7 +176,7 @@ func RegisterWriterRoutesWithAuth(r *gin.RouterGroup, searchSvc *searchservice.S
 	locationRepo := repositoryFactory.CreateLocationRepository()
 	var locationSvc interfaces.LocationService
 	if locationRepo != nil {
-		locationSvc = writerservice.NewLocationService(locationRepo, eventBus)
+		locationSvc = writerservice.NewLocationService(locationRepo, projectRepo, eventBus)
 	}
 
 	// 创建TimelineService（时间线服务）
