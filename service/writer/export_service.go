@@ -308,7 +308,9 @@ func (s *ExportService) DeleteExportTask(ctx context.Context, taskID, userID str
 	}
 
 	if task.FileURL != "" && s.fileStorage != nil {
-		_ = s.fileStorage.Delete(ctx, task.FileURL)
+		if err := s.fileStorage.Delete(ctx, task.FileURL); err != nil {
+			return errors.NewServiceError("ExportService", errors.ServiceErrorInternal, "删除导出文件失败", "", err)
+		}
 	}
 
 	return s.exportTaskRepo.Delete(ctx, taskID)
