@@ -369,8 +369,7 @@ func (s *OutlineDocumentSyncService) SyncLevelChangeToDocument(ctx context.Conte
 		updates := map[string]interface{}{
 			"outline_node_id": "",
 		}
-		_ = s.documentRepo.Update(ctx, outlineNode.DocumentID, updates)
-		return nil
+		return s.documentRepo.Update(ctx, outlineNode.DocumentID, updates)
 	}
 
 	// 更新文档的 Level 和 Type
