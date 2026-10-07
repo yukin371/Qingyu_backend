@@ -47,5 +47,6 @@ Phase 5 当前口径：writer 主线已完成 factory / compat / port adapter、
 - **章节发布前置检查**：创建章节发布记录前，章节自身和所属项目的既有发布记录查询失败必须返回错误并停止创建，不能继续写入无法关联书城项目的 pending 记录。
 - **批注统计错误传播**：批注统计由 `repository/mongodb/writer/MongoCommentRepository.GetStats` 负责聚合；总数、已解决数、聚合和 cursor 解码错误必须向 `CommentServiceImpl`/API 传播，异常 BSON 类型不得通过强制断言触发 panic。真实 Mongo 聚合联调与错误注入测试归入 Phase 4。
 - **导出删除一致性**：`ExportService.DeleteExportTask` 必须先确认导出文件删除成功，再删除任务记录；文件存储失败时返回内部错误并保留任务，以便重试，不得把文件删除错误静默成成功。
+- **本地导出路径边界**：`LocalFileStorage` 生成 URL 使用正斜杠；`Download`/`Delete` 必须通过 `resolveFilePath` 校验 URL 前缀和规范化路径，禁止 `..` 越出 `baseDir`。
 - **导出任务异步写回**：`updateTaskProgress`/`failTask` 当前仍是后台 best-effort 写回，受 `TODO(T3-084-export-task-write-error-owner)` 约束；未定义重试、补偿、告警和最终状态可见性前，不得把忽略仓储错误误认为已完成。
 - **批量操作状态写回**：`BatchOperationService.executeDelete` 在 processing/succeeded/failed/cancelled 分支的 item 状态更新仍受 `TODO(T3-085-batch-item-write-error-owner)` 约束；未定义 atomic/non-atomic 的补偿和可见性前，不得把 `UpdateItemStatus` 错误当作无害。

@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -43,18 +44,17 @@ func (s *LocalFileStorage) Upload(ctx context.Context, filename string, content 
 	}
 
 	relPath := filepath.Join(dateDir, uniqueName)
-	return fmt.Sprintf("%s/exports/%s", s.baseURL, relPath), nil
+	return fmt.Sprintf("%s/exports/%s", s.baseURL, filepath.ToSlash(relPath)), nil
 }
 
 // Download 下载文件
 func (s *LocalFileStorage) Download(ctx context.Context, url string) (io.ReadCloser, error) {
-	relPath := ""
-	fmt.Sscanf(url, s.baseURL+"/exports/%s", &relPath)
-	if relPath == "" {
-		return nil, fmt.Errorf("invalid file URL")
+	filePath, err := s.resolveFilePath(url)
+	if err != nil {
+		return nil, err
 	}
 
-	f, err := os.Open(filepath.Join(s.baseDir, relPath))
+	f, err := os.Open(filePath)
 	if err != nil {
 		return nil, fmt.Errorf("open file failed: %w", err)
 	}
@@ -63,12 +63,37 @@ func (s *LocalFileStorage) Download(ctx context.Context, url string) (io.ReadClo
 
 // Delete 删除文件
 func (s *LocalFileStorage) Delete(ctx context.Context, url string) error {
-	relPath := ""
-	fmt.Sscanf(url, s.baseURL+"/exports/%s", &relPath)
-	if relPath == "" {
-		return fmt.Errorf("invalid file URL")
+	filePath, err := s.resolveFilePath(url)
+	if err != nil {
+		return err
 	}
-	return os.Remove(filepath.Join(s.baseDir, relPath))
+	return os.Remove(filePath)
+}
+
+func (s *LocalFileStorage) resolveFilePath(url string) (string, error) {
+	prefix := strings.TrimRight(s.baseURL, "/") + "/exports/"
+	if !strings.HasPrefix(url, prefix) {
+		return "", fmt.Errorf("invalid file URL")
+	}
+
+	relPath := filepath.Clean(filepath.FromSlash(strings.TrimPrefix(url, prefix)))
+	if relPath == "." || relPath == ".." || filepath.IsAbs(relPath) || strings.HasPrefix(relPath, ".."+string(filepath.Separator)) {
+		return "", fmt.Errorf("invalid file URL")
+	}
+
+	baseDir, err := filepath.Abs(s.baseDir)
+	if err != nil {
+		return "", fmt.Errorf("resolve storage directory failed: %w", err)
+	}
+	filePath, err := filepath.Abs(filepath.Join(baseDir, relPath))
+	if err != nil {
+		return "", fmt.Errorf("resolve file path failed: %w", err)
+	}
+	rel, err := filepath.Rel(baseDir, filePath)
+	if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+		return "", fmt.Errorf("invalid file URL")
+	}
+	return filePath, nil
 }
 
 // GetSignedURL 获取签名URL（本地存储直接返回原URL）
