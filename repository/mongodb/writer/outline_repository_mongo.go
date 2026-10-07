@@ -90,7 +90,10 @@ func (r *OutlineRepositoryMongo) FindByProjectID(ctx context.Context, projectID 
 	if err != nil {
 		return nil, err
 	}
-	projectObjectID, _ := primitive.ObjectIDFromHex(safeProjectID)
+	projectObjectID, err := primitive.ObjectIDFromHex(safeProjectID)
+	if err != nil {
+		return nil, errors.NewRepositoryError(errors.RepositoryErrorValidation, "invalid project id format", err)
+	}
 
 	filter := bson.M{"project_id": projectObjectID}
 
@@ -159,7 +162,10 @@ func (r *OutlineRepositoryMongo) FindByParentID(ctx context.Context, projectID, 
 	if err != nil {
 		return nil, err
 	}
-	projectObjectID, _ := primitive.ObjectIDFromHex(safeProjectID)
+	projectObjectID, err := primitive.ObjectIDFromHex(safeProjectID)
+	if err != nil {
+		return nil, errors.NewRepositoryError(errors.RepositoryErrorValidation, "invalid project id format", err)
+	}
 
 	filter := bson.M{
 		"project_id": projectObjectID,
@@ -189,7 +195,10 @@ func (r *OutlineRepositoryMongo) FindRoots(ctx context.Context, projectID string
 	if err != nil {
 		return nil, err
 	}
-	projectObjectID, _ := primitive.ObjectIDFromHex(safeProjectID)
+	projectObjectID, err := primitive.ObjectIDFromHex(safeProjectID)
+	if err != nil {
+		return nil, errors.NewRepositoryError(errors.RepositoryErrorValidation, "invalid project id format", err)
+	}
 
 	filter := bson.M{
 		"project_id": projectObjectID,
@@ -255,7 +264,10 @@ func (r *OutlineRepositoryMongo) CountByProjectID(ctx context.Context, projectID
 	if err != nil {
 		return 0, err
 	}
-	projectObjectID, _ := primitive.ObjectIDFromHex(safeProjectID)
+	projectObjectID, err := primitive.ObjectIDFromHex(safeProjectID)
+	if err != nil {
+		return 0, errors.NewRepositoryError(errors.RepositoryErrorValidation, "invalid project id format", err)
+	}
 
 	filter := bson.M{"project_id": projectObjectID}
 	count, err := r.GetCollection().CountDocuments(ctx, filter)
@@ -275,7 +287,10 @@ func (r *OutlineRepositoryMongo) CountByParentID(ctx context.Context, projectID,
 	if err != nil {
 		return 0, err
 	}
-	projectObjectID, _ := primitive.ObjectIDFromHex(safeProjectID)
+	projectObjectID, err := primitive.ObjectIDFromHex(safeProjectID)
+	if err != nil {
+		return 0, errors.NewRepositoryError(errors.RepositoryErrorValidation, "invalid project id format", err)
+	}
 
 	var filter bson.M
 

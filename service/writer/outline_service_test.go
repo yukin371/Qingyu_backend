@@ -259,6 +259,26 @@ func TestOutlineService_Create_ChildNode(t *testing.T) {
 	mockEventBus.AssertExpectations(t)
 }
 
+func TestOutlineService_Create_PropagatesSiblingCountError(t *testing.T) {
+	ctx := context.Background()
+	mockRepo := new(MockOutlineRepository)
+	service := NewOutlineService(mockRepo, nil)
+	projectID := primitive.NewObjectID().Hex()
+	parentID := primitive.NewObjectID().Hex()
+	parentNode := createTestOutlineNode(projectID, "第一卷", "", 0)
+
+	mockRepo.On("FindByID", ctx, parentID).Return(parentNode, nil).Once()
+	mockRepo.On("CountByParentID", ctx, projectID, parentID).Return(int64(0), errors.New("count failed")).Once()
+
+	outline, err := service.Create(ctx, projectID, "", &serviceInterfaces.CreateOutlineRequest{Title: "第一章", ParentID: parentID})
+
+	require.Error(t, err)
+	require.Nil(t, outline)
+	assert.Contains(t, err.Error(), "count sibling outlines failed")
+	mockRepo.AssertNotCalled(t, "Create", mock.Anything, mock.Anything)
+	mockRepo.AssertExpectations(t)
+}
+
 // TestOutlineService_Create_ParentNotFound 测试父节点不存在
 func TestOutlineService_Create_ParentNotFound(t *testing.T) {
 	// Arrange

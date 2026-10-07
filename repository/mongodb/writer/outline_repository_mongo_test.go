@@ -45,6 +45,26 @@ func createTestOutline(projectID, title, parentID string, order int) *writer.Out
 	return outline
 }
 
+func TestOutlineRepository_RejectsInvalidProjectIDsBeforeQuery(t *testing.T) {
+	repo := &writerRepo.OutlineRepositoryMongo{}
+	ctx := context.Background()
+
+	_, err := repo.FindByProjectID(ctx, "invalid-project")
+	require.Error(t, err)
+
+	_, err = repo.FindByParentID(ctx, "invalid-project", "")
+	require.Error(t, err)
+
+	_, err = repo.FindRoots(ctx, "invalid-project")
+	require.Error(t, err)
+
+	_, err = repo.CountByProjectID(ctx, "invalid-project")
+	require.Error(t, err)
+
+	_, err = repo.CountByParentID(ctx, "invalid-project", "")
+	require.Error(t, err)
+}
+
 // TestOutlineRepository_Create 测试创建大纲节点
 func TestOutlineRepository_Create(t *testing.T) {
 	if testing.Short() {

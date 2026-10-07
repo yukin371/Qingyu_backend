@@ -60,7 +60,10 @@ func (s *OutlineService) Create(
 	order := req.Order
 	if order == 0 && req.ParentID != "" {
 		// 获取同级最大order
-		count, _ := s.outlineRepo.CountByParentID(ctx, projectID, req.ParentID)
+		count, err := s.outlineRepo.CountByParentID(ctx, projectID, req.ParentID)
+		if err != nil {
+			return nil, errors.NewServiceError("OutlineService", errors.ServiceErrorInternal, "count sibling outlines failed", "", err)
+		}
 		order = int(count)
 	}
 
