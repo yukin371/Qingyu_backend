@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	writerModels "Qingyu_backend/models/writer"
+	writerBase "Qingyu_backend/models/writer/base"
 	serviceErrors "Qingyu_backend/pkg/errors"
 	writerRepoInterfaces "Qingyu_backend/repository/interfaces/writer"
 	"Qingyu_backend/service/base"
@@ -117,6 +118,11 @@ func requireOutlineProjectIDValidation(t *testing.T, err error) {
 	require.Contains(t, serviceErr.Error(), "invalid project ID")
 }
 
+func newOutlineCreateService(repo *MockOutlineRepository, eventBus base.EventBus, userID string) serviceInterfaces.OutlineService {
+	ownerID, _ := primitive.ObjectIDFromHex(userID)
+	return NewOutlineService(repo, eventBus, projectReaderStub{project: &writerModels.Project{OwnedEntity: writerBase.OwnedEntity{AuthorID: ownerID}}})
+}
+
 func TestOutlineService_CreateRejectsInvalidProjectID(t *testing.T) {
 	service := &OutlineService{}
 
@@ -185,10 +191,9 @@ func TestOutlineService_Create_RootNode(t *testing.T) {
 	mockRepo := new(MockOutlineRepository)
 	mockEventBus := new(MockEventBus)
 
-	service := NewOutlineService(mockRepo, mockEventBus)
-
 	projectID := primitive.NewObjectID().Hex()
 	userID := primitive.NewObjectID().Hex()
+	service := newOutlineCreateService(mockRepo, mockEventBus, userID)
 
 	req := &serviceInterfaces.CreateOutlineRequest{
 		Title:   "第一卷",
@@ -225,11 +230,10 @@ func TestOutlineService_Create_ChildNode(t *testing.T) {
 	mockRepo := new(MockOutlineRepository)
 	mockEventBus := new(MockEventBus)
 
-	service := NewOutlineService(mockRepo, mockEventBus)
-
 	projectID := primitive.NewObjectID().Hex()
 	userID := primitive.NewObjectID().Hex()
 	parentID := primitive.NewObjectID().Hex()
+	service := newOutlineCreateService(mockRepo, mockEventBus, userID)
 
 	parentNode := createTestOutlineNode(projectID, "第一卷", "", 0)
 
@@ -262,15 +266,16 @@ func TestOutlineService_Create_ChildNode(t *testing.T) {
 func TestOutlineService_Create_PropagatesSiblingCountError(t *testing.T) {
 	ctx := context.Background()
 	mockRepo := new(MockOutlineRepository)
-	service := NewOutlineService(mockRepo, nil)
 	projectID := primitive.NewObjectID().Hex()
+	userID := primitive.NewObjectID().Hex()
 	parentID := primitive.NewObjectID().Hex()
 	parentNode := createTestOutlineNode(projectID, "第一卷", "", 0)
+	service := newOutlineCreateService(mockRepo, nil, userID)
 
 	mockRepo.On("FindByID", ctx, parentID).Return(parentNode, nil).Once()
 	mockRepo.On("CountByParentID", ctx, projectID, parentID).Return(int64(0), errors.New("count failed")).Once()
 
-	outline, err := service.Create(ctx, projectID, "", &serviceInterfaces.CreateOutlineRequest{Title: "第一章", ParentID: parentID})
+	outline, err := service.Create(ctx, projectID, userID, &serviceInterfaces.CreateOutlineRequest{Title: "第一章", ParentID: parentID})
 
 	require.Error(t, err)
 	require.Nil(t, outline)
@@ -286,11 +291,10 @@ func TestOutlineService_Create_ParentNotFound(t *testing.T) {
 	mockRepo := new(MockOutlineRepository)
 	mockEventBus := new(MockEventBus)
 
-	service := NewOutlineService(mockRepo, mockEventBus)
-
 	projectID := primitive.NewObjectID().Hex()
 	userID := primitive.NewObjectID().Hex()
 	parentID := primitive.NewObjectID().Hex()
+	service := newOutlineCreateService(mockRepo, mockEventBus, userID)
 
 	req := &serviceInterfaces.CreateOutlineRequest{
 		Title:    "第一章",
@@ -317,12 +321,11 @@ func TestOutlineService_Create_CrossProjectParent(t *testing.T) {
 	mockRepo := new(MockOutlineRepository)
 	mockEventBus := new(MockEventBus)
 
-	service := NewOutlineService(mockRepo, mockEventBus)
-
 	projectID := primitive.NewObjectID().Hex()
 	otherProjectID := primitive.NewObjectID().Hex()
 	userID := primitive.NewObjectID().Hex()
 	parentID := primitive.NewObjectID().Hex()
+	service := newOutlineCreateService(mockRepo, mockEventBus, userID)
 
 	parentNode := createTestOutlineNode(otherProjectID, "其他项目的卷", "", 0)
 
@@ -351,10 +354,9 @@ func TestOutlineService_Create_InvalidData(t *testing.T) {
 	mockRepo := new(MockOutlineRepository)
 	mockEventBus := new(MockEventBus)
 
-	service := NewOutlineService(mockRepo, mockEventBus)
-
 	projectID := primitive.NewObjectID().Hex()
 	userID := primitive.NewObjectID().Hex()
+	service := newOutlineCreateService(mockRepo, mockEventBus, userID)
 
 	req := &serviceInterfaces.CreateOutlineRequest{
 		Title: "", // 空标题
@@ -367,6 +369,17 @@ func TestOutlineService_Create_InvalidData(t *testing.T) {
 	assert.Error(t, err)
 	assert.Nil(t, outline)
 	assert.Contains(t, err.Error(), "invalid outline data")
+}
+
+func TestOutlineService_CreateRejectsUserWithoutProjectEditPermission(t *testing.T) {
+	service := NewOutlineService(new(MockOutlineRepository), nil, projectReaderStub{project: &writerModels.Project{}})
+
+	outline, err := service.Create(context.Background(), primitive.NewObjectID().Hex(), primitive.NewObjectID().Hex(), &serviceInterfaces.CreateOutlineRequest{Title: "测试大纲"})
+
+	var serviceErr *serviceErrors.ServiceError
+	require.ErrorAs(t, err, &serviceErr)
+	require.Equal(t, serviceErrors.ServiceErrorForbidden, serviceErr.Type)
+	require.Nil(t, outline)
 }
 
 // TestOutlineService_GetByID_Success 测试成功获取大纲

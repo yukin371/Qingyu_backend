@@ -52,3 +52,4 @@ Phase 5 当前口径：writer 主线已完成 factory / compat / port adapter、
 - **批量操作状态写回**：`BatchOperationService.executeDelete` 在 processing/succeeded/failed/cancelled 分支的 item 状态更新仍受 `TODO(T3-085-batch-item-write-error-owner)` 约束；未定义 atomic/non-atomic 的补偿和可见性前，不得把 `UpdateItemStatus` 错误当作无害。
 - **角色创建权限**：`CharacterService.Create` 必须通过组合根注入的只读项目 port 获取项目，并复用 `Project.CanEdit(userID)`；不能只校验项目 ID 后直接写入角色。项目仓储不可用或用户无编辑权时不得写入或发布事件。
 - **地点创建权限**：`LocationService.Create` 与角色创建共享 `projectReader` 最小 port 和 `Project.CanEdit(userID)` 规则；未通过项目编辑权检查时不得写入地点或发布事件。
+- **大纲创建权限**：`OutlineService.Create` 生产组合根必须显式注入 `projectReader`，并复用 `Project.CanEdit(userID)`；旧构造器未注入 port 时只允许非创建兼容测试，创建必须返回依赖未配置错误，不得绕过权限。

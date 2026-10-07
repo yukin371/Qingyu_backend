@@ -191,7 +191,7 @@ func RegisterWriterRoutesWithAuth(r *gin.RouterGroup, searchSvc *searchservice.S
 	outlineRepo := repositoryFactory.CreateOutlineRepository()
 	var outlineSvc interfaces.OutlineService
 	if outlineRepo != nil {
-		outlineSvc = writerservice.NewOutlineService(outlineRepo, eventBus)
+		outlineSvc = writerservice.NewOutlineService(outlineRepo, eventBus, projectRepo)
 
 		// 创建分布式锁服务（用于保护全局总纲的并发创建）
 		var distLockSvc *distlock.RedisLockService

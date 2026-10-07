@@ -15,6 +15,7 @@ import (
 // OutlineService 大纲服务实现
 type OutlineService struct {
 	outlineRepo writerRepo.OutlineRepository
+	projectRepo projectReader
 	eventBus    base.EventBus
 	syncService *OutlineDocumentSyncService // 大纲-文档双向同步服务
 }
@@ -23,9 +24,15 @@ type OutlineService struct {
 func NewOutlineService(
 	outlineRepo writerRepo.OutlineRepository,
 	eventBus base.EventBus,
+	projectRepos ...projectReader,
 ) serviceInterfaces.OutlineService {
+	var projectRepo projectReader
+	if len(projectRepos) > 0 {
+		projectRepo = projectRepos[0]
+	}
 	return &OutlineService{
 		outlineRepo: outlineRepo,
+		projectRepo: projectRepo,
 		eventBus:    eventBus,
 	}
 }
@@ -44,6 +51,16 @@ func (s *OutlineService) Create(
 	projectOID, err := repository.ParseID(projectID)
 	if err != nil {
 		return nil, errors.NewServiceError("OutlineService", errors.ServiceErrorValidation, "invalid project ID", "", err)
+	}
+	if s.projectRepo == nil {
+		return nil, errors.NewServiceError("OutlineService", errors.ServiceErrorInternal, "project repository unavailable", "", nil)
+	}
+	project, err := s.projectRepo.GetByID(ctx, projectID)
+	if err != nil {
+		return nil, errors.NewServiceError("OutlineService", errors.ServiceErrorNotFound, "project not found", "", err)
+	}
+	if project == nil || !project.CanEdit(userID) {
+		return nil, errors.NewServiceError("OutlineService", errors.ServiceErrorForbidden, "no permission to create outline in this project", "", nil)
 	}
 	// 如果指定了父节点，验证父节点是否存在且属于同一项目
 	if req.ParentID != "" {
