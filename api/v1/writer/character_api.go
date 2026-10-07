@@ -138,7 +138,8 @@ func (api *CharacterApi) UpdateCharacter(c *gin.Context) {
 		return
 	}
 
-	character, err := api.characterService.Update(c.Request.Context(), characterID, projectID, &req)
+	userID := shared.GetUserIDOptional(c)
+	character, err := api.characterService.Update(c.Request.Context(), characterID, projectID, userID, &req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -168,7 +169,8 @@ func (api *CharacterApi) DeleteCharacter(c *gin.Context) {
 		return
 	}
 
-	err := api.characterService.Delete(c.Request.Context(), characterID, projectID)
+	userID := shared.GetUserIDOptional(c)
+	err := api.characterService.Delete(c.Request.Context(), characterID, projectID, userID)
 	if err != nil {
 		c.Error(err)
 		return
@@ -199,7 +201,8 @@ func (api *CharacterApi) CreateCharacterRelation(c *gin.Context) {
 		return
 	}
 
-	relation, err := api.characterService.CreateRelation(c.Request.Context(), projectID, &req)
+	userID := shared.GetUserIDOptional(c)
+	relation, err := api.characterService.CreateRelation(c.Request.Context(), projectID, userID, &req)
 	if err != nil {
 		c.Error(err)
 		return
@@ -260,7 +263,8 @@ func (api *CharacterApi) DeleteCharacterRelation(c *gin.Context) {
 		return
 	}
 
-	err := api.characterService.DeleteRelation(c.Request.Context(), relationID, projectID)
+	userID := shared.GetUserIDOptional(c)
+	err := api.characterService.DeleteRelation(c.Request.Context(), relationID, projectID, userID)
 	if err != nil {
 		c.Error(err)
 		return

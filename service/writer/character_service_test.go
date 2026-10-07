@@ -55,6 +55,39 @@ func TestCharacterService_CreateRejectsUserWithoutProjectEditPermission(t *testi
 	require.Nil(t, character)
 }
 
+func TestCharacterService_UpdateRejectsUserWithoutProjectEditPermission(t *testing.T) {
+	projectID := primitive.NewObjectID()
+	authorID := primitive.NewObjectID()
+	service := &CharacterService{
+		projectRepo: projectReaderStub{
+			project: &writer.Project{OwnedEntity: base.OwnedEntity{AuthorID: authorID}},
+		},
+	}
+
+	character, err := service.Update(context.Background(), primitive.NewObjectID().Hex(), projectID.Hex(), primitive.NewObjectID().Hex(), &interfaces.UpdateCharacterRequest{})
+
+	var serviceErr *serviceErrors.ServiceError
+	require.ErrorAs(t, err, &serviceErr)
+	require.Equal(t, serviceErrors.ServiceErrorForbidden, serviceErr.Type)
+	require.Nil(t, character)
+}
+
+func TestCharacterService_DeleteRejectsUserWithoutProjectEditPermission(t *testing.T) {
+	projectID := primitive.NewObjectID()
+	authorID := primitive.NewObjectID()
+	service := &CharacterService{
+		projectRepo: projectReaderStub{
+			project: &writer.Project{OwnedEntity: base.OwnedEntity{AuthorID: authorID}},
+		},
+	}
+
+	err := service.Delete(context.Background(), primitive.NewObjectID().Hex(), projectID.Hex(), primitive.NewObjectID().Hex())
+
+	var serviceErr *serviceErrors.ServiceError
+	require.ErrorAs(t, err, &serviceErr)
+	require.Equal(t, serviceErrors.ServiceErrorForbidden, serviceErr.Type)
+}
+
 func TestCharacterService_GetByIDRejectsInvalidProjectID(t *testing.T) {
 	service := &CharacterService{}
 
@@ -67,7 +100,7 @@ func TestCharacterService_GetByIDRejectsInvalidProjectID(t *testing.T) {
 func TestCharacterService_CreateRelationRejectsInvalidProjectID(t *testing.T) {
 	service := &CharacterService{}
 
-	relation, err := service.CreateRelation(context.Background(), "invalid-project", &interfaces.CreateRelationRequest{FromID: "character-1", ToID: "character-2", Type: "朋友"})
+	relation, err := service.CreateRelation(context.Background(), "invalid-project", "user-1", &interfaces.CreateRelationRequest{FromID: "character-1", ToID: "character-2", Type: "朋友"})
 
 	requireCharacterProjectIDValidation(t, err)
 	require.Nil(t, relation)
@@ -76,7 +109,7 @@ func TestCharacterService_CreateRelationRejectsInvalidProjectID(t *testing.T) {
 func TestCharacterService_DeleteRelationRejectsInvalidProjectID(t *testing.T) {
 	service := &CharacterService{}
 
-	err := service.DeleteRelation(context.Background(), "relation-1", "invalid-project")
+	err := service.DeleteRelation(context.Background(), "relation-1", "invalid-project", "user-1")
 
 	requireCharacterProjectIDValidation(t, err)
 }

@@ -12,15 +12,13 @@ type CharacterService interface {
 	Create(ctx context.Context, projectID, userID string, req *CreateCharacterRequest) (*writer.Character, error)
 	GetByID(ctx context.Context, characterID, projectID string) (*writer.Character, error)
 	List(ctx context.Context, projectID string) ([]*writer.Character, error)
-	// TODO(T3-090-writer-asset-write-actor-owner): 更新/删除必须补显式 userID 或统一 actor port，不能只依赖项目 ID。
-	Update(ctx context.Context, characterID, projectID string, req *UpdateCharacterRequest) (*writer.Character, error)
-	Delete(ctx context.Context, characterID, projectID string) error
+	Update(ctx context.Context, characterID, projectID, userID string, req *UpdateCharacterRequest) (*writer.Character, error)
+	Delete(ctx context.Context, characterID, projectID, userID string) error
 
 	// 关系管理
-	// TODO(T3-090-writer-asset-write-actor-owner): 关系写入/删除需要传递调用者并复用 Project.CanEdit。
-	CreateRelation(ctx context.Context, projectID string, req *CreateRelationRequest) (*writer.CharacterRelation, error)
+	CreateRelation(ctx context.Context, projectID, userID string, req *CreateRelationRequest) (*writer.CharacterRelation, error)
 	ListRelations(ctx context.Context, projectID string, characterID *string) ([]*writer.CharacterRelation, error)
-	DeleteRelation(ctx context.Context, relationID, projectID string) error
+	DeleteRelation(ctx context.Context, relationID, projectID, userID string) error
 
 	// 关系时序事件管理
 	CreateRelationTimelineEvent(ctx context.Context, projectID string, req *CreateRelationTimelineEventRequest) (*writer.RelationTimelineEvent, error)
@@ -53,12 +51,12 @@ type CharacterGraph struct {
 
 // CreateRelationTimelineEventRequest 创建关系时序事件请求
 type CreateRelationTimelineEventRequest struct {
-	RelationID  string `json:"relationId"`
-	ChapterID   string `json:"chapterId"`
+	RelationID   string `json:"relationId"`
+	ChapterID    string `json:"chapterId"`
 	ChapterTitle string `json:"chapterTitle"`
-	NewType     string `json:"newType"`
-	NewStrength int    `json:"newStrength"`
-	Notes       string `json:"notes,omitempty"`
+	NewType      string `json:"newType"`
+	NewStrength  int    `json:"newStrength"`
+	Notes        string `json:"notes,omitempty"`
 }
 
 // UpdateRelationTimelineEventRequest 更新关系时序事件请求

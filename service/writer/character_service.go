@@ -19,6 +19,23 @@ type CharacterService struct {
 	eventBus      base.EventBus
 }
 
+func (s *CharacterService) ensureProjectEditor(ctx context.Context, projectID, userID string) error {
+	if _, err := repository.ParseID(projectID); err != nil {
+		return errors.NewServiceError("CharacterService", errors.ServiceErrorValidation, "invalid project ID", "", err)
+	}
+	if s.projectRepo == nil {
+		return errors.NewServiceError("CharacterService", errors.ServiceErrorInternal, "project repository unavailable", "", nil)
+	}
+	project, err := s.projectRepo.GetByID(ctx, projectID)
+	if err != nil {
+		return errors.NewServiceError("CharacterService", errors.ServiceErrorNotFound, "project not found", "", err)
+	}
+	if project == nil || !project.CanEdit(userID) {
+		return errors.NewServiceError("CharacterService", errors.ServiceErrorForbidden, "no permission to edit characters in this project", "", nil)
+	}
+	return nil
+}
+
 // NewCharacterService 创建CharacterService实例
 func NewCharacterService(
 	characterRepo writerRepo.CharacterRepository,
@@ -42,15 +59,8 @@ func (s *CharacterService) Create(
 	if err != nil {
 		return nil, errors.NewServiceError("CharacterService", errors.ServiceErrorValidation, "invalid project ID", "", err)
 	}
-	if s.projectRepo == nil {
-		return nil, errors.NewServiceError("CharacterService", errors.ServiceErrorInternal, "project repository unavailable", "", nil)
-	}
-	project, err := s.projectRepo.GetByID(ctx, projectID)
-	if err != nil {
-		return nil, errors.NewServiceError("CharacterService", errors.ServiceErrorNotFound, "project not found", "", err)
-	}
-	if project == nil || !project.CanEdit(userID) {
-		return nil, errors.NewServiceError("CharacterService", errors.ServiceErrorForbidden, "no permission to create character in this project", "", nil)
+	if err := s.ensureProjectEditor(ctx, projectID, userID); err != nil {
+		return nil, err
 	}
 
 	// 构建角色对象（使用base mixins）
@@ -123,9 +133,12 @@ func (s *CharacterService) List(
 // Update 更新角色
 func (s *CharacterService) Update(
 	ctx context.Context,
-	characterID, projectID string,
+	characterID, projectID, userID string,
 	req *serviceInterfaces.UpdateCharacterRequest,
 ) (*writer.Character, error) {
+	if err := s.ensureProjectEditor(ctx, projectID, userID); err != nil {
+		return nil, err
+	}
 	// 获取现有角色
 	character, err := s.GetByID(ctx, characterID, projectID)
 	if err != nil {
@@ -186,8 +199,11 @@ func (s *CharacterService) Update(
 // Delete 删除角色
 func (s *CharacterService) Delete(
 	ctx context.Context,
-	characterID, projectID string,
+	characterID, projectID, userID string,
 ) error {
+	if err := s.ensureProjectEditor(ctx, projectID, userID); err != nil {
+		return err
+	}
 	// 验证权限
 	character, err := s.GetByID(ctx, characterID, projectID)
 	if err != nil {
@@ -223,9 +239,12 @@ func (s *CharacterService) Delete(
 // CreateRelation 创建角色关系
 func (s *CharacterService) CreateRelation(
 	ctx context.Context,
-	projectID string,
+	projectID, userID string,
 	req *serviceInterfaces.CreateRelationRequest,
 ) (*writer.CharacterRelation, error) {
+	if err := s.ensureProjectEditor(ctx, projectID, userID); err != nil {
+		return nil, err
+	}
 	// 验证两个角色是否存在且属于同一项目
 	projectOID, err := repository.ParseID(projectID)
 	if err != nil {
@@ -277,8 +296,11 @@ func (s *CharacterService) ListRelations(
 // DeleteRelation 删除角色关系
 func (s *CharacterService) DeleteRelation(
 	ctx context.Context,
-	relationID, projectID string,
+	relationID, projectID, userID string,
 ) error {
+	if err := s.ensureProjectEditor(ctx, projectID, userID); err != nil {
+		return err
+	}
 	projectOID, err := repository.ParseID(projectID)
 	if err != nil {
 		return errors.NewServiceError("CharacterService", errors.ServiceErrorValidation, "invalid project ID", "", err)

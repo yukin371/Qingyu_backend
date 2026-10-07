@@ -40,21 +40,21 @@ func (m *mockCharacterServiceForEntity) List(ctx context.Context, projectID stri
 	return args.Get(0).([]*writer.Character), args.Error(1)
 }
 
-func (m *mockCharacterServiceForEntity) Update(ctx context.Context, characterID, projectID string, req *interfaces.UpdateCharacterRequest) (*writer.Character, error) {
-	args := m.Called(ctx, characterID, projectID, req)
+func (m *mockCharacterServiceForEntity) Update(ctx context.Context, characterID, projectID, userID string, req *interfaces.UpdateCharacterRequest) (*writer.Character, error) {
+	args := m.Called(ctx, characterID, projectID, userID, req)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
 	return args.Get(0).(*writer.Character), args.Error(1)
 }
 
-func (m *mockCharacterServiceForEntity) Delete(ctx context.Context, characterID, projectID string) error {
-	args := m.Called(ctx, characterID, projectID)
+func (m *mockCharacterServiceForEntity) Delete(ctx context.Context, characterID, projectID, userID string) error {
+	args := m.Called(ctx, characterID, projectID, userID)
 	return args.Error(0)
 }
 
-func (m *mockCharacterServiceForEntity) CreateRelation(ctx context.Context, projectID string, req *interfaces.CreateRelationRequest) (*writer.CharacterRelation, error) {
-	args := m.Called(ctx, projectID, req)
+func (m *mockCharacterServiceForEntity) CreateRelation(ctx context.Context, projectID, userID string, req *interfaces.CreateRelationRequest) (*writer.CharacterRelation, error) {
+	args := m.Called(ctx, projectID, userID, req)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -69,8 +69,8 @@ func (m *mockCharacterServiceForEntity) ListRelations(ctx context.Context, proje
 	return args.Get(0).([]*writer.CharacterRelation), args.Error(1)
 }
 
-func (m *mockCharacterServiceForEntity) DeleteRelation(ctx context.Context, relationID, projectID string) error {
-	args := m.Called(ctx, relationID, projectID)
+func (m *mockCharacterServiceForEntity) DeleteRelation(ctx context.Context, relationID, projectID, userID string) error {
+	args := m.Called(ctx, relationID, projectID, userID)
 	return args.Error(0)
 }
 
