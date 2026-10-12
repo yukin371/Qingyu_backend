@@ -163,6 +163,19 @@ func (api *BookRatingAPI) GetRatingDistribution(c *gin.Context) {
 }
 
 // CreateRating 创建当前用户对书籍的评分
+// @Summary 创建书籍评分
+// @Description 当前用户为指定书籍创建评分
+// @Tags 图书评分
+// @Accept json
+// @Produce json
+// @Security Bearer
+// @Param id path string true "图书ID"
+// @Param request body upsertRatingRequest true "评分信息"
+// @Success 200 {object} response.APIResponse "成功"
+// @Failure 400 {object} response.APIResponse "请求参数错误"
+// @Failure 401 {object} response.APIResponse "未授权"
+// @Failure 500 {object} response.APIResponse "服务器内部错误"
+// @Router /api/v1/bookstore/books/{id}/rating [post]
 func (api *BookRatingAPI) CreateRating(c *gin.Context) {
 	bookID, ok := api.parseObjectIDParam(c, "id", "图书ID")
 	if !ok {
@@ -190,6 +203,19 @@ func (api *BookRatingAPI) CreateOrUpdateRatingCompat(c *gin.Context) {
 }
 
 // UpdateRating 更新当前用户对书籍的评分
+// @Summary 更新书籍评分
+// @Description 当前用户更新指定书籍的评分
+// @Tags 图书评分
+// @Accept json
+// @Produce json
+// @Security Bearer
+// @Param id path string true "图书ID"
+// @Param request body upsertRatingRequest true "评分信息"
+// @Success 200 {object} response.APIResponse "成功"
+// @Failure 400 {object} response.APIResponse "请求参数错误"
+// @Failure 401 {object} response.APIResponse "未授权"
+// @Failure 500 {object} response.APIResponse "服务器内部错误"
+// @Router /api/v1/bookstore/books/{id}/rating [put]
 func (api *BookRatingAPI) UpdateRating(c *gin.Context) {
 	bookID, ok := api.parseObjectIDParam(c, "id", "图书ID")
 	if !ok {
@@ -244,6 +270,17 @@ func (api *BookRatingAPI) UpdateUserRatingCompat(c *gin.Context) {
 }
 
 // DeleteRating 删除当前用户对书籍的评分
+// @Summary 删除书籍评分
+// @Description 当前用户删除指定书籍的评分
+// @Tags 图书评分
+// @Produce json
+// @Security Bearer
+// @Param id path string true "图书ID"
+// @Success 200 {object} response.APIResponse "成功"
+// @Failure 400 {object} response.APIResponse "请求参数错误"
+// @Failure 401 {object} response.APIResponse "未授权"
+// @Failure 500 {object} response.APIResponse "服务器内部错误"
+// @Router /api/v1/bookstore/books/{id}/rating [delete]
 func (api *BookRatingAPI) DeleteRating(c *gin.Context) {
 	bookID, ok := api.parseObjectIDParam(c, "id", "图书ID")
 	if !ok {
